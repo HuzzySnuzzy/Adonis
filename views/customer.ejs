@@ -20,7 +20,7 @@
   <section class="rdw-card" aria-label="RDW-gegevens">
     <div class="rdw-head">
       <h2>RDW-gegevens</h2>
-      <div class="rdw-links">
+      <div class="rdw-links"<%= rdwData && rdwData.foreign ? ' hidden' : '' %>>
         <a href="<%= rdwUrl(customer.kenteken) %>" target="_blank" rel="noopener">Alles bekijken op rdw.nl ↗</a>
         <form method="post" action="/klant/<%= customer.id %>/rdw" class="inline">
           <input type="hidden" name="_csrf" value="<%= csrf %>">
@@ -28,7 +28,9 @@
         </form>
       </div>
     </div>
-    <% if (!ri) { %>
+    <% if (rdwData && rdwData.foreign) { %>
+      <p class="muted"><%= rdwData.country === 'D' ? 'Duits kenteken' : 'Geen Nederlands kenteken' %>: de RDW heeft alleen gegevens van Nederlandse kentekens.</p>
+    <% } else if (!ri) { %>
       <p class="muted">De RDW is op dit moment niet bereikbaar<%= rdwData && rdwData.error ? ' (' + rdwData.error + ')' : '' %>. Probeer later opnieuw.</p>
     <% } else if (!ri.found) { %>
       <p class="muted">Kenteken <strong><%= customer.kenteken %></strong> is niet gevonden bij de RDW. Klopt het kenteken?</p>
@@ -88,4 +90,5 @@
   </div>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

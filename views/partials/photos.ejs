@@ -1,0 +1,36 @@
+<%# Foto's bij een bandenset of voorraaditem. photoOwner = { type, id } of null (nog niet opgeslagen). %>
+<section class="card photo-card" id="fotos" <% if (photoOwner) { %>data-photo-type="<%= photoOwner.type %>" data-photo-id="<%= photoOwner.id %>" data-csrf="<%= csrf %>"<% } %>>
+  <div class="photo-head">
+    <h2>Foto's <span class="muted small" data-photo-count><%= photoList.length ? '(' + photoList.length + ')' : '' %></span></h2>
+    <% if (photoOwner) { %>
+    <div class="photo-add">
+      <label class="btn btn-small">
+        <input type="file" accept="image/*" capture="environment" hidden data-photo-input>
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+        Foto maken
+      </label>
+      <label class="btn btn-small">
+        <input type="file" accept="image/*" multiple hidden data-photo-input>
+        Foto's kiezen
+      </label>
+    </div>
+    <% } %>
+  </div>
+  <% if (!photoOwner) { %>
+    <p class="muted small">Na het opslaan kun je hier foto's toevoegen (bijvoorbeeld van de banden, het label of de velgen).</p>
+  <% } else { %>
+    <div class="photo-grid" data-photo-grid>
+      <% for (const p of photoList) { %>
+      <figure class="photo" data-photo="<%= p.id %>">
+        <a href="/fotos/<%= p.id %>/full" target="_blank" rel="noopener" data-photo-open><img src="/fotos/<%= p.id %>/thumb" alt="Foto <%= p.name %>" loading="lazy"></a>
+        <form method="post" action="/fotos/<%= p.id %>/verwijderen" data-photo-delete>
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="thumb-del" type="submit" aria-label="Foto verwijderen" title="Verwijderen">×</button>
+        </form>
+      </figure>
+      <% } %>
+    </div>
+    <p class="muted small photo-empty" data-photo-empty <%= photoList.length ? 'hidden' : '' %>>Nog geen foto's. Maak een foto of sleep foto's hierheen.</p>
+    <p class="photo-status muted small" data-photo-status aria-live="polite" hidden></p>
+  <% } %>
+</section>

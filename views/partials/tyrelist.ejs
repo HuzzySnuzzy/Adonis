@@ -1,12 +1,15 @@
 <div class="table-wrap">
 <table class="list clickable tyre-list">
   <thead><tr>
+    <th class="ph-col"><span class="sr-only">Foto</span></th>
     <% if (showPlate) { %><th>Kenteken</th><th>Klant</th><% } %><th>Auto</th><th>Seizoen</th><th>Maat</th>
     <th>Profiel</th><th>Locatie</th><th>Label</th><th><%= showStatus ? 'Status' : 'Ingeslagen' %></th>
   </tr></thead>
   <tbody>
   <% for (const t of tyres) { %>
     <tr data-href="/bandenhotel/<%= t.id %>" class="<%= t.status === 'uitgegeven' ? 'is-out' : '' %>">
+      <% const ph = locals.fotos && fotos.get(t.id); %>
+      <td class="ph-col"><% if (ph) { %><a href="/fotos/<%= ph.id %>/full" data-photo-open class="ph-thumb" title="<%= ph.n %> foto<%= ph.n === 1 ? '' : "'s" %>"><img src="/fotos/<%= ph.id %>/thumb" alt="" loading="lazy"><% if (ph.n > 1) { %><span class="ph-n"><%= ph.n %></span><% } %></a><% } %></td>
       <% if (showPlate) { %>
       <td><% if (t.kenteken) { %><a href="/bandenhotel/<%= t.id %>"><%- include('/partials/plate', { kenteken: t.kenteken }) %></a><% } else { %><span class="muted small">geen kenteken</span><% } %></td>
       <td><% if (t.customer_id) { %><a href="/klant/<%= t.customer_id %>"><%= t.klant_naam || 'klant' %></a><% } else { %><%= t.klant_naam %><% } %></td>

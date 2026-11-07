@@ -142,15 +142,7 @@ function parseExtra(json) {
 const TYRE_STATUSES = { opgeslagen: 'Opgeslagen', uitgegeven: 'Uitgegeven' };
 const TYRE_SOORTEN = { klant: 'Klantenbanden', opslag: 'Overige opslag' };
 
-/** Nederlands kenteken met streepjes: "SB846S" -> "SB-846-S", "19SLVL" -> "19-SL-VL". Anders zoals getypt. */
-function formatPlate(input) {
-  const raw = clean(input, 20).toUpperCase();
-  if (/[-\s.]/.test(raw)) return raw.replace(/\s+|\./g, '-').replace(/-+/g, '-');
-  if (!/^[A-Z0-9]{6}$/.test(raw)) return raw;
-  let groups = raw.match(/[A-Z]+|\d+/g);
-  if (groups.length === 2) groups = groups.flatMap((g) => (g.length === 4 ? [g.slice(0, 2), g.slice(2)] : [g]));
-  return groups.length === 3 ? groups.join('-') : raw;
-}
+const { formatPlate } = require('./plates');
 const VELGEN = { '': '—', staal: 'Stalen velg', alu: 'Lichtmetalen velg', zonder: 'Zonder velg' };
 
 /** Formulier/import -> nette gegevens voor tyre_storage. */

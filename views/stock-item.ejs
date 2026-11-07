@@ -49,6 +49,8 @@
       <a class="btn btn-ghost" href="/voorraad?soort=<%= d.soort %>">Annuleren</a>
     </div>
   </form>
+  <%- include('/partials/photos', { photoList, photoOwner }) %>
+
   <% if (item && user.is_admin) { %>
   <form method="post" action="/voorraad/<%= item.id %>/verwijderen" class="danger-zone" data-confirm="Dit item definitief uit de voorraad verwijderen?">
     <input type="hidden" name="_csrf" value="<%= csrf %>">
@@ -57,4 +59,5 @@
   <% } %>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

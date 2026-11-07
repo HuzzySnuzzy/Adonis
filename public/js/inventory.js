@@ -48,6 +48,8 @@
       try {
         const res = await fetch('/bandenhotel/klant/' + encodeURIComponent(v), { credentials: 'same-origin' });
         const r = await res.json();
+        plate.classList.toggle('plate-input-de', r.country === 'D');
+        if (r.formatted && !r.found) plate.value = r.formatted;
         if (r.found) {
           if (!field('klant_naam').value) field('klant_naam').value = r.naam;
           if (!field('telefoon').value) field('telefoon').value = r.telefoon;

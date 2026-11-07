@@ -21,6 +21,7 @@ const tunnel = require('./tunnel');
 const cloudflare = require('./cloudflare');
 const rdw = require('./rdw');
 const inv = require('./inventory');
+const plates = require('./plates');
 const registerInventory = require('./inventory-routes');
 
 const app = express();
@@ -187,6 +188,8 @@ app.locals.FLUIDS = orders.FLUIDS;
 app.locals.TIRES = orders.TIRES;
 app.locals.WORK_LINES = orders.WORK_LINES;
 app.locals.fmtMm = inv.fmtMm;
+app.locals.plateInfo = plates.plateInfo;
+app.locals.PLATE_STARS = plates.STARS_SVG;
 app.locals.treadClass = inv.treadClass;
 function flash(req, type, text) {
   req.session.flash = { type, text };
@@ -306,9 +309,10 @@ app.get('/klant/:id', wrap(async (req, res) => {
         `SELECT * FROM orders WHERE customer_id = ? AND search_text LIKE ? ESCAPE '\\' ORDER BY datum_invoer DESC, nummer DESC`
       ).all(customer.id, likeTerm(q))
     : db.prepare('SELECT * FROM orders WHERE customer_id = ? ORDER BY datum_invoer DESC, nummer DESC').all(customer.id);
-  const rdwData = await rdw.forCustomer(customer);
+  // Alleen Nederlandse kentekens staan bij de RDW (niet bijv. een Duits kenteken).
+  const rdwData = plates.rdwApplicable(customer.kenteken) ? await rdw.forCustomer(customer) : { foreign: true, country: plates.plateInfo(customer.kenteken).country };
   res.render('customer', {
-    title: customer.kenteken, customer, q, orders: rows.map(withSummary), rdwData, tyres: inv.tyresForPlate(customer.plate_key),
+    title: customer.kenteken, customer, q, orders: rows.map(withSummary), rdwData, tyres: inv.tyresForPlate(customer.plate_key), fotos: require('./photos').firstPhotos('tyre'),
   });
 }));
 
@@ -324,6 +328,9 @@ app.post('/klant/:id/rdw', wrap(async (req, res) => {
 // RDW opzoeken vanuit het werkopdrachtformulier (JSON).
 app.get('/rdw/:kenteken', wrap(async (req, res) => {
   const key = plateKey(req.params.kenteken);
+  if (!plates.rdwApplicable(req.params.kenteken)) {
+    return res.status(400).json({ ok: false, foreign: true, error: 'Geen Nederlands kenteken: de RDW heeft alleen gegevens van Nederlandse kentekens.' });
+  }
   try {
     const customer = db.prepare('SELECT * FROM customers WHERE plate_key = ?').get(key);
     const info = customer ? (await rdw.forCustomer(customer)).info : await rdw.lookup(key);

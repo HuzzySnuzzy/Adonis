@@ -41,6 +41,7 @@ const TYRE_FIELDS = {
   seizoen: 'Seizoen', maat: 'Bandenmaat', merk: 'Merk banden', aantal: 'Aantal banden', velg: 'Velgen',
   profiel: 'Profiel (vrije tekst, wordt uitgelezen)', profiel_voor: 'Profiel voor (mm)', profiel_achter: 'Profiel achter (mm)',
   dot: 'DOT-nummer', locatie: 'Opslaglocatie', opmerkingen: 'Opmerkingen', datum_in: 'Datum ingeslagen', status: 'Status (opgeslagen/uitgegeven)',
+  foto: 'Foto (bestandsnaam)',
 };
 const TARGETS = {
   bandenhotel: { label: 'Bandenhotel – klantenbanden (klanten worden toegevoegd aan Klanten)', fields: TYRE_FIELDS },
@@ -50,6 +51,7 @@ const TARGETS = {
     fields: {
       aantal: 'Aantal', beschikbaar: 'Beschikbaar (ja/nee)', merk: 'Merk', nummer: 'Artikelnummer', oe_nummer: 'Origineel (OE) nummer',
       type: 'Soort onderdeel', omschrijving: 'Omschrijving / opmerking', locatie: 'Locatie', prijs: 'Prijs', datum: 'Datum',
+      foto: 'Foto (bestandsnaam)',
     },
   },
   banden: {
@@ -57,7 +59,7 @@ const TARGETS = {
     fields: {
       aantal: 'Aantal', beschikbaar: 'Beschikbaar (ja/nee)', merk: 'Merk', type: 'Bandtype / model', maat: 'Bandenmaat',
       profiel: 'Profiel (mm of "nieuw")', snelheid: 'Last-/snelheidsindex', seizoen: 'Seizoen', locatie: 'Locatie',
-      omschrijving: 'Opmerking', prijs: 'Prijs', datum: 'Datum binnen',
+      omschrijving: 'Opmerking', prijs: 'Prijs', datum: 'Datum binnen', foto: 'Foto (bestandsnaam)',
     },
   },
 };
@@ -154,6 +156,7 @@ const SYNONYMS = [
   ['type', /^type$|soort|categorie/],
   ['merk', /^merk$|brand/],
   ['velg', /velg/],
+  ['foto', /foto|afbeelding|image|photo|plaatje/],
   ['status', /^status$/],
 ];
 function guessField(header, doel) {
@@ -192,9 +195,9 @@ function rawFields(sheet, plan, row) {
     const f = plan.kolommen[ci] || 'extra';
     const v = row.cells[ci];
     if (f === 'overslaan' || v === null || v === undefined) return;
-    if (f === 'extra') {
+    if (f === 'extra' || f === 'foto') {
       const t = cellText(v);
-      if (t && !/nophoto/i.test(t)) extra[col.header] = t;
+      if (t && !/nophoto/i.test(t)) extra[f === 'foto' ? 'Foto' : col.header] = t;
       return;
     }
     if (out[f] === undefined) out[f] = v;
@@ -442,7 +445,7 @@ Bekijk elk blad en geef per blad terug:
 - "reden": in één zin waarom (Nederlands, voor de gebruiker).
 - "kolommen": voor ELKE kolom (letter) het veld. Kijk naar de inhoud, niet alleen naar de kop: in een bandenhotellijst
   is "Merk" vaak het merk van de auto (veld auto) en niet van de band. Gebruik voor het bandenhotel bij een vrije-tekstkolom
-  met profieldiepte het veld "profiel". Kolommen met fotopaden, QR-codes e.d. naar "extra". Onbekende betekenis: "extra".
+  met profieldiepte het veld "profiel". Kolommen met fotobestanden/-paden naar "foto" (de foto's kunnen daarna worden gekoppeld); QR-codes e.d. naar "extra". Onbekende betekenis: "extra".
 - "waarden": schrijfwijzen gelijktrekken voor de velden ${VALUE_FIELDS.join(', ')}: alleen waarden die moeten veranderen,
   met "van" precies zoals in de lijst. Voeg hoofdlettervarianten en duidelijke synoniemen samen ("Blauwe Container" en
   "Blauwe container"; "ZOMER" -> "Zomer"; "All" -> "All season"). Seizoen als "Zomer", "Winter" of "All season"; laat

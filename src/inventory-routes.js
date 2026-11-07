@@ -10,6 +10,7 @@ const sheets = require('./sheet-import');
 const importer = require('./import');
 const events = require('./events');
 const orders = require('./orders');
+const photos = require('./photos');
 
 module.exports = function register(app, { flash, wrap }) {
   const announce = (req, area, extra = {}) =>
@@ -26,7 +27,7 @@ module.exports = function register(app, { flash, wrap }) {
     const locatie = String(req.query.locatie || '');
     res.render('tyres', {
       title: soort === 'opslag' ? 'Overige bandenopslag' : 'Bandenhotel', soort, q, status, seizoen, locatie, SOORTEN: inv.TYRE_SOORTEN,
-      tyres: inv.searchTyres({ soort, q, status, seizoen, locatie }),
+      tyres: inv.searchTyres({ soort, q, status, seizoen, locatie }), fotos: photos.firstPhotos('tyre'),
       counts: inv.tyreCounts(soort),
       locaties: inv.distinct('tyre_storage', 'locatie', `AND status = 'opgeslagen' AND soort = '${soort}'`),
       seizoenen: inv.distinct('tyre_storage', 'seizoen', `AND soort = '${soort}'`),
@@ -41,6 +42,7 @@ module.exports = function register(app, { flash, wrap }) {
       extra: inv.parseExtra(data.extra),
       customer: data.plate_key ? db.prepare('SELECT id, naam FROM customers WHERE plate_key = ?').get(data.plate_key) : null,
       others: data.plate_key ? inv.tyresForPlate(data.plate_key).filter((t) => !tyre || t.id !== tyre.id) : [],
+      photoList: tyre ? photos.list('tyre', tyre.id) : [], photoOwner: tyre ? { type: 'tyre', id: tyre.id } : null, fotos: photos.firstPhotos('tyre'),
     });
   }
 
@@ -66,7 +68,8 @@ module.exports = function register(app, { flash, wrap }) {
   app.get('/bandenhotel/klant/:kenteken', (req, res) => {
     const c = db.prepare('SELECT naam, tel_prive, tel_zaak, merk_type, kenteken FROM customers WHERE plate_key = ?').get(plateKey(req.params.kenteken));
     const stored = inv.tyresForPlate(plateKey(req.params.kenteken)).filter((t) => t.status === 'opgeslagen');
-    res.json({ found: Boolean(c), naam: c ? c.naam : '', telefoon: c ? c.tel_prive || c.tel_zaak : '', auto: c ? c.merk_type : '', kenteken: c ? c.kenteken : '', opgeslagen: stored.length });
+    const pi = require('./plates').plateInfo(req.params.kenteken);
+    res.json({ country: pi.country, formatted: pi.country ? pi.parts.join('-') : '', found: Boolean(c), naam: c ? c.naam : '', telefoon: c ? c.tel_prive || c.tel_zaak : '', auto: c ? c.merk_type : '', kenteken: c ? c.kenteken : '', opgeslagen: stored.length });
   });
 
   app.post('/bandenhotel', (req, res) => {
@@ -124,6 +127,7 @@ module.exports = function register(app, { flash, wrap }) {
   app.post('/bandenhotel/:id/verwijderen', auth.requireAdmin, (req, res) => {
     const tyre = inv.getTyre(req.params.id);
     if (tyre) {
+      photos.removeFor('tyre', tyre.id);
       inv.deleteTyre(tyre.id);
       announce(req, 'bandenhotel', { id: tyre.id });
       flash(req, 'ok', 'De bandenset is verwijderd.');
@@ -140,7 +144,7 @@ module.exports = function register(app, { flash, wrap }) {
     const alleen = req.query.alleen === '1';
     res.render('stock', {
       title: soort === 'band' ? 'Voorraad banden' : 'Voorraad onderdelen', soort, q, type, locatie, alleen,
-      items: inv.searchStock({ soort, q, type, locatie, alleen }),
+      items: inv.searchStock({ soort, q, type, locatie, alleen }), fotos: photos.firstPhotos('stock'),
       counts: inv.stockCounts(), SOORTEN: inv.SOORTEN,
       // Bij banden: ook laten zien hoeveel sets met deze zoekterm in de overige opslag liggen (noodbanden).
       opslagMatches: soort === 'band' && q ? inv.searchTyres({ soort: 'opslag', q, status: 'opgeslagen' }).length : 0,
@@ -154,6 +158,7 @@ module.exports = function register(app, { flash, wrap }) {
       title: item ? (data.soort === 'band' ? `Band ${item.maat || item.merk}` : `Onderdeel ${item.nummer || item.oe_nummer || item.type || item.id}`)
         : data.soort === 'band' ? 'Band toevoegen' : 'Onderdeel toevoegen',
       item, d: data, error, SEASONS: inv.SEASONS, SOORTEN: inv.SOORTEN, extra: inv.parseExtra(data.extra),
+      photoList: item ? photos.list('stock', item.id) : [], photoOwner: item ? { type: 'stock', id: item.id } : null,
       types: inv.distinct('stock_items', 'type', `AND soort = '${data.soort}'`),
       merken: inv.distinct('stock_items', 'merk', `AND soort = '${data.soort}'`),
       locaties: inv.distinct('stock_items', 'locatie'),
@@ -204,12 +209,54 @@ module.exports = function register(app, { flash, wrap }) {
   app.post('/voorraad/:id/verwijderen', auth.requireAdmin, (req, res) => {
     const item = inv.getStock(req.params.id);
     if (item) {
+      photos.removeFor('stock', item.id);
       inv.deleteStock(item.id);
       announce(req, 'voorraad', { id: item.id });
       flash(req, 'ok', 'Verwijderd uit de voorraad.');
     }
     res.redirect(`/voorraad?soort=${item ? item.soort : 'onderdeel'}`);
   });
+
+  /* ================= foto's ================= */
+  // Vóór de upload-route: anders vangt /fotos/:type/:id ook /fotos/12/verwijderen af.
+  app.post('/fotos/:id/verwijderen', (req, res) => {
+    const p = photos.remove(req.params.id);
+    if (p) announce(req, p.owner_type === 'tyre' ? 'bandenhotel' : 'voorraad', { id: p.owner_id });
+    if (wantsJson(req)) return res.json({ ok: Boolean(p) });
+    flash(req, 'ok', 'Foto verwijderd.');
+    res.redirect(p ? (p.owner_type === 'tyre' ? `/bandenhotel/${p.owner_id}` : `/voorraad/${p.owner_id}`) : '/');
+  });
+
+  // Uploaden: de browser verkleint de foto en stuurt een grote en een kleine versie (JSON met data-URL's).
+  app.post('/fotos/:type/:id', express.json({ limit: '14mb' }), (req, res) => {
+    const { type } = req.params;
+    const id = Number(req.params.id);
+    try {
+      const b = req.body || {};
+      const r = photos.add({ type, id, full: b.full, thumb: b.thumb, name: b.name, ref: b.ref, width: b.width, height: b.height, userId: req.user.id });
+      if (!r.existed) announce(req, type === 'tyre' ? 'bandenhotel' : 'voorraad', { id, foto: r.id });
+      res.json({ ok: true, id: r.id, existed: r.existed });
+    } catch (err) {
+      if (!(err instanceof photos.PhotoError)) console.error(err);
+      res.status(400).json({ error: err instanceof photos.PhotoError ? err.message : 'De foto kon niet worden opgeslagen.' });
+    }
+  });
+  app.get('/fotos/:id/:size', (req, res) => {
+    const p = photos.get(req.params.id);
+    if (!p || !['full', 'thumb'].includes(req.params.size)) return res.status(404).end();
+    let buf;
+    try { buf = require('node:fs').readFileSync(photos.filePath(p, req.params.size)); } catch { return res.status(404).end(); }
+    // Een foto verandert nooit (nieuwe foto = nieuw nummer): lang bewaren mag.
+    res.set({ 'Content-Type': p.media_type, 'Cache-Control': 'private, max-age=31536000, immutable' });
+    if (req.query.download) res.attachment(p.name || `foto-${p.id}.jpg`);
+    res.send(buf);
+  });
+  // Foto's die bij een Excel-lijst horen (bijv. de map klanten_Images) in één keer koppelen.
+  app.get('/importeren/fotos', auth.requireAdmin, (req, res) => {
+    const r = photos.references();
+    res.render('import-photos', { title: "Foto's koppelen", total: r.total, done: r.done, files: Object.keys(r.refs).length, stats: photos.stats() });
+  });
+  app.get('/importeren/fotos/verwijzingen', auth.requireAdmin, (req, res) => res.json(photos.references()));
 
   /* ================= Excel-import ================= */
   app.get('/importeren/excel', auth.requireAdmin, (req, res) => {
@@ -269,7 +316,9 @@ module.exports = function register(app, { flash, wrap }) {
     if (r.bandenhotel || r.bandenopslag || r.bijgewerkt) announce(req, 'bandenhotel');
     if (r.klantenNieuw || r.klantenAangevuld) events.broadcast({ type: 'data', area: 'klanten', by: req.user.name, byId: req.user.id });
     if (r.onderdelen || r.banden) announce(req, 'voorraad');
-    flash(req, 'ok', parts.length ? `Import voltooid: ${parts.join(', ')}.` : 'Er is niets geïmporteerd (geen rijen aangevinkt).');
+    const refs = photos.references();
+    const fotoHint = refs.total > refs.done ? ` Deze lijst verwijst naar ${refs.total - refs.done} foto's: koppel ze via Importeren → Foto's koppelen.` : '';
+    flash(req, 'ok', (parts.length ? `Import voltooid: ${parts.join(', ')}.` : 'Er is niets geïmporteerd (geen rijen aangevinkt).') + fotoHint);
     res.redirect(r.bandenhotel || r.bijgewerkt ? '/bandenhotel' : r.bandenopslag ? '/bandenhotel?soort=opslag' : r.banden && !r.onderdelen ? '/voorraad?soort=band' : r.onderdelen ? '/voorraad' : '/importeren/excel');
   });
   app.post('/importeren/excel/:id/annuleren', auth.requireAdmin, (req, res) => {

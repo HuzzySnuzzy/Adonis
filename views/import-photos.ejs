@@ -1,0 +1,46 @@
+<%- include('/partials/head') %>
+<main class="page narrow import-page">
+  <%- include('/partials/import-tabs', { active: 'fotos' }) %>
+  <h1>Foto's koppelen</h1>
+  <p class="muted">Verwijst een geïmporteerde Excel-lijst naar foto's (bijvoorbeeld <code>klanten_Images/azx1.Foto.143052.jpg</code>)?
+    Kies dan hier de map met die foto's. ADONIS zoekt bij elke foto de juiste bandenset of het juiste onderdeel op
+    bestandsnaam en voegt hem toe. Al gekoppelde foto's worden overgeslagen, dus je kunt dit gerust nog een keer doen.</p>
+
+  <section class="card" id="linkCard" data-csrf="<%= csrf %>">
+    <% if (!total) { %>
+      <p><strong>Er zijn geen fotoverwijzingen gevonden.</strong></p>
+      <p class="muted small">Importeer eerst een Excel-lijst met een kolom met fotonamen (bijv. "Foto"). Losse foto's voeg je toe
+        op de pagina van een bandenset of onderdeel.</p>
+    <% } else { %>
+      <p class="link-stats"><strong><%= done %></strong> van <strong><%= total %></strong> verwijzingen hebben al een foto
+        <span class="muted small">(<%= files %> verschillende bestandsnamen)</span>.</p>
+      <div class="capture-buttons">
+        <label class="btn btn-primary btn-big">
+          <input type="file" id="dirInput" webkitdirectory multiple hidden>
+          Map kiezen
+        </label>
+        <label class="btn btn-big">
+          <input type="file" id="filesInput" accept="image/*,.zip,application/zip" multiple hidden>
+          Foto's of .zip kiezen
+        </label>
+      </div>
+      <p class="muted small">Tip: kies de map <em>klanten_Images</em> (of de map erboven). Een .zip-bestand mag ook.</p>
+      <div class="link-progress" id="linkProgress" hidden>
+        <progress id="linkBar" max="1" value="0"></progress>
+        <p id="linkText" aria-live="polite"></p>
+      </div>
+      <div id="linkResult" hidden>
+        <ul class="link-summary" id="linkSummary"></ul>
+        <details id="linkMissingWrap" hidden><summary>Foto's zonder bijbehorend record</summary><ul class="muted small" id="linkMissing"></ul></details>
+        <details id="linkErrorsWrap" hidden><summary>Niet gelukt</summary><ul class="small" id="linkErrors"></ul></details>
+      </div>
+    <% } %>
+  </section>
+  <p class="muted small">Foto's worden in de browser verkleind (langste zijde 1800 pixels) en bewaard in de datamap van ADONIS
+    (<code>fotos</code>), niet in de cloud. Nu opgeslagen: <%= stats.count %> foto's, <%= stats.mb.toString().replace('.', ',') %> MB.</p>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/vendor/fflate-unzip.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/import-photos.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

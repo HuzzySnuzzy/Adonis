@@ -45,6 +45,14 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Voorraad:** onderdelen en banden die op de zaak liggen, met aantal (knoppen − en +), merk, artikelnummer,
   origineel (OE) nummer, soort en locatie. Een nummer vind je ook als het anders is getypt: `1493001` vindt `1 493 001`,
   `A0031592603` vindt `A003.159.26.03`.
+- **Foto's** bij elke bandenset en elk voorraaditem: maak er een met de camera, kies er een paar, of sleep ze erop.
+  Ze worden in de browser verkleind (langste zijde 1800 px) en bewaard in de map `fotos` in de datamap. In de lijsten
+  staat een miniatuur; klik voor groot (met vorige/volgende). Verwijst een geïmporteerde Excel-lijst naar foto's
+  (bijv. `klanten_Images/azx1.Foto.143052.jpg`), dan koppel je de hele map (of een .zip) in één keer via
+  *Importeren → Foto's koppelen*; elke foto gaat op bestandsnaam naar het juiste record.
+- **Kentekenplaten** zien eruit als echte platen en zijn altijd even groot: Nederlands (geel, streepjes volgens de
+  sidecode, bijv. `SB846S` → `SB-846-S`) en **Duits** (wit, `KLE JB 789` met keurmerken). Bij een Duits kenteken wordt
+  de RDW niet geraadpleegd.
 - **Excel importeren met Claude als meekijker** (alleen beheerders): zet bestaande lijsten (.xlsx of .csv) over naar
   het bandenhotel, de overige opslag of de voorraad. Zie [Excel-import](#excel-import).
 - **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker / Neon* (dezelfde stijl als het 2049-thema van DiscordLinked, met opstartreeks en animaties; effecten *Volledig* of *Rustig*), handschrift of gewone letters

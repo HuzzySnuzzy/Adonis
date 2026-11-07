@@ -120,6 +120,7 @@ async function forCustomer(customer, { force = false } = {}) {
 
 /** Op de achtergrond verversen (bijv. na het opslaan van een werkopdracht). */
 function refreshInBackground(kenteken) {
+  if (!require('./plates').rdwApplicable(kenteken)) return;
   const c = db.prepare('SELECT * FROM customers WHERE plate_key = ?').get(plateKey(kenteken));
   if (c) forCustomer(c).catch(() => {});
 }
