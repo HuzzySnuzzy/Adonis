@@ -38,6 +38,7 @@ process.env.TRUST_PROXY = cfg.trustProxy ? 'true' : 'false';
 process.env.IMPORT_LIMIT_PER_DAY = String(cfg.importLimitPerDay);
 process.env.AUTO_UPDATE_ENABLED = cfg.autoUpdate ? 'true' : 'false';
 process.env.APP_PORT = String(cfg.port);
+process.env.UPDATE_REPO = cfg.updateRepo;
 if (cfg.anthropicApiKey) process.env.ANTHROPIC_API_KEY = cfg.anthropicApiKey;
 else delete process.env.ANTHROPIC_API_KEY;
 

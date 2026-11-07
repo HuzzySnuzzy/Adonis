@@ -4,3 +4,5 @@ dist/
 .cache/
 config.properties
 .env
+desktop/node_modules/
+desktop/dist/

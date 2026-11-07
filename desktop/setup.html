@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+  <title>ADONIS – verbinden</title>
+  <style>
+    :root { color-scheme: dark; --accent: #ffa630; --holo: #4fe3d6; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center; color: #f4e4cf;
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(80% 90% at 0% 100%, rgba(255, 110, 20, .25), transparent 60%),
+                  radial-gradient(60% 70% at 100% 0%, rgba(79, 227, 214, .12), transparent 60%), #0b0806;
+    }
+    .card {
+      width: min(460px, calc(100vw - 32px)); padding: 34px 32px 28px; position: relative;
+      background: rgba(16, 10, 6, .9); border: 1px solid rgba(255, 166, 48, .3); border-radius: 3px;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, .55);
+    }
+    .card::before, .card::after { content: ""; position: absolute; width: 18px; height: 18px; border: 2px solid var(--accent); }
+    .card::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+    .card::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+    .logo { display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 18px; }
+    .logo svg { width: 48px; height: 48px; filter: drop-shadow(0 0 10px rgba(255, 166, 48, .5)); }
+    .word { font-weight: 800; letter-spacing: .24em; font-size: 22px; }
+    .sub { font-size: 11px; letter-spacing: .18em; color: var(--holo); text-transform: uppercase; }
+    h1 { font-size: 15px; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 6px; color: #ffe2bd; }
+    p { margin: 0 0 16px; color: #c9b096; font-size: 14px; }
+    label { display: block; font-size: 13px; color: #c9b096; margin-bottom: 6px; }
+    input {
+      width: 100%; padding: 11px 12px; font: inherit; color: #f4e4cf; background: rgba(0, 0, 0, .4);
+      border: 1px solid #8a6038; border-bottom: 2px solid var(--accent); border-radius: 2px; outline: none;
+    }
+    input:focus { border-color: var(--holo); box-shadow: 0 0 0 3px rgba(79, 227, 214, .22); }
+    button {
+      margin-top: 16px; width: 100%; padding: 11px; font: 700 13px system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase;
+      color: #140a03; background: #ffa21f; border: 0; border-radius: 2px; cursor: pointer; box-shadow: 0 0 14px rgba(255, 166, 48, .35);
+    }
+    button:disabled { opacity: .6; cursor: wait; }
+    button.ghost { background: transparent; color: #f4e4cf; border: 1px solid rgba(255, 166, 48, .55); box-shadow: none; }
+    .msg { min-height: 1.4em; margin-top: 12px; font-size: 13px; color: #ff8a73; }
+    .msg.ok { color: #6fe0a0; }
+    .hint { margin-top: 18px; font-size: 12px; color: #8f7a62; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#ffa630"/><path d="M32 11 50.5 53h-9L32 30.5 22.5 53h-9z" fill="#fff"/><rect x="21" y="40" width="22" height="5.5" rx="2.75" fill="#4fe3d6"/></svg>
+      <div><div class="word">ADONIS</div><div class="sub">Werkopdrachten</div></div>
+    </div>
+    <h1 id="title">Verbinden met ADONIS</h1>
+    <p id="intro">Vul het adres in van jullie ADONIS-server. Dit hoeft maar één keer; daarna opent de app meteen.</p>
+    <form id="form" autocomplete="off">
+      <label for="url">Adres van de server</label>
+      <input id="url" name="url" placeholder="bijv. https://adonis.revnet.nl of 192.168.1.20:3000" required autofocus spellcheck="false">
+      <button id="go" type="submit">Verbinden</button>
+      <button id="back" class="ghost" type="button" hidden>Terug naar ADONIS</button>
+      <div class="msg" id="msg" role="status"></div>
+    </form>
+    <div class="hint">Tip: later wijzigen kan altijd met <b>Ctrl + ,</b></div>
+  </main>
+  <script src="setup.js"></script>
+</body>
+</html>

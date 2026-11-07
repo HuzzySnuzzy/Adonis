@@ -514,3 +514,8 @@
   :root[data-theme="neon"] .lbl { color: #2f2f2f; }
   :root[data-theme="neon"] .red-nr { color: #c8302c; font-family: "Courier New", monospace; font-weight: 400; }
 }
+
+/* Het datapakketje (en andere effecten) mag nooit buiten het scherm uitsteken: anders verschijnt er
+   een horizontale schuifbalk. Zelfde oplossing als in DiscordLinked (overflow-x: clip op de menubalk). */
+:root[data-theme="neon"] .topbar { overflow-x: clip; }
+:root[data-theme="neon"], :root[data-theme="neon"] body { overflow-x: clip; }

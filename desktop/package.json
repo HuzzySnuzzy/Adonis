@@ -1,0 +1,41 @@
+{
+  "name": "adonis-app",
+  "productName": "ADONIS",
+  "version": "1.0.0",
+  "description": "ADONIS Werkopdrachten \u2013 eigen venster voor de ADONIS-website",
+  "main": "main.js",
+  "private": true,
+  "author": "ADONIS",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable --x64"
+  },
+  "build": {
+    "appId": "nl.adonis.werkopdrachten",
+    "productName": "ADONIS",
+    "files": [
+      "main.js",
+      "preload.js",
+      "setup.html",
+      "setup.js",
+      "offline.html",
+      "offline.js",
+      "build/icon.png"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "ADONIS-app.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0"
+  }
+}

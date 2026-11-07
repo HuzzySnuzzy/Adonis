@@ -534,3 +534,6 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
 .topbar { view-transition-name: topbar; }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 .status-badge.in-list { margin-left: 0; }
+
+.app-actions { justify-content: flex-start; gap: .6rem; flex-wrap: wrap; }
+.app-download .sys-steps { padding-left: 1.2rem; line-height: 1.6; }

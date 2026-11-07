@@ -584,9 +584,22 @@ function setThemeCookie(res, theme) {
   // Onthoudt het thema op dit apparaat, zodat ook de inlogpagina in het gekozen thema verschijnt.
   res.cookie('wo_theme', theme, { maxAge: 365 * 24 * 3600 * 1000, httpOnly: true, sameSite: 'lax', secure: FORCE_SECURE || res.req.secure });
 }
-function renderSettings(res, { error = null, status = 200 } = {}) {
-  res.status(status).render('settings', { title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS });
+function serverOrigin(req) {
+  return `${req.protocol}://${req.get('host')}`;
 }
+function renderSettings(res, { error = null, status = 200 } = {}) {
+  const repo = process.env.UPDATE_REPO || updater.DEFAULT_REPO;
+  res.status(status).render('settings', {
+    title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS,
+    serverUrl: serverOrigin(res.req),
+    appDownload: `https://github.com/${repo}/releases/latest/download/ADONIS-app.exe`,
+  });
+}
+// Instellingenbestand voor de ADONIS-app: naast ADONIS-app.exe zetten, dan vraagt de app niets.
+app.get('/instellingen/adonis-app.json', (req, res) => {
+  res.set('Content-Disposition', 'attachment; filename="adonis-app.json"');
+  res.json({ url: serverOrigin(req) });
+});
 app.get('/instellingen', (req, res) => renderSettings(res));
 app.get('/account', (req, res) => res.redirect('/instellingen'));
 

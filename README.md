@@ -70,6 +70,17 @@ De bestanden staan bij elke [release](../../releases) (`werkopdrachten.exe`, `we
 Het venster toont ook het adres voor andere apparaten, bijv. `http://192.168.1.20:3000`.
 Automatisch starten met Windows: zet een snelkoppeling naar de .exe in de map `shell:startup`.
 
+### ADONIS-app (Windows)
+
+`ADONIS-app.exe` (bij elke release) is een los programma dat alleen ADONIS toont, in een eigen venster met eigen
+icoon: geen tabbladen of adresbalk. Bij de eerste start vraagt de app het adres van de server en onthoudt dat (plus
+inlog, venstergrootte en -positie). Links naar andere websites openen in de gewone browser.
+
+- Vooraf instellen: zet `adonis-app.json` (`{"url": "https://adonis.voorbeeld.nl"}`) naast de .exe. ADONIS levert dit
+  bestand kant-en-klaar via **Instellingen → ADONIS-app voor Windows**.
+- `Ctrl + ,` adres wijzigen · `Ctrl + R` herladen · `F11` volledig scherm · `Alt` toont het menu.
+- Broncode in `desktop/` (Electron); gebouwd door GitHub Actions.
+
 ### Linux
 
 ```bash
