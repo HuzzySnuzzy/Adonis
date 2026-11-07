@@ -631,7 +631,7 @@ function serverOrigin(req) {
 function renderSettings(res, { error = null, status = 200 } = {}) {
   const repo = process.env.UPDATE_REPO || updater.DEFAULT_REPO;
   res.status(status).render('settings', {
-    title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS,
+    title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS, SECRET_THEMES: auth.SECRET_THEMES,
     serverUrl: serverOrigin(res.req),
     // De ADONIS-app zet "ADONIS-app/<versie>" in de user-agent.
     inApp: /ADONIS-app\//.test(res.req.get('user-agent') || ''),
@@ -649,6 +649,8 @@ app.get('/account', (req, res) => res.redirect('/instellingen'));
 
 app.post('/instellingen', (req, res) => {
   const prefs = auth.savePrefs(req.user.id, {
+    // Eerst de geheime thema's (aan/uit), dan het thema: zo kan beide in één keer.
+    secret: [].concat(req.body.secret || []).includes('on') ? 'on' : 'off',
     theme: req.body.theme, ink: req.body.ink, start: req.body.start, fx: req.body.fx,
   });
   setThemeCookie(res, prefs.theme);
@@ -656,14 +658,13 @@ app.post('/instellingen', (req, res) => {
   res.redirect('/instellingen');
 });
 
-// Snel wisselen via de knop in de menubalk: systeem → licht → donker → systeem.
 // Thema kiezen via het menu in de menubalk (JSON), of zonder JavaScript: naar het volgende thema.
 app.post('/instellingen/thema', (req, res) => {
   const changes = {};
   if (auth.PREF_OPTIONS.theme.includes(req.body.theme)) changes.theme = req.body.theme;
   if (auth.PREF_OPTIONS.fx.includes(req.body.fx)) changes.fx = req.body.fx;
   if (!Object.keys(changes).length) {
-    const order = auth.PREF_OPTIONS.theme;
+    const order = auth.visibleThemes(req.user.prefs);
     changes.theme = order[(order.indexOf(req.user.prefs.theme) + 1) % order.length];
   }
   const prefs = auth.savePrefs(req.user.id, changes);

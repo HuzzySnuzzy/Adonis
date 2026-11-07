@@ -4,7 +4,7 @@
  *               waar ze waren in plaats van opnieuw te beginnen.
  * nav-internal: binnen ADONIS genavigeerd (geen opstartanimatie; wel de korte "pagina-wissel"-effecten).
  * data-hidden:  tabblad niet zichtbaar -> alle animaties pauzeren (scheelt rekenkracht).
- * data-boot:    thema Neon of Black Ice met volledige effecten: eenmaal per tabblad de opstartreeks (neon.js / ice.js). */
+ * data-boot:    opstartanimatie (Effecten: Volledig), eenmaal per tabblad; boot.js, neon.js of ice.js speelt hem af. */
 (function () {
   var d = document.documentElement;
   d.style.setProperty('--clock', ((Date.now() / 1000) % 86400).toFixed(3));
@@ -15,8 +15,9 @@
 
   var still = d.getAttribute('data-fx') === 'calm'
     || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  var fxTheme = d.getAttribute('data-theme');
-  if ((fxTheme === 'neon' || fxTheme === 'ice') && !still) {
+  // Opstartanimatie: eenmaal per tabblad, bij elk thema (Neon/Black Ice hebben een eigen reeks).
+  var fxTheme = d.getAttribute('data-theme') || 'system';
+  if (!still) {
     var seen = '1';
     var bootKey = 'adonis-' + fxTheme + '-boot';
     try { seen = sessionStorage.getItem(bootKey); } catch (e) { /* opslag geblokkeerd */ }

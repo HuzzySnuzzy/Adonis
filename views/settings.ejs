@@ -5,6 +5,7 @@
     { value: 'system', label: 'Systeem', help: 'Volgt de instelling van je apparaat' },
     { value: 'light', label: 'Licht', help: 'Altijd licht' },
     { value: 'dark', label: 'Donker', help: 'Altijd donker, prettig in een donkere werkplaats' },
+    { value: 'oled', label: 'OLED', help: 'Puur zwart: alles lijkt in de lucht te zweven' },
     { value: 'neon', label: 'Neon', help: 'Futuristisch: neon, hologrammen en animaties' },
     { value: 'ice', label: 'Black Ice', help: 'ICE·XVIII: zwart kristalrooster, ionensporen en rijp' },
   ];
@@ -51,34 +52,39 @@
 
     <section class="card">
       <h2>Thema</h2>
-      <div class="choice-grid five" role="radiogroup" aria-label="Thema">
-        <% for (const t of THEMES) { %>
-        <label class="choice">
+      <div class="choice-grid themes" role="radiogroup" aria-label="Thema">
+        <% for (const t of THEMES) { const secret = SECRET_THEMES.includes(t.value); %>
+        <label class="choice<%= secret ? ' secret-theme' : '' %>" <%= secret ? 'data-secret-theme' : '' %> <%= secret && p.secret !== 'on' ? 'hidden' : '' %>>
           <input type="radio" name="theme" value="<%= t.value %>" <%= p.theme === t.value ? 'checked' : '' %>>
           <span class="choice-body">
             <span class="theme-preview theme-preview-<%= t.value %>" aria-hidden="true">
               <span class="tp-bar"></span><span class="tp-card"><span></span><span></span><span></span></span>
             </span>
-            <span class="choice-label"><%= t.label %></span>
+            <span class="choice-label"><%= t.label %><% if (secret) { %> <span class="secret-tag" title="Geheim thema">geheim</span><% } %></span>
             <span class="choice-help"><%= t.help %></span>
           </span>
         </label>
         <% } %>
       </div>
+      <label class="check secret-toggle">
+        <input type="hidden" name="secret" value="off">
+        <input type="checkbox" name="secret" value="on" data-secret-toggle <%= p.secret === 'on' ? 'checked' : '' %>>
+        <span><b>Geheime thema's</b> <span class="muted small">– toont ook Neon en Black Ice (met veel animaties)</span></span>
+      </label>
       <p class="muted small">Tip: met de themaknop naast “Nieuwe werkopdracht” in de menubalk kies je snel een thema.</p>
     </section>
 
     <section class="card">
-      <h2>Effecten (thema's Neon en Black Ice)</h2>
-      <p class="muted small">Hoeveel beweging de thema's Neon en Black Ice laten zien. Staat je apparaat op “minder beweging”, dan staat alles altijd stil.</p>
+      <h2>Effecten</h2>
+      <p class="muted small">Hoeveel beweging je ziet: de opstartanimatie bij elk thema, en de bewegende achtergronden van de geheime thema's. Staat je apparaat op “minder beweging”, dan staat alles altijd stil.</p>
       <div class="choice-grid two" role="radiogroup" aria-label="Effecten">
         <label class="choice">
           <input type="radio" name="fx" value="full" <%= (p.fx || 'full') === 'full' ? 'checked' : '' %>>
-          <span class="choice-body"><span class="choice-label">Volledig</span><span class="choice-help">Opstartreeks, regen, zoeklicht, scanstraal en glitches</span></span>
+          <span class="choice-body"><span class="choice-label">Volledig</span><span class="choice-help">Opstartanimatie en alle bewegende effecten</span></span>
         </label>
         <label class="choice">
           <input type="radio" name="fx" value="calm" <%= p.fx === 'calm' ? 'checked' : '' %>>
-          <span class="choice-body"><span class="choice-label">Rustig</span><span class="choice-help">Dezelfde stijl, veel minder beweging (fijn op oudere computers)</span></span>
+          <span class="choice-body"><span class="choice-label">Rustig</span><span class="choice-help">Geen opstartanimatie, veel minder beweging (fijn op oudere computers)</span></span>
         </label>
       </div>
     </section>

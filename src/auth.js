@@ -17,25 +17,39 @@ if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'prefer
 }
 
 const PREF_OPTIONS = {
-  theme: ['system', 'light', 'dark', 'neon', 'ice'],
+  theme: ['system', 'light', 'dark', 'oled', 'neon', 'ice'],
   fx: ['full', 'calm'],
   ink: ['hand', 'plain'],
   start: ['/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw', '/bandenhotel', '/voorraad'],
+  secret: ['off', 'on'],
 };
-const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full' };
+const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off' };
+/** Thema's die alleen zichtbaar zijn met de voorkeur "Geheime thema's". */
+const SECRET_THEMES = ['neon', 'ice'];
+/** Thema's die iemand met deze voorkeuren kan kiezen (in volgorde van het menu). */
+function visibleThemes(prefs) {
+  return PREF_OPTIONS.theme.filter((t) => prefs.secret === 'on' || !SECRET_THEMES.includes(t));
+}
 
 function parsePrefs(json) {
   let raw = {};
   try { raw = JSON.parse(json || '{}'); } catch { /* standaard */ }
   const out = {};
   for (const [k, opts] of Object.entries(PREF_OPTIONS)) out[k] = opts.includes(raw[k]) ? raw[k] : PREF_DEFAULTS[k];
+  // Wie al een geheim thema gebruikte (van vóór deze voorkeur), houdt het: geheime thema's staan dan aan.
+  if (raw.secret === undefined && SECRET_THEMES.includes(out.theme)) out.secret = 'on';
+  if (out.secret !== 'on' && SECRET_THEMES.includes(out.theme)) out.theme = 'system';
   return out;
 }
 
 function savePrefs(userId, changes) {
   const row = db.prepare('SELECT preferences FROM users WHERE id = ?').get(userId);
   const prefs = parsePrefs(row && row.preferences);
+  const before = prefs.theme;
   for (const [k, v] of Object.entries(changes)) if (PREF_OPTIONS[k] && PREF_OPTIONS[k].includes(v)) prefs[k] = v;
+  // Geheime thema's uit: een geheim thema kan niet worden gekozen (het huidige thema blijft),
+  // en wie de voorkeur uitzet terwijl een geheim thema actief is, gaat naar Systeem.
+  if (prefs.secret !== 'on' && SECRET_THEMES.includes(prefs.theme)) prefs.theme = SECRET_THEMES.includes(before) ? 'system' : before;
   db.prepare('UPDATE users SET preferences = ? WHERE id = ?').run(JSON.stringify(prefs), userId);
   return prefs;
 }
@@ -141,7 +155,7 @@ function loadUser(req, res, next) {
   if (!req.session.csrf) req.session.csrf = crypto.randomBytes(24).toString('hex');
   res.locals.user = req.user;
   // Thema: van de gebruiker, of (op de inlogpagina) van de laatst gekozen instelling op dit apparaat.
-  const cookieTheme = /(?:^|;\s*)wo_theme=(light|dark|system|neon|ice)/.exec(req.headers.cookie || '');
+  const cookieTheme = /(?:^|;\s*)wo_theme=(light|dark|system|oled|neon|ice)/.exec(req.headers.cookie || '');
   res.locals.prefs = req.user ? req.user.prefs : { ...PREF_DEFAULTS, theme: cookieTheme ? cookieTheme[1] : 'system' };
   res.locals.csrf = req.session.csrf;
   next();
@@ -205,7 +219,7 @@ setInterval(() => {
 }, WINDOW).unref();
 
 module.exports = {
-  PREF_OPTIONS, savePrefs, ROLES, setRole,
+  PREF_OPTIONS, SECRET_THEMES, visibleThemes, savePrefs, ROLES, setRole,
   userCount, findUserById, verifyLogin, createUser, setPassword, checkPassword,
   loadUser, requireLogin, requireAdmin, requireOwner, csrfProtection,
   loginBlocked, loginFailed, loginSucceeded,

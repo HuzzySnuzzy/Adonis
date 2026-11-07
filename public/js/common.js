@@ -42,3 +42,18 @@ if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
   if (window.MutationObserver) new MutationObserver(() => requestAnimationFrame(all)).observe(document.body, { childList: true, subtree: true });
   all();
 })();
+// Instellingen: "Geheime thema's" aan/uit toont of verbergt Neon en Black Ice meteen.
+(function () {
+  const toggle = document.querySelector('[data-secret-toggle]');
+  if (!toggle) return;
+  toggle.addEventListener('change', () => {
+    document.querySelectorAll('[data-secret-theme]').forEach((el) => {
+      el.hidden = !toggle.checked;
+      const radio = el.querySelector('input[type=radio]');
+      if (!toggle.checked && radio && radio.checked) {
+        const sys = document.querySelector('input[name=theme][value=system]');
+        if (sys) sys.checked = true;
+      }
+    });
+  });
+})();

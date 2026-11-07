@@ -63,8 +63,8 @@
     if (theme === 'system') root.removeAttribute('data-theme');
     else root.setAttribute('data-theme', theme);
     const meta = document.querySelector('meta[name="color-scheme"]');
-    if (meta) meta.content = theme === 'system' ? 'light dark' : theme;
-    const label = { system: 'Systeem', light: 'Licht', dark: 'Donker', neon: 'Neon', ice: 'Black Ice' }[theme];
+    if (meta) meta.content = theme === 'system' ? 'light dark' : theme === 'oled' ? 'dark' : theme;
+    const label = { system: 'Systeem', light: 'Licht', dark: 'Donker', oled: 'OLED', neon: 'Neon', ice: 'Black Ice' }[theme];
     btn.title = 'Thema: ' + label;
     btn.setAttribute('aria-label', 'Thema kiezen (nu ' + label + ')');
     close(true);

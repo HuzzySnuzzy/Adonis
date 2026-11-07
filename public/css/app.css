@@ -831,3 +831,147 @@ table.list.stock-list .summary { max-width: 30ch; }
 .season { overflow-wrap: anywhere; max-width: 12ch; }
 table.list.stock-list td { overflow-wrap: anywhere; }
 .season { overflow-wrap: normal; max-width: none; }
+
+/* =====================================================================
+   Thema OLED: puur zwart. Panelen hebben geen zichtbare rand maar zweven: een zwakke gloed eronder,
+   een lichtrand bovenaan en ze komen iets omhoog als je eroverheen gaat. Zuinig op een OLED-scherm:
+   geen bewegende achtergrond.
+   ===================================================================== */
+:root[data-theme="oled"] {
+  --bg: #000;
+  --surface: #0a0a0c; --surface-2: #101013; --hover: rgba(255,255,255,.04);
+  --text: #f4f4f6; --muted: #8c8c96;
+  --border: rgba(255,255,255,.08); --border-soft: rgba(255,255,255,.05);
+  --input-bg: #0c0c0f;
+  --brand: #3d63ff; --accent: #f0c35a; --primary: #4a72ff; --primary-hover: #6b8cff; --link: #94b0ff;
+  --danger: #ff8a80; --danger-border: rgba(255,138,128,.35);
+  --ok-bg: rgba(80,220,140,.1); --ok-text: #86e3ad;
+  --err-bg: rgba(255,120,110,.1); --err-text: #ffb1a8;
+  --warn-bg: rgba(255,200,90,.1); --warn-text: #f5d07e; --warn-border: rgba(255,200,90,.3);
+  --code-bg: rgba(255,255,255,.07);
+  --shadow: 0 30px 60px -30px rgba(74,114,255,.35);
+  --topbar-bg: #000; --topbar-text: #b9b9c3; --topbar-hover: rgba(255,255,255,.06); --topbar-active: rgba(255,255,255,.09);
+  --ordernr: #ff8a7a;
+  --paper: #060608; --form-grey: rgba(255,255,255,.045); --form-grey-dark: rgba(255,255,255,.08);
+  --label: #b4b4be; --ink: #a9c1ff; --red: #ff8a7a;
+  --ink-hover: rgba(255,255,255,.03); --ink-focus: rgba(148,176,255,.1); --placeholder: rgba(169,193,255,.3);
+  --box-bg: #111115;
+  --box-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 2.5 14 13.5M13.5 2 2.5 14' stroke='%23a9c1ff' stroke-width='2.4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+  --tread-bad: rgba(255,110,100,.25); --tread-warn: rgba(255,200,90,.22);
+  --desk: #000; --toolbar-bg: rgba(0,0,0,.92); --wo-title: #f4f4f6;
+  --float: inset 0 1px 0 rgba(255,255,255,.07), 0 0 0 1px rgba(255,255,255,.035), 0 28px 50px -26px rgba(74,114,255,.45), 0 10px 30px -18px rgba(150,170,255,.25);
+  --float-hover: inset 0 1px 0 rgba(255,255,255,.1), 0 0 0 1px rgba(255,255,255,.06), 0 40px 70px -28px rgba(74,114,255,.6), 0 14px 40px -18px rgba(150,170,255,.35);
+  --sheet-shadow: var(--float);
+  --radius: 14px;
+  color-scheme: dark;
+  background: #000;
+}
+:root[data-theme="oled"] body { background: #000; }
+:root[data-theme="oled"] .topbar { background: rgba(0,0,0,.9); border-bottom: 0; box-shadow: 0 1px 0 rgba(255,255,255,.06), 0 18px 40px -30px rgba(74,114,255,.5); }
+:root[data-theme="oled"] .mainnav a { border-radius: 999px; }
+:root[data-theme="oled"] .mainnav a.active { background: rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 8px 20px -10px rgba(74,114,255,.8); }
+/* Zwevende panelen */
+:root[data-theme="oled"] :where(.card, .table-wrap, .customer-head, .rdw-card, .empty, .auth-card, .sheet, .review-bar, .theme-menu) {
+  background: linear-gradient(180deg, #0e0e11, #08080a); border: 0; border-radius: var(--radius); box-shadow: var(--float);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s cubic-bezier(.2,.8,.2,1);
+}
+:root[data-theme="oled"] :where(.card, .customer-head, .rdw-card, .empty, .auth-card):hover { transform: translateY(-3px); box-shadow: var(--float-hover); }
+:root[data-theme="oled"] .table-wrap:hover { box-shadow: var(--float-hover); }
+:root[data-theme="oled"] .empty { background: transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+:root[data-theme="oled"] :where(.apk-box, .choice-body, .photo, .review-block, .claude-note) { border-color: rgba(255,255,255,.07); background: #0b0b0e; border-radius: 10px; }
+:root[data-theme="oled"] .choice:hover .choice-body { transform: translateY(-2px); box-shadow: var(--float); }
+:root[data-theme="oled"] .choice-body { transition: transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s; }
+:root[data-theme="oled"] .choice input:checked + .choice-body { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary), 0 18px 40px -20px rgba(74,114,255,.8); }
+/* Tabellen: haarlijnen, geen vlakken */
+:root[data-theme="oled"] table.list th { background: transparent; border-bottom-color: rgba(255,255,255,.08); }
+:root[data-theme="oled"] table.list td { border-bottom-color: rgba(255,255,255,.045); }
+:root[data-theme="oled"] table.list.clickable tbody tr:hover { background: rgba(255,255,255,.035); }
+/* Knoppen: zweven met een gloed eronder */
+:root[data-theme="oled"] .btn { border-radius: 999px; border-color: rgba(255,255,255,.12); background: #0e0e12; transition: transform .2s, box-shadow .2s, background-color .2s; }
+:root[data-theme="oled"] .btn:hover:not(:disabled) { transform: translateY(-1px); background: #15151a; box-shadow: 0 10px 24px -14px rgba(150,170,255,.6); }
+:root[data-theme="oled"] .btn-primary { background: linear-gradient(180deg, #5a7fff, #3d63ff); border-color: transparent; box-shadow: 0 10px 26px -12px rgba(74,114,255,.9), inset 0 1px 0 rgba(255,255,255,.25); }
+:root[data-theme="oled"] .btn-primary:hover:not(:disabled) { background: linear-gradient(180deg, #6b8cff, #4a72ff); box-shadow: 0 16px 34px -12px rgba(74,114,255,1), inset 0 1px 0 rgba(255,255,255,.3); }
+:root[data-theme="oled"] .btn-ghost { background: transparent; border-color: transparent; box-shadow: none; }
+:root[data-theme="oled"] .btn-danger { background: transparent; }
+/* Velden */
+:root[data-theme="oled"] .page input:not([type=checkbox]):not([type=radio]):not(.ink):not(.plate-input), :root[data-theme="oled"] .auth-card input,
+:root[data-theme="oled"] .page select, :root[data-theme="oled"] .page textarea:not(.ink) {
+  border-radius: 10px; border-color: rgba(255,255,255,.08); background: #0c0c0f; box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+}
+:root[data-theme="oled"] .page input:focus-visible, :root[data-theme="oled"] .page select:focus-visible, :root[data-theme="oled"] .page textarea:focus-visible {
+  outline: none; border-color: rgba(148,176,255,.6); box-shadow: 0 0 0 4px rgba(74,114,255,.18), 0 12px 30px -16px rgba(74,114,255,.8);
+}
+:root[data-theme="oled"] .status-tabs a { border-radius: 999px; background: #0c0c0f; border-color: rgba(255,255,255,.08); }
+:root[data-theme="oled"] .status-tabs a.active { background: #f4f4f6; color: #000; border-color: #f4f4f6; box-shadow: 0 10px 24px -14px rgba(255,255,255,.7); }
+:root[data-theme="oled"] .flash, :root[data-theme="oled"] .alert { border-radius: 12px; box-shadow: var(--float); }
+:root[data-theme="oled"] .live-toast { border-radius: 12px; background: #0e0e12; box-shadow: var(--float-hover); }
+:root[data-theme="oled"] .plate { box-shadow: inset 0 0 0 .045em #1a1a1a, 0 8px 18px -10px rgba(247,198,0,.45); }
+:root[data-theme="oled"] .order-toolbar { background: rgba(0,0,0,.92); border-bottom-color: rgba(255,255,255,.06); }
+:root[data-theme="oled"] .app-footer { color: #55555d; }
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="oled"] * { transition-duration: 0s !important; }
+  :root[data-theme="oled"] :where(.card, .customer-head, .rdw-card, .empty, .auth-card, .choice-body, .btn):hover { transform: none; }
+}
+/* Voorbeeldtegel en kleurstaal */
+.theme-preview-oled { background: #000; }
+.theme-preview-oled .tp-bar { background: #000; border-bottom: 0; box-shadow: 0 1px 0 rgba(255,255,255,.08); }
+.theme-preview-oled .tp-card { background: linear-gradient(180deg, #121216, #08080a); border-radius: 8px; top: 22px; bottom: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 10px 16px -8px rgba(74,114,255,.7); }
+.theme-preview-oled .tp-card span { background: #2c2c33; }
+.theme-preview-oled .tp-card span:first-child { background: #f4f4f6; }
+.sw-oled { background: radial-gradient(60% 40% at 50% 85%, rgba(74,114,255,.9), transparent 70%), #000; box-shadow: inset 0 0 0 1px rgba(128,128,128,.5); }
+:root[data-theme="oled"] .theme-btn .ti-oled { display: block; }
+/* Thema-instellingen */
+.choice-grid.themes { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.choice[hidden] { display: none; }
+.secret-toggle { margin: .4rem 0 .6rem; padding: 0; align-items: baseline; }
+.secret-tag { font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; padding: .05rem .35rem; border-radius: 4px; background: var(--code-bg); color: var(--muted); vertical-align: middle; }
+
+/* =====================================================================
+   Opstartanimatie (Systeem, Licht, Donker, OLED): eenmaal per tabblad, ± 1,3 s.
+   Het logo bouwt zich op; daarna komen menubalk en pagina in beeld. Blokkeert nooit.
+   ===================================================================== */
+.app-boot {
+  position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; pointer-events: none;
+  background: var(--bg); animation: app-boot-out .45s cubic-bezier(.6,0,.2,1) .8s both;
+}
+.app-boot-logo { display: flex; align-items: center; gap: 18px; color: var(--text); }
+.app-boot-logo .logo-mark { width: 76px; height: 76px; animation: app-boot-mark .6s cubic-bezier(.2,.9,.2,1.15) both; filter: drop-shadow(0 12px 24px rgba(42,70,199,.35)); }
+.app-boot-logo .logo-mark rect:last-child { transform-box: fill-box; transform-origin: 0 50%; animation: app-boot-bar .35s cubic-bezier(.2,.8,.2,1) .4s both; }
+.app-boot-word { display: flex; font-weight: 800; font-size: 34px; letter-spacing: .22em; line-height: 1; }
+.app-boot-word span { display: inline-block; animation: app-boot-letter .45s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(.18s + var(--i, 0) * .05s); }
+.app-boot-sub { margin-top: 8px; font-size: 12px; letter-spacing: .5em; text-transform: uppercase; color: var(--muted); animation: app-boot-sub .6s cubic-bezier(.2,.8,.2,1) .45s both; }
+.app-boot-text { position: relative; overflow: hidden; padding: 4px 6px; }
+/* Een lichtstreep over de naam */
+.app-boot-text::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%);
+  transform: translateX(-120%); animation: app-boot-shine .7s ease .55s both; mix-blend-mode: overlay;
+}
+@keyframes app-boot-mark { from { opacity: 0; transform: scale(.55) rotate(-10deg); } to { opacity: 1; transform: none; } }
+@keyframes app-boot-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes app-boot-letter { from { opacity: 0; transform: translateY(14px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes app-boot-sub { from { opacity: 0; letter-spacing: 1.1em; } to { opacity: 1; letter-spacing: .5em; } }
+@keyframes app-boot-shine { to { transform: translateX(120%); } }
+@keyframes app-boot-out { to { opacity: 0; transform: scale(1.06); visibility: hidden; } }
+/* De pagina komt omhoog zodra het logo wegvaagt (ook zonder boot.js: de animatie eindigt zichtbaar). */
+:root[data-boot]:not([data-theme="neon"]):not([data-theme="ice"]) :is(main, .order-toolbar, .sheet-scroll, .flash, .app-footer) {
+  animation: app-boot-rise .6s cubic-bezier(.2,.8,.2,1) .85s both;
+}
+:root[data-boot]:not([data-theme="neon"]):not([data-theme="ice"]) .topbar { animation: app-boot-drop .5s cubic-bezier(.2,.8,.2,1) .75s both; }
+@keyframes app-boot-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes app-boot-drop { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: none; } }
+/* OLED: het logo zweeft op uit het zwart, met een gloed eronder; de pagina "landt" daarna. */
+:root[data-theme="oled"] .app-boot { background: #000; }
+:root[data-theme="oled"] .app-boot-logo { animation: app-boot-float 1.2s cubic-bezier(.2,.8,.2,1) both; }
+:root[data-theme="oled"] .app-boot-logo .logo-mark { filter: drop-shadow(0 22px 30px rgba(74,114,255,.65)); }
+:root[data-theme="oled"] .app-boot::after {
+  content: ""; position: absolute; left: 50%; top: calc(50% + 60px); width: 320px; height: 40px; margin-left: -160px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(74,114,255,.45), transparent); filter: blur(8px); animation: app-boot-shadow 1.2s cubic-bezier(.2,.8,.2,1) both;
+}
+:root[data-theme="oled"][data-boot] :is(main, .order-toolbar, .sheet-scroll) { animation-name: app-boot-land; }
+@keyframes app-boot-float { from { transform: translateY(26px); } to { transform: translateY(-4px); } }
+@keyframes app-boot-shadow { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: scale(1.1); } }
+@keyframes app-boot-land { from { opacity: 0; transform: translateY(28px) scale(.985); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .app-boot { display: none; } }
+@media print { .app-boot { display: none !important; } }
