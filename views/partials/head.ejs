@@ -19,12 +19,21 @@
   <% if (prefs.theme === 'neon') { %><link rel="stylesheet" href="/static/css/theme-neon.css?v=<%= assetVersion %>"><% } %>
 </head>
 <body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>"<%- user.can_invoice ? ' data-can-invoice="1"' : '' %><% } %>>
+<% if (prefs.theme === 'neon') { %>
+<div class="neon-bg no-print" aria-hidden="true">
+  <span class="orb orb-1"></span><span class="orb orb-2"></span><span class="orb orb-3"></span><span class="orb orb-4"></span>
+  <span class="holo-grid"></span><span class="dust dust-1"></span><span class="dust dust-2"></span>
+  <span class="shimmer"></span><span class="fog"></span><span class="rain rain-1"></span><span class="rain rain-2"></span>
+  <span class="hud hud-left">ADONIS // WERKPLAATS-07 // SEC 4·12·88 // LINK STABIEL</span>
+  <span class="hud hud-right">DIEPTE 880 // SIG NOMINAAL // KANAAL 2049</span>
+</div>
+<% } %>
 <% if (locals.user) { %>
 <header class="topbar no-print">
   <a class="brand" href="/" title="ADONIS – naar het overzicht"><%- include('/partials/logo') %></a>
   <nav class="mainnav">
     <a href="/" class="<%= path === '/' || path.startsWith('/klant') ? 'active' : '' %>">Klanten</a>
-    <a href="/werkopdrachten" class="<%= path === '/werkopdrachten' ? 'active' : '' %>">Alle werkopdrachten</a>
+    <a href="/werkopdrachten" class="<%= path === '/werkopdrachten' && !(locals.url || '').includes('status=klaar') ? 'active' : '' %>">Alle werkopdrachten</a>
     <% if (user.can_invoice) { %><a href="/werkopdrachten?status=klaar" class="<%= path === '/werkopdrachten' && locals.url && locals.url.includes('status=klaar') ? 'active' : '' %>">Facturatie<span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span></a><% } %>
     <a href="/importeren" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Foto importeren</a>
     <% if (user.is_admin) { %><a href="/gebruikers" class="<%= path === '/gebruikers' ? 'active' : '' %>">Gebruikers</a><% } %>

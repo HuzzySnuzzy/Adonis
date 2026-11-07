@@ -195,37 +195,41 @@
 
 /* ---------- tabellen ---------- */
 [data-theme="neon"] table.list th { background: rgba(61,224,230,.06); color: var(--neon-cyan); font-weight: 500; letter-spacing: .14em; }
-[data-theme="neon"] table.list.clickable tbody tr { position: relative; }
-[data-theme="neon"] table.list.clickable tbody tr:hover {
-  background: linear-gradient(90deg, rgba(255,157,61,.0) 0%, rgba(255,157,61,.16) 50%, rgba(255,157,61,0) 100%) -100% 0 / 60% 100% no-repeat, rgba(255,157,61,.05);
-  animation: neon-rowscan .9s ease-out forwards;
-  box-shadow: inset 3px 0 0 var(--neon-orange);
+/* Hover: alleen overgangen op de cellen – de opstartanimatie van de rij blijft ongemoeid */
+[data-theme="neon"] table.list tbody td {
+  transition: background-color .25s ease, color .25s ease, box-shadow .25s ease;
 }
-@keyframes neon-rowscan { to { background-position: 220% 0, 0 0; } }
+[data-theme="neon"] table.list.clickable tbody tr:hover td {
+  background-color: rgba(255,157,61,.07);
+  color: #fff;
+}
+[data-theme="neon"] table.list.clickable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--neon-orange), inset 14px 0 18px -14px rgba(255,157,61,.7); }
 [data-theme="neon"] .ordernr { color: var(--neon-orange); text-shadow: var(--glow-o); }
 
 /* ---------- knoppen ---------- */
 [data-theme="neon"] .btn {
   border-radius: 2px; text-transform: uppercase; letter-spacing: .1em; font-size: .82rem;
   background: rgba(61,224,230,.06); border: 1px solid rgba(61,224,230,.55); color: var(--neon-cyan);
-  transition: box-shadow .2s, background .2s, color .2s;
+  transition: background-color .25s, color .25s, border-color .25s, filter .25s;
 }
-[data-theme="neon"] .btn:hover { background: rgba(61,224,230,.14); box-shadow: var(--glow-c); color: #fff; animation: neon-btn-glitch .35s steps(2) 1; }
+[data-theme="neon"] .btn { position: relative; overflow: hidden; }
+[data-theme="neon"] .btn::after {
+  content: ""; position: absolute; inset: -2px; pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%);
+  transform: translateX(-130%); transition: transform .65s cubic-bezier(.3,.7,.2,1);
+}
+[data-theme="neon"] .btn:hover::after { transform: translateX(130%); }
+[data-theme="neon"] .btn:hover { background: rgba(61,224,230,.14); color: #fff; text-shadow: var(--glow-c); border-color: var(--neon-cyan); }
 [data-theme="neon"] .btn-primary {
   background: rgba(255,157,61,.14); border-color: var(--neon-orange); color: var(--neon-amber);
   box-shadow: 0 0 10px rgba(255,157,61,.3), inset 0 0 12px rgba(255,157,61,.15);
   animation: neon-breathe 3s ease-in-out infinite;
 }
-[data-theme="neon"] .btn-primary:hover { background: rgba(255,157,61,.26); color: #fff; box-shadow: var(--glow-o); animation: neon-btn-glitch .35s steps(2) 1; }
+[data-theme="neon"] .btn-primary:hover { background: rgba(255,157,61,.26); color: #fff; text-shadow: var(--glow-o); filter: brightness(1.15); }
 [data-theme="neon"] .btn-danger { border-color: var(--danger-border); color: var(--danger); background: rgba(255,61,110,.06); }
 [data-theme="neon"] .btn-ok { background: rgba(61,224,140,.12); border-color: #3de08c; color: #8dffc4; }
 [data-theme="neon"] .btn-ghost { border-color: transparent; background: transparent; }
 @keyframes neon-breathe { 0%, 100% { box-shadow: 0 0 8px rgba(255,157,61,.25), inset 0 0 10px rgba(255,157,61,.1); } 50% { box-shadow: 0 0 18px rgba(255,157,61,.55), inset 0 0 16px rgba(255,157,61,.2); } }
-@keyframes neon-btn-glitch {
-  0% { clip-path: inset(0 0 55% 0); transform: translateX(-2px); }
-  50% { clip-path: inset(45% 0 0 0); transform: translateX(2px); }
-  100% { clip-path: none; transform: none; }
-}
 
 /* ---------- invoervelden ---------- */
 [data-theme="neon"] .page input:not([type=checkbox]):not([type=radio]):not(.ink),
@@ -273,6 +277,274 @@
 [data-theme="neon"] .side-title { color: var(--neon-cyan); font-family: var(--mono); letter-spacing: .3em; }
 [data-theme="neon"] .status-bar { font-family: var(--mono); letter-spacing: .03em; }
 
+
+/* =====================================================================
+   Hologram-achtergrond: wazige lichtbollen, perspectiefraster, stof,
+   een glinstering en mist. Alleen transform/opacity-animaties (licht voor de computer).
+   ===================================================================== */
+.neon-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.neon-bg > span { position: absolute; display: block; will-change: transform, opacity; }
+
+/* wazige lichtbollen die langzaam rondzweven */
+.neon-bg .orb { border-radius: 50%; filter: blur(70px); mix-blend-mode: screen; opacity: .55; }
+.neon-bg .orb-1 { width: 46vmax; height: 46vmax; left: -12vmax; bottom: -18vmax; background: radial-gradient(circle, rgba(255,128,32,.75), rgba(255,128,32,0) 65%); animation: orb-a 38s ease-in-out infinite alternate; }
+.neon-bg .orb-2 { width: 38vmax; height: 38vmax; right: -10vmax; top: -12vmax; background: radial-gradient(circle, rgba(61,224,230,.6), rgba(61,224,230,0) 65%); animation: orb-b 44s ease-in-out infinite alternate; }
+.neon-bg .orb-3 { width: 28vmax; height: 28vmax; left: 42%; top: 30%; background: radial-gradient(circle, rgba(160,80,255,.38), rgba(160,80,255,0) 65%); animation: orb-c 52s ease-in-out infinite alternate; opacity: .4; }
+.neon-bg .orb-4 { width: 22vmax; height: 22vmax; right: 18%; bottom: 8%; background: radial-gradient(circle, rgba(255,61,129,.35), rgba(255,61,129,0) 65%); animation: orb-d 33s ease-in-out infinite alternate; opacity: .35; }
+@keyframes orb-a { 0% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(18vw,-10vh,0) scale(1.15); opacity: .7; } 100% { transform: translate3d(6vw,-22vh,0) scale(.9); } }
+@keyframes orb-b { 0% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(-22vw,14vh,0) scale(1.2); } 100% { transform: translate3d(-8vw,30vh,0) scale(.95); opacity: .7; } }
+@keyframes orb-c { 0% { transform: translate3d(-10vw,10vh,0) scale(.8); } 50% { transform: translate3d(14vw,-12vh,0) scale(1.25); opacity: .55; } 100% { transform: translate3d(-18vw,-6vh,0) scale(1); } }
+@keyframes orb-d { 0% { transform: translate3d(0,0,0); opacity: .2; } 50% { transform: translate3d(-26vw,-30vh,0); opacity: .45; } 100% { transform: translate3d(-40vw,-6vh,0); opacity: .25; } }
+
+/* holografisch perspectiefraster in de verte, schuift langzaam naar je toe */
+.neon-bg .holo-grid {
+  left: -50%; right: -50%; bottom: -8vh; height: 70vh;
+  background-image:
+    linear-gradient(rgba(61,224,230,.55) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(61,224,230,.55) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform-origin: 50% 100%;
+  transform: perspective(420px) rotateX(72deg) translateY(0);
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,.9) 0%, rgba(0,0,0,.35) 45%, transparent 85%);
+  mask-image: linear-gradient(to top, rgba(0,0,0,.9) 0%, rgba(0,0,0,.35) 45%, transparent 85%);
+  filter: blur(.6px) drop-shadow(0 0 6px rgba(61,224,230,.6));
+  opacity: .22;
+  animation: grid-roll 6s linear infinite, grid-flicker 9s steps(1) infinite;
+}
+@keyframes grid-roll { from { transform: perspective(420px) rotateX(72deg) translateY(0); } to { transform: perspective(420px) rotateX(72deg) translateY(64px); } }
+@keyframes grid-flicker { 0%, 100% { opacity: .22; } 41% { opacity: .1; } 42% { opacity: .26; } 43% { opacity: .14; } 44% { opacity: .22; } 77% { opacity: .3; } 78% { opacity: .22; } }
+
+/* zwevende stofdeeltjes die langzaam opstijgen (twee lagen, verschillende snelheid) */
+.neon-bg .dust {
+  left: 0; right: 0; top: 0; height: 200%;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,196,107,.9), transparent 60%),
+    radial-gradient(1px 1px at 33% 72%, rgba(61,224,230,.9), transparent 60%),
+    radial-gradient(2px 2px at 58% 40%, rgba(255,157,61,.7), transparent 60%),
+    radial-gradient(1px 1px at 76% 12%, rgba(255,255,255,.8), transparent 60%),
+    radial-gradient(1.5px 1.5px at 88% 63%, rgba(61,224,230,.8), transparent 60%),
+    radial-gradient(1px 1px at 47% 91%, rgba(255,196,107,.8), transparent 60%);
+  background-size: 420px 420px;
+  filter: blur(.4px);
+  opacity: .5;
+}
+.neon-bg .dust-1 { animation: dust-rise 70s linear infinite; }
+.neon-bg .dust-2 { background-size: 640px 640px; filter: blur(1.5px); opacity: .35; animation: dust-rise 110s linear infinite reverse; }
+@keyframes dust-rise { from { transform: translate3d(0,0,0); } to { transform: translate3d(-40px,-50%,0); } }
+
+/* glinstering die af en toe schuin over het scherm trekt */
+.neon-bg .shimmer {
+  top: -50%; bottom: -50%; width: 40vw; left: -60vw;
+  background: linear-gradient(100deg, transparent 0%, rgba(61,224,230,.0) 30%, rgba(61,224,230,.10) 45%, rgba(255,255,255,.12) 50%, rgba(255,157,61,.08) 55%, transparent 75%);
+  filter: blur(18px);
+  transform: rotate(12deg);
+  animation: shimmer-pass 14s cubic-bezier(.6,0,.3,1) infinite;
+}
+@keyframes shimmer-pass { 0%, 55% { transform: translate3d(0,0,0) rotate(12deg); opacity: 0; } 60% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translate3d(190vw,0,0) rotate(12deg); opacity: 0; } }
+
+/* lage mist die heen en weer deint */
+.neon-bg .fog {
+  left: -25%; right: -25%; bottom: -10vh; height: 45vh;
+  background:
+    radial-gradient(50% 60% at 30% 70%, rgba(120,150,170,.16), transparent 70%),
+    radial-gradient(45% 55% at 75% 80%, rgba(255,150,80,.10), transparent 70%);
+  filter: blur(30px);
+  animation: fog-drift 30s ease-in-out infinite alternate;
+}
+@keyframes fog-drift { from { transform: translate3d(-6%,0,0) scaleY(1); opacity: .7; } to { transform: translate3d(6%,-3vh,0) scaleY(1.15); opacity: 1; } }
+
+/* panelen iets doorzichtiger, zodat de hologramlaag erachter zichtbaar blijft */
+[data-theme="neon"] .card, [data-theme="neon"] .table-wrap, [data-theme="neon"] .customer-head,
+[data-theme="neon"] .rdw-card, [data-theme="neon"] .empty, [data-theme="neon"] .auth-card {
+  background: linear-gradient(160deg, rgba(14,26,33,.62), rgba(8,13,17,.62));
+  backdrop-filter: blur(10px) saturate(1.2); -webkit-backdrop-filter: blur(10px) saturate(1.2);
+}
+
+
+/* =====================================================================
+   Warme oranje variant (sfeer: oranje nevel, regen, kleine HUD-teksten)
+   ===================================================================== */
+:root[data-theme="neon"] {
+  --neon-orange: #ff8f2e;
+  --neon-amber: #ffb35c;
+  --neon-cyan: #5fd1c4;
+  --glow-o: 0 0 6px rgba(255,143,46,.7), 0 0 18px rgba(255,143,46,.3);
+  --glow-c: 0 0 6px rgba(95,209,196,.5), 0 0 14px rgba(95,209,196,.2);
+  --bg: #0b0806;
+  --surface: rgba(18, 12, 8, .7);
+  --surface-2: rgba(255, 143, 46, .05);
+  --hover: rgba(255, 143, 46, .08);
+  --text: #f3e6d8;
+  --muted: #a48d78;
+  --border: rgba(255, 143, 46, .26);
+  --border-soft: rgba(255, 143, 46, .1);
+  --input-bg: rgba(8, 5, 3, .8);
+  --accent: #ff8f2e;
+  --link: #ffb35c;
+  --topbar-bg: rgba(10, 7, 5, .82);
+  --topbar-text: #d9b48c;
+  --topbar-hover: rgba(255, 143, 46, .1);
+  --topbar-active: #ff8f2e;
+  --paper: rgba(14, 9, 6, .9);
+  --form-grey: rgba(255, 143, 46, .06);
+  --form-grey-dark: rgba(255, 143, 46, .13);
+  --label: #d6a679;
+  --ink: #ffc27a;
+  --sheet-shadow: 0 0 0 1px rgba(255,143,46,.4), 0 0 40px rgba(255,143,46,.1), 0 20px 60px rgba(0,0,0,.7);
+}
+[data-theme="neon"] body {
+  background:
+    radial-gradient(80% 90% at 0% 100%, rgba(255, 110, 20, .30), transparent 60%),
+    radial-gradient(60% 70% at 100% 100%, rgba(180, 50, 140, .22), transparent 60%),
+    radial-gradient(70% 50% at 50% 0%, rgba(90, 50, 20, .25), transparent 70%),
+    linear-gradient(180deg, #0a0705 0%, #120b07 60%, #160c0b 100%) fixed;
+  background-color: #0b0806;
+}
+[data-theme="neon"] body::before {
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(255,143,46,.05) 48%, rgba(255,143,46,.1) 50%, rgba(255,143,46,.05) 52%, transparent 100%) 0 0 / 100% 220px no-repeat,
+    repeating-linear-gradient(180deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px);
+}
+[data-theme="neon"] h1 { color: var(--neon-amber); text-shadow: var(--glow-o); }
+[data-theme="neon"] h2 { color: var(--neon-amber); }
+@keyframes neon-glitch {
+  0%, 91%, 100% { text-shadow: var(--glow-o); transform: none; }
+  92% { text-shadow: -2px 0 #ff3d81, 2px 0 var(--neon-cyan); transform: translateX(1px) skewX(-6deg); }
+  93% { text-shadow: 2px 0 #ff3d81, -2px 0 var(--neon-cyan); transform: translateX(-2px); clip-path: inset(10% 0 40% 0); }
+  94% { text-shadow: -1px 0 var(--neon-orange), 1px 0 var(--neon-cyan); transform: none; clip-path: none; }
+  95% { text-shadow: 3px 0 #ff3d81, -3px 0 var(--neon-cyan); transform: translateX(2px) skewX(4deg); }
+  96% { text-shadow: var(--glow-o); transform: none; }
+}
+[data-theme="neon"] h1::before { content: "› "; color: var(--neon-orange); }
+[data-theme="neon"] a { text-shadow: none; }
+
+/* menubalk: kader met lineaal, actieve tab gevuld oranje */
+[data-theme="neon"] .topbar { border-bottom: 1px solid rgba(255,143,46,.45); }
+[data-theme="neon"] .topbar::before {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,143,46,.55) 0 1px, transparent 1px 12px) 0 100% / 100% 3px no-repeat,
+    repeating-linear-gradient(90deg, rgba(255,143,46,.8) 0 1px, transparent 1px 96px) 0 100% / 100% 6px no-repeat;
+  opacity: .6;
+}
+[data-theme="neon"] .mainnav a { border-radius: 1px; color: var(--topbar-text); }
+[data-theme="neon"] .mainnav a:hover { color: #fff; background: rgba(255,143,46,.12); }
+[data-theme="neon"] .mainnav a.active { background: var(--neon-orange); color: #1a0d03; box-shadow: 0 0 16px rgba(255,143,46,.45); text-shadow: none; }
+[data-theme="neon"] .mainnav a.active .nav-count { background: #1a0d03; color: var(--neon-orange); }
+[data-theme="neon"] .logo-sub { color: var(--neon-amber); opacity: .75; }
+
+/* tabellen: kleine teal kolomkoppen, compacter */
+[data-theme="neon"] table.list th { color: var(--neon-cyan); background: rgba(255,143,46,.04); font-size: .68rem; letter-spacing: .18em; }
+[data-theme="neon"] table.list td { border-bottom-color: rgba(255,143,46,.09); }
+
+/* knoppen: klein, scherp, oranje omlijnd */
+[data-theme="neon"] .btn {
+  border-radius: 1px; font-size: .74rem; font-weight: 700; letter-spacing: .12em; padding: .45rem .8rem;
+  background: rgba(20, 12, 6, .7); border: 1px solid rgba(255,143,46,.7); color: var(--neon-amber);
+}
+[data-theme="neon"] .btn:hover { background: rgba(255,143,46,.16); border-color: var(--neon-orange); color: #fff; text-shadow: var(--glow-o); }
+[data-theme="neon"] .btn-primary { background: var(--neon-orange); color: #1a0d03; border-color: var(--neon-orange); }
+[data-theme="neon"] .btn-primary:hover { background: #ffa452; color: #1a0d03; text-shadow: none; }
+@keyframes neon-breathe { 0%, 100% { box-shadow: 0 0 8px rgba(255,143,46,.3); } 50% { box-shadow: 0 0 20px rgba(255,143,46,.6); } }
+[data-theme="neon"] .btn-danger { background: rgba(20, 8, 6, .7); border-color: rgba(255,90,60,.7); color: #ff8a6b; }
+[data-theme="neon"] .btn-ok { background: rgba(20, 12, 6, .7); border-color: #6bd88f; color: #9df0b6; }
+[data-theme="neon"] .page input:not([type=checkbox]):not([type=radio]):not(.ink),
+[data-theme="neon"] .auth-card input, [data-theme="neon"] select { border-color: rgba(255,143,46,.35); color: var(--text); }
+
+/* panelen: warme glasachtige achtergrond */
+[data-theme="neon"] .card, [data-theme="neon"] .table-wrap, [data-theme="neon"] .customer-head,
+[data-theme="neon"] .rdw-card, [data-theme="neon"] .empty, [data-theme="neon"] .auth-card, [data-theme="neon"] .choice-body {
+  background: linear-gradient(160deg, rgba(26,16,9,.6), rgba(12,8,6,.62));
+  box-shadow: inset 0 0 30px rgba(255,143,46,.04), 0 0 0 1px rgba(0,0,0,.4);
+}
+[data-theme="neon"] .wo-title { text-shadow: var(--glow-o); }
+[data-theme="neon"] table.grid th, [data-theme="neon"] .work-head, [data-theme="neon"] .block-head { color: var(--neon-amber); }
+
+/* hologramlaag in warme kleuren */
+.neon-bg .orb-1 { background: radial-gradient(circle, rgba(255,110,20,.8), rgba(255,110,20,0) 65%); opacity: .6; }
+.neon-bg .orb-2 { background: radial-gradient(circle, rgba(255,170,80,.4), rgba(255,170,80,0) 65%); opacity: .4; }
+.neon-bg .orb-3 { background: radial-gradient(circle, rgba(170,60,170,.4), rgba(170,60,170,0) 65%); }
+.neon-bg .orb-4 { background: radial-gradient(circle, rgba(255,60,110,.4), rgba(255,60,110,0) 65%); }
+.neon-bg .holo-grid {
+  background-image: linear-gradient(rgba(255,143,46,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,143,46,.6) 1px, transparent 1px);
+  filter: blur(.6px) drop-shadow(0 0 6px rgba(255,143,46,.6));
+  opacity: .16;
+}
+.neon-bg .shimmer { background: linear-gradient(100deg, transparent 0%, rgba(255,143,46,.0) 30%, rgba(255,160,80,.10) 45%, rgba(255,230,200,.10) 50%, rgba(255,90,140,.06) 55%, transparent 75%); }
+
+/* regen: korte strepen verspreid over een blok dat precies één bloklengte per ronde valt (naadloos) */
+.neon-bg .rain {
+  left: -10%; right: -10%; top: -600px; bottom: -600px;
+  background-image:
+    radial-gradient(0.6px 34px at 6% 12%, rgba(255,225,200,.35), transparent),
+    radial-gradient(0.6px 26px at 19% 58%, rgba(255,225,200,.3), transparent),
+    radial-gradient(0.6px 40px at 31% 31%, rgba(255,225,200,.32), transparent),
+    radial-gradient(0.6px 22px at 44% 83%, rgba(255,225,200,.28), transparent),
+    radial-gradient(0.6px 36px at 57% 7%, rgba(255,225,200,.3), transparent),
+    radial-gradient(0.6px 28px at 69% 47%, rgba(255,225,200,.33), transparent),
+    radial-gradient(0.6px 38px at 82% 71%, rgba(255,225,200,.3), transparent),
+    radial-gradient(0.6px 24px at 94% 26%, rgba(255,225,200,.28), transparent);
+  background-size: 300px 600px;
+}
+.neon-bg .rain-1 { transform: rotate(8deg); animation: rain-fall-1 1.4s linear infinite; opacity: .6; }
+.neon-bg .rain-2 { background-size: 460px 600px; filter: blur(1.2px); transform: rotate(8deg); animation: rain-fall-2 2.6s linear infinite; opacity: .4; }
+@keyframes rain-fall-1 { from { transform: rotate(8deg) translate3d(0, -600px, 0); } to { transform: rotate(8deg) translate3d(0, 0, 0); } }
+@keyframes rain-fall-2 { from { transform: rotate(8deg) translate3d(0, -600px, 0); } to { transform: rotate(8deg) translate3d(0, 0, 0); } }
+
+/* kleine verticale HUD-teksten langs de randen */
+.neon-bg .hud {
+  top: 50%; font: 600 9px/1 var(--mono); letter-spacing: .35em; color: rgba(255,143,46,.45);
+  white-space: nowrap; text-shadow: 0 0 6px rgba(255,143,46,.35);
+  animation: hud-flicker 6s steps(1) infinite;
+}
+.neon-bg .hud-left { left: 12px; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; margin-top: 160px; }
+.neon-bg .hud-right { right: 12px; transform: translateY(-50%) rotate(90deg); transform-origin: right center; margin-top: -160px; color: rgba(95,209,196,.4); }
+@keyframes hud-flicker { 0%, 100% { opacity: 1; } 47% { opacity: .4; } 48% { opacity: 1; } 49% { opacity: .55; } 50% { opacity: 1; } }
+@media (max-width: 900px) { .neon-bg .hud { display: none; } }
+
+/* ---------- bijstellingen hologramlaag ---------- */
+.neon-bg .holo-grid {
+  left: -60%; right: -60%; bottom: -6vh; height: 120vh;
+  transform: perspective(700px) rotateX(66deg) translateY(0);
+  animation: grid-roll2 5s linear infinite, grid-flicker 9s steps(1) infinite;
+  opacity: .2;
+}
+@keyframes grid-roll2 { from { transform: perspective(700px) rotateX(66deg) translateY(0); } to { transform: perspective(700px) rotateX(66deg) translateY(64px); } }
+@keyframes grid-flicker { 0%, 100% { opacity: .2; } 41% { opacity: .08; } 42% { opacity: .24; } 43% { opacity: .12; } 44% { opacity: .2; } 77% { opacity: .28; } 78% { opacity: .2; } }
+/* HUD-teksten verticaal via writing-mode (geen draaiing die buiten beeld valt) */
+.neon-bg .hud { writing-mode: vertical-rl; transform: none; margin: 0; top: auto; }
+.neon-bg .hud-left { left: 10px; bottom: 12vh; transform: rotate(180deg); }
+.neon-bg .hud-right { right: 10px; top: 12vh; }
+/* regen iets beter zichtbaar */
+.neon-bg .rain {
+  background-image:
+    radial-gradient(1px 34px at 6% 12%, rgba(255,225,200,.55), transparent),
+    radial-gradient(1px 26px at 19% 58%, rgba(255,225,200,.45), transparent),
+    radial-gradient(1px 40px at 31% 31%, rgba(255,225,200,.5), transparent),
+    radial-gradient(1px 22px at 44% 83%, rgba(255,225,200,.45), transparent),
+    radial-gradient(1px 36px at 57% 7%, rgba(255,225,200,.5), transparent),
+    radial-gradient(1px 28px at 69% 47%, rgba(255,225,200,.5), transparent),
+    radial-gradient(1px 38px at 82% 71%, rgba(255,225,200,.45), transparent),
+    radial-gradient(1px 24px at 94% 26%, rgba(255,225,200,.45), transparent);
+}
+.neon-bg .rain-1 { opacity: .5; }
+.neon-bg .rain-2 { opacity: .35; }
+/* statusfilters in dezelfde stijl als de knoppen */
+[data-theme="neon"] .status-tabs a { border-radius: 1px; font-family: var(--mono); font-size: .76rem; letter-spacing: .08em; text-transform: uppercase; border-color: rgba(255,143,46,.35); background: rgba(20,12,6,.6); }
+[data-theme="neon"] .status-tabs a.active { background: var(--neon-orange); border-color: var(--neon-orange); color: #1a0d03; }
+
+/* Achtergrond op <html> en body doorzichtig: anders schildert de body over de hologramlaag heen. */
+html[data-theme="neon"] {
+  background:
+    radial-gradient(80% 90% at 0% 100%, rgba(255, 110, 20, .30), transparent 60%),
+    radial-gradient(60% 70% at 100% 100%, rgba(180, 50, 140, .22), transparent 60%),
+    radial-gradient(70% 50% at 50% 0%, rgba(90, 50, 20, .25), transparent 70%),
+    linear-gradient(180deg, #0a0705 0%, #120b07 60%, #160c0b 100%) fixed;
+  background-color: #0b0806;
+  min-height: 100%;
+}
+[data-theme="neon"] body, [data-theme="neon"] body.order-page { background: transparent !important; }
+
 /* ---------- rustig aan: geen animaties als het apparaat daarom vraagt ---------- */
 @media (prefers-reduced-motion: reduce) {
   [data-theme="neon"] *, [data-theme="neon"] *::before, [data-theme="neon"] *::after,
@@ -283,9 +555,10 @@
 
 /* ---------- afdrukken: gewoon wit papier ---------- */
 @media print {
-  [data-theme="neon"] body { background: #fff !important; }
-  [data-theme="neon"] body::before, [data-theme="neon"] body::after, [data-theme="neon"] .sheet::after { display: none !important; }
+  html[data-theme="neon"], [data-theme="neon"] body { background: #fff !important; }
+  [data-theme="neon"] body::before, [data-theme="neon"] body::after, [data-theme="neon"] .sheet::after, .neon-bg { display: none !important; }
   [data-theme="neon"] .sheet { clip-path: none; background: #fff !important; animation: none !important; }
   [data-theme="neon"] .ink, [data-theme="neon"] .red-nr, [data-theme="neon"] .wo-title, [data-theme="neon"] h1 { text-shadow: none !important; }
   [data-theme="neon"] .wo-title, [data-theme="neon"] table.grid th, [data-theme="neon"] .work-head, [data-theme="neon"] .block-head { font-family: Arial, Helvetica, sans-serif; letter-spacing: normal; color: #2f2f2f; }
 }
+
