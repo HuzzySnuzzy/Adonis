@@ -15,6 +15,7 @@ const assets = require('./assets');
 const importer = require('./import');
 const buildinfo = require('./buildinfo');
 const updater = require('./update');
+const events = require('./events');
 
 const app = express();
 // HTTPS (achter een reverse proxy): alleen dan beveiligde cookies en HSTS.
@@ -229,6 +230,15 @@ app.post('/logout', (req, res) => {
 /* ---------- alles hieronder vereist inloggen ---------- */
 app.use(auth.requireLogin);
 
+/* Live bijwerken: open verbinding per scherm */
+app.get('/events', (req, res) => events.subscribe(req, res));
+function announce(req, action, order) {
+  events.broadcast({
+    type: 'order', action, id: order.id, nummer: order.nummer, kenteken: order.kenteken || '',
+    customerId: order.customerId || null, by: req.user.name, byId: req.user.id,
+  });
+}
+
 /* Klantenoverzicht op kenteken */
 app.get('/', (req, res) => {
   const q = String(req.query.q || '').trim();
@@ -319,6 +329,7 @@ app.post('/werkopdracht', (req, res) => {
   const error = validateOrder(data, nummer, null);
   if (error) return renderOrder(res, { order: null, data, nummer: req.body.nummer, error, status: 400 });
   const id = orders.saveOrder({ nummer, data, userId: req.user.id });
+  announce(req, 'created', { id, nummer, kenteken: data.kenteken });
   flash(req, 'ok', `Werkopdracht ${nummer} is opgeslagen.`);
   res.redirect(`/werkopdracht/${id}`);
 });
@@ -351,6 +362,7 @@ app.post('/werkopdracht/:id', (req, res) => {
   if (error) return renderOrder(res, { order, data, nummer: req.body.nummer, error, status: 400 });
   // Datum invoer is bij een bestaande werkopdracht aan te passen (bijv. een verkeerd geïmporteerde datum).
   orders.saveOrder({ id: order.id, nummer, data, userId: req.user.id, datumInvoer: orders.parseDate(req.body.datum_invoer) || null });
+  announce(req, 'updated', { id: order.id, nummer, kenteken: data.kenteken });
   flash(req, 'ok', `Werkopdracht ${nummer} is opgeslagen.`);
   res.redirect(`/werkopdracht/${order.id}`);
 });
@@ -359,6 +371,7 @@ app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
   const order = loadOrder(req.params.id);
   if (!order) return res.redirect('/');
   const customerId = orders.deleteOrder(order.id);
+  announce(req, 'deleted', { id: order.id, nummer: order.nummer, customerId });
   flash(req, 'ok', `Werkopdracht ${order.nummer} is verwijderd.`);
   const stillExists = db.prepare('SELECT 1 FROM customers WHERE id = ?').get(customerId);
   res.redirect(stillExists ? `/klant/${customerId}` : '/');
@@ -422,6 +435,7 @@ app.post('/importeren/:id/bevestigen', (req, res) => {
     return renderOrder(res, { order: null, data, nummer: req.body.nummer, error, status: 400, draft, datumInvoer });
   }
   const id = orders.saveOrder({ nummer, data, userId: req.user.id, datumInvoer });
+  announce(req, 'created', { id, nummer, kenteken: data.kenteken });
   importer.deleteDraft(draft.id);
   flash(req, 'ok', `Import bevestigd: werkopdracht ${nummer} is opgeslagen.`);
   res.redirect(`/werkopdracht/${id}`);

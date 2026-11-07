@@ -9,6 +9,7 @@
     </form>
   </div>
 
+  <div id="live-customers" data-live>
   <% if (customers.length === 0) { %>
     <div class="empty">
       <% if (q) { %>
@@ -40,6 +41,7 @@
     </table>
     </div>
   <% } %>
+  </div>
 </main>
 <script src="/static/js/common.js"></script>
 <%- include('/partials/foot') %>

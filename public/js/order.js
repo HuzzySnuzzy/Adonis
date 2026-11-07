@@ -91,8 +91,9 @@
   // Na een fout, of bij een nog niet bevestigde import, is er nog niets opgeslagen.
   let dirty = document.querySelector('.alert-wide, .import-review') !== null;
   function markDirty() { dirty = true; toolbar.classList.add('dirty'); }
+  window.adonisOrderDirty = () => dirty; // voor live bijwerken (live.js)
   if (dirty) toolbar.classList.add('dirty');
-  window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  window.addEventListener('beforeunload', (e) => { if (dirty && !window.adonisLeaving) { e.preventDefault(); e.returnValue = ''; } });
   // Opslaan of annuleren (na bevestiging) mag de pagina verlaten zonder waarschuwing.
   document.addEventListener('submit', (e) => { if (!e.defaultPrevented) dirty = false; });
 

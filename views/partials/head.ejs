@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="/static/css/app.css">
   <% if (typeof extraCss !== 'undefined') { %><link rel="stylesheet" href="/static/css/<%= extraCss %>"><% } %>
 </head>
-<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>"<% } %>>
 <% if (locals.user) { %>
 <header class="topbar no-print">
   <a class="brand" href="/" title="ADONIS – naar het overzicht"><%- include('/partials/logo') %></a>

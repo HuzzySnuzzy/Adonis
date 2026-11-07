@@ -1,7 +1,7 @@
 <%- include('/partials/head') %>
 <main class="page">
   <p class="crumbs"><a href="/">← Alle klanten</a></p>
-  <div class="customer-head">
+  <div class="customer-head" id="live-customer-head" data-live>
     <div>
       <%- include('/partials/plate', { kenteken: customer.kenteken }) %>
       <h1><%= customer.naam || 'Onbekende klant' %></h1>
@@ -23,11 +23,13 @@
       <% if (q) { %><a class="btn btn-ghost" href="/klant/<%= customer.id %>">Wissen</a><% } %>
     </form>
   </div>
+  <div id="live-customer-orders" data-live>
   <% if (orders.length === 0) { %>
     <div class="empty"><p>Geen werkopdrachten gevonden<%= q ? ' voor “' + q + '”' : '' %>.</p></div>
   <% } else { %>
     <%- include('/partials/orderlist', { orders, showPlate: false }) %>
   <% } %>
+  </div>
 </main>
 <script src="/static/js/common.js"></script>
 <%- include('/partials/foot') %>

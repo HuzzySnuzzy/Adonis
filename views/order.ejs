@@ -73,6 +73,7 @@
 
 <% if (error) { %><div class="alert alert-wide no-print"><%= error %></div><% } %>
 
+<% if (order) { %><span hidden id="live-order" data-id="<%= order.id %>"></span><% } %>
 <form id="orderForm" method="post" action="<%= draft ? '/importeren/' + draft.id + '/bevestigen' : order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off">
   <input type="hidden" name="_csrf" value="<%= csrf %>">
   <% if (order) { %><input type="hidden" name="versie" value="<%= order.updated_at %>"><% } %>

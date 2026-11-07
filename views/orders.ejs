@@ -8,12 +8,14 @@
       <% if (q) { %><a class="btn btn-ghost" href="/werkopdrachten">Wissen</a><% } %>
     </form>
   </div>
+  <div id="live-orders" data-live>
   <% if (orders.length === 0) { %>
     <div class="empty"><p><%= q ? 'Niets gevonden voor “' + q + '”.' : 'Nog geen werkopdrachten.' %></p></div>
   <% } else { %>
     <p class="muted"><%= q ? orders.length + ' gevonden' : 'Laatste ' + orders.length + ' werkopdrachten' %></p>
     <%- include('/partials/orderlist', { orders, showPlate: true }) %>
   <% } %>
+  </div>
 </main>
 <script src="/static/js/common.js"></script>
 <%- include('/partials/foot') %>
