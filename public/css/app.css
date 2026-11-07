@@ -1020,3 +1020,71 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 .mscale-sample { display: flex; align-items: flex-end; justify-content: center; height: 44px; font-weight: 700; line-height: 1; color: var(--text); }
 .mscale-100 { font-size: 34px; } .mscale-90 { font-size: 30px; } .mscale-80 { font-size: 26px; } .mscale-70 { font-size: 22px; } .mscale-60 { font-size: 18px; }
 @media (max-width: 760px) { .mscale-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .mscale-grid .choice-help { display: block; } }
+
+/* =====================================================================
+   Telefoon: alles in beeld zonder opzij te schuiven.
+   - Tabellen worden kaarten: per rij een kaart met alle ingevulde velden (label + waarde).
+   - De menubalk is compacter: logo en knoppen op één rij, het menu eronder om door te vegen.
+   ===================================================================== */
+.nw-short, .lo-icon { display: none; }
+@media (max-width: 760px) {
+  /* ----- menubalk ----- */
+  .topbar { gap: .45rem .6rem; padding: .5rem .75rem; }
+  .topbar .brand { order: 1; }
+  .topbar .usernav { order: 2; margin-left: auto; width: auto; justify-content: flex-end; gap: .55rem; }
+  .topbar .mainnav { order: 3; }
+  .logo-sub { display: none; }
+  .logo-mark { width: 28px; height: 28px; }
+  .new-order-btn { padding: .4rem .7rem; }
+  .nw-long, .lo-text { display: none; }
+  .nw-short { display: inline; }
+  .lo-icon { display: block; }
+  .logout-btn { display: inline-flex; align-items: center; padding: 4px; text-decoration: none; }
+  .mainnav a { padding: .35rem .6rem; font-size: .95rem; }
+  .page { padding: 1rem .75rem 2.5rem; }
+  .page-head { margin: .6rem 0 .8rem; gap: .6rem; }
+  .page-head h1 { font-size: 1.35rem; }
+
+  /* ----- tabellen als kaarten ----- */
+  .table-wrap:has(> table.cards) { overflow: visible; }
+  :root .table-wrap:has(> table.cards).more-right, :root .table-wrap:has(> table.cards).more-left { box-shadow: none; }
+  table.list.cards, table.list.cards > tbody { display: block; width: 100%; }
+  table.list.cards > thead { display: none; }
+  table.list.cards > tbody > tr {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem .9rem; align-items: start;
+    position: relative; padding: .8rem .9rem; border-bottom: 1px solid var(--border-soft);
+  }
+  table.list.cards > tbody > tr:last-child { border-bottom: 0; }
+  table.list.cards > tbody > tr > td {
+    display: block; padding: 0; border: 0 !important; min-width: 0; max-width: none; text-align: left;
+    white-space: normal; overflow-wrap: anywhere; box-shadow: none !important;
+  }
+  table.list.cards > tbody > tr > td::before {
+    content: attr(data-label); display: block; margin-bottom: .1rem;
+    font-size: .68rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
+  }
+  table.list.cards > tbody > tr > td[data-label=""]::before { display: none; }
+  table.list.cards > tbody > tr > td.is-empty { display: none; }
+  /* De eerste ingevulde kolom (kenteken, nummer, maat...) is de kop van de kaart. */
+  table.list.cards > tbody > tr > td.card-lead { grid-column: 1 / -1; font-size: 1.05rem; font-weight: 600; }
+  table.list.cards > tbody > tr > td.card-lead::before { display: none; }
+  /* Lange tekst en knoppen over de hele breedte */
+  table.list.cards > tbody > tr > td:is(.summary, .qty-col, .act-col, .why) { grid-column: 1 / -1; }
+  table.list.cards .summary { color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  table.list.cards > tbody > tr > td.num { text-align: left; }
+  /* Foto rechtsboven in de kaart */
+  table.list.cards > tbody > tr > td.ph-col { position: absolute; top: .8rem; right: .9rem; width: auto; }
+  table.list.cards > tbody > tr > td.ph-col::before { display: none; }
+  table.list.cards > tbody > tr > td.qty-col::before { display: none; }
+  table.list.cards .qty-btn { width: 40px; height: 40px; font-size: 1.2rem; }
+  table.list.cards .tread-text { max-width: none; white-space: normal; }
+  table.list.cards .maat-col { max-width: none; }
+  table.list.cards.clickable > tbody > tr:hover > td:first-child { box-shadow: none; }
+  /* Gebruikers: formulieren in de kaart over de hele breedte */
+  table.list.cards .inline-form { flex-wrap: wrap; }
+  table.list.cards > tbody > tr > td:has(form.inline-form) { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .topbar .usernav { flex-wrap: nowrap; }
+  .topbar .usernav > * { flex: 0 0 auto; }
+}

@@ -57,7 +57,7 @@
     <% if (user.is_owner) { %><a href="/systeem" class="<%= path === '/systeem' ? 'active' : '' %>">Systeem</a><% } %>
   </nav>
   <div class="usernav">
-    <a class="btn btn-primary" href="/werkopdracht/nieuw">+ Nieuwe werkopdracht</a>
+    <a class="btn btn-primary new-order-btn" href="/werkopdracht/nieuw" title="Nieuwe werkopdracht">+<span class="nw-long"> Nieuwe werkopdracht</span><span class="nw-short"> Nieuw</span></a>
     <%
       const THEMES_MENU = [
         { v: 'system', name: 'Systeem', sub: 'Volgt de instelling van je apparaat' },
@@ -107,7 +107,7 @@
     <a href="/instellingen" class="username" title="Instellingen"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.7 7.7 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.7 7.7 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.7 7.7 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.7 7.7 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="uname"><%= user.name %></span></a>
     <form method="post" action="/logout" class="inline">
       <input type="hidden" name="_csrf" value="<%= csrf %>">
-      <button class="linkbtn" type="submit">Uitloggen</button>
+      <button class="linkbtn logout-btn" type="submit" title="Uitloggen" aria-label="Uitloggen"><svg class="lo-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10"/></svg><span class="lo-text">Uitloggen</span></button>
     </form>
   </div>
 </header>

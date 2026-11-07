@@ -79,3 +79,29 @@ document.addEventListener('submit', async (e) => {
 document.addEventListener('change', (e) => {
   if (e.target.matches('[data-mscale-choice]')) document.documentElement.setAttribute('data-mscale', e.target.value);
 });
+// Telefoon: tabellen worden kaarten (zie app.css). Elke cel krijgt de kolomkop als label,
+// lege cellen worden verborgen. Ook na live bijwerken (de lijst wordt dan vervangen).
+(function () {
+  const SKIP_LEAD = ['ph-col', 'qty-col', 'chk'];
+  function cardify(table) {
+    if (table.matches('.compact, .no-cards') || !table.tHead) return;
+    const heads = [...table.tHead.rows[0].cells].map((th) => th.textContent.replace(/\s+/g, ' ').trim());
+    table.classList.add('cards');
+    for (const row of table.tBodies[0] ? table.tBodies[0].rows : []) {
+      let lead = false;
+      [...row.cells].forEach((td, i) => {
+        td.dataset.label = heads[i] || '';
+        const filled = td.textContent.trim() || td.querySelector('img, svg, input, button, select, .plate');
+        td.classList.toggle('is-empty', !filled);
+        if (!lead && filled && !SKIP_LEAD.some((c) => td.classList.contains(c))) { td.classList.add('card-lead'); lead = true; }
+      });
+    }
+  }
+  function all() { document.querySelectorAll('table.list').forEach(cardify); }
+  all();
+  if (window.MutationObserver) {
+    let queued = false;
+    new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; all(); }); } })
+      .observe(document.body, { childList: true, subtree: true });
+  }
+})();
