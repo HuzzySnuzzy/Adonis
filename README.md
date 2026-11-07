@@ -34,7 +34,7 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   met een link naar rdw.nl. In de klantenlijst een APK-kolom. Op een nieuwe werkopdracht worden Merk/Type en
   A.p.k.-datum na het invullen van het kenteken automatisch ingevuld; de knop **RDW** naast het kenteken toont de
   details. Gegevens worden per klant bewaard en hooguit één keer per dag opnieuw opgehaald (vereist internet).
-- **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker / Neon* (futuristisch, met animaties), handschrift of gewone letters
+- **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker / Neon* (dezelfde stijl als het 2049-thema van DiscordLinked, met opstartreeks en animaties; effecten *Volledig* of *Rustig*), handschrift of gewone letters
   in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
   apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.
 
@@ -217,4 +217,5 @@ GitHub Actions bouwt en test de bestanden automatisch bij elke push. Een release
 - `src/main.js` – opstarten, config.properties, console-opdrachten · `src/server.js` – routes · `src/assets.js` – ingebakken bestanden
 - `scripts/build.js` – bouwt de losse executables · `src/orders.js` – werkopdracht-velden en opslag · `src/auth.js` – inloggen, CSRF-bescherming, rate limiting
 - `views/order.ejs` + `public/css/werkopdracht.css` – het formulier
+- `public/css/theme-neon.css`, `public/js/neon.js` – thema Neon (lettertypen Orbitron, Oxanium en Share Tech Mono onder de SIL Open Font License, zie `public/fonts/OFL-*.txt`)
 - `src/import.js` – foto-import (Claude vision + JSON-schema afgeleid van de formuliervelden), `public/js/import.js` – camera en verkleinen

@@ -533,3 +533,4 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .18s; }
 .topbar { view-transition-name: topbar; }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+.status-badge.in-list { margin-left: 0; }

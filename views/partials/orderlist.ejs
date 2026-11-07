@@ -8,7 +8,7 @@
   <% for (const o of orders) { %>
     <tr data-href="/werkopdracht/<%= o.id %>">
       <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= o.nummer %></a></td>
-      <td><span class="status-badge status-<%= o.status %>" style="margin-left:0"><%= { open: 'Open', klaar: 'Facturatie', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>
+      <td><span class="status-badge status-<%= o.status %> in-list"><%= { open: 'Open', klaar: 'Facturatie', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>
       <td><%= fmtDate(o.datum_invoer) %></td>
       <% if (showPlate) { %><td><%- include('/partials/plate', { kenteken: o.d.kenteken || o.c_kenteken }) %></td><td><%= o.d.naam %></td><% } %>
       <td><%= o.d.km_in || o.d.km_uit %></td>

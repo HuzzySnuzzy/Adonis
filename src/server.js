@@ -592,7 +592,7 @@ app.get('/account', (req, res) => res.redirect('/instellingen'));
 
 app.post('/instellingen', (req, res) => {
   const prefs = auth.savePrefs(req.user.id, {
-    theme: req.body.theme, ink: req.body.ink, start: req.body.start,
+    theme: req.body.theme, ink: req.body.ink, start: req.body.start, fx: req.body.fx,
   });
   setThemeCookie(res, prefs.theme);
   flash(req, 'ok', 'Je instellingen zijn opgeslagen.');

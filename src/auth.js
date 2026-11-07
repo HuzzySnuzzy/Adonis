@@ -18,10 +18,11 @@ if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'prefer
 
 const PREF_OPTIONS = {
   theme: ['system', 'light', 'dark', 'neon'],
+  fx: ['full', 'calm'],
   ink: ['hand', 'plain'],
   start: ['/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw'],
 };
-const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/' };
+const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full' };
 
 function parsePrefs(json) {
   let raw = {};

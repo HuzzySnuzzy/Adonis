@@ -42,6 +42,21 @@
     </section>
 
     <section class="card">
+      <h2>Effecten (thema Neon)</h2>
+      <p class="muted small">Hoeveel beweging het thema Neon laat zien. Staat je apparaat op “minder beweging”, dan staat alles altijd stil.</p>
+      <div class="choice-grid two" role="radiogroup" aria-label="Effecten">
+        <label class="choice">
+          <input type="radio" name="fx" value="full" <%= (p.fx || 'full') === 'full' ? 'checked' : '' %>>
+          <span class="choice-body"><span class="choice-label">Volledig</span><span class="choice-help">Opstartreeks, regen, zoeklicht, scanstraal en glitches</span></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="fx" value="calm" <%= p.fx === 'calm' ? 'checked' : '' %>>
+          <span class="choice-body"><span class="choice-label">Rustig</span><span class="choice-help">Dezelfde stijl, veel minder beweging (fijn op oudere computers)</span></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>Werkopdrachtformulier</h2>
       <p class="muted small">Hoe ingevulde tekst op het formulier wordt weergegeven. Afdrukken gebeurt altijd op wit papier.</p>
       <div class="choice-grid two" role="radiogroup" aria-label="Letters in het formulier">
