@@ -1,3 +1,11 @@
+/* Handschriftlettertype (SIL Open Font License, zie /static/fonts/OFL.txt) – lokaal, werkt ook zonder internet */
+@font-face {
+  font-family: "Patrick Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/patrick-hand-latin.woff2") format("woff2");
+}
 :root {
   --bg: #f3f2ef;
   --surface: #ffffff;

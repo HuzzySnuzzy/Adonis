@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "description": "Werkopdrachten beheren voor de garage – digitale versie van het papieren werkopdrachtformulier",
   "private": true,
-  "main": "src/server.js",
+  "main": "src/main.js",
   "scripts": {
-    "start": "node --disable-warning=ExperimentalWarning src/server.js",
-    "dev": "node --disable-warning=ExperimentalWarning --watch src/server.js",
-    "create-user": "node --disable-warning=ExperimentalWarning scripts/create-user.js"
+    "start": "node src/main.js",
+    "dev": "node --watch src/main.js",
+    "create-user": "node src/main.js create-user",
+    "build": "node scripts/build.js",
+    "build:windows": "node scripts/build.js win-x64",
+    "build:linux": "node scripts/build.js linux-x64"
   },
   "engines": {
     "node": ">=22.13"
@@ -18,5 +21,9 @@
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.19.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.10",
+    "postject": "^1.0.0-alpha.6"
   }
 }

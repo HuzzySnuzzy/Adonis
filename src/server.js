@@ -4,16 +4,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const express = require('express');
+const ejs = require('ejs');
 const session = require('express-session');
 
 const { db, plateKey, DATA_DIR } = require('./db');
 const SqliteStore = require('./session-store');
 const auth = require('./auth');
 const orders = require('./orders');
+const assets = require('./assets');
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '3000', 10);
-const PROD = process.env.NODE_ENV === 'production';
+// HTTPS (achter een reverse proxy): alleen dan beveiligde cookies en HSTS.
+const SECURE = process.env.COOKIE_SECURE === 'true';
 
 /* ---------- session secret ---------- */
 function sessionSecret() {
@@ -24,10 +26,8 @@ function sessionSecret() {
 }
 
 /* ---------- app setup ---------- */
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '..', 'views'));
 app.disable('x-powered-by');
-if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : process.env.TRUST_PROXY);
+if (process.env.TRUST_PROXY === 'true') app.set('trust proxy', 1);
 
 app.use((req, res, next) => {
   res.set({
@@ -35,14 +35,65 @@ app.use((req, res, next) => {
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'same-origin',
     'Content-Security-Policy':
-      "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; " +
-      "img-src 'self' data:; script-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+      "default-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
   });
-  if (PROD) res.set('Strict-Transport-Security', 'max-age=31536000');
+  if (SECURE) res.set('Strict-Transport-Security', 'max-age=31536000');
   next();
 });
 
-app.use('/static', express.static(path.join(__dirname, '..', 'public'), { maxAge: PROD ? '1d' : 0 }));
+/* ---------- statische bestanden (ingebakken in de executable) ---------- */
+const MIME = {
+  '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.woff2': 'font/woff2',
+  '.txt': 'text/plain; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon',
+};
+const STARTED = Date.now().toString(36);
+app.get('/static/*file', (req, res, next) => {
+  const rel = [].concat(req.params.file).join('/');
+  const type = MIME[path.extname(rel)];
+  const buf = type && assets.get('public/' + rel);
+  if (!buf) return next();
+  const etag = `"${STARTED}-${buf.length}"`;
+  res.set({ 'Content-Type': type, 'Cache-Control': 'public, max-age=3600', ETag: etag });
+  if (req.get('if-none-match') === etag) return res.status(304).end();
+  res.send(buf);
+});
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
+/* ---------- templates (EJS, ingebakken) ---------- */
+const templateCache = new Map();
+function compileTemplate(file) {
+  if (assets.isEmbedded() && templateCache.has(file)) return templateCache.get(file);
+  const src = assets.get(file.replace(/^\//, ''));
+  if (!src) throw new Error('Template niet gevonden: ' + file);
+  const fn = ejs.compile(src.toString('utf8'), {
+    filename: file,
+    root: '/views', // includes zijn absoluut: include('/partials/head')
+    includer: (original, resolved) => {
+      const rel = path.posix.normalize(resolved.replace(/\\/g, '/').replace(/^[A-Za-z]:/, ''));
+      const inc = assets.get((rel.endsWith('.ejs') ? rel : rel + '.ejs').replace(/^\//, ''));
+      if (!inc) throw new Error('Include niet gevonden: ' + original);
+      return { template: inc.toString('utf8') };
+    },
+  });
+  templateCache.set(file, fn);
+  return fn;
+}
+app.use((req, res, next) => {
+  res.render = (name, locals = {}) => {
+    try {
+      const html = compileTemplate(`/views/${name}.ejs`)({ ...app.locals, ...res.locals, ...locals });
+      res.type('html').send(html);
+    } catch (err) {
+      if (name === 'error') {
+        console.error(err);
+        return res.status(500).type('text').send('Er ging iets mis.');
+      }
+      next(err);
+    }
+  };
+  next();
+});
+
 app.use(express.urlencoded({ extended: true, limit: '1mb', parameterLimit: 5000 }));
 app.use(
   session({
@@ -55,7 +106,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
-      secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : PROD,
+      secure: SECURE,
       maxAge: 12 * 60 * 60 * 1000, // 12 uur na laatste activiteit
     },
   })
@@ -79,7 +130,7 @@ function fmtDateTime(sqlDate) {
   if (!sqlDate) return '';
   const d = new Date(sqlDate.replace(' ', 'T') + 'Z');
   return new Intl.DateTimeFormat('nl-NL', {
-    timeZone: process.env.TZ || 'Europe/Amsterdam', day: '2-digit', month: '2-digit', year: 'numeric',
+    timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam', day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   }).format(d);
 }
@@ -375,12 +426,5 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).render('error', { title: 'Er ging iets mis', message: 'Er is een onverwachte fout opgetreden.' });
 });
-
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Werkopdrachten draait op http://localhost:${PORT}`);
-    if (auth.userCount() === 0) console.log(`Nog geen gebruikers: ga naar http://localhost:${PORT}/setup`);
-  });
-}
 
 module.exports = app;

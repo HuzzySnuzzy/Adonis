@@ -22,52 +22,121 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 
 Sneltoetsen in het formulier: `Ctrl+S` slaat op, `Enter` springt naar het volgende vak.
 
-## Starten
+## Installeren – één bestand
 
-Vereist **Node.js 22.13 of nieuwer** (de ingebouwde SQLite-database van Node wordt gebruikt; geen aparte database nodig).
+Werkopdrachten is **één los programma**, net als een Minecraft-server: zet het in een eigen map en start het.
+Bij de eerste start worden ernaast aangemaakt:
 
-```bash
-npm install
-npm start
+```
+Werkopdrachten/
+├── werkopdrachten.exe        ← het programma (Linux: werkopdrachten-linux-x64)
+├── config.properties         ← instellingen (poort, eerste werkopdrachtnummer, ...)
+└── data/
+    └── werkopdrachten.db     ← alle klanten, werkopdrachten en accounts  ← BACK-UP MAKEN!
 ```
 
-Open daarna <http://localhost:3000>. Zolang er nog geen accounts zijn, wordt `/setup` getoond om het eerste
-(beheerders)account aan te maken. Maak dit account direct aan, of maak het vooraf aan via de commandoregel:
+Er hoeft niets anders geïnstalleerd te worden (geen Node.js, geen database), en er is geen internet nodig.
+
+De bestanden staan bij elke [release](../../releases) (`werkopdrachten.exe`, `werkopdrachten-linux-x64`,
+`werkopdrachten-linux-arm64`) of maak ze zelf, zie [Zelf bouwen](#zelf-bouwen).
+
+### Windows (lokaal in de werkplaats)
+
+1. Maak een map, bijv. `C:\Werkopdrachten`, en zet `werkopdrachten.exe` erin.
+2. Dubbelklik op `werkopdrachten.exe`. De eerste keer:
+   - Windows kan waarschuwen dat het programma onbekend is → *Meer informatie* → *Toch uitvoeren*.
+   - Windows Firewall vraagt toegang → sta **Privénetwerken** toe, dan kunnen andere pc's/tablets in de werkplaats ook verbinden.
+3. De browser opent vanzelf. Maak het eerste (beheerders)account aan.
+4. **Laat het zwarte venster open** zolang de site gebruikt wordt. Typ `stop` (of sluit het venster) om af te sluiten.
+
+Het venster toont ook het adres voor andere apparaten, bijv. `http://192.168.1.20:3000`.
+Automatisch starten met Windows: zet een snelkoppeling naar de .exe in de map `shell:startup`.
+
+### Linux
 
 ```bash
-npm run create-user -- collin "Collin" --admin
+chmod +x werkopdrachten-linux-x64
+./werkopdrachten-linux-x64
 ```
 
-Andere monteurs voeg je toe via **Gebruikers** in het menu.
+Werkt op gewone Linux-distributies (Debian, Ubuntu, ...; niet op Alpine). Als achtergronddienst kun je bijv.
+een systemd-service gebruiken die dit bestand start.
 
-### Instellingen (omgevingsvariabelen)
+### Pterodactyl
 
-| Variabele | Standaard | Uitleg |
+1. Importeer `pterodactyl/egg-werkopdrachten.json` (Admin → Nests → Import Egg).
+2. Maak een server met deze egg. Bij installatie wordt `werkopdrachten-linux-x64` gedownload van de nieuwste release.
+   Is de repository privé, of lukt de download niet? Upload het bestand dan zelf via de bestandsbeheerder.
+3. Start de server; de poort komt automatisch van de toegewezen allocatie (`SERVER_PORT`).
+4. Maak het eerste account aan via `/setup`, of typ in de console:
+   `create-user collin "Collin" <wachtwoord> --admin`
+
+### Console-opdrachten
+
+In het venster / de Pterodactyl-console kun je typen:
+
+| Opdracht | |
+|---|---|
+| `help` | overzicht |
+| `users` | gebruikers tonen |
+| `create-user <gebruiker> "<naam>" <wachtwoord> [--admin]` | gebruiker aanmaken |
+| `reset-password <gebruiker> <nieuw wachtwoord>` | wachtwoord vergeten? zo stel je een nieuw in |
+| `make-admin <gebruiker>` | gebruiker beheerder maken |
+| `stop` | netjes afsluiten |
+
+Dezelfde opdrachten werken ook los, bijv. `werkopdrachten.exe reset-password collin` (vraagt dan om het wachtwoord).
+
+### Instellingen
+
+`config.properties` (wordt bij de eerste start aangemaakt; herstart na wijzigen):
+
+| Instelling | Standaard | Uitleg |
 |---|---|---|
-| `PORT` | `3000` | Poort van de webserver |
-| `DATA_DIR` | `./data` | Map voor de database (`werkopdrachten.db`). **Maak hier regelmatig een back-up van.** |
-| `START_ORDER_NUMBER` | `1` | Eerste werkopdrachtnummer, bijv. `4449` om verder te gaan na de papieren boekjes |
-| `NODE_ENV` | – | Zet op `production` op de server (alleen beveiligde cookies via HTTPS) |
-| `SESSION_SECRET` | automatisch | Geheime sleutel voor sessies; wordt anders automatisch aangemaakt in `DATA_DIR` |
-| `TRUST_PROXY` | – | Zet op `true` als de site achter een reverse proxy (bijv. nginx, Caddy) draait |
-| `COOKIE_SECURE` | – | Overschrijft of cookies alleen via HTTPS gaan (`true`/`false`) |
-| `TZ` | `Europe/Amsterdam` | Tijdzone voor “Datum invoer” |
+| `port` | `3000` | Poort van de website |
+| `host` | `0.0.0.0` | `0.0.0.0` = ook bereikbaar vanaf andere apparaten in het netwerk; `127.0.0.1` = alleen deze pc |
+| `data-dir` | `data` | Map voor de database. **Maak hier regelmatig een back-up van** (bijv. kopie naar USB-stick of NAS). |
+| `start-order-number` | `1` | Eerste werkopdrachtnummer, bijv. `4449` om verder te tellen na de papieren boekjes |
+| `open-browser` | `true` | Browser automatisch openen bij het starten (Windows) |
+| `secure-cookies` | `false` | `true` als de site via HTTPS bereikbaar is |
+| `trust-proxy` | `false` | `true` achter een reverse proxy (nginx, Caddy, Cloudflare) |
+| `timezone` | `Europe/Amsterdam` | Tijdzone voor “Datum invoer” |
+
+Alles kan ook als opdrachtregeloptie (`--port 8080`) of omgevingsvariabele (`SERVER_PORT`/`PORT`, `DATA_DIR`,
+`START_ORDER_NUMBER`, `APP_TIMEZONE`, `COOKIE_SECURE`, `TRUST_PROXY`). Volgorde: opdrachtregel > omgeving > config.properties.
+
+### Beveiliging
+
+Lokaal in de werkplaats gaat het verkeer onversleuteld (http) over het eigen netwerk; dat is prima voor een
+afgeschermd bedrijfsnetwerk. **Zet de site niet zomaar open op internet.** Wil je er van buitenaf bij, gebruik dan
+HTTPS via een reverse proxy (bijv. Caddy of Cloudflare Tunnel) en zet `secure-cookies=true` en `trust-proxy=true`.
 
 ### Docker
 
 ```bash
 docker build -t werkopdrachten .
-docker run -d -p 3000:3000 -v werkopdrachten-data:/app/data \
-  -e START_ORDER_NUMBER=4449 werkopdrachten
+docker run -d -p 3000:3000 -v werkopdrachten-data:/data werkopdrachten
 ```
 
-### Online zetten
+## Zelf bouwen
 
-Zet de site altijd achter **HTTPS** (bijv. met Caddy of een hostingpartij die HTTPS regelt) en gebruik
-`NODE_ENV=production` en `TRUST_PROXY=true`. Zonder HTTPS gaan wachtwoorden onversleuteld over het internet.
+Vereist Node.js 22.13 of nieuwer.
+
+```bash
+npm install
+npm start                    # ontwikkelen: draait direct vanuit de broncode
+npm run build                # maakt dist/werkopdrachten.exe, dist/werkopdrachten-linux-x64 en -linux-arm64
+npm run build -- win-x64     # alleen Windows
+```
+
+Het bouwscript bundelt alle code, templates, css en het lettertype tot één bestand en zet dat in een officiële
+Node.js-binary (Node “Single Executable Application”). Dit kan vanaf elk besturingssysteem voor elk doel.
+
+GitHub Actions bouwt en test de bestanden automatisch bij elke push. Een release maken:
+`git tag v1.0.0 && git push --tags` → de bestanden verschijnen bij de release.
 
 ## Techniek
 
-- Node.js + Express, server-side templates (EJS), SQLite (`node:sqlite`)
-- `src/server.js` – routes · `src/orders.js` – werkopdracht-velden en opslag · `src/auth.js` – inloggen, CSRF-bescherming, rate limiting
+- Node.js + Express, server-side templates (EJS), SQLite (`node:sqlite`), verpakt als Node Single Executable Application
+- `src/main.js` – opstarten, config.properties, console-opdrachten · `src/server.js` – routes · `src/assets.js` – ingebakken bestanden
+- `scripts/build.js` – bouwt de losse executables · `src/orders.js` – werkopdracht-velden en opslag · `src/auth.js` – inloggen, CSRF-bescherming, rate limiting
 - `views/order.ejs` + `public/css/werkopdracht.css` – het formulier

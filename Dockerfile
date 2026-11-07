@@ -1,11 +1,16 @@
-FROM node:22-alpine
+# Docker-image dat de app vanuit de broncode draait.
+# (Alternatief: gebruik het losse bestand werkopdrachten-linux-x64 in een Debian/Ubuntu-image.)
+FROM node:22-bookworm-slim
 WORKDIR /app
-ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
-COPY . .
-RUN mkdir -p /app/data && chown -R node:node /app/data
+COPY src ./src
+COPY views ./views
+COPY public ./public
+# config.properties en data/ komen in /data
+ENV WERKOPDRACHTEN_HOME=/data
+RUN mkdir -p /data && chown node:node /data
 USER node
-VOLUME ["/app/data"]
+VOLUME ["/data"]
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "src/main.js", "--open-browser", "false"]

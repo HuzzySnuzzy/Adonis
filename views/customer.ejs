@@ -1,9 +1,9 @@
-<%- include('partials/head') %>
+<%- include('/partials/head') %>
 <main class="page">
   <p class="crumbs"><a href="/">← Alle klanten</a></p>
   <div class="customer-head">
     <div>
-      <%- include('partials/plate', { kenteken: customer.kenteken }) %>
+      <%- include('/partials/plate', { kenteken: customer.kenteken }) %>
       <h1><%= customer.naam || 'Onbekende klant' %></h1>
       <p class="muted"><%= customer.merk_type %></p>
     </div>
@@ -26,8 +26,8 @@
   <% if (orders.length === 0) { %>
     <div class="empty"><p>Geen werkopdrachten gevonden<%= q ? ' voor “' + q + '”' : '' %>.</p></div>
   <% } else { %>
-    <%- include('partials/orderlist', { orders, showPlate: false }) %>
+    <%- include('/partials/orderlist', { orders, showPlate: false }) %>
   <% } %>
 </main>
 <script src="/static/js/common.js"></script>
-<%- include('partials/foot') %>
+<%- include('/partials/foot') %>

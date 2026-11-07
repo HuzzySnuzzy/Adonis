@@ -117,7 +117,7 @@ function flattenText(value, out = []) {
 
 function todayISO() {
   // Datum in Nederlandse tijd, als YYYY-MM-DD
-  return new Intl.DateTimeFormat('sv-SE', { timeZone: process.env.TZ || 'Europe/Amsterdam' }).format(new Date());
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam' }).format(new Date());
 }
 
 function nextOrderNumber() {

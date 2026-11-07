@@ -1,0 +1,62 @@
+{
+    "_comment": "Pterodactyl egg voor Werkopdrachten. Importeren via Admin > Nests > Import Egg.",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2026-11-07T00:00:00+00:00",
+    "name": "Werkopdrachten",
+    "author": "collinsteennis@gmail.com",
+    "description": "Werkopdrachten-website voor de garage (één los Linux-bestand, ingebouwde database).",
+    "features": null,
+    "docker_images": {
+        "Debian": "ghcr.io/parkervcp/yolks:debian"
+    },
+    "file_denylist": [],
+    "startup": "./werkopdrachten-linux-x64 --port {{SERVER_PORT}} --host 0.0.0.0 --open-browser false",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"Werkopdrachten draait op\"\r\n}",
+        "logs": "{}",
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\n# Download het Linux-bestand. Lukt dit niet (bijv. privé repository), upload\n# werkopdrachten-linux-x64 dan zelf via de bestandsbeheerder.\napt-get update -qq && apt-get install -y -qq curl ca-certificates > /dev/null\ncd /mnt/server\nif [ -n \"${DOWNLOAD_URL}\" ]; then\n  curl -fL -o werkopdrachten-linux-x64 \"${DOWNLOAD_URL}\" || echo \"Download mislukt - upload het bestand handmatig.\"\nfi\nchmod +x werkopdrachten-linux-x64 2>/dev/null || true\necho \"Installatie klaar.\"",
+            "container": "debian:bookworm-slim",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Download-URL",
+            "description": "Waar werkopdrachten-linux-x64 wordt gedownload bij (her)installatie. Laat leeg om het bestand zelf te uploaden.",
+            "env_variable": "DOWNLOAD_URL",
+            "default_value": "https://github.com/huzzysnuzzy/adonis/releases/latest/download/werkopdrachten-linux-x64",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:500",
+            "field_type": "text"
+        },
+        {
+            "name": "Eerste werkopdrachtnummer",
+            "description": "Nummer van de eerste werkopdracht, bijv. 4449 om verder te tellen na de papieren boekjes.",
+            "env_variable": "START_ORDER_NUMBER",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:1",
+            "field_type": "text"
+        },
+        {
+            "name": "Tijdzone",
+            "description": "Tijdzone voor 'Datum invoer'.",
+            "env_variable": "APP_TIMEZONE",
+            "default_value": "Europe/Amsterdam",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:64",
+            "field_type": "text"
+        }
+    ]
+}

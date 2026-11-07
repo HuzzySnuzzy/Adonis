@@ -9,7 +9,7 @@
     <tr data-href="/werkopdracht/<%= o.id %>">
       <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= o.nummer %></a></td>
       <td><%= fmtDate(o.datum_invoer) %></td>
-      <% if (showPlate) { %><td><%- include('plate', { kenteken: o.d.kenteken || o.c_kenteken }) %></td><td><%= o.d.naam %></td><% } %>
+      <% if (showPlate) { %><td><%- include('/partials/plate', { kenteken: o.d.kenteken || o.c_kenteken }) %></td><td><%= o.d.naam %></td><% } %>
       <td><%= o.d.km_in || o.d.km_uit %></td>
       <td><%= o.d.monteur %></td>
       <td class="summary"><%= o.summary %></td>

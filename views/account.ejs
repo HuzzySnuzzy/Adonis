@@ -1,4 +1,4 @@
-<%- include('partials/head') %>
+<%- include('/partials/head') %>
 <main class="page narrow">
   <h1>Mijn account</h1>
   <p class="muted">Ingelogd als <strong><%= user.username %></strong> (<%= user.name %>)<%= user.is_admin ? ' · beheerder' : '' %>.</p>
@@ -14,4 +14,4 @@
     </form>
   </section>
 </main>
-<%- include('partials/foot') %>
+<%- include('/partials/foot') %>
