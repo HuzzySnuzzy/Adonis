@@ -26,6 +26,7 @@
     <a href="/werkopdrachten" class="<%= path === '/werkopdrachten' ? 'active' : '' %>">Alle werkopdrachten</a>
     <a href="/importeren" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Foto importeren</a>
     <% if (user.is_admin) { %><a href="/gebruikers" class="<%= path === '/gebruikers' ? 'active' : '' %>">Gebruikers</a><% } %>
+    <% if (user.is_owner) { %><a href="/systeem" class="<%= path === '/systeem' ? 'active' : '' %>">Systeem</a><% } %>
   </nav>
   <div class="usernav">
     <a class="btn btn-primary" href="/werkopdracht/nieuw">+ Nieuwe werkopdracht</a>

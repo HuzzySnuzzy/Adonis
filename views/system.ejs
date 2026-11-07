@@ -1,0 +1,103 @@
+<%- include('/partials/head') %>
+<%
+  const st = tunnelState;
+  const on = cf && cf.enabled;
+  const STATUS = {
+    'uit': ['Uit', 'off'], 'downloaden': ['Bezig met downloaden…', 'busy'], 'starten': ['Verbinden…', 'busy'],
+    'verbonden': ['Online', 'ok'], 'verbinding verbroken': ['Verbinding verbroken – opnieuw verbinden…', 'busy'], 'fout': ['Fout', 'bad'],
+  };
+  const [label, cls] = STATUS[st.status] || [st.status, 'off'];
+%>
+<main class="page system-page">
+  <h1>Systeem</h1>
+  <p class="muted">Alleen zichtbaar voor de ADONIS-beheerder.</p>
+
+  <section class="card">
+    <div class="sys-head">
+      <h2>Online bereikbaar (Cloudflare)</h2>
+      <% if (cf) { %><span class="status-pill status-<%= on ? cls : 'off' %>"><%= on ? label : 'Uitgeschakeld' %></span><% } %>
+    </div>
+    <p class="muted">Maakt ADONIS veilig (https, met slotje) bereikbaar op je eigen domein, ook buiten de werkplaats.
+      Er hoeven geen poorten open te staan: ADONIS maakt zelf een beveiligde verbinding met Cloudflare.
+      In de werkplaats blijft het gewone adres ook werken.</p>
+
+    <% if (error) { %><div class="alert"><%= error %></div><% } %>
+
+    <% if (cf) { %>
+      <dl class="facts sys-facts">
+        <% if (cf.hostname) { %><dt>Adres</dt><dd><a href="https://<%= cf.hostname %>" target="_blank" rel="noopener">https://<%= cf.hostname %></a></dd><% } %>
+        <dt>Ingesteld</dt><dd><%= fmtDateTime(cf.installedAt.replace('T', ' ').slice(0, 19)) %> door <%= cf.installedBy %><%= cf.manual ? ' (met tunnelsleutel)' : '' %></dd>
+        <% if (on && st.message) { %><dt>Melding</dt><dd><%= st.message %></dd><% } %>
+      </dl>
+      <% if (port && cf.port && cf.port !== port) { %>
+        <div class="alert">De tunnel stuurt door naar poort <%= cf.port %>, maar ADONIS draait nu op poort <%= port %>.
+          Stel de tunnel hieronder opnieuw in om dit te herstellen.</div>
+      <% } %>
+      <div class="sys-actions">
+        <% if (on) { %>
+          <form method="post" action="/systeem/cloudflare/uit" class="inline" data-confirm="Cloudflare-tunnel uitschakelen? ADONIS is dan alleen nog in het eigen netwerk bereikbaar.">
+            <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn" type="submit">Uitschakelen</button>
+          </form>
+        <% } else { %>
+          <form method="post" action="/systeem/cloudflare/aan" class="inline">
+            <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-primary" type="submit">Inschakelen</button>
+          </form>
+        <% } %>
+        <form method="post" action="/systeem/cloudflare/vergeten" class="inline" data-confirm="Cloudflare-instellingen verwijderen uit ADONIS?">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-danger" type="submit">Instellingen verwijderen</button>
+        </form>
+      </div>
+      <% if (st.log.length) { %>
+        <details class="sys-log"><summary>Verbindingslogboek</summary><pre><%= st.log.join('\n') %></pre></details>
+      <% } %>
+    <% } %>
+
+    <% if (!supported) { %>
+      <div class="alert">Automatisch installeren is op dit besturingssysteem niet beschikbaar.</div>
+    <% } else { %>
+    <details class="sys-install" <%= cf ? '' : 'open' %>>
+      <summary><strong><%= cf ? 'Opnieuw instellen' : 'Instellen in één klik' %></strong></summary>
+      <ol class="sys-steps">
+        <li>Zorg dat je domein (bijv. <code>revnet.nl</code>) in je Cloudflare-account staat.</li>
+        <li>Maak een API-token aan: Cloudflare → <em>My Profile</em> → <em>API Tokens</em> → <em>Create Token</em> →
+          <em>Create Custom Token</em>, met deze rechten:
+          <ul>
+            <li>Account → <strong>Cloudflare Tunnel</strong> → Edit</li>
+            <li>Zone → <strong>DNS</strong> → Edit</li>
+            <li>Zone → <strong>Zone</strong> → Read</li>
+          </ul>
+          Bij <em>Zone Resources</em>: kies je domein. Kopieer de token.</li>
+        <li>Vul hieronder het adres en de token in en klik op <strong>Installeren</strong>. ADONIS regelt de rest:
+          tunnel, DNS-record, https-certificaat en het verbindingsprogramma. De token wordt niet bewaard.</li>
+      </ol>
+      <form method="post" action="/systeem/cloudflare/installeren" class="stack sys-form" id="cfInstall">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <label>Adres voor ADONIS
+          <input name="hostname" value="<%= values.hostname || (cf && cf.hostname) || '' %>" placeholder="adonis.revnet.nl" required autocapitalize="none" spellcheck="false">
+        </label>
+        <label>Cloudflare API-token
+          <input name="api_token" type="password" required autocomplete="off" spellcheck="false">
+        </label>
+        <button class="btn btn-primary" type="submit">Installeren</button>
+        <p class="muted small busy-note" hidden>Bezig… dit kan tot een minuut duren (het verbindingsprogramma wordt gedownload).</p>
+      </form>
+
+      <details class="sys-alt">
+        <summary>Liever zelf de tunnel aanmaken in het Cloudflare-dashboard?</summary>
+        <p class="muted small">Cloudflare → <em>Zero Trust</em> → <em>Networks</em> → <em>Tunnels</em> → <em>Create a tunnel</em>.
+          Voeg een <em>Public hostname</em> toe die verwijst naar <code>http://127.0.0.1:<%= port || 3000 %></code>,
+          en plak hieronder de sleutel (of het hele installatiecommando).</p>
+        <form method="post" action="/systeem/cloudflare/sleutel" class="stack sys-form">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <label>Adres (alleen ter info) <input name="hostname" placeholder="adonis.revnet.nl" autocapitalize="none" spellcheck="false"></label>
+          <label>Tunnelsleutel <input name="tunnel_token" type="password" required autocomplete="off" spellcheck="false"></label>
+          <button class="btn" type="submit">Verbinden</button>
+        </form>
+      </details>
+    </details>
+    <% } %>
+  </section>
+</main>
+<script src="/static/js/common.js"></script>
+<script src="/static/js/system.js"></script>
+<%- include('/partials/foot') %>

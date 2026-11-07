@@ -37,6 +37,7 @@ process.env.COOKIE_SECURE = cfg.secureCookies ? 'true' : 'false';
 process.env.TRUST_PROXY = cfg.trustProxy ? 'true' : 'false';
 process.env.IMPORT_LIMIT_PER_DAY = String(cfg.importLimitPerDay);
 process.env.AUTO_UPDATE_ENABLED = cfg.autoUpdate ? 'true' : 'false';
+process.env.APP_PORT = String(cfg.port);
 if (cfg.anthropicApiKey) process.env.ANTHROPIC_API_KEY = cfg.anthropicApiKey;
 else delete process.env.ANTHROPIC_API_KEY;
 
@@ -72,9 +73,9 @@ async function runAdminCommand(cmd, args, { askPassword }) {
   const pos = args.filter((a) => !a.startsWith('--'));
   switch (cmd) {
     case 'users': {
-      const rows = db.prepare('SELECT username, name, is_admin FROM users ORDER BY username').all();
+      const rows = db.prepare('SELECT username, name, is_admin, is_owner FROM users ORDER BY is_owner DESC, username').all();
       if (!rows.length) console.log('  Nog geen gebruikers.');
-      for (const u of rows) console.log(`  ${u.username.padEnd(20)} ${u.name.padEnd(24)} ${u.is_admin ? 'beheerder' : 'monteur'}`);
+      for (const u of rows) console.log(`  ${u.username.padEnd(20)} ${u.name.padEnd(24)} ${u.is_owner ? 'ADONIS-beheerder (eigenaar)' : u.is_admin ? 'beheerder' : 'monteur'}`);
       return true;
     }
     case 'create-user': {
@@ -174,6 +175,15 @@ function startServer() {
 
   server.on('listening', () => {
     require('./update').startStatusChecks(cfg.updateRepo);
+    // Cloudflare-tunnel weer starten als die is ingesteld.
+    const cfSettings = require('./settings').get('cloudflare', null);
+    if (cfSettings && cfSettings.enabled && cfSettings.token) {
+      console.log(`  Online via Cloudflare: https://${cfSettings.hostname || '(tunnel)'}`);
+      if (cfSettings.port && cfSettings.port !== cfg.port) {
+        console.log(`  LET OP: de tunnel stuurt door naar poort ${cfSettings.port}, maar ADONIS draait nu op ${cfg.port}. Stel de tunnel opnieuw in via Systeem.`);
+      }
+      require('./tunnel').start({ token: cfSettings.token, hostname: cfSettings.hostname });
+    }
     const local = `http://localhost:${cfg.port}`;
     console.log('');
     console.log(`  ADONIS Werkopdrachten v${VERSION}`);
@@ -204,6 +214,7 @@ function startServer() {
     if (stopping) return;
     stopping = true;
     console.log('  Server wordt gestopt...');
+    try { require('./tunnel').stop(); } catch { /* geen tunnel */ }
     server.close(() => {
       try { require('./db').db.close(); } catch { /* al dicht */ }
       console.log('  Gestopt.');

@@ -16,10 +16,14 @@ const importer = require('./import');
 const buildinfo = require('./buildinfo');
 const updater = require('./update');
 const events = require('./events');
+const settings = require('./settings');
+const tunnel = require('./tunnel');
+const cloudflare = require('./cloudflare');
 
 const app = express();
-// HTTPS (achter een reverse proxy): alleen dan beveiligde cookies en HSTS.
-const SECURE = process.env.COOKIE_SECURE === 'true';
+// Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
+// binnenkomt (bijv. via de Cloudflare-tunnel). Zo blijft gewoon http in het eigen netwerk ook werken.
+const FORCE_SECURE = process.env.COOKIE_SECURE === 'true';
 
 /* ---------- session secret ---------- */
 function sessionSecret() {
@@ -31,7 +35,9 @@ function sessionSecret() {
 
 /* ---------- app setup ---------- */
 app.disable('x-powered-by');
-if (process.env.TRUST_PROXY === 'true') app.set('trust proxy', 1);
+// Proxy-headers (X-Forwarded-Proto/For) alleen vertrouwen van deze computer zelf (cloudflared),
+// of van één proxy ervoor als trust-proxy=true.
+app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : 'loopback');
 
 app.use((req, res, next) => {
   res.set({
@@ -41,7 +47,7 @@ app.use((req, res, next) => {
     'Content-Security-Policy':
       "default-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
   });
-  if (SECURE) res.set('Strict-Transport-Security', 'max-age=31536000');
+  if (req.secure) res.set('Strict-Transport-Security', 'max-age=31536000');
   next();
 });
 
@@ -110,7 +116,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
-      secure: SECURE,
+      secure: FORCE_SECURE ? true : 'auto',
       maxAge: 12 * 60 * 60 * 1000, // 12 uur na laatste activiteit
     },
   })
@@ -450,7 +456,7 @@ app.post('/importeren/:id/annuleren', (req, res) => {
 /* ---------- instellingen (persoonlijke voorkeuren + wachtwoord) ---------- */
 function setThemeCookie(res, theme) {
   // Onthoudt het thema op dit apparaat, zodat ook de inlogpagina in het gekozen thema verschijnt.
-  res.cookie('wo_theme', theme, { maxAge: 365 * 24 * 3600 * 1000, httpOnly: true, sameSite: 'lax', secure: SECURE });
+  res.cookie('wo_theme', theme, { maxAge: 365 * 24 * 3600 * 1000, httpOnly: true, sameSite: 'lax', secure: FORCE_SECURE || res.req.secure });
 }
 function renderSettings(res, { error = null, status = 200 } = {}) {
   res.status(status).render('settings', { title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS });
@@ -513,9 +519,90 @@ app.post('/account/wachtwoord', wrap(async (req, res) => {
   });
 }));
 
+/* ---------- systeem (alleen ADONIS-beheerder): online bereikbaar via Cloudflare ---------- */
+function renderSystem(res, { error = null, status = 200, values = {} } = {}) {
+  const cf = settings.get('cloudflare', null);
+  res.status(status).render('system', {
+    title: 'Systeem', error, values, cf, tunnelState: tunnel.getState(),
+    port: Number(process.env.APP_PORT) || null, supported: Boolean(tunnel.assetName()),
+    permissionsHelp: cloudflare.PERMISSIONS_HELP,
+  });
+}
+app.get('/systeem', auth.requireOwner, (req, res) => renderSystem(res));
+
+app.post('/systeem/cloudflare/installeren', auth.requireOwner, wrap(async (req, res) => {
+  const port = Number(process.env.APP_PORT) || 3000;
+  const hostname = String(req.body.hostname || '').trim().toLowerCase();
+  const log = [];
+  try {
+    const r = await cloudflare.setup({ apiToken: req.body.api_token, hostname, port, log: (l) => log.push(l) });
+    settings.set('cloudflare', {
+      enabled: true, hostname: r.hostname, tunnelId: r.tunnelId, accountId: r.accountId, zoneId: r.zoneId,
+      token: r.tunnelToken, port, installedAt: new Date().toISOString(), installedBy: req.user.name,
+    });
+    tunnel.stop();
+    await tunnel.start({ token: r.tunnelToken, hostname: r.hostname });
+    const ok = await tunnel.waitConnected(25000);
+    flash(req, 'ok', ok
+      ? `Klaar! ADONIS is nu online bereikbaar op https://${r.hostname} (het kan een minuutje duren voordat het overal werkt).`
+      : `Ingesteld voor https://${r.hostname}. De verbinding wordt nog opgebouwd; ververs deze pagina over een minuut.`);
+    res.redirect('/systeem');
+  } catch (err) {
+    if (!(err instanceof cloudflare.CloudflareError)) console.error(err);
+    renderSystem(res, { error: err.message, status: 400, values: { hostname } });
+  }
+}));
+
+// Alternatief: zelf een tunnel aangemaakt in het Cloudflare-dashboard en alleen de sleutel plakken.
+app.post('/systeem/cloudflare/sleutel', auth.requireOwner, wrap(async (req, res) => {
+  const token = String(req.body.tunnel_token || '').trim().replace(/^.*--token\s+/, '').replace(/^.*\s/, '');
+  const hostname = String(req.body.hostname || '').trim().toLowerCase();
+  if (!/^[A-Za-z0-9+/=_-]{40,}$/.test(token)) {
+    return renderSystem(res, { error: 'Dat lijkt geen geldige tunnelsleutel. Kopieer de sleutel (of het hele installatiecommando) uit het Cloudflare-dashboard.', status: 400, values: { hostname } });
+  }
+  if (hostname && !cloudflare.validHostname(hostname)) {
+    return renderSystem(res, { error: 'Vul een geldig (sub)domein in, bijvoorbeeld adonis.revnet.nl.', status: 400, values: { hostname } });
+  }
+  settings.set('cloudflare', {
+    enabled: true, hostname, token, manual: true, port: Number(process.env.APP_PORT) || 3000,
+    installedAt: new Date().toISOString(), installedBy: req.user.name,
+  });
+  tunnel.stop();
+  await tunnel.start({ token, hostname });
+  const ok = await tunnel.waitConnected(25000);
+  flash(req, 'ok', ok ? 'Tunnel verbonden.' : 'Tunnel ingesteld; de verbinding wordt nog opgebouwd.');
+  res.redirect('/systeem');
+}));
+
+app.post('/systeem/cloudflare/aan', auth.requireOwner, wrap(async (req, res) => {
+  const cf = settings.get('cloudflare', null);
+  if (cf) {
+    settings.set('cloudflare', { ...cf, enabled: true });
+    await tunnel.start({ token: cf.token, hostname: cf.hostname });
+    await tunnel.waitConnected(15000);
+    flash(req, 'ok', 'Cloudflare-tunnel ingeschakeld.');
+  }
+  res.redirect('/systeem');
+}));
+
+app.post('/systeem/cloudflare/uit', auth.requireOwner, (req, res) => {
+  const cf = settings.get('cloudflare', null);
+  if (cf) settings.set('cloudflare', { ...cf, enabled: false });
+  tunnel.stop();
+  flash(req, 'ok', 'Cloudflare-tunnel uitgeschakeld. ADONIS is nu alleen nog in het eigen netwerk bereikbaar.');
+  res.redirect('/systeem');
+});
+
+app.post('/systeem/cloudflare/vergeten', auth.requireOwner, (req, res) => {
+  tunnel.stop();
+  settings.remove('cloudflare');
+  flash(req, 'ok', 'Cloudflare-instellingen verwijderd. De tunnel en het DNS-record bestaan nog in je Cloudflare-account; verwijder die daar eventueel.');
+  res.redirect('/systeem');
+});
+
 /* ---------- gebruikersbeheer (beheerder) ---------- */
 function renderUsers(req, res, error, status) {
-  const users = db.prepare('SELECT id, username, name, is_admin, created_at FROM users ORDER BY name').all();
+  const users = db.prepare('SELECT id, username, name, is_admin, is_owner, created_at FROM users ORDER BY is_owner DESC, name').all();
   res.status(status || 200).render('users', { title: 'Gebruikers', users, error });
 }
 app.get('/gebruikers', auth.requireAdmin, (req, res) => renderUsers(req, res, null));
@@ -533,6 +620,9 @@ app.post('/gebruikers', auth.requireAdmin, wrap(async (req, res) => {
 app.post('/gebruikers/:id/wachtwoord', auth.requireAdmin, wrap(async (req, res) => {
   const target = auth.findUserById(req.params.id);
   if (!target) return res.redirect('/gebruikers');
+  if (target.is_owner && target.id !== req.user.id) {
+    return renderUsers(req, res, 'Het wachtwoord van de ADONIS-beheerder kan alleen door die persoon zelf worden gewijzigd.', 403);
+  }
   try {
     await auth.setPassword(target.id, req.body.password);
   } catch (err) {
@@ -544,7 +634,7 @@ app.post('/gebruikers/:id/wachtwoord', auth.requireAdmin, wrap(async (req, res) 
 }));
 app.post('/gebruikers/:id/beheerder', auth.requireAdmin, (req, res) => {
   const target = auth.findUserById(req.params.id);
-  if (target && target.id !== req.user.id) {
+  if (target && target.id !== req.user.id && !target.is_owner) {
     db.prepare('UPDATE users SET is_admin = ? WHERE id = ?').run(target.is_admin ? 0 : 1, target.id);
     flash(req, 'ok', `${target.username} is ${target.is_admin ? 'geen' : 'nu'} beheerder.`);
   }
@@ -552,7 +642,7 @@ app.post('/gebruikers/:id/beheerder', auth.requireAdmin, (req, res) => {
 });
 app.post('/gebruikers/:id/verwijderen', auth.requireAdmin, (req, res) => {
   const target = auth.findUserById(req.params.id);
-  if (target && target.id !== req.user.id) {
+  if (target && target.id !== req.user.id && !target.is_owner) {
     db.prepare('DELETE FROM users WHERE id = ?').run(target.id);
     db.prepare("DELETE FROM sessions WHERE json_extract(data, '$.userId') = ?").run(target.id);
     flash(req, 'ok', `Gebruiker ${target.username} is verwijderd.`);

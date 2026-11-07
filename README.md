@@ -154,6 +154,22 @@ De foto's gaan voor het uitlezen naar Anthropic; ze worden hier alleen bewaard z
 of geannuleerd (en maximaal 3 dagen). Bij een (onterechte) weigering van het model probeert de API automatisch een ander
 Claude-model (`fallbacks: "default"`).
 
+### Online bereikbaar via Cloudflare (één klik)
+
+Het eerste account is de **ADONIS-beheerder** (eigenaar): kan niet worden verwijderd of gedegradeerd en ziet als enige
+het menu **Systeem**. Daar zet je ADONIS met één klik online op je eigen domein, bijv. `https://adonis.revnet.nl`:
+
+1. Je domein moet in je Cloudflare-account staan.
+2. Maak in Cloudflare een API-token (*My Profile → API Tokens → Create Custom Token*) met:
+   Account → Cloudflare Tunnel → Edit, Zone → DNS → Edit en Zone → Zone → Read.
+3. Vul in ADONIS het adres en de token in en klik **Installeren**.
+
+ADONIS maakt dan de tunnel en het DNS-record aan, downloadt `cloudflared` (in `data/bin/`) en houdt de verbinding in
+stand, ook na een herstart. Er hoeven geen poorten open te staan (werkt dus ook in Pterodactyl), het https-certificaat
+regelt Cloudflare, en de API-token wordt niet bewaard. Bezoeken via https krijgen automatisch beveiligde cookies;
+het gewone adres in de werkplaats (http) blijft werken. Liever zelf een tunnel maken in het Cloudflare-dashboard?
+Dan kun je ook alleen de tunnelsleutel plakken.
+
 ### Beveiliging
 
 Lokaal in de werkplaats gaat het verkeer onversleuteld (http) over het eigen netwerk; dat is prima voor een

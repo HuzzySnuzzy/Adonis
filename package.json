@@ -1,6 +1,6 @@
 {
   "name": "werkopdrachten",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "ADONIS Werkopdrachten – werkopdrachten beheren voor de garage",
   "private": true,
   "main": "src/main.js",

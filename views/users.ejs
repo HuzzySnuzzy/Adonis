@@ -13,7 +13,9 @@
         <td><%= u.name %></td>
         <td><%= u.username %></td>
         <td>
-          <% if (u.id === user.id) { %><%= u.is_admin ? 'Beheerder' : 'Monteur' %> (jij)<% } else { %>
+          <% if (u.is_owner) { %>
+            <span class="role-owner" title="Eerste account: kan niet worden verwijderd of gedegradeerd">ADONIS-beheerder</span><%= u.id === user.id ? ' (jij)' : '' %>
+          <% } else if (u.id === user.id) { %><%= u.is_admin ? 'Beheerder' : 'Monteur' %> (jij)<% } else { %>
           <form method="post" action="/gebruikers/<%= u.id %>/beheerder" class="inline">
             <input type="hidden" name="_csrf" value="<%= csrf %>">
             <%= u.is_admin ? 'Beheerder' : 'Monteur' %>
@@ -22,14 +24,16 @@
           <% } %>
         </td>
         <td>
+          <% if (!u.is_owner || u.id === user.id) { %>
           <form method="post" action="/gebruikers/<%= u.id %>/wachtwoord" class="inline-form">
             <input type="hidden" name="_csrf" value="<%= csrf %>">
             <input type="password" name="password" placeholder="Nieuw wachtwoord" minlength="8" autocomplete="new-password" required>
             <button class="btn btn-small" type="submit">Opslaan</button>
           </form>
+          <% } else { %><span class="muted small">Alleen door de ADONIS-beheerder zelf</span><% } %>
         </td>
         <td>
-          <% if (u.id !== user.id) { %>
+          <% if (u.id !== user.id && !u.is_owner) { %>
           <form method="post" action="/gebruikers/<%= u.id %>/verwijderen" class="inline" data-confirm="Gebruiker <%= u.username %> verwijderen?">
             <input type="hidden" name="_csrf" value="<%= csrf %>">
             <button class="btn btn-small btn-danger" type="submit">Verwijderen</button>

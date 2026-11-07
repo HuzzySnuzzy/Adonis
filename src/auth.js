@@ -39,8 +39,19 @@ function savePrefs(userId, changes) {
   return prefs;
 }
 
+// Eigenaar ("ADONIS-beheerder"): het eerste account. Kan niet worden verwijderd of gedegradeerd
+// en is de enige die de systeeminstellingen (zoals Cloudflare) ziet.
+if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'is_owner')) {
+  db.exec('ALTER TABLE users ADD COLUMN is_owner INTEGER NOT NULL DEFAULT 0');
+}
+if (!db.prepare('SELECT 1 FROM users WHERE is_owner = 1').get()) {
+  // Bestaande installatie: de eerst aangemaakte beheerder wordt eigenaar.
+  const first = db.prepare('SELECT id FROM users ORDER BY is_admin DESC, id ASC LIMIT 1').get();
+  if (first) db.prepare('UPDATE users SET is_owner = 1, is_admin = 1 WHERE id = ?').run(first.id);
+}
+
 function findUserById(id) {
-  const row = db.prepare('SELECT id, username, name, is_admin, preferences FROM users WHERE id = ?').get(id);
+  const row = db.prepare('SELECT id, username, name, is_admin, is_owner, preferences FROM users WHERE id = ?').get(id);
   if (!row) return row;
   const { preferences, ...user } = row;
   return { ...user, prefs: parsePrefs(preferences) };
@@ -74,8 +85,9 @@ async function createUser({ username, name, password, isAdmin }) {
     throw new Error('Deze gebruikersnaam bestaat al.');
   }
   const hash = await bcrypt.hash(password, 12);
-  db.prepare('INSERT INTO users (username, name, password_hash, is_admin) VALUES (?, ?, ?, ?)').run(
-    username, name.slice(0, 80), hash, isAdmin ? 1 : 0
+  const first = userCount() === 0; // het allereerste account wordt eigenaar
+  db.prepare('INSERT INTO users (username, name, password_hash, is_admin, is_owner) VALUES (?, ?, ?, ?, ?)').run(
+    username, name.slice(0, 80), hash, isAdmin || first ? 1 : 0, first ? 1 : 0
   );
 }
 
@@ -117,6 +129,11 @@ function requireLogin(req, res, next) {
 function requireAdmin(req, res, next) {
   if (req.user && req.user.is_admin) return next();
   res.status(403).render('error', { title: 'Geen toegang', message: 'Alleen beheerders hebben toegang tot deze pagina.' });
+}
+
+function requireOwner(req, res, next) {
+  if (req.user && req.user.is_owner) return next();
+  res.status(403).render('error', { title: 'Geen toegang', message: 'Alleen de ADONIS-beheerder (eigenaar) heeft toegang tot deze pagina.' });
 }
 
 function csrfProtection(req, res, next) {
@@ -162,6 +179,6 @@ setInterval(() => {
 module.exports = {
   PREF_OPTIONS, savePrefs,
   userCount, findUserById, verifyLogin, createUser, setPassword, checkPassword,
-  loadUser, requireLogin, requireAdmin, csrfProtection,
+  loadUser, requireLogin, requireAdmin, requireOwner, csrfProtection,
   loginBlocked, loginFailed, loginSucceeded,
 };
