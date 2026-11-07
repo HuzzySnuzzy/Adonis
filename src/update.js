@@ -35,6 +35,19 @@ function compareVersions(a, b) {
   return 0;
 }
 
+/** Hernoemen, met nieuwe pogingen: op Windows houdt de virusscanner een net gedownload bestand even vast (EBUSY). */
+async function renameRetry(from, to) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      fs.renameSync(from, to);
+      return;
+    } catch (err) {
+      if (attempt >= 20 || !['EBUSY', 'EPERM', 'EACCES'].includes(err.code)) throw err;
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+}
+
 /** Oude bestanden van een vorige update opruimen (Windows kan een draaiend .exe niet verwijderen). */
 function cleanupOld() {
   for (const suffix of ['.old', '.download']) {
@@ -98,15 +111,15 @@ async function checkAndInstall({ repo = DEFAULT_REPO, log = () => {} } = {}) {
   if (process.platform === 'win32') {
     // Een draaiend .exe mag wel hernoemd worden, niet overschreven.
     fs.rmSync(exe + '.old', { force: true });
-    fs.renameSync(exe, exe + '.old');
+    await renameRetry(exe, exe + '.old');
     try {
-      fs.renameSync(tmp, exe);
+      await renameRetry(tmp, exe);
     } catch (err) {
-      fs.renameSync(exe + '.old', exe); // terugzetten
+      await renameRetry(exe + '.old', exe); // terugzetten
       throw err;
     }
   } else {
-    fs.renameSync(tmp, exe); // het draaiende proces houdt het oude bestand tot het stopt
+    await renameRetry(tmp, exe); // het draaiende proces houdt het oude bestand tot het stopt
   }
   return { updated: true, version: latest, message: `Bijgewerkt naar v${latest}.` };
 }

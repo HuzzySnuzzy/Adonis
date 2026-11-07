@@ -58,13 +58,16 @@ const MIME = {
   '.txt': 'text/plain; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon',
 };
 const STARTED = Date.now().toString(36);
+// Versie in de links naar css/js: na een update (of herstart) haalt de browser meteen de nieuwe bestanden op.
+app.locals.assetVersion = `${buildinfo.version}-${STARTED}`;
 app.get('/static/*file', (req, res, next) => {
   const rel = [].concat(req.params.file).join('/');
   const type = MIME[path.extname(rel)];
   const buf = type && assets.get('public/' + rel);
   if (!buf) return next();
   const etag = `"${STARTED}-${buf.length}"`;
-  res.set({ 'Content-Type': type, 'Cache-Control': 'public, max-age=3600', ETag: etag });
+  // Met ?v=... in de link mag de browser het bestand lang bewaren; zonder: altijd even navragen.
+  res.set({ 'Content-Type': type, 'Cache-Control': req.query.v ? 'public, max-age=31536000, immutable' : 'no-cache', ETag: etag });
   if (req.get('if-none-match') === etag) return res.status(304).end();
   res.send(buf);
 });

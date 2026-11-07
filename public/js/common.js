@@ -15,3 +15,9 @@ document.addEventListener('submit', (e) => {
 document.addEventListener('change', (e) => {
   if (e.target.matches('select[data-autosubmit]')) e.target.form.requestSubmit();
 });
+// Zoekveld alleen automatisch selecteren op een computer met muis; op telefoon/tablet zou
+// dat meteen het toetsenbord (en de wachtwoordbalk) openen.
+if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
+  const el = document.querySelector('[data-autofocus]');
+  if (el) el.focus();
+}

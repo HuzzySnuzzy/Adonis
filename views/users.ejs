@@ -55,8 +55,8 @@
     <h2>Nieuwe gebruiker</h2>
     <form method="post" action="/gebruikers" class="grid-form">
       <input type="hidden" name="_csrf" value="<%= csrf %>">
-      <label>Naam <input name="name" placeholder="bv. Collin" required></label>
-      <label>Gebruikersnaam <input name="username" autocapitalize="none" required></label>
+      <label>Naam <input name="name" placeholder="bv. Collin" autocomplete="off" required></label>
+      <label>Gebruikersnaam <input name="username" autocapitalize="none" autocomplete="off" required></label>
       <label>Wachtwoord <input type="password" name="password" minlength="8" autocomplete="new-password" required></label>
       <label>Rol
         <select name="role">
@@ -67,5 +67,5 @@
     </form>
   </section>
 </main>
-<script src="/static/js/common.js"></script>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

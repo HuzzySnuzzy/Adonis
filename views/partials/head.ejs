@@ -14,8 +14,8 @@
   <title><%= title %> · ADONIS</title>
   <link rel="icon" type="image/svg+xml" href="/static/img/adonis-icon.svg">
   <link rel="apple-touch-icon" href="/static/img/adonis-icon.svg">
-  <link rel="stylesheet" href="/static/css/app.css">
-  <% if (typeof extraCss !== 'undefined') { %><link rel="stylesheet" href="/static/css/<%= extraCss %>"><% } %>
+  <link rel="stylesheet" href="/static/css/app.css?v=<%= assetVersion %>">
+  <% if (typeof extraCss !== 'undefined') { %><link rel="stylesheet" href="/static/css/<%= extraCss %>?v=<%= assetVersion %>"><% } %>
 </head>
 <body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>"<%- user.can_invoice ? ' data-can-invoice="1"' : '' %><% } %>>
 <% if (locals.user) { %>

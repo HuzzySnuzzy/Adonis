@@ -2,9 +2,9 @@
 <main class="page">
   <div class="page-head">
     <h1><%= status === 'klaar' ? 'Facturatie – klaar om te factureren' : 'Alle werkopdrachten' %></h1>
-    <form class="search" method="get" action="/werkopdrachten" role="search">
+    <form class="search" method="get" action="/werkopdrachten" role="search" autocomplete="off">
       <% if (status) { %><input type="hidden" name="status" value="<%= status %>"><% } %>
-      <input type="search" name="q" value="<%= q %>" placeholder="Zoek op nummer, kenteken, onderdeel, foutcode, tekst…" autofocus>
+      <input type="search" name="q" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" data-1p-ignore data-lpignore="true" value="<%= q %>" placeholder="Zoek op nummer, kenteken, onderdeel, foutcode, tekst…" data-autofocus>
       <button class="btn" type="submit">Zoeken</button>
       <% if (q) { %><a class="btn btn-ghost" href="/werkopdrachten">Wissen</a><% } %>
     </form>
@@ -25,5 +25,5 @@
   <% } %>
   </div>
 </main>
-<script src="/static/js/common.js"></script>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>
