@@ -180,7 +180,7 @@ function canEdit(user, order) {
 /** Welke statuswijzigingen mag deze gebruiker doen vanuit de huidige status? */
 function allowedTransitions(user, order) {
   switch (order.status) {
-    case 'open': return ['klaar'];
+    case 'open': return user.can_invoice ? ['klaar', 'gefactureerd'] : ['klaar']; // facturatie mag direct afronden
     case 'klaar': return user.can_invoice ? ['open', 'gefactureerd'] : ['open'];
     case 'gefactureerd': return user.can_invoice ? ['klaar'] : [];
     default: return [];
@@ -197,7 +197,8 @@ function setStatus(orderId, status, user) {
   db.prepare("UPDATE orders SET status = ?, status_at = datetime('now'), status_by = ?, updated_at = datetime('now') WHERE id = ?")
     .run(status, user.id, orderId);
   logAction(orderId, user, prev === 'gefactureerd' && status === 'klaar' ? 'heropend'
-    : prev === 'klaar' && status === 'open' ? 'teruggezet naar Open (terug naar monteur)' : LOG_TEXT[status]);
+    : prev === 'klaar' && status === 'open' ? 'teruggezet naar Open (terug naar monteur)'
+      : prev === 'open' && status === 'gefactureerd' ? 'direct gefactureerd (afgerond)' : LOG_TEXT[status]);
 }
 
 function logAction(orderId, user, action) {

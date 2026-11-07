@@ -21,6 +21,7 @@
   <div class="tb-right">
     <button class="btn btn-danger" type="submit" form="cancelImportForm">Annuleren</button>
     <button class="btn btn-primary" type="submit" form="orderForm" id="saveBtn">Bevestigen en opslaan</button>
+    <% if (user.can_invoice) { %><button class="btn btn-ok" type="submit" form="orderForm" name="next_status" value="gefactureerd" title="Opslaan en meteen als gefactureerd afronden (oude, al gefactureerde werkopdracht)">Bevestigen als gefactureerd</button><% } %>
   </div>
 </div>
 <form id="cancelImportForm" method="post" action="/importeren/<%= draft.id %>/annuleren" class="no-print"
@@ -102,6 +103,7 @@
 <% if (order) { %><span hidden id="live-order" data-id="<%= order.id %>"></span><% } %>
 <form id="orderForm" method="post" action="<%= draft ? '/importeren/' + draft.id + '/bevestigen' : order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off">
   <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <input type="hidden" name="zonder_factuurnr" value="">
   <% if (order) { %><input type="hidden" name="versie" value="<%= order.updated_at %>"><% } %>
 
   <fieldset class="order-fieldset"<%= editable ? '' : ' disabled' %>>
@@ -320,6 +322,7 @@
     <% if (draft) { %>
       <button class="btn btn-danger" type="submit" form="cancelImportForm">Annuleren</button>
       <button class="btn btn-primary" type="submit" form="orderForm">Bevestigen en opslaan</button>
+      <% if (user.can_invoice) { %><button class="btn btn-ok" type="submit" form="orderForm" name="next_status" value="gefactureerd">Bevestigen als gefactureerd</button><% } %>
     <% } else { %>
       <%- include('/partials/order-actions', { where: 'bottom' }) %>
     <% } %>

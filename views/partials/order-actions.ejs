@@ -10,9 +10,13 @@
     <button class="btn btn-primary" type="submit" form="orderForm" name="next_status" value="klaar"
             title="Opslaan en doorsturen naar facturatie">Klaar → naar facturatie</button>
   <% } %>
+  <% if (st === 'open' && can('gefactureerd')) { %>
+    <button class="btn btn-ok" type="submit" form="orderForm" name="next_status" value="gefactureerd"
+            title="Opslaan en meteen als gefactureerd afronden (zonder de stap via facturatie)">Direct gefactureerd</button>
+  <% } %>
   <% if (st === 'klaar' && can('gefactureerd')) { %>
     <button class="btn btn-ok" type="submit" form="orderForm" name="next_status" value="gefactureerd"
-            title="Opslaan en afronden; het factuurnummer moet ingevuld zijn">Afronden (gefactureerd)</button>
+            title="Opslaan en afronden">Afronden (gefactureerd)</button>
   <% } %>
 <% } %>
 <% if (order && st === 'klaar' && can('open')) { %>

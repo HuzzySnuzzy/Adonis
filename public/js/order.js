@@ -106,6 +106,22 @@
     if (next) next.focus();
   });
 
+  /* ---------- gefactureerd zonder factuurnummer: eerst bevestigen ---------- */
+  form.addEventListener('submit', (e) => {
+    const btn = e.submitter;
+    if (!btn || btn.value !== 'gefactureerd') return;
+    const nr = form.querySelector('[name="d[faktuurnr]"]');
+    const flag = form.querySelector('[name=zonder_factuurnr]');
+    if (nr && !nr.value.trim()) {
+      if (!window.confirm('Er is geen factuurnummer ingevuld (onderaan: "Berekend op faktuurnr.").\n\nToch als gefactureerd afronden?')) {
+        e.preventDefault();
+        nr.focus();
+        return;
+      }
+      flag.value = '1';
+    }
+  }, true);
+
   /* ---------- Ctrl/Cmd+S = opslaan ---------- */
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {

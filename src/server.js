@@ -365,7 +365,7 @@ function renderOrder(res, { order, data, nummer, error, status, draft, datumInvo
     order, data, nummer, error, draft: draft || null,
     STATUSES: orders.STATUSES,
     editable: draft ? true : orders.canEdit(user, order),
-    transitions: order ? orders.allowedTransitions(user, order) : ['klaar'],
+    transitions: orders.allowedTransitions(user, order || { status: 'open' }),
     history: order ? orders.history(order.id) : [],
     datumInvoer: draft ? (datumInvoer || '') : datumInvoer || (order ? order.datum_invoer : orders.todayISO()),
   });
@@ -394,19 +394,36 @@ function validateOrder(data, nummer, existingId) {
   return null;
 }
 
+/** Status meteen bij het aanmaken (nieuw of import): 'klaar' mag iedereen, 'gefactureerd' alleen facturatie/beheer. */
+function initialStatusError(req, data) {
+  const next = req.body.next_status;
+  if (!next) return null;
+  if (!orders.allowedTransitions(req.user, { status: 'open' }).includes(next)) return 'Deze statuswijziging is niet toegestaan.';
+  return factuurnrError(req, data, next);
+}
+/** Gefactureerd zonder factuurnummer kan, maar alleen na bevestiging (bijv. oude papieren werkopdrachten). */
+function factuurnrError(req, data, next) {
+  if (next === 'gefactureerd' && !data.faktuurnr.trim() && req.body.zonder_factuurnr !== '1') {
+    return 'Vul het factuurnummer in (onderaan het formulier: "Berekend op faktuurnr.") of bevestig dat je zonder factuurnummer wilt afronden.';
+  }
+  return null;
+}
+const DONE_MSG = { klaar: 'naar facturatie gestuurd', gefactureerd: 'als gefactureerd afgerond' };
+
 app.post('/werkopdracht', (req, res) => {
   const data = orders.normalizeOrderData(req.body.d);
   const nummer = parseNummer(req.body.nummer);
-  const error = validateOrder(data, nummer, null);
+  const error = validateOrder(data, nummer, null) || initialStatusError(req, data);
   if (error) return renderOrder(res, { order: null, data, nummer: req.body.nummer, error, status: 400 });
   const id = orders.saveOrder({ nummer, data, userId: req.user.id });
   orders.logAction(id, req.user, 'aangemaakt');
+  const next = req.body.next_status;
   let msg = `Werkopdracht ${nummer} is opgeslagen.`;
-  if (req.body.next_status === 'klaar') {
-    orders.setStatus(id, 'klaar', req.user);
-    msg = `Werkopdracht ${nummer} is opgeslagen en naar facturatie gestuurd.`;
+  if (next) {
+    orders.setStatus(id, next, req.user);
+    msg = `Werkopdracht ${nummer} is opgeslagen en ${DONE_MSG[next]}.`;
   }
-  announce(req, 'created', { id, nummer, kenteken: data.kenteken, status: req.body.next_status === 'klaar' ? 'klaar' : 'open' });
+  announce(req, 'created', { id, nummer, kenteken: data.kenteken, status: next || 'open' });
   rdw.refreshInBackground(data.kenteken);
   flash(req, 'ok', msg);
   res.redirect(`/werkopdracht/${id}`);
@@ -441,9 +458,7 @@ app.post('/werkopdracht/:id', (req, res) => {
   const next = req.body.next_status;
   let error = validateOrder(data, nummer, order.id);
   if (!error && next && !orders.allowedTransitions(req.user, order).includes(next)) error = 'Deze statuswijziging is niet toegestaan.';
-  if (!error && next === 'gefactureerd' && !data.faktuurnr.trim()) {
-    error = 'Vul eerst het factuurnummer in (onderaan het formulier: "Berekend op faktuurnr.") en klik dan opnieuw op Afronden.';
-  }
+  if (!error) error = factuurnrError(req, data, next);
   if (!error && req.body.versie !== order.updated_at) {
     error = `Iemand anders (${order.updated_by_name || 'onbekend'}) heeft deze werkopdracht intussen gewijzigd ` +
       `(${fmtDateTime(order.updated_at)}). Open de werkopdracht opnieuw om de laatste versie te zien – ` +
@@ -457,7 +472,7 @@ app.post('/werkopdracht/:id', (req, res) => {
   if (next) {
     orders.setStatus(order.id, next, req.user);
     msg = next === 'klaar' ? `Werkopdracht ${nummer} is naar facturatie gestuurd.`
-      : next === 'gefactureerd' ? `Werkopdracht ${nummer} is afgerond (factuur ${data.faktuurnr}).` : msg;
+      : next === 'gefactureerd' ? `Werkopdracht ${nummer} is afgerond${data.faktuurnr ? ` (factuur ${data.faktuurnr})` : ' (zonder factuurnummer)'}.` : msg;
   }
   announce(req, next ? 'status' : 'updated', { id: order.id, nummer, kenteken: data.kenteken, status: next || order.status });
   flash(req, 'ok', msg);
@@ -543,17 +558,18 @@ app.post('/importeren/:id/bevestigen', (req, res) => {
   const data = orders.normalizeOrderData(req.body.d);
   const nummer = parseNummer(req.body.nummer);
   const datumInvoer = orders.parseDate(req.body.datum_invoer);
-  const error = datumInvoer ? validateOrder(data, nummer, null)
+  const error = datumInvoer ? validateOrder(data, nummer, null) || initialStatusError(req, data)
     : 'Vul de Datum invoer in: de datum die op de papieren werkopdracht staat.';
   if (error) {
     return renderOrder(res, { order: null, data, nummer: req.body.nummer, error, status: 400, draft, datumInvoer });
   }
   const id = orders.saveOrder({ nummer, data, userId: req.user.id, datumInvoer });
   orders.logAction(id, req.user, 'aangemaakt (foto-import)');
+  if (req.body.next_status) orders.setStatus(id, req.body.next_status, req.user);
   rdw.refreshInBackground(data.kenteken);
-  announce(req, 'created', { id, nummer, kenteken: data.kenteken });
+  announce(req, 'created', { id, nummer, kenteken: data.kenteken, status: req.body.next_status || 'open' });
   importer.deleteDraft(draft.id);
-  flash(req, 'ok', `Import bevestigd: werkopdracht ${nummer} is opgeslagen.`);
+  flash(req, 'ok', `Import bevestigd: werkopdracht ${nummer} is opgeslagen${req.body.next_status ? ' en ' + DONE_MSG[req.body.next_status] : ''}.`);
   res.redirect(`/werkopdracht/${id}`);
 });
 

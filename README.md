@@ -27,6 +27,8 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   De monteur klikt **Klaar → naar facturatie**; de werkopdracht verschijnt dan bij **Facturatie** (met teller in het
   menu en een melding). Facturatie vult het factuurnummer in en klikt **Afronden**: de werkopdracht is dan vergrendeld.
   Terughalen, terugsturen en heropenen kan ook; de geschiedenis laat zien wie wat wanneer deed.
+  Facturatie en beheerders kunnen een open (of nieuwe/geïmporteerde) werkopdracht ook **direct als gefactureerd**
+  afronden – handig bij het overzetten van oude papieren werkopdrachten (zonder factuurnummer na bevestiging).
 - **RDW-gegevens** (RDW Open Data, gratis): op de klantpagina APK-vervaldatum (groen/oranje/rood), merk/type,
   brandstof en vermogen, eerste toelating, tellerstandoordeel en een waarschuwing bij een openstaande terugroepactie,
   met een link naar rdw.nl. In de klantenlijst een APK-kolom. Op een nieuwe werkopdracht worden Merk/Type en

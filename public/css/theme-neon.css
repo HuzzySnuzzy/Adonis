@@ -545,6 +545,25 @@ html[data-theme="neon"] {
 }
 [data-theme="neon"] body, [data-theme="neon"] body.order-page { background: transparent !important; }
 
+/* =====================================================================
+   Doorlopende animaties volgen een gedeelde klok (--clock, gezet door early.js):
+   bij het wisselen van pagina lopen ze door in plaats van opnieuw te beginnen.
+   ===================================================================== */
+[data-theme="neon"] body::before, [data-theme="neon"] body::after,
+[data-theme="neon"] .topbar::after, [data-theme="neon"] .logo-mark, [data-theme="neon"] h1,
+[data-theme="neon"] .btn-primary, [data-theme="neon"] .status-klaar, [data-theme="neon"] .app-footer::after,
+[data-theme="neon"] .sheet::after, .neon-bg > span {
+  animation-delay: calc(var(--clock, 0) * -1s) !important;
+}
+/* hologramlaag blijft staan tijdens de paginaovergang */
+.neon-bg { view-transition-name: neon-bg; }
+/* opstartanimatie alleen bij binnenkomst, niet bij elke klik binnen ADONIS */
+html.nav-internal[data-theme="neon"] main > *,
+html.nav-internal[data-theme="neon"] .sheet,
+html.nav-internal[data-theme="neon"] .order-toolbar,
+html.nav-internal[data-theme="neon"] .flash,
+html.nav-internal[data-theme="neon"] table.list tbody tr { animation: none; }
+
 /* ---------- rustig aan: geen animaties als het apparaat daarom vraagt ---------- */
 @media (prefers-reduced-motion: reduce) {
   [data-theme="neon"] *, [data-theme="neon"] *::before, [data-theme="neon"] *::after,

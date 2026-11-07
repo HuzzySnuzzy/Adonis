@@ -527,3 +527,9 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
 .theme-preview-neon .tp-card { background: rgba(10,20,26,.7); border: 1px solid rgba(61,224,230,.6); box-shadow: 0 0 10px rgba(61,224,230,.35) inset; }
 .theme-preview-neon .tp-card span { background: #ff9d3d; box-shadow: 0 0 6px #ff9d3d; opacity: .85; }
 .theme-preview-neon .tp-card span:nth-child(2) { background: #3de0e6; box-shadow: 0 0 6px #3de0e6; }
+
+/* ---------- vloeiende overgang tussen pagina's (Chrome/Edge, Safari 18+) ---------- */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .18s; }
+.topbar { view-transition-name: topbar; }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
