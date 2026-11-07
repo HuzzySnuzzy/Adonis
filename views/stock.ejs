@@ -71,8 +71,8 @@
       <tbody>
       <% for (const i of items) { %>
         <tr data-href="/voorraad/<%= i.id %>" class="<%= !i.beschikbaar || i.aantal === 0 ? 'is-out' : '' %>">
-          <% const ph = fotos.get(i.id); %>
-          <td class="ph-col"><% if (ph) { %><a href="/fotos/<%= ph.id %>/full" data-photo-open class="ph-thumb"><img src="/fotos/<%= ph.id %>/thumb" alt="" loading="lazy"><% if (ph.n > 1) { %><span class="ph-n"><%= ph.n %></span><% } %></a><% } %></td>
+          <% const ph = fotos.get(i.id); const sample = !ph && i.type ? partSamples[i.type] : null; %>
+          <td class="ph-col"<%- sample === 'zoeken' ? ` data-parttype="${esc(i.type)}"` : '' %>><% if (ph) { %><a href="/fotos/<%= ph.id %>/full" data-photo-open class="ph-thumb"><img src="/fotos/<%= ph.id %>/thumb" alt="" loading="lazy"><% if (ph.n > 1) { %><span class="ph-n"><%= ph.n %></span><% } %></a><% } else if (sample && sample.ok) { %><span class="ph-thumb ph-sample" title="Voorbeeld: <%= sample.title %> (Wikipedia)"><img src="<%= sample.img %>" alt="" loading="lazy"></span><% } %></td>
           <td class="qty-col">
             <form method="post" action="/voorraad/<%= i.id %>/aantal" class="qty" data-qty>
               <input type="hidden" name="_csrf" value="<%= csrf %>">

@@ -66,13 +66,19 @@
     </section>
 
     <section class="card" id="autofoto">
-      <h2>Foto van de auto</h2>
+      <h2>Voorbeeldfoto's</h2>
       <label class="check big-check">
         <input type="hidden" name="carimg" value="off">
         <input type="checkbox" name="carimg" value="on" <%= p.carimg !== 'off' ? 'checked' : '' %>>
         <span><b>Foto van het automodel tonen op de klantpagina</b><br><span class="muted small">Een voorbeeldfoto van het model
           (bijvoorbeeld een Nissan Note), zodat u de auto snel herkent. Gratis, van Wikipedia: alleen merk en model worden opgezocht,
           nooit het kenteken of de klant. Het kan een andere uitvoering of kleur zijn.</span></span>
+      </label>
+      <label class="check big-check">
+        <input type="hidden" name="partimg" value="off">
+        <input type="checkbox" name="partimg" value="on" <%= p.partimg !== 'off' ? 'checked' : '' %>>
+        <span><b>Voorbeeldfoto van onderdelen tonen in de voorraad</b><br><span class="muted small">Een voorbeeld van de soort onderdeel
+          (bijvoorbeeld een bougie of oliefilter), ook van Wikipedia. Eigen foto's van een onderdeel gaan altijd voor.</span></span>
       </label>
     </section>
 

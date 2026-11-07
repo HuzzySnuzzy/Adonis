@@ -25,8 +25,9 @@ const PREF_OPTIONS = {
   mscale: ['100', '90', '80', '70', '60'], // weergave op telefoon (procent)
   simple: ['off', 'on'], // eenvoudige weergave: grote knoppen, alleen het belangrijkste, geen animaties
   carimg: ['on', 'off'], // foto van het automodel op de klantpagina (Wikipedia)
+  partimg: ['on', 'off'], // voorbeeldfoto van de soort onderdeel in de voorraad (Wikipedia)
 };
-const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off', mscale: '90', simple: 'off', carimg: 'on' };
+const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off', mscale: '90', simple: 'off', carimg: 'on', partimg: 'on' };
 /** Thema's die alleen zichtbaar zijn met de voorkeur "Geheime thema's". */
 const SECRET_THEMES = ['neon', 'ice'];
 /** Thema's die iemand met deze voorkeuren kan kiezen (in volgorde van het menu). */

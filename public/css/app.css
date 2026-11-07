@@ -1174,3 +1174,15 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 /* In de ADONIS-app (Windows) nooit de hele pagina schalen: in-/uitzoomen gaat daar met Ctrl + en Ctrl -. */
 :root[data-app] { zoom: 1 !important; }
 .car-photo .car-wrong { align-self: flex-start; font-size: .75rem; color: var(--muted); margin-top: .1rem; }
+
+/* Voorbeeldfoto's van onderdelen */
+.ph-sample { opacity: .85; }
+.ph-sample img { filter: saturate(.85); }
+.part-look { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: flex-start; margin: 0 0 1rem; }
+.part-sample { margin: 0; width: 220px; }
+.part-sample[hidden] { display: none; }
+.part-sample img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #fff; border-radius: 10px; border: 1px solid var(--border); }
+.part-sample figcaption { margin-top: .35rem; font-size: .75rem; line-height: 1.35; display: flex; flex-direction: column; gap: .1rem; }
+.part-sample figcaption a { color: inherit; }
+.part-search { flex: 1 1 260px; }
+.part-search p { margin: 0 0 .5rem; }

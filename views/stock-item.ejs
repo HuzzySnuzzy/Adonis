@@ -8,6 +8,27 @@
     </div>
   </div>
   <% if (error) { %><div class="alert"><%= error %></div><% } %>
+  <% if (item && (partSample || webSearch)) { const ps = partSample && partSample.ok ? partSample : null; %>
+  <div class="part-look">
+    <% if (partSample && partSample !== null && (ps || partSample === 'zoeken')) { %>
+    <figure class="part-sample" data-type="<%= d.type %>" <%- partSample === 'zoeken' ? 'data-fetch' : '' %> data-csrf="<%= csrf %>" <%= ps ? '' : 'hidden' %>>
+      <img src="<%= ps ? ps.img : '' %>" alt="Voorbeeldfoto van een <%= d.type.toLowerCase() %>" <%= ps ? '' : 'hidden' %>>
+      <figcaption>
+        <span>Voorbeeld van een <%= d.type.toLowerCase() %>: <a href="<%= ps ? ps.pageUrl : '#' %>" target="_blank" rel="noopener" data-sample-title><%= ps ? ps.title : '' %></a></span>
+        <span class="muted">Niet dit exacte onderdeel · foto <a href="<%= ps && ps.fileUrl ? ps.fileUrl : '#' %>" target="_blank" rel="noopener" data-sample-file>Wikimedia Commons</a></span>
+        <button type="button" class="linkbtn car-wrong" data-sample-wrong>Verkeerde foto? Verbergen</button>
+      </figcaption>
+    </figure>
+    <% } %>
+    <div class="part-search">
+      <p class="muted small">Wilt u zien hoe dít onderdeel eruitziet? Zoek afbeeldingen op internet (opent in de browser).</p>
+      <a class="btn" href="<%= webSearch %>" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m15.5 15.5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Afbeeldingen zoeken
+      </a>
+    </div>
+  </div>
+  <% } %>
   <form method="post" action="<%= item ? '/voorraad/' + item.id : '/voorraad' %>" class="card inv-form" autocomplete="off" data-guard>
     <input type="hidden" name="_csrf" value="<%= csrf %>">
     <input type="hidden" name="s[soort]" value="<%= d.soort %>">

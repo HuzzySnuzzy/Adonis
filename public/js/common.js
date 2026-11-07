@@ -161,3 +161,59 @@ document.addEventListener('click', async (e) => {
   fig.hidden = true;
   const head = fig.closest('.customer-head'); if (head) head.classList.remove('has-photo');
 });
+// Voorraad: voorbeeldfoto per soort onderdeel ophalen (Wikipedia, via de eigen server). Elke soort maar één keer.
+(function () {
+  const cells = [...document.querySelectorAll('td[data-parttype]')];
+  const fig = document.querySelector('figure.part-sample[data-fetch]');
+  if ((!cells.length && !fig) || !window.fetch) return;
+  const cache = new Map();
+  const get = (type) => {
+    if (!cache.has(type)) {
+      cache.set(type, fetch('/onderdeelfoto?type=' + encodeURIComponent(type), { credentials: 'same-origin' })
+        .then((r) => r.json()).catch(() => ({ ok: false })));
+    }
+    return cache.get(type);
+  };
+  (async () => {
+    if (fig) {
+      const r = await get(fig.dataset.type);
+      if (r.ok) {
+        const img = fig.querySelector('img');
+        img.addEventListener('load', () => { img.hidden = false; fig.hidden = false; }, { once: true });
+        img.src = r.img;
+        const t = fig.querySelector('[data-sample-title]'); t.textContent = r.title; t.href = r.pageUrl;
+        if (r.fileUrl) fig.querySelector('[data-sample-file]').href = r.fileUrl;
+      }
+    }
+    // Lijst: soorten één voor één (vriendelijk voor Wikipedia), met de meest voorkomende eerst.
+    const counts = new Map();
+    cells.forEach((td) => counts.set(td.dataset.parttype, (counts.get(td.dataset.parttype) || 0) + 1));
+    for (const type of [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a))) {
+      const r = await get(type);
+      if (!r.ok) continue;
+      document.querySelectorAll('td[data-parttype]').forEach((td) => {
+        if (td.dataset.parttype !== type || td.querySelector('img')) return;
+        const span = document.createElement('span');
+        span.className = 'ph-thumb ph-sample';
+        span.title = `Voorbeeld: ${r.title} (Wikipedia)`;
+        const img = document.createElement('img');
+        img.src = r.img; img.alt = ''; img.loading = 'lazy';
+        span.append(img);
+        td.append(span);
+      });
+    }
+  })();
+})();
+// Voorbeeldfoto van een onderdeel klopt niet: voor deze soort niet meer tonen.
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-sample-wrong]');
+  if (!btn) return;
+  const fig = btn.closest('figure.part-sample');
+  if (!window.confirm(`Klopt deze voorbeeldfoto niet bij "${fig.dataset.type}"?\n\nDan wordt voor deze soort onderdeel geen voorbeeldfoto meer getoond.`)) return;
+  try {
+    await fetch('/onderdeelfoto/fout', { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': fig.dataset.csrf },
+      body: new URLSearchParams({ type: fig.dataset.type }) });
+  } catch { /* volgende keer */ }
+  fig.hidden = true;
+});

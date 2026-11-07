@@ -47,6 +47,10 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   op de auto staan bovenaan; met **Gebeld** houd je bij wie al is uitgenodigd. Afdrukken kan ook.
   Daarnaast is er **Overige opslag (noodbanden)** voor banden die niet bij één vaste klant horen; zoek je in de voorraad op
   een maat, dan zie je ook hoeveel sets van die maat daar liggen.
+- **Voorraad met voorbeeldfoto's:** in de lijst en op de pagina van een onderdeel staat een voorbeeldfoto van de
+  soort onderdeel (bougie, oliefilter, riem, remblokken...), gratis van Wikipedia; eigen foto's gaan altijd voor.
+  Er wordt een vaste artikeltitel opgevraagd (gangbare garagewoorden zijn vertaald), dus nooit een willekeurig
+  zoekresultaat. De knop **Afbeeldingen zoeken** zoekt foto's van precies dat onderdeel (merk + nummer) in de browser.
 - **Voorraad:** onderdelen en banden die op de zaak liggen, met aantal (knoppen − en +), merk, artikelnummer,
   origineel (OE) nummer, soort en locatie. Een nummer vind je ook als het anders is getypt: `1493001` vindt `1 493 001`,
   `A0031592603` vindt `A003.159.26.03`.

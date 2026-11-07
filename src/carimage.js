@@ -62,9 +62,8 @@ const VERSION = 'v2|'; // andere zoekregels: oude (mogelijk verkeerde) resultate
 const keyOf = (q) => VERSION + String(q || '').toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 80);
 const squash = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-function cached(q) {
-  const key = keyOf(q);
-  if (!key) return null;
+function cachedKey(key) {
+  if (!key || key === VERSION) return null;
   const row = db.prepare('SELECT * FROM car_images WHERE key = ?').get(key);
   if (!row) return null;
   const age = Date.now() - row.fetched_at;
@@ -73,6 +72,7 @@ function cached(q) {
     : row.status === 'none' ? age < NONE_DAYS * 864e5 : age < ERROR_MINUTES * 6e4;
   return fresh ? row : null;
 }
+const cached = (q) => cachedKey(keyOf(q));
 function publicInfo(row) {
   if (!row || row.status !== 'ok') return { ok: false, blocked: Boolean(row && row.status === 'blocked') };
   return { ok: true, img: `/autofoto/img/${row.id}`, title: row.title, pageUrl: row.page_url, fileUrl: row.file_url };
@@ -120,10 +120,13 @@ function block(q) {
 }
 
 const inFlight = new Map();
-async function lookup(q) {
-  const key = keyOf(q);
+/**
+ * Gedeeld door auto's en onderdelen: in de cache kijken, anders finder() laten zoeken (geeft een Wikipedia-pagina
+ * met thumbnail, of null), de foto downloaden en lokaal bewaren.
+ */
+async function resolve(key, finder) {
   if (!key) return { ok: false };
-  const hit = cached(q);
+  const hit = cachedKey(key);
   if (hit) return publicInfo(hit);
   if (inFlight.has(key)) return inFlight.get(key);
   const job = (async () => {
@@ -135,20 +138,7 @@ async function lookup(q) {
       return db.prepare('SELECT * FROM car_images WHERE key = ?').get(key);
     };
     try {
-      const { brand, names, codes } = parseQuery(q);
-      const search = (term) => getJson({
-        action: 'query', generator: 'search', gsrsearch: term, gsrlimit: '10', gsrnamespace: '0',
-        prop: 'pageimages|info', piprop: 'thumbnail|name', pithumbsize: '640', inprop: 'url',
-      }).then((d) => (d && d.query && d.query.pages) || []);
-      // Eerst alleen artikelen met het model in de titel; zo nodig gewoon zoeken.
-      // Wikipedia zoekt met EN: eerst merk + model, en apart met de typecode (vindt bijv. "Vito (W639)").
-      const terms = [`intitle:"${names[0]}" ${brand}`];
-      if (codes[0]) terms.push(`intitle:"${names[0]}" ${codes[0]}`);
-      const seen = new Map();
-      for (const term of terms) for (const p of await search(term)) if (!seen.has(p.title)) seen.set(p.title, p);
-      let pages = [...seen.values()];
-      let page = pick(pages, q);
-      if (!page) { pages = await search(`${brand} ${names.join(' ')}`); page = pick(pages, q); }
+      const page = await finder();
       if (!page) return publicInfo(save({ status: 'none' }));
       const imgRes = await fetch(page.thumbnail.source, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(10000) });
       if (!imgRes.ok) throw new Error('foto niet bereikbaar');
@@ -172,10 +162,101 @@ async function lookup(q) {
   try { return await job; } finally { inFlight.delete(key); }
 }
 
+/* ---------- auto's ---------- */
+async function lookup(q) {
+  return resolve(keyOf(q), async () => {
+    const { brand, names, codes } = parseQuery(q);
+    const search = (term) => getJson({
+      action: 'query', generator: 'search', gsrsearch: term, gsrlimit: '10', gsrnamespace: '0',
+      prop: 'pageimages|info', piprop: 'thumbnail|name', pithumbsize: '640', inprop: 'url',
+    }).then((d) => (d && d.query && d.query.pages) || []);
+    // Wikipedia zoekt met EN: eerst merk + model, en apart met de typecode (vindt bijv. "Vito (W639)").
+    const terms = [`intitle:"${names[0]}" ${brand}`];
+    if (codes[0]) terms.push(`intitle:"${names[0]}" ${codes[0]}`);
+    const seen = new Map();
+    for (const term of terms) for (const p of await search(term)) if (!seen.has(p.title)) seen.set(p.title, p);
+    let page = pick([...seen.values()], q);
+    if (!page) page = pick(await search(`${brand} ${names.join(' ')}`), q);
+    return page;
+  });
+}
+
+/* ---------- onderdelen: een voorbeeldfoto van de soort onderdeel ----------
+ * Geen zoekopdracht maar een vaste artikeltitel: zo kan er geen willekeurig verkeerd artikel uitkomen.
+ * Woorden zoals ze in een Nederlandse garage worden gebruikt -> Engelse Wikipedia-titel (meer en betere foto's). */
+const PART_TITLES = {
+  bougie: 'Spark plug', gloeibougie: 'Glowplug', oliefilter: 'Oil filter', luchtfilter: 'Air filter',
+  brandstoffilter: 'Fuel filter', dieselfilter: 'Fuel filter', interieurfilter: 'Cabin air filter', pollenfilter: 'Cabin air filter',
+  riem: 'Serpentine belt', microv: 'Serpentine belt', polyvriem: 'Serpentine belt', vriem: 'Serpentine belt', multiriem: 'Serpentine belt',
+  distributieriem: 'Timing belt (camshaft)', tandriem: 'Timing belt (camshaft)', powergrip: 'Timing belt (camshaft)', distributieketting: 'Timing chain',
+  remblokken: 'Brake pad', remblok: 'Brake pad', remschijf: 'Disc brake', remschijven: 'Disc brake', remschoenen: 'Drum brake', remtrommel: 'Drum brake',
+  remklauw: 'Disc brake', remtang: 'Disc brake', pakking: 'Gasket', koppakking: 'Head gasket', kleppendekselpakking: 'Gasket',
+  thermostaat: 'Thermostat', waterpomp: 'Water pump', radiateur: 'Radiator (engine cooling)', koelvloeistof: 'Antifreeze',
+  bobine: 'Ignition coil', penbobine: 'Ignition coil', stroomverdelerkap: 'Distributor', stroomverdeler: 'Distributor', rotor: 'Distributor', distrotor: 'Distributor',
+  dynamo: 'Alternator (automotive)', startmotor: 'Starter (engine)', accu: 'Automotive battery',
+  lambdasonde: 'Oxygen sensor', lambdasensor: 'Oxygen sensor', abssensor: 'Wheel speed sensor', abs: 'Anti-lock braking system',
+  krukassensor: 'Crankshaft position sensor', nokkenassensor: 'Camshaft position sensor', luchtmassasensor: 'Mass flow sensor', mapsensor: 'MAP sensor',
+  injector: 'Fuel injection', verstuiver: 'Fuel injection', brandstofpomp: 'Fuel pump', turbo: 'Turbocharger', turbochargerkit: 'Turbocharger',
+  ashoes: 'Constant-velocity joint', ashoezen: 'Constant-velocity joint', ashoesset: 'Constant-velocity joint', homokineteas: 'Constant-velocity joint',
+  fuzeekogel: 'Ball joint', fuseekogel: 'Ball joint', keerring: 'Radial shaft seal', keering: 'Radial shaft seal',
+  schokbreker: 'Shock absorber', veer: 'Coil spring', stabilisatorstang: 'Anti-roll bar', antirollbar: 'Anti-roll bar',
+  koppeling: 'Clutch', koppelingsplaat: 'Clutch', gasklep: 'Throttle', relais: 'Relay', zekering: 'Fuse (electrical)',
+  ruitenwisser: 'Windscreen wiper', wisserblad: 'Windscreen wiper', lamp: 'Automotive lighting', uitlaat: 'Exhaust system',
+  katalysator: 'Catalytic converter', roetfilter: 'Diesel particulate filter', aircodroger: 'Automobile air conditioning', condensator: 'Capacitor',
+  wikkelveer: 'Clockspring', bougiekabels: 'Spark plug', bobinekabel: 'Ignition coil', antenne: 'Antenna (radio)', spiegelkap: 'Wing mirror',
+};
+const squashNl = (s) => String(s || '').toLowerCase().replace(/[^a-z]/g, '');
+/** Soort onderdeel -> vaste artikeltitel ({ lang, title }) of null. */
+function partTarget(type) {
+  const t = squashNl(type);
+  if (t.length < 3) return null;
+  if (PART_TITLES[t]) return { lang: 'en', title: PART_TITLES[t] };
+  // "Olie Filter, Olie, Interieur Filter" -> begint met "oliefilter"; langste passende sleutel wint.
+  const keys = Object.keys(PART_TITLES).filter((k) => k.length >= 4 && t.startsWith(k)).sort((a, b) => b.length - a.length);
+  if (keys.length) return { lang: 'en', title: PART_TITLES[keys[0]] };
+  // Onbekend woord: alleen één los woord, en alleen als dat precies een Nederlands artikel is (bijv. "Stofzuigzak").
+  const first = String(type).trim().split(/[,/(]/)[0].trim();
+  if (!/^[a-zà-ÿ-]{4,30}$/i.test(first)) return null;
+  return { lang: 'nl', title: first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() };
+}
+async function lookupPart(type) {
+  const target = partTarget(type);
+  if (!target) return { ok: false };
+  const key = VERSION + `part|${target.lang}|${target.title.toLowerCase()}`;
+  return resolve(key, async () => {
+    const api = target.lang === 'nl' ? API.replace('//en.', '//nl.') : API;
+    const url = api + '?' + new URLSearchParams({
+      format: 'json', formatversion: '2', action: 'query', titles: target.title, redirects: '1',
+      prop: 'pageimages|info|pageprops', piprop: 'thumbnail|name', pithumbsize: '480', inprop: 'url', ppprop: 'disambiguation',
+    });
+    const res = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('Wikipedia antwoordde met ' + res.status);
+    const d = await res.json();
+    const page = d && d.query && d.query.pages && d.query.pages[0];
+    if (!page || page.missing || (page.pageprops && 'disambiguation' in page.pageprops)) return null;
+    if (!page.thumbnail || /\.svg$/i.test(page.pageimage || '')) return null; // geen foto of alleen een tekening/logo
+    return page;
+  });
+}
+function blockPart(type) {
+  const target = partTarget(type);
+  if (!target) return;
+  const key = VERSION + `part|${target.lang}|${target.title.toLowerCase()}`;
+  db.prepare(`INSERT INTO car_images (key, status, fetched_at) VALUES (?, 'blocked', ?)
+              ON CONFLICT(key) DO UPDATE SET status = 'blocked', fetched_at = excluded.fetched_at`).run(key, Date.now());
+}
+/** Voor de lijst: bekende foto's per soort (zonder te zoeken). */
+function cachedPart(type) {
+  const target = partTarget(type);
+  if (!target) return null;
+  const row = cachedKey(VERSION + `part|${target.lang}|${target.title.toLowerCase()}`);
+  return row ? publicInfo(row) : null;
+}
+
 function imagePath(id) {
   if (!/^[a-f0-9]{20}p?$/.test(String(id))) return null;
   const file = path.join(DIR, id + '.jpg');
   return fs.existsSync(file) ? { file, type: id.endsWith('p') ? 'image/png' : 'image/jpeg' } : null;
 }
 
-module.exports = { queryFor, parseQuery, pick, block, cached, publicInfo, lookup, imagePath };
+module.exports = { queryFor, parseQuery, pick, block, cached, publicInfo, lookup, imagePath, partTarget, lookupPart, cachedPart, blockPart };

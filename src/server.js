@@ -363,6 +363,16 @@ app.post('/autofoto/fout', (req, res) => {
   if (q) carimage.block(q);
   res.json({ ok: true });
 });
+// Voorbeeldfoto van een soort onderdeel (bijv. BOUGIE -> een bougie), ook via Wikipedia.
+app.get('/onderdeelfoto', wrap(async (req, res) => {
+  const type = String(req.query.type || '').slice(0, 80);
+  res.json(type ? await carimage.lookupPart(type) : { ok: false });
+}));
+app.post('/onderdeelfoto/fout', (req, res) => {
+  const type = String((req.body && req.body.type) || '').slice(0, 80);
+  if (type) carimage.blockPart(type);
+  res.json({ ok: true });
+});
 app.get('/autofoto/img/:id', (req, res) => {
   const f = carimage.imagePath(req.params.id);
   if (!f) return res.status(404).end();
@@ -718,6 +728,7 @@ app.post('/instellingen', (req, res) => {
     theme: req.body.theme, ink: req.body.ink, start: req.body.start, fx: req.body.fx, mscale: req.body.mscale,
     simple: [].concat(req.body.simple || []).includes('on') ? 'on' : 'off',
     carimg: [].concat(req.body.carimg || []).includes('on') ? 'on' : 'off',
+    partimg: [].concat(req.body.partimg || []).includes('on') ? 'on' : 'off',
   });
   setThemeCookie(res, prefs.theme);
   flash(req, 'ok', 'Je instellingen zijn opgeslagen.');

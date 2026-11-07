@@ -11,6 +11,7 @@ const importer = require('./import');
 const events = require('./events');
 const orders = require('./orders');
 const photos = require('./photos');
+const carimage = require('./carimage');
 
 module.exports = function register(app, { flash, wrap }) {
   const announce = (req, area, extra = {}) =>
@@ -178,9 +179,19 @@ module.exports = function register(app, { flash, wrap }) {
     const type = String(req.query.type || '');
     const locatie = String(req.query.locatie || '');
     const alleen = req.query.alleen === '1';
+    const items = inv.searchStock({ soort, q, type, locatie, alleen });
     res.render('stock', {
       title: soort === 'band' ? 'Voorraad banden' : 'Voorraad onderdelen', soort, q, type, locatie, alleen,
-      items: inv.searchStock({ soort, q, type, locatie, alleen }), fotos: photos.firstPhotos('stock'),
+      items, fotos: photos.firstPhotos('stock'),
+      // Voorbeeldfoto per soort onderdeel: al bekend (meteen tonen), "zoeken" (de pagina haalt hem op) of niets.
+      partSamples: soort === 'onderdeel' && req.user.prefs.partimg !== 'off' ? (() => {
+        const out = {};
+        for (const t of new Set(items.map((i) => i.type).filter(Boolean))) {
+          const hit = carimage.cachedPart(t);
+          out[t] = hit ? hit : carimage.partTarget(t) ? 'zoeken' : null;
+        }
+        return out;
+      })() : {},
       counts: inv.stockCounts(), SOORTEN: inv.SOORTEN,
       // Bij banden: ook laten zien hoeveel sets met deze zoekterm in de overige opslag liggen (noodbanden).
       opslagMatches: soort === 'band' && q ? inv.searchTyres({ soort: 'opslag', q, status: 'opgeslagen' }).length : 0,
@@ -195,6 +206,10 @@ module.exports = function register(app, { flash, wrap }) {
         : data.soort === 'band' ? 'Band toevoegen' : 'Onderdeel toevoegen',
       item, d: data, error, SEASONS: inv.SEASONS, SOORTEN: inv.SOORTEN, extra: inv.parseExtra(data.extra),
       photoList: item ? photos.list('stock', item.id) : [], photoOwner: item ? { type: 'stock', id: item.id } : null,
+      partSample: item && data.soort === 'onderdeel' && data.type && res.req.user.prefs.partimg !== 'off'
+        ? (carimage.cachedPart(data.type) || (carimage.partTarget(data.type) ? 'zoeken' : null)) : null,
+      webSearch: item ? 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(
+        (data.soort === 'band' ? [data.merk, data.type, data.maat] : [data.merk, data.nummer || data.oe_nummer, data.nummer ? '' : data.type]).filter(Boolean).join(' ')) : '',
       types: inv.distinct('stock_items', 'type', `AND soort = '${data.soort}'`),
       merken: inv.distinct('stock_items', 'merk', `AND soort = '${data.soort}'`),
       locaties: inv.distinct('stock_items', 'locatie'),
