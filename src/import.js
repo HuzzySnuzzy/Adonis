@@ -322,20 +322,31 @@ async function readWithClaude(images) {
     throw billedError('Het resultaat kon niet worden gelezen. Probeer het opnieuw.');
   }
   const nummer = String(parsed.nummer || '').replace(/\D/g, '');
+  const data = toWorkOrder(parsed);
   const rawDatum = String(parsed.datum_invoer || '').trim();
-  const datum = orders.parseDate(rawDatum);
+  let datum = orders.parseDate(rawDatum);
+  let datumBron = datum ? 'invoer' : '';
   const onzeker = Array.isArray(parsed.onzeker) ? parsed.onzeker.map(String).slice(0, 30) : [];
-  if (!datum) {
+  const fmt = (iso) => iso.split('-').reverse().join('-');
+  if (!datum && data.datum_gereed) {
+    // Datum invoer leeg of onduidelijk: Datum gereed gebruiken (staat er vaak wel).
+    datum = data.datum_gereed;
+    datumBron = 'gereed';
     onzeker.unshift(rawDatum
-      ? `Datum invoer gelezen als "${rawDatum}", maar dat is geen geldige datum – vul de datum van de papieren werkopdracht in.`
-      : 'Datum invoer kon niet worden gelezen – vul de datum van de papieren werkopdracht in.');
+      ? `Datum invoer was onduidelijk ("${rawDatum}"), daarom is Datum gereed (${fmt(datum)}) gebruikt – controleer dit.`
+      : `Datum invoer stond niet op het formulier, daarom is Datum gereed (${fmt(datum)}) gebruikt – controleer dit.`);
+  } else if (!datum) {
+    onzeker.unshift(rawDatum
+      ? `Datum invoer gelezen als "${rawDatum}", maar dat is geen geldige datum (en Datum gereed is ook leeg) – vul de datum van de papieren werkopdracht in.`
+      : 'Datum invoer en Datum gereed konden niet worden gelezen – vul de datum van de papieren werkopdracht in.');
   }
   return {
     usage: used,
     nummer,
     datum_invoer: datum,
+    datum_bron: datumBron, // 'invoer', 'gereed' of '' (niet gevonden)
     onzeker,
-    data: toWorkOrder(parsed),
+    data,
   };
 }
 
