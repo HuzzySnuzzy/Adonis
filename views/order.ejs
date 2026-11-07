@@ -1,0 +1,266 @@
+<%- include('partials/head', { extraCss: 'werkopdracht.css', bodyClass: 'order-page' }) %>
+<%
+  const d = data;
+  const lined = (field, extra = '') =>
+    `<textarea class="ink lined" name="d[${field}]" rows="${WORK_LINES}" spellcheck="false" ${extra}>${esc(d[field])}</textarea>`;
+  const achter = (field, rows) =>
+    `<textarea class="ink lined" name="d[achter][${field}]" rows="${rows}" spellcheck="false">${esc(d.achter[field])}</textarea>`;
+  const dv = d.diversen;
+  const box = (field, label) =>
+    `<label class="box"><input type="checkbox" name="d[diversen][${field}]" ${dv[field] ? 'checked' : ''}> ${label}</label>`;
+%>
+
+<div class="order-toolbar no-print">
+  <div class="tb-left">
+    <% if (order) { %>
+      <a class="btn btn-ghost" href="/klant/<%= order.customer_id %>">← Klant</a>
+    <% } else { %>
+      <a class="btn btn-ghost" href="/">← Terug</a>
+    <% } %>
+    <div class="tb-title">
+      <strong><%= order ? 'Werkopdracht ' + order.nummer : 'Nieuwe werkopdracht' %></strong>
+      <% if (order) { %>
+        <span class="muted small">Aangemaakt door <%= order.created_by_name || 'onbekend' %> op <%= fmtDateTime(order.created_at) %>
+        <% if (order.updated_at !== order.created_at) { %> · gewijzigd door <%= order.updated_by_name || 'onbekend' %> op <%= fmtDateTime(order.updated_at) %><% } %></span>
+      <% } %>
+    </div>
+  </div>
+  <div class="tb-right">
+    <span class="totals muted small" id="totals" title="Som van aantal × prijs p.eenh. van onderdelen, vloeistoffen en diversen"></span>
+    <a class="btn btn-ghost" href="#achterkant">Achterkant ↓</a>
+    <button class="btn" type="button" id="printBtn">Afdrukken</button>
+    <button class="btn btn-primary" type="submit" form="orderForm" id="saveBtn">Opslaan</button>
+  </div>
+</div>
+
+<% if (error) { %><div class="alert alert-wide no-print"><%= error %></div><% } %>
+
+<form id="orderForm" method="post" action="<%= order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <% if (order) { %><input type="hidden" name="versie" value="<%= order.updated_at %>"><% } %>
+
+  <!-- ===================== VOORKANT ===================== -->
+  <div class="sheet-scroll">
+  <section class="sheet front" aria-label="Voorkant werkopdracht">
+
+    <!-- ---------- linkerhelft: onderdelen ---------- -->
+    <div class="panel panel-left">
+      <div class="red-nr mirror-nr"><%= nummer %></div>
+      <table class="grid parts">
+        <colgroup><col class="c-rownum"><col class="c-partnr"><col><col class="c-qty"><col class="c-price"></colgroup>
+        <thead>
+          <tr><th colspan="2">Onderdeelnummer</th><th>Omschrijving</th><th class="center">Aantal</th><th class="center">Prijs p.eenh.</th></tr>
+        </thead>
+        <tbody>
+        <% d.onderdelen.forEach((p, i) => { %>
+          <tr data-line>
+            <td class="rownum"><%= i + 1 %></td>
+            <td><%- inp(`onderdelen.${i}.nr`, p.nr) %></td>
+            <td><%- inp(`onderdelen.${i}.omschrijving`, p.omschrijving) %></td>
+            <td><%- inp(`onderdelen.${i}.aantal`, p.aantal, 'class="ink center" data-qty') %></td>
+            <td><%- inp(`onderdelen.${i}.prijs`, p.prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+
+      <div class="bottom-split">
+        <table class="grid fluids">
+          <colgroup><col class="c-liter"><col><col class="c-price"></colgroup>
+          <thead><tr><th>Liter</th><th>Omschrijving</th><th class="center">Prijs p.eenh.</th></tr></thead>
+          <tbody>
+          <% FLUIDS.forEach((f) => { const v = d.vloeistoffen[f.key]; %>
+            <tr data-line>
+              <td><%- inp(`vloeistoffen.${f.key}.liter`, v.liter, 'class="ink center" data-qty') %></td>
+              <td><div class="labelled">
+                <% if (f.kind === 'visc') { %>
+                  <span class="lbl"><%= f.label %></span>
+                  <%- inp(`vloeistoffen.${f.key}.info`, v.info, 'class="ink center visc" aria-label="Viscositeit (eerste getal)"') %>
+                  <span class="lbl">w</span>
+                  <%- inp(`vloeistoffen.${f.key}.info2`, v.info2, 'class="ink center visc" aria-label="Viscositeit (tweede getal)"') %>
+                <% } else if (f.label) { %>
+                  <span class="lbl"><%= f.label %></span>
+                  <%- inp(`vloeistoffen.${f.key}.info`, v.info, `aria-label="${f.label}"`) %>
+                  <% if (f.suffix) { %><span class="lbl"><%= f.suffix %></span><% } %>
+                <% } else { %>
+                  <%- inp(`vloeistoffen.${f.key}.info`, v.info) %>
+                <% } %>
+              </div></td>
+              <td><%- inp(`vloeistoffen.${f.key}.prijs`, v.prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+
+        <table class="grid diversen">
+          <colgroup><col><col class="c-price"></colgroup>
+          <thead><tr><th>Diversen</th><th class="center">Prijs p.eenh.</th></tr></thead>
+          <tbody>
+            <tr data-line>
+              <td><div class="labelled"><span class="lbl">Servicewagen</span><%- inp('diversen.servicewagen_km', dv.servicewagen_km, 'class="ink right" inputmode="numeric"') %><span class="lbl">km</span></div></td>
+              <td><%- inp('diversen.servicewagen_prijs', dv.servicewagen_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+            </tr>
+            <tr data-line>
+              <td><div class="labelled"><span class="lbl">Leenauto</span><%- inp('diversen.leenauto_km', dv.leenauto_km, 'class="ink right" inputmode="numeric"') %><span class="lbl">km</span></div></td>
+              <td><%- inp('diversen.leenauto_prijs', dv.leenauto_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+            </tr>
+            <tr data-line>
+              <td><div class="labelled"><span class="lbl">Werk derden</span><%- inp('diversen.werk_derden', dv.werk_derden) %></div></td>
+              <td><%- inp('diversen.werk_derden_prijs', dv.werk_derden_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+            </tr>
+            <tr data-line>
+              <td><div class="labelled boxes"><%- box('apk', 'A.p.k.') %><%- box('afmeldkosten', 'Afmeldkosten') %></div></td>
+              <td><%- inp('diversen.apk_prijs', dv.apk_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+            </tr>
+            <tr data-line>
+              <td><div class="labelled"><span class="lbl">Testapparatuur</span><%- inp('diversen.testapparatuur', dv.testapparatuur) %></div></td>
+              <td><%- inp('diversen.testapparatuur_prijs', dv.testapparatuur_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+            </tr>
+            <tr data-line>
+              <td><%- inp('diversen.extra', dv.extra) %></td>
+              <td><%- inp('diversen.extra_prijs', dv.extra_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+            </tr>
+            <tr data-line>
+              <td><div class="labelled boxes"><%- box('uitlijnen', 'Uitlijnen') %><%- box('balanceren', 'Balanceren') %></div></td>
+              <td><%- inp('diversen.uitlijnen_prijs', dv.uitlijnen_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+            </tr>
+            <tr data-line>
+              <td><div class="labelled"><span class="lbl">Kleinmateriaal</span><%- inp('diversen.kleinmateriaal', dv.kleinmateriaal) %></div></td>
+              <td><%- inp('diversen.kleinmateriaal_prijs', dv.kleinmateriaal_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+            </tr>
+            <tr data-line>
+              <td><div class="labelled"><span class="lbl">Milieutoeslag</span><%- inp('diversen.milieutoeslag', dv.milieutoeslag) %></div></td>
+              <td><%- inp('diversen.milieutoeslag_prijs', dv.milieutoeslag_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ---------- rechterhelft: werkopdracht ---------- -->
+    <div class="panel panel-right">
+      <div class="head-grid">
+        <div class="cell"><span class="lbl">Monteur</span><%- inp('monteur', d.monteur) %></div>
+        <div class="cell title-cell">
+          <span class="wo-title">WERKOPDRACHT</span>
+          <input class="red-nr nr-input" name="nummer" value="<%= nummer %>" inputmode="numeric" required aria-label="Werkopdrachtnummer" autocomplete="off">
+        </div>
+
+        <div class="cell"><span class="lbl">Datum invoer</span><span class="ink static" title="Wordt automatisch ingevuld bij aanmaken"><%= fmtDate(datumInvoer) %></span></div>
+        <div class="cell"><span class="lbl">Naam</span><%- inp('naam', d.naam) %></div>
+
+        <div class="cell"><span class="lbl">Datum gereed</span><%- inp('datum_gereed', d.datum_gereed, 'type="date"') %></div>
+        <div class="cell"><span class="lbl">Adres</span><%- inp('adres', d.adres) %></div>
+
+        <div class="cell"><span class="lbl">Klantnr.</span><%- inp('klantnr', d.klantnr) %></div>
+        <div class="cell"><span class="lbl">Plaats</span><%- inp('plaats', d.plaats) %></div>
+
+        <div class="cell"><span class="lbl">Kenteken</span><%- inp('kenteken', d.kenteken, 'class="ink upper" required autocapitalize="characters" placeholder="verplicht"') %></div>
+        <div class="cell"><span class="lbl">Tel. privé</span><%- inp('tel_prive', d.tel_prive, 'type="tel"') %></div>
+
+        <div class="cell"><span class="lbl">Merk/Type</span><%- inp('merk_type', d.merk_type) %></div>
+        <div class="cell"><span class="lbl">Tel. zaak</span><%- inp('tel_zaak', d.tel_zaak, 'type="tel"') %></div>
+
+        <div class="cell"><span class="lbl">Km-stand (werkelijk)</span><%- inp('km_in', d.km_in, 'inputmode="numeric"') %><span class="lbl">(in)</span></div>
+        <div class="cell"><span class="lbl">Alle noodzakelijke reparaties uitvoeren</span>
+          <span class="janee">
+            <label><input type="radio" name="d[alle_reparaties]" value="ja" <%= d.alle_reparaties === 'ja' ? 'checked' : '' %>><span>Ja</span></label>/<label><input type="radio" name="d[alle_reparaties]" value="nee" <%= d.alle_reparaties === 'nee' ? 'checked' : '' %>><span>Nee</span></label>
+          </span>
+        </div>
+
+        <div class="cell"><span class="lbl">Km-stand (teller)</span><%- inp('km_uit', d.km_uit, 'inputmode="numeric"') %><span class="lbl">(uit)</span></div>
+        <div class="cell"><span class="lbl">Kontakt opnemen bij extra rep.kosten boven €</span><%- inp('contact_boven', d.contact_boven, 'inputmode="decimal"') %></div>
+
+        <div class="cell"><span class="lbl">Datum deel I</span><%- inp('datum_deel1', d.datum_deel1, 'type="date"') %></div>
+        <div class="cell"><span class="lbl">Chassisnummer</span><%- inp('chassisnummer', d.chassisnummer, 'class="ink upper"') %></div>
+
+        <div class="cell"><span class="lbl">A.p.k.-datum</span><%- inp('apk_datum', d.apk_datum, 'type="date"') %></div>
+        <div class="cell"><span class="lbl">Alarmcode:</span><%- inp('alarmcode', d.alarmcode) %></div>
+      </div>
+
+      <div class="work">
+        <div class="work-row work-head">
+          <div class="w-check">✓</div><div class="w-oms">Omschrijving werkzaamheden</div><div class="w-code">Code</div><div class="w-tijd">Tijd</div>
+        </div>
+        <div class="work-row">
+          <div class="w-check"></div>
+          <div class="w-oms labelled"><span class="lbl">Servicebeurt</span><%- inp('servicebeurt_km', d.servicebeurt_km, 'class="ink right" inputmode="numeric"') %><span class="lbl">km</span><span class="spacer"></span></div>
+          <div class="w-code"></div><div class="w-tijd"></div>
+        </div>
+        <div class="work-lines" data-sync>
+          <div class="w-check"><%- lined('werk_check', 'aria-label="Afgevinkt"') %></div>
+          <div class="w-oms"><%- lined('werk_omschrijving', 'aria-label="Omschrijving werkzaamheden"') %></div>
+          <div class="w-code"><%- lined('werk_code', 'aria-label="Code"') %></div>
+          <div class="w-tijd"><%- lined('werk_tijd', 'aria-label="Tijd"') %></div>
+        </div>
+        <div class="work-row foot">
+          <div class="w-span labelled"><span class="lbl">Berekend op faktuurnr.</span><%- inp('faktuurnr', d.faktuurnr) %></div>
+        </div>
+        <div class="work-row foot">
+          <div class="w-span2 labelled"><span class="lbl">Totaal gewerkte uren</span><%- inp('totaal_uren', d.totaal_uren, 'inputmode="decimal"') %></div>
+          <div class="w-code labelled stacked"><span class="lbl tiny">Tarief</span><%- inp('tarief', d.tarief, 'class="ink right" inputmode="decimal"') %></div>
+          <div class="w-tijd labelled stacked"><span class="lbl tiny">Bedrag</span><%- inp('bedrag', d.bedrag, 'class="ink right" inputmode="decimal"') %></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <!-- ===================== ACHTERKANT ===================== -->
+  <h2 class="side-title no-print" id="achterkant">Achterkant</h2>
+  <div class="sheet-scroll">
+  <section class="sheet back" aria-label="Achterkant werkopdracht">
+    <div class="panel panel-left">
+      <div class="back-head"><span class="wo-title small-title">Bandenprofiel</span><span class="red-nr mirror-nr"><%= nummer %></span></div>
+      <table class="grid tires">
+        <colgroup><col class="c-tire"><col class="c-prof"><col><col><col class="c-dot"></colgroup>
+        <thead><tr><th>Band</th><th class="center">Profiel (mm)</th><th>Maat</th><th>Merk</th><th class="center">DOT</th></tr></thead>
+        <tbody>
+        <% TIRES.forEach((t) => { const b = d.achter.banden[t.key]; %>
+          <tr data-line>
+            <td class="rowlabel"><%= t.label %></td>
+            <td><%- inp(`achter.banden.${t.key}.profiel`, b.profiel, 'class="ink center" inputmode="decimal" data-tread') %></td>
+            <td><%- inp(`achter.banden.${t.key}.maat`, b.maat, 'placeholder=""') %></td>
+            <td><%- inp(`achter.banden.${t.key}.merk`, b.merk) %></td>
+            <td><%- inp(`achter.banden.${t.key}.dot`, b.dot, 'class="ink center" inputmode="numeric"') %></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+      <p class="tread-legend no-print"><span class="tread bad">&lt; 1,6 mm wettelijk minimum</span> <span class="tread warn">&lt; 3 mm advies vervangen</span></p>
+
+      <div class="back-block">
+        <div class="block-head">A.p.k. / Afkeurpunten</div>
+        <div class="block-lines"><%- achter('apk', 12) %></div>
+      </div>
+    </div>
+
+    <div class="panel panel-right">
+      <div class="back-block">
+        <div class="block-head">Aandachtspunten</div>
+        <div class="block-lines"><%- achter('aandachtspunten', 14) %></div>
+      </div>
+      <div class="back-block">
+        <div class="block-head">Notities</div>
+        <div class="block-lines"><%- achter('notities', 9) %></div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <div class="form-actions no-print">
+    <button class="btn btn-primary" type="submit">Opslaan</button>
+  </div>
+</form>
+
+<% if (order && user.is_admin) { %>
+<form method="post" action="/werkopdracht/<%= order.id %>/verwijderen" class="delete-form no-print"
+      data-confirm="Werkopdracht <%= order.nummer %> definitief verwijderen? Dit kan niet ongedaan worden gemaakt.">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <button class="btn btn-danger btn-small" type="submit">Werkopdracht verwijderen</button>
+</form>
+<% } %>
+
+<script src="/static/js/common.js"></script>
+<script src="/static/js/order.js"></script>
+<%- include('partials/foot') %>

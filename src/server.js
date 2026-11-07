@@ -1,0 +1,386 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const express = require('express');
+const session = require('express-session');
+
+const { db, plateKey, DATA_DIR } = require('./db');
+const SqliteStore = require('./session-store');
+const auth = require('./auth');
+const orders = require('./orders');
+
+const app = express();
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const PROD = process.env.NODE_ENV === 'production';
+
+/* ---------- session secret ---------- */
+function sessionSecret() {
+  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
+  const file = path.join(DATA_DIR, 'session-secret');
+  if (!fs.existsSync(file)) fs.writeFileSync(file, crypto.randomBytes(48).toString('hex'), { mode: 0o600 });
+  return fs.readFileSync(file, 'utf8').trim();
+}
+
+/* ---------- app setup ---------- */
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '..', 'views'));
+app.disable('x-powered-by');
+if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : process.env.TRUST_PROXY);
+
+app.use((req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'same-origin',
+    'Content-Security-Policy':
+      "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; " +
+      "img-src 'self' data:; script-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+  });
+  if (PROD) res.set('Strict-Transport-Security', 'max-age=31536000');
+  next();
+});
+
+app.use('/static', express.static(path.join(__dirname, '..', 'public'), { maxAge: PROD ? '1d' : 0 }));
+app.use(express.urlencoded({ extended: true, limit: '1mb', parameterLimit: 5000 }));
+app.use(
+  session({
+    name: 'wo.sid',
+    secret: sessionSecret(),
+    store: new SqliteStore(),
+    resave: false,
+    saveUninitialized: false,
+    rolling: true,
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : PROD,
+      maxAge: 12 * 60 * 60 * 1000, // 12 uur na laatste activiteit
+    },
+  })
+);
+app.use(auth.loadUser);
+app.use((req, res, next) => {
+  res.locals.path = req.path;
+  res.locals.flash = req.session.flash || null;
+  delete req.session.flash;
+  next();
+});
+app.use(auth.csrfProtection);
+
+/* ---------- view helpers ---------- */
+function fmtDate(iso) {
+  if (!iso) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  return m ? `${m[3]}-${m[2]}-${m[1].slice(2)}` : iso;
+}
+function fmtDateTime(sqlDate) {
+  if (!sqlDate) return '';
+  const d = new Date(sqlDate.replace(' ', 'T') + 'Z');
+  return new Intl.DateTimeFormat('nl-NL', {
+    timeZone: process.env.TZ || 'Europe/Amsterdam', day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  }).format(d);
+}
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+/** <input> for a work-order field; `path` like "onderdelen.3.nr" becomes name="d[onderdelen][3][nr]". */
+function inp(pathStr, value, attrs = '') {
+  const name = 'd' + pathStr.split('.').map((p) => `[${p}]`).join('');
+  const cls = /\bclass=/.test(attrs) ? '' : 'class="ink" ';
+  return `<input ${cls}name="${name}" value="${esc(value)}" autocomplete="off" ${attrs}>`;
+}
+app.locals.esc = esc;
+app.locals.inp = inp;
+app.locals.fmtDate = fmtDate;
+app.locals.fmtDateTime = fmtDateTime;
+app.locals.FLUIDS = orders.FLUIDS;
+app.locals.TIRES = orders.TIRES;
+app.locals.WORK_LINES = orders.WORK_LINES;
+function flash(req, type, text) {
+  req.session.flash = { type, text };
+}
+function likeTerm(q) {
+  return '%' + q.replace(/[\\%_]/g, (c) => '\\' + c) + '%';
+}
+const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+/* ---------- eerste gebruiker ---------- */
+app.get('/setup', (req, res) => {
+  if (auth.userCount() > 0) return res.redirect('/login');
+  res.render('setup', { title: 'Eerste account aanmaken', error: null, values: {} });
+});
+app.post('/setup', wrap(async (req, res) => {
+  if (auth.userCount() > 0) return res.redirect('/login');
+  const { username, name, password, password2 } = req.body;
+  try {
+    if (password !== password2) throw new Error('De wachtwoorden komen niet overeen.');
+    await auth.createUser({ username, name, password, isAdmin: true });
+  } catch (err) {
+    return res.status(400).render('setup', { title: 'Eerste account aanmaken', error: err.message, values: { username, name } });
+  }
+  flash(req, 'ok', 'Account aangemaakt. Log nu in.');
+  res.redirect('/login');
+}));
+
+/* ---------- inloggen ---------- */
+function safeNext(next) {
+  return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') ? next : '/';
+}
+app.get('/login', (req, res) => {
+  if (req.user) return res.redirect('/');
+  if (auth.userCount() === 0) return res.redirect('/setup');
+  res.render('login', { title: 'Inloggen', error: null, username: '', next: safeNext(req.query.next) });
+});
+app.post('/login', wrap(async (req, res) => {
+  const username = String(req.body.username || '').trim();
+  const next = safeNext(req.body.next);
+  const key = req.ip + '|' + username.toLowerCase();
+  const fail = (msg) => res.status(401).render('login', { title: 'Inloggen', error: msg, username, next });
+  if (auth.loginBlocked(key) || auth.loginBlocked(req.ip)) {
+    return fail('Te veel mislukte pogingen. Probeer het over 15 minuten opnieuw.');
+  }
+  const user = await auth.verifyLogin(username, req.body.password);
+  if (!user) {
+    auth.loginFailed(key);
+    auth.loginFailed(req.ip); // ook per IP-adres, over alle gebruikersnamen heen
+    return fail('Onjuiste gebruikersnaam of wachtwoord.');
+  }
+  auth.loginSucceeded(key);
+  req.session.regenerate((err) => {
+    if (err) return res.status(500).send('Sessiefout');
+    req.session.userId = user.id;
+    req.session.csrf = crypto.randomBytes(24).toString('hex');
+    res.redirect(next);
+  });
+}));
+app.post('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie('wo.sid');
+    res.redirect('/login');
+  });
+});
+
+/* ---------- alles hieronder vereist inloggen ---------- */
+app.use(auth.requireLogin);
+
+/* Klantenoverzicht op kenteken */
+app.get('/', (req, res) => {
+  const q = String(req.query.q || '').trim();
+  let rows;
+  const base = `
+    SELECT c.*, COUNT(o.id) AS aantal, MAX(o.datum_invoer) AS laatste
+    FROM customers c LEFT JOIN orders o ON o.customer_id = c.id`;
+  if (q) {
+    const term = likeTerm(q);
+    const pkey = plateKey(q);
+    rows = db.prepare(
+      `${base}
+       WHERE (? <> '' AND c.plate_key LIKE ? ESCAPE '\\') OR c.naam LIKE ? ESCAPE '\\' OR c.merk_type LIKE ? ESCAPE '\\'
+          OR c.klantnr LIKE ? ESCAPE '\\' OR c.plaats LIKE ? ESCAPE '\\' OR c.chassisnummer LIKE ? ESCAPE '\\'
+       GROUP BY c.id ORDER BY c.plate_key LIMIT 500`
+    ).all(pkey, likeTerm(pkey), term, term, term, term, term);
+  } else {
+    rows = db.prepare(`${base} GROUP BY c.id ORDER BY c.plate_key LIMIT 2000`).all();
+  }
+  res.render('customers', { title: 'Klanten', q, customers: rows });
+});
+
+/* Eén klant met alle werkopdrachten */
+app.get('/klant/:id', (req, res) => {
+  const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+  if (!customer) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze klant bestaat niet.' });
+  const q = String(req.query.q || '').trim();
+  const rows = q
+    ? db.prepare(
+        `SELECT * FROM orders WHERE customer_id = ? AND search_text LIKE ? ESCAPE '\\' ORDER BY datum_invoer DESC, nummer DESC`
+      ).all(customer.id, likeTerm(q))
+    : db.prepare('SELECT * FROM orders WHERE customer_id = ? ORDER BY datum_invoer DESC, nummer DESC').all(customer.id);
+  res.render('customer', { title: customer.kenteken, customer, q, orders: rows.map(withSummary) });
+});
+
+/* Alle werkopdrachten doorzoeken */
+app.get('/werkopdrachten', (req, res) => {
+  const q = String(req.query.q || '').trim();
+  const sql = `SELECT o.*, c.kenteken AS c_kenteken FROM orders o JOIN customers c ON c.id = o.customer_id`;
+  const rows = q
+    ? db.prepare(`${sql} WHERE o.search_text LIKE ? ESCAPE '\\' OR c.plate_key LIKE ? ESCAPE '\\'
+                  ORDER BY o.nummer DESC LIMIT 500`).all(likeTerm(q), likeTerm(plateKey(q) || q))
+    : db.prepare(`${sql} ORDER BY o.nummer DESC LIMIT 200`).all();
+  res.render('orders', { title: 'Werkopdrachten', q, orders: rows.map(withSummary) });
+});
+
+function withSummary(row) {
+  const data = orders.parseOrderData(row.data);
+  const firstLine = data.werk_omschrijving.split('\n').map((l) => l.replace(/^[-–\s]+/, '').trim()).find(Boolean) || '';
+  return { ...row, d: data, summary: firstLine };
+}
+
+/* ---------- werkopdracht formulier ---------- */
+function renderOrder(res, { order, data, nummer, error, status }) {
+  res.status(status || 200).render('order', {
+    title: order ? `Werkopdracht ${order.nummer}` : 'Nieuwe werkopdracht',
+    order, data, nummer, error,
+    datumInvoer: order ? order.datum_invoer : orders.todayISO(),
+  });
+}
+
+app.get('/werkopdracht/nieuw', (req, res) => {
+  const data = orders.emptyOrderData();
+  data.monteur = req.user.name;
+  if (req.query.klant) {
+    const c = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.query.klant);
+    if (c) for (const f of orders.CUSTOMER_FIELDS) data[f] = c[f];
+  }
+  renderOrder(res, { order: null, data, nummer: orders.nextOrderNumber() });
+});
+
+function parseNummer(v) {
+  const n = parseInt(String(v || '').trim(), 10);
+  return Number.isInteger(n) && n > 0 && n < 1e9 ? n : null;
+}
+
+function validateOrder(data, nummer, existingId) {
+  if (!nummer) return 'Vul een geldig werkopdrachtnummer in.';
+  if (!plateKey(data.kenteken)) return 'Vul een kenteken in – werkopdrachten worden per kenteken opgeslagen.';
+  const clash = db.prepare('SELECT id FROM orders WHERE nummer = ?').get(nummer);
+  if (clash && clash.id !== existingId) return `Werkopdrachtnummer ${nummer} bestaat al.`;
+  return null;
+}
+
+app.post('/werkopdracht', (req, res) => {
+  const data = orders.normalizeOrderData(req.body.d);
+  const nummer = parseNummer(req.body.nummer);
+  const error = validateOrder(data, nummer, null);
+  if (error) return renderOrder(res, { order: null, data, nummer: req.body.nummer, error, status: 400 });
+  const id = orders.saveOrder({ nummer, data, userId: req.user.id });
+  flash(req, 'ok', `Werkopdracht ${nummer} is opgeslagen.`);
+  res.redirect(`/werkopdracht/${id}`);
+});
+
+function loadOrder(id) {
+  return db.prepare(
+    `SELECT o.*, cu.name AS created_by_name, uu.name AS updated_by_name
+     FROM orders o LEFT JOIN users cu ON cu.id = o.created_by LEFT JOIN users uu ON uu.id = o.updated_by
+     WHERE o.id = ?`
+  ).get(id);
+}
+
+app.get('/werkopdracht/:id', (req, res) => {
+  const order = loadOrder(req.params.id);
+  if (!order) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze werkopdracht bestaat niet.' });
+  renderOrder(res, { order, data: orders.parseOrderData(order.data), nummer: order.nummer });
+});
+
+app.post('/werkopdracht/:id', (req, res) => {
+  const order = loadOrder(req.params.id);
+  if (!order) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze werkopdracht bestaat niet.' });
+  const data = orders.normalizeOrderData(req.body.d);
+  const nummer = parseNummer(req.body.nummer);
+  let error = validateOrder(data, nummer, order.id);
+  if (!error && req.body.versie !== order.updated_at) {
+    error = `Iemand anders (${order.updated_by_name || 'onbekend'}) heeft deze werkopdracht intussen gewijzigd ` +
+      `(${fmtDateTime(order.updated_at)}). Open de werkopdracht opnieuw om de laatste versie te zien – ` +
+      'jouw wijzigingen staan hieronder nog ingevuld, maar zijn NIET opgeslagen.';
+  }
+  if (error) return renderOrder(res, { order, data, nummer: req.body.nummer, error, status: 400 });
+  orders.saveOrder({ id: order.id, nummer, data, userId: req.user.id });
+  flash(req, 'ok', `Werkopdracht ${nummer} is opgeslagen.`);
+  res.redirect(`/werkopdracht/${order.id}`);
+});
+
+app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
+  const order = loadOrder(req.params.id);
+  if (!order) return res.redirect('/');
+  const customerId = orders.deleteOrder(order.id);
+  flash(req, 'ok', `Werkopdracht ${order.nummer} is verwijderd.`);
+  const stillExists = db.prepare('SELECT 1 FROM customers WHERE id = ?').get(customerId);
+  res.redirect(stillExists ? `/klant/${customerId}` : '/');
+});
+
+/* ---------- eigen account ---------- */
+app.get('/account', (req, res) => res.render('account', { title: 'Mijn account', error: null }));
+app.post('/account/wachtwoord', wrap(async (req, res) => {
+  const { current, password, password2 } = req.body;
+  try {
+    if (!(await auth.checkPassword(req.user.id, current))) throw new Error('Huidig wachtwoord is onjuist.');
+    if (password !== password2) throw new Error('De nieuwe wachtwoorden komen niet overeen.');
+    await auth.setPassword(req.user.id, password);
+  } catch (err) {
+    return res.status(400).render('account', { title: 'Mijn account', error: err.message });
+  }
+  // setPassword logt alle sessies uit; maak een nieuwe sessie voor deze gebruiker.
+  const userId = req.user.id;
+  req.session.regenerate(() => {
+    req.session.userId = userId;
+    req.session.csrf = crypto.randomBytes(24).toString('hex');
+    flash(req, 'ok', 'Je wachtwoord is gewijzigd.');
+    res.redirect('/account');
+  });
+}));
+
+/* ---------- gebruikersbeheer (beheerder) ---------- */
+function renderUsers(req, res, error, status) {
+  const users = db.prepare('SELECT id, username, name, is_admin, created_at FROM users ORDER BY name').all();
+  res.status(status || 200).render('users', { title: 'Gebruikers', users, error });
+}
+app.get('/gebruikers', auth.requireAdmin, (req, res) => renderUsers(req, res, null));
+app.post('/gebruikers', auth.requireAdmin, wrap(async (req, res) => {
+  try {
+    await auth.createUser({
+      username: req.body.username, name: req.body.name, password: req.body.password, isAdmin: req.body.is_admin === 'on',
+    });
+  } catch (err) {
+    return renderUsers(req, res, err.message, 400);
+  }
+  flash(req, 'ok', `Gebruiker ${req.body.username} is aangemaakt.`);
+  res.redirect('/gebruikers');
+}));
+app.post('/gebruikers/:id/wachtwoord', auth.requireAdmin, wrap(async (req, res) => {
+  const target = auth.findUserById(req.params.id);
+  if (!target) return res.redirect('/gebruikers');
+  try {
+    await auth.setPassword(target.id, req.body.password);
+  } catch (err) {
+    return renderUsers(req, res, err.message, 400);
+  }
+  if (target.id === req.user.id) return res.redirect('/login');
+  flash(req, 'ok', `Wachtwoord van ${target.username} is gewijzigd.`);
+  res.redirect('/gebruikers');
+}));
+app.post('/gebruikers/:id/beheerder', auth.requireAdmin, (req, res) => {
+  const target = auth.findUserById(req.params.id);
+  if (target && target.id !== req.user.id) {
+    db.prepare('UPDATE users SET is_admin = ? WHERE id = ?').run(target.is_admin ? 0 : 1, target.id);
+    flash(req, 'ok', `${target.username} is ${target.is_admin ? 'geen' : 'nu'} beheerder.`);
+  }
+  res.redirect('/gebruikers');
+});
+app.post('/gebruikers/:id/verwijderen', auth.requireAdmin, (req, res) => {
+  const target = auth.findUserById(req.params.id);
+  if (target && target.id !== req.user.id) {
+    db.prepare('DELETE FROM users WHERE id = ?').run(target.id);
+    db.prepare("DELETE FROM sessions WHERE json_extract(data, '$.userId') = ?").run(target.id);
+    flash(req, 'ok', `Gebruiker ${target.username} is verwijderd.`);
+  }
+  res.redirect('/gebruikers');
+});
+
+/* ---------- fouten ---------- */
+app.use((req, res) => res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze pagina bestaat niet.' }));
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).render('error', { title: 'Er ging iets mis', message: 'Er is een onverwachte fout opgetreden.' });
+});
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Werkopdrachten draait op http://localhost:${PORT}`);
+    if (auth.userCount() === 0) console.log(`Nog geen gebruikers: ga naar http://localhost:${PORT}/setup`);
+  });
+}
+
+module.exports = app;

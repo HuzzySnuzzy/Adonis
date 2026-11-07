@@ -1,0 +1,33 @@
+<%- include('partials/head') %>
+<main class="page">
+  <p class="crumbs"><a href="/">← Alle klanten</a></p>
+  <div class="customer-head">
+    <div>
+      <%- include('partials/plate', { kenteken: customer.kenteken }) %>
+      <h1><%= customer.naam || 'Onbekende klant' %></h1>
+      <p class="muted"><%= customer.merk_type %></p>
+    </div>
+    <dl class="facts">
+      <% const facts = [['Klantnr.', customer.klantnr], ['Adres', customer.adres], ['Plaats', customer.plaats],
+           ['Tel. privé', customer.tel_prive], ['Tel. zaak', customer.tel_zaak], ['Chassisnummer', customer.chassisnummer]]; %>
+      <% for (const [k, v] of facts) { if (v) { %><dt><%= k %></dt><dd><%= v %></dd><% } } %>
+    </dl>
+    <a class="btn btn-primary" href="/werkopdracht/nieuw?klant=<%= customer.id %>">+ Nieuwe werkopdracht voor <%= customer.kenteken %></a>
+  </div>
+
+  <div class="page-head">
+    <h2>Werkopdrachten</h2>
+    <form class="search" method="get" role="search">
+      <input type="search" name="q" value="<%= q %>" placeholder="Zoek in werkopdrachten (bv. accu, U1F1B, distributie)…">
+      <button class="btn" type="submit">Zoeken</button>
+      <% if (q) { %><a class="btn btn-ghost" href="/klant/<%= customer.id %>">Wissen</a><% } %>
+    </form>
+  </div>
+  <% if (orders.length === 0) { %>
+    <div class="empty"><p>Geen werkopdrachten gevonden<%= q ? ' voor “' + q + '”' : '' %>.</p></div>
+  <% } else { %>
+    <%- include('partials/orderlist', { orders, showPlate: false }) %>
+  <% } %>
+</main>
+<script src="/static/js/common.js"></script>
+<%- include('partials/foot') %>

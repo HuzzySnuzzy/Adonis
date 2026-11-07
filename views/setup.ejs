@@ -1,0 +1,24 @@
+<%- include('partials/head') %>
+<main class="auth-card">
+  <h1>Welkom</h1>
+  <p class="muted">Er zijn nog geen accounts. Maak het eerste account aan; dit wordt de beheerder
+    die later andere monteurs kan toevoegen.</p>
+  <% if (error) { %><div class="alert"><%= error %></div><% } %>
+  <form method="post" action="/setup">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Naam (verschijnt als monteur)
+      <input name="name" value="<%= values.name || '' %>" required>
+    </label>
+    <label>Gebruikersnaam
+      <input name="username" value="<%= values.username || '' %>" autocomplete="username" autocapitalize="none" required>
+    </label>
+    <label>Wachtwoord (minimaal 8 tekens)
+      <input name="password" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <label>Herhaal wachtwoord
+      <input name="password2" type="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <button class="btn btn-primary btn-block" type="submit">Account aanmaken</button>
+  </form>
+</main>
+<%- include('partials/foot') %>

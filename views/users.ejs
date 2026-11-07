@@ -1,0 +1,58 @@
+<%- include('partials/head') %>
+<main class="page">
+  <h1>Gebruikers</h1>
+  <p class="muted">Iedereen met een account kan werkopdrachten bekijken, aanmaken en wijzigen.
+    Beheerders kunnen daarnaast gebruikers beheren en werkopdrachten verwijderen.</p>
+  <% if (error) { %><div class="alert"><%= error %></div><% } %>
+  <div class="table-wrap">
+  <table class="list">
+    <thead><tr><th>Naam</th><th>Gebruikersnaam</th><th>Rol</th><th>Nieuw wachtwoord instellen</th><th></th></tr></thead>
+    <tbody>
+    <% for (const u of users) { %>
+      <tr>
+        <td><%= u.name %></td>
+        <td><%= u.username %></td>
+        <td>
+          <% if (u.id === user.id) { %><%= u.is_admin ? 'Beheerder' : 'Monteur' %> (jij)<% } else { %>
+          <form method="post" action="/gebruikers/<%= u.id %>/beheerder" class="inline">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <%= u.is_admin ? 'Beheerder' : 'Monteur' %>
+            <button class="linkbtn" type="submit"><%= u.is_admin ? '(maak monteur)' : '(maak beheerder)' %></button>
+          </form>
+          <% } %>
+        </td>
+        <td>
+          <form method="post" action="/gebruikers/<%= u.id %>/wachtwoord" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <input type="password" name="password" placeholder="Nieuw wachtwoord" minlength="8" autocomplete="new-password" required>
+            <button class="btn btn-small" type="submit">Opslaan</button>
+          </form>
+        </td>
+        <td>
+          <% if (u.id !== user.id) { %>
+          <form method="post" action="/gebruikers/<%= u.id %>/verwijderen" class="inline" data-confirm="Gebruiker <%= u.username %> verwijderen?">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <button class="btn btn-small btn-danger" type="submit">Verwijderen</button>
+          </form>
+          <% } %>
+        </td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+  </div>
+
+  <section class="card">
+    <h2>Nieuwe gebruiker</h2>
+    <form method="post" action="/gebruikers" class="grid-form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label>Naam <input name="name" placeholder="bv. Collin" required></label>
+      <label>Gebruikersnaam <input name="username" autocapitalize="none" required></label>
+      <label>Wachtwoord <input type="password" name="password" minlength="8" autocomplete="new-password" required></label>
+      <label class="check"><input type="checkbox" name="is_admin"> Beheerder</label>
+      <button class="btn btn-primary" type="submit">Gebruiker toevoegen</button>
+    </form>
+  </section>
+</main>
+<script src="/static/js/common.js"></script>
+<%- include('partials/foot') %>

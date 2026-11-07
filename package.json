@@ -1,0 +1,22 @@
+{
+  "name": "werkopdrachten",
+  "version": "1.0.0",
+  "description": "Werkopdrachten beheren voor de garage – digitale versie van het papieren werkopdrachtformulier",
+  "private": true,
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/server.js",
+    "create-user": "node --disable-warning=ExperimentalWarning scripts/create-user.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.19.0"
+  }
+}

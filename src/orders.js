@@ -1,0 +1,209 @@
+'use strict';
+
+const { db, plateKey } = require('./db');
+
+const PART_ROWS = 22;
+const WORK_LINES = 19;
+
+/** Header fields that belong to the customer/vehicle (copied onto new orders). */
+const CUSTOMER_FIELDS = [
+  'kenteken', 'naam', 'adres', 'plaats', 'klantnr', 'tel_prive', 'tel_zaak',
+  'merk_type', 'chassisnummer', 'alarmcode',
+];
+
+const FLUIDS = [
+  { key: 'motorolie', label: 'Motorolie', kind: 'visc' },
+  { key: 'cardanolie', label: 'Cardanolie/versn.bakolie' },
+  { key: 'atf', label: 'ATF-olie' },
+  { key: 'koelvloeistof', label: 'Koelvloeistof', suffix: '°C' },
+  { key: 'remvloeistof', label: 'Remvloeistof' },
+  { key: 'ruitensproeier', label: 'Ruitensproeiervloeistof' },
+  { key: 'koudemiddel', label: 'Koudemiddel (airco)' },
+  { key: 'extra1', label: '' },
+  { key: 'extra2', label: '' },
+];
+
+const TIRES = [
+  { key: 'lv', label: 'Linksvoor' },
+  { key: 'rv', label: 'Rechtsvoor' },
+  { key: 'la', label: 'Linksachter' },
+  { key: 'ra', label: 'Rechtsachter' },
+  { key: 'reserve', label: 'Reservewiel' },
+];
+
+/** The full shape of a work order. Every field the form can send is listed here. */
+function emptyOrderData() {
+  const fluids = {};
+  for (const f of FLUIDS) fluids[f.key] = { liter: '', info: '', info2: '', prijs: '' };
+  const tires = {};
+  for (const t of TIRES) tires[t.key] = { profiel: '', maat: '', merk: '', dot: '' };
+  return {
+    // kop rechts
+    monteur: '', datum_gereed: '', klantnr: '', kenteken: '', merk_type: '',
+    km_in: '', km_uit: '', datum_deel1: '', apk_datum: '',
+    naam: '', adres: '', plaats: '', tel_prive: '', tel_zaak: '',
+    alle_reparaties: '', contact_boven: '', chassisnummer: '', alarmcode: '',
+    // werkzaamheden
+    servicebeurt_km: '',
+    werk_check: '', werk_omschrijving: '', werk_code: '', werk_tijd: '',
+    // voet rechts
+    faktuurnr: '', totaal_uren: '', tarief: '', bedrag: '',
+    // onderdelen links
+    onderdelen: Array.from({ length: PART_ROWS }, () => ({ nr: '', omschrijving: '', aantal: '', prijs: '' })),
+    vloeistoffen: fluids,
+    diversen: {
+      servicewagen_km: '', servicewagen_prijs: '',
+      leenauto_km: '', leenauto_prijs: '',
+      werk_derden: '', werk_derden_prijs: '',
+      apk: false, afmeldkosten: false, apk_prijs: '',
+      testapparatuur: '', testapparatuur_prijs: '',
+      extra: '', extra_prijs: '',
+      uitlijnen: false, balanceren: false, uitlijnen_prijs: '',
+      kleinmateriaal: '', kleinmateriaal_prijs: '',
+      milieutoeslag: '', milieutoeslag_prijs: '',
+    },
+    // achterzijde
+    achter: {
+      banden: tires,
+      apk: '',
+      aandachtspunten: '',
+      notities: '',
+    },
+  };
+}
+
+/** Copy `input` into the shape of `template`, keeping only known keys and coercing types. */
+function shape(template, input) {
+  if (Array.isArray(template)) {
+    const arr = Array.isArray(input) ? input : input && typeof input === 'object' ? Object.values(input) : [];
+    return template.map((t, i) => shape(t, arr[i]));
+  }
+  if (template && typeof template === 'object') {
+    const src = input && typeof input === 'object' ? input : {};
+    const out = {};
+    for (const key of Object.keys(template)) out[key] = shape(template[key], src[key]);
+    return out;
+  }
+  if (typeof template === 'boolean') {
+    return input === true || input === 'on' || input === 'true' || input === '1';
+  }
+  if (input === undefined || input === null) return '';
+  if (Array.isArray(input)) input = input[input.length - 1];
+  return String(input).replace(/\r\n/g, '\n').slice(0, 5000);
+}
+
+function normalizeOrderData(input) {
+  const data = shape(emptyOrderData(), input);
+  data.kenteken = data.kenteken.toUpperCase().trim();
+  if (!['ja', 'nee'].includes(data.alle_reparaties)) data.alle_reparaties = '';
+  return data;
+}
+
+/** Load stored JSON and fill in fields that may have been added later. */
+function parseOrderData(json) {
+  let raw = {};
+  try { raw = JSON.parse(json); } catch { /* keep empty */ }
+  return shape(emptyOrderData(), raw);
+}
+
+function flattenText(value, out = []) {
+  if (value && typeof value === 'object') {
+    for (const v of Object.values(value)) flattenText(v, out);
+  } else if (typeof value === 'string' && value.trim()) {
+    out.push(value.trim());
+  }
+  return out;
+}
+
+function todayISO() {
+  // Datum in Nederlandse tijd, als YYYY-MM-DD
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: process.env.TZ || 'Europe/Amsterdam' }).format(new Date());
+}
+
+function nextOrderNumber() {
+  const row = db.prepare('SELECT MAX(nummer) AS max FROM orders').get();
+  const start = parseInt(process.env.START_ORDER_NUMBER || '1', 10) || 1;
+  return Math.max(row.max ? row.max + 1 : start, start);
+}
+
+function getOrCreateCustomer(kenteken) {
+  const key = plateKey(kenteken);
+  let row = db.prepare('SELECT * FROM customers WHERE plate_key = ?').get(key);
+  if (!row) {
+    db.prepare('INSERT INTO customers (plate_key, kenteken) VALUES (?, ?)').run(key, kenteken.toUpperCase());
+    row = db.prepare('SELECT * FROM customers WHERE plate_key = ?').get(key);
+  }
+  return row;
+}
+
+/** Customer details = most recent non-empty value of each field across their orders. */
+function refreshCustomer(customerId) {
+  const orders = db.prepare('SELECT data FROM orders WHERE customer_id = ? ORDER BY nummer DESC').all(customerId);
+  if (orders.length === 0) {
+    db.prepare('DELETE FROM customers WHERE id = ?').run(customerId);
+    return;
+  }
+  const values = {};
+  for (const o of orders) {
+    const d = parseOrderData(o.data);
+    for (const f of CUSTOMER_FIELDS) {
+      if (values[f] === undefined && d[f] && d[f].trim()) values[f] = d[f].trim();
+    }
+  }
+  const sets = CUSTOMER_FIELDS.map((f) => `${f} = ?`).join(', ');
+  db.prepare(`UPDATE customers SET ${sets}, updated_at = datetime('now') WHERE id = ?`).run(
+    ...CUSTOMER_FIELDS.map((f) => values[f] || ''),
+    customerId
+  );
+}
+
+function saveOrder({ id, nummer, data, userId }) {
+  const customer = getOrCreateCustomer(data.kenteken);
+  const searchText = [nummer, ...flattenText(data)].join(' \n ');
+  let orderId = id;
+  let oldCustomerId = null;
+  db.exec('BEGIN');
+  try {
+    if (id) {
+      oldCustomerId = db.prepare('SELECT customer_id FROM orders WHERE id = ?').get(id).customer_id;
+      db.prepare(
+        `UPDATE orders SET nummer = ?, customer_id = ?, data = ?, search_text = ?, updated_by = ?,
+         updated_at = datetime('now') WHERE id = ?`
+      ).run(nummer, customer.id, JSON.stringify(data), searchText, userId, id);
+    } else {
+      const res = db.prepare(
+        `INSERT INTO orders (nummer, customer_id, datum_invoer, data, search_text, created_by, updated_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).run(nummer, customer.id, todayISO(), JSON.stringify(data), searchText, userId, userId);
+      orderId = Number(res.lastInsertRowid);
+    }
+    refreshCustomer(customer.id);
+    if (oldCustomerId && oldCustomerId !== customer.id) refreshCustomer(oldCustomerId);
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+  return orderId;
+}
+
+function deleteOrder(id) {
+  const row = db.prepare('SELECT customer_id FROM orders WHERE id = ?').get(id);
+  if (!row) return null;
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM orders WHERE id = ?').run(id);
+    refreshCustomer(row.customer_id);
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+  return row.customer_id;
+}
+
+module.exports = {
+  PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS,
+  emptyOrderData, normalizeOrderData, parseOrderData,
+  nextOrderNumber, saveOrder, deleteOrder, todayISO,
+};

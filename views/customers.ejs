@@ -1,0 +1,45 @@
+<%- include('partials/head') %>
+<main class="page">
+  <div class="page-head">
+    <h1>Klanten</h1>
+    <form class="search" method="get" action="/" role="search">
+      <input type="search" name="q" value="<%= q %>" placeholder="Zoek op kenteken, naam, merk, plaats…" autofocus>
+      <button class="btn" type="submit">Zoeken</button>
+      <% if (q) { %><a class="btn btn-ghost" href="/">Wissen</a><% } %>
+    </form>
+  </div>
+
+  <% if (customers.length === 0) { %>
+    <div class="empty">
+      <% if (q) { %>
+        <p>Geen klant gevonden voor “<strong><%= q %></strong>”.</p>
+        <p><a class="btn btn-primary" href="/werkopdracht/nieuw">+ Nieuwe werkopdracht aanmaken</a></p>
+        <p class="muted">Of <a href="/werkopdrachten?q=<%= encodeURIComponent(q) %>">zoek in alle werkopdrachten</a>.</p>
+      <% } else { %>
+        <p>Nog geen klanten. Klanten verschijnen hier automatisch zodra je een werkopdracht met een kenteken opslaat.</p>
+        <p><a class="btn btn-primary" href="/werkopdracht/nieuw">+ Eerste werkopdracht aanmaken</a></p>
+      <% } %>
+    </div>
+  <% } else { %>
+    <p class="muted"><%= customers.length %> klant<%= customers.length === 1 ? '' : 'en' %><%= q ? ' gevonden' : '' %></p>
+    <div class="table-wrap">
+    <table class="list clickable">
+      <thead><tr><th>Kenteken</th><th>Naam</th><th>Merk/Type</th><th>Plaats</th><th class="num">Opdrachten</th><th>Laatste bezoek</th></tr></thead>
+      <tbody>
+      <% for (const c of customers) { %>
+        <tr data-href="/klant/<%= c.id %>">
+          <td><a href="/klant/<%= c.id %>"><%- include('partials/plate', { kenteken: c.kenteken }) %></a></td>
+          <td><%= c.naam %></td>
+          <td><%= c.merk_type %></td>
+          <td><%= c.plaats %></td>
+          <td class="num"><%= c.aantal %></td>
+          <td><%= fmtDate(c.laatste) %></td>
+        </tr>
+      <% } %>
+      </tbody>
+    </table>
+    </div>
+  <% } %>
+</main>
+<script src="/static/js/common.js"></script>
+<%- include('partials/foot') %>
