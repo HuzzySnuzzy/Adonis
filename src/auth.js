@@ -20,11 +20,13 @@ const PREF_OPTIONS = {
   theme: ['system', 'light', 'dark', 'oled', 'neon', 'ice'],
   fx: ['full', 'calm'],
   ink: ['hand', 'plain'],
-  start: ['/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw', '/bandenhotel', '/voorraad'],
+  start: ['/start', '/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw', '/bandenhotel', '/voorraad'],
   secret: ['off', 'on'],
   mscale: ['100', '90', '80', '70', '60'], // weergave op telefoon (procent)
+  simple: ['off', 'on'], // eenvoudige weergave: grote knoppen, alleen het belangrijkste, geen animaties
+  carimg: ['on', 'off'], // foto van het automodel op de klantpagina (Wikipedia)
 };
-const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off', mscale: '90' };
+const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off', mscale: '90', simple: 'off', carimg: 'on' };
 /** Thema's die alleen zichtbaar zijn met de voorkeur "Geheime thema's". */
 const SECRET_THEMES = ['neon', 'ice'];
 /** Thema's die iemand met deze voorkeuren kan kiezen (in volgorde van het menu). */
@@ -190,9 +192,15 @@ function csrfProtection(req, res, next) {
   ) {
     return next();
   }
+  // Meestal: te lang niet gebruikt en daardoor uitgelogd. Leg het rustig uit; een werkopdracht die werd ingevuld
+  // is op dit apparaat bewaard en wordt na het inloggen teruggezet (zie order.js).
+  const loggedOut = !req.session.userId;
   res.status(403).render('error', {
-    title: 'Sessie verlopen',
-    message: 'De pagina was verlopen. Ga terug, herlaad de pagina en probeer het opnieuw.',
+    title: loggedOut ? 'U bent uitgelogd' : 'De pagina was verlopen',
+    message: loggedOut
+      ? 'Omdat ADONIS een tijd niet is gebruikt, bent u automatisch uitgelogd. Log opnieuw in. Was u een werkopdracht aan het invullen? Die is op dit apparaat bewaard: open hem opnieuw en kies "Terugzetten".'
+      : 'Deze pagina stond te lang open. Ga terug, laad de pagina opnieuw en probeer het nog eens. Een werkopdracht die u aan het invullen was, is op dit apparaat bewaard.',
+    action: loggedOut ? { href: '/login', label: 'Opnieuw inloggen' } : null,
   });
 }
 

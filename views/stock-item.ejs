@@ -8,7 +8,7 @@
     </div>
   </div>
   <% if (error) { %><div class="alert"><%= error %></div><% } %>
-  <form method="post" action="<%= item ? '/voorraad/' + item.id : '/voorraad' %>" class="card inv-form" autocomplete="off">
+  <form method="post" action="<%= item ? '/voorraad/' + item.id : '/voorraad' %>" class="card inv-form" autocomplete="off" data-guard>
     <input type="hidden" name="_csrf" value="<%= csrf %>">
     <input type="hidden" name="s[soort]" value="<%= d.soort %>">
     <% if (item) { %><input type="hidden" name="versie" value="<%= item.updated_at %>"><% } %>

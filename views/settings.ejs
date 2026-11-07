@@ -10,6 +10,7 @@
     { value: 'ice', label: 'Black Ice', help: 'ICE·XVIII: zwart kristalrooster, ionensporen en rijp' },
   ];
   const STARTS = [
+    { value: '/start', label: 'Startscherm (grote knoppen)' },
     { value: '/', label: 'Klanten' },
     { value: '/werkopdrachten', label: 'Werkopdrachten' },
     { value: '/werkopdracht/nieuw', label: 'Nieuwe werkopdracht' },
@@ -47,8 +48,33 @@
     <% } %>
 
 
-  <form method="post" action="/instellingen" class="settings-form">
+  <form method="post" action="/instellingen" class="settings-form" data-guard>
     <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+    <section class="card simple-card">
+      <h2>Eenvoudige weergave</h2>
+      <label class="check big-check">
+        <input type="hidden" name="simple" value="off">
+        <input type="checkbox" name="simple" value="on" <%= p.simple === 'on' ? 'checked' : '' %>>
+        <span><b>Eenvoudige weergave aan</b><br><span class="muted small">Grotere letters en knoppen, een startscherm met grote knoppen,
+          alleen het belangrijkste in het menu en geen animaties. Fijn als u niet zo vaak met computers werkt.</span></span>
+      </label>
+      <% if (p.simple === 'on' && user.is_admin) { %>
+      <p class="muted small">Beheer (staat in deze weergave niet in het menu):
+        <a href="/importeren">Importeren</a> · <a href="/gebruikers">Gebruikers</a><% if (user.is_owner) { %> · <a href="/systeem">Systeem</a><% } %></p>
+      <% } %>
+    </section>
+
+    <section class="card" id="autofoto">
+      <h2>Foto van de auto</h2>
+      <label class="check big-check">
+        <input type="hidden" name="carimg" value="off">
+        <input type="checkbox" name="carimg" value="on" <%= p.carimg !== 'off' ? 'checked' : '' %>>
+        <span><b>Foto van het automodel tonen op de klantpagina</b><br><span class="muted small">Een voorbeeldfoto van het model
+          (bijvoorbeeld een Nissan Note), zodat u de auto snel herkent. Gratis, van Wikipedia: alleen merk en model worden opgezocht,
+          nooit het kenteken of de klant. Het kan een andere uitvoering of kleur zijn.</span></span>
+      </label>
+    </section>
 
     <section class="card">
       <h2>Thema</h2>

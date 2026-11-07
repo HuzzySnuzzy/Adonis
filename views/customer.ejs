@@ -2,7 +2,17 @@
 <main class="page">
   <p class="crumbs"><a href="/">← Alle klanten</a></p>
   <% if (!editing) { %>
-  <div class="customer-head" id="live-customer-head" data-live>
+  <div class="customer-head<%= locals.carImg && carImg.ok ? ' has-photo' : '' %>" id="live-customer-head" data-live>
+    <% if (locals.carQ) { const ci = locals.carImg; %>
+    <figure class="car-photo" data-carimg-q="<%= carQ %>" <%= ci && ci.ok ? '' : 'hidden' %>>
+      <img src="<%= ci && ci.ok ? ci.img : '' %>" alt="Voorbeeldfoto van een <%= carQ %>" <%= ci && ci.ok ? '' : 'hidden' %>>
+      <figcaption>
+        <span>Voorbeeld: <a href="<%= ci && ci.ok ? ci.pageUrl : '#' %>" target="_blank" rel="noopener" data-carimg-title><%= ci && ci.ok ? ci.title : carQ %></a></span>
+        <span class="muted">Kan een andere uitvoering of kleur zijn<%= locals.carYear ? ' (deze auto: ' + carYear + ')' : '' %> ·
+          foto <a href="<%= ci && ci.ok && ci.fileUrl ? ci.fileUrl : '#' %>" target="_blank" rel="noopener" data-carimg-file>Wikimedia Commons</a></span>
+      </figcaption>
+    </figure>
+    <% } %>
     <div>
       <%- include('/partials/plate', { kenteken: customer.kenteken }) %>
       <h1><%= customer.naam || 'Onbekende klant' %></h1>
@@ -22,7 +32,7 @@
     </div>
   </div>
   <% } else { const v = editValues || customer; %>
-  <form method="post" action="/klant/<%= customer.id %>/bewerken" class="customer-head customer-edit" id="gegevens" autocomplete="off">
+  <form method="post" action="/klant/<%= customer.id %>/bewerken" class="customer-head customer-edit" id="gegevens" autocomplete="off" data-guard>
     <input type="hidden" name="_csrf" value="<%= csrf %>">
     <div class="edit-head">
       <h1>Klantgegevens wijzigen</h1>
@@ -136,7 +146,7 @@
     <% if (needsSwap) { %>
     <div class="swap-hint">
       <span>Komende wissel: <b><%= match.seizoen.toLowerCase() %>banden</b> liggen klaar in <%= match.locatie || 'de opslag' %><%= match.label && match.label.length <= 12 ? ' (label ' + match.label + ')' : '' %>.<%= match.uitgenodigd_at ? ' Gebeld op ' + fmtDate(match.uitgenodigd_at) + '.' : '' %></span>
-      <form method="post" action="/bandenhotel/<%= match.id %>/wissel" class="inline">
+      <form method="post" action="/bandenhotel/<%= match.id %>/wissel" class="inline" data-confirm="Wisselen?&#10;&#10;De <%= match.seizoen.toLowerCase() %>banden gaan op de auto. De banden die er nu op staan gaan de opslag in (<%= match.locatie || 'op dezelfde plek' %>).">
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <button class="btn btn-small btn-primary" type="submit">Wisselen</button>
       </form>

@@ -4,7 +4,7 @@
   const THEME_LABEL = { system: 'Systeem', light: 'Licht', dark: 'Donker', oled: 'OLED', neon: 'Neon', ice: 'Black Ice' };
   %>
 <!doctype html>
-<html lang="nl"<%- themeAttr %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>">
+<html lang="nl"<%- themeAttr %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.simple === 'on' ? 'calm' : prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>"<%- prefs.simple === 'on' ? ' data-simple="on"' : '' %>>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -45,16 +45,20 @@
 <% } %>
 <% if (locals.user) { %>
 <header class="topbar no-print">
-  <a class="brand" href="/" title="ADONIS – naar het overzicht"><%- include('/partials/logo') %></a>
+  <% const simple = prefs.simple === 'on'; %>
+  <a class="brand" href="<%= simple ? '/start' : '/' %>" title="ADONIS – naar het begin"><%- include('/partials/logo') %></a>
   <nav class="mainnav">
+    <% if (simple) { %><a href="/start" class="<%= path === '/start' ? 'active' : '' %>">Start</a><% } %>
     <a href="/" class="<%= path === '/' || path.startsWith('/klant') ? 'active' : '' %>">Klanten</a>
     <a href="/werkopdrachten" class="<%= (path === '/werkopdrachten' && !(locals.url || '').includes('status=klaar')) || path.startsWith('/werkopdracht/') ? 'active' : '' %>">Werkopdrachten</a>
     <% if (user.can_invoice) { %><a href="/werkopdrachten?status=klaar" class="<%= path === '/werkopdrachten' && locals.url && locals.url.includes('status=klaar') ? 'active' : '' %>">Facturatie<span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span></a><% } %>
     <a href="/bandenhotel" class="<%= path.startsWith('/bandenhotel') ? 'active' : '' %>">Bandenhotel</a>
     <a href="/voorraad" class="<%= path.startsWith('/voorraad') ? 'active' : '' %>">Voorraad</a>
+    <% if (!simple) { %>
     <a href="/importeren" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Importeren</a>
     <% if (user.is_admin) { %><a href="/gebruikers" class="<%= path === '/gebruikers' ? 'active' : '' %>">Gebruikers</a><% } %>
     <% if (user.is_owner) { %><a href="/systeem" class="<%= path === '/systeem' ? 'active' : '' %>">Systeem</a><% } %>
+    <% } %>
   </nav>
   <div class="usernav">
     <a class="btn btn-primary new-order-btn" href="/werkopdracht/nieuw" title="Nieuwe werkopdracht">+<span class="nw-long"> Nieuwe werkopdracht</span><span class="nw-short"> Nieuw</span></a>
@@ -70,7 +74,7 @@
       const fxNow = prefs.fx || 'full';
       const secretOn = prefs.secret === 'on' || ['neon', 'ice'].includes(prefs.theme);
     %>
-    <div class="theme-wrap">
+    <div class="theme-wrap"<%- prefs.simple === 'on' ? ' hidden' : '' %>>
       <%# Zonder JavaScript wisselt de knop gewoon naar het volgende thema (formulier). %>
       <form method="post" action="/instellingen/thema" class="inline" id="themeForm">
         <input type="hidden" name="_csrf" value="<%= csrf %>">
@@ -104,6 +108,7 @@
         </div>
       </div>
     </div>
+    <a href="/hulp" class="help-link<%= path === '/hulp' ? ' active' : '' %>" title="Hulp: uitleg in stappen" aria-label="Hulp"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.1" fill="currentColor"/></svg><span class="help-text">Hulp</span></a>
     <a href="/instellingen" class="username" title="Instellingen"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.7 7.7 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.7 7.7 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.7 7.7 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.7 7.7 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="uname"><%= user.name %></span></a>
     <form method="post" action="/logout" class="inline">
       <input type="hidden" name="_csrf" value="<%= csrf %>">

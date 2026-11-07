@@ -13,7 +13,7 @@ document.addEventListener('submit', (e) => {
 });
 // Keuzelijst die direct opslaat (bijv. rol van een gebruiker)
 document.addEventListener('change', (e) => {
-  if (e.target.matches('select[data-autosubmit]')) e.target.form.requestSubmit();
+  if (e.target.matches('[data-autosubmit]')) e.target.form.requestSubmit();
 });
 // Zoekveld alleen automatisch selecteren op een computer met muis; op telefoon/tablet zou
 // dat meteen het toetsenbord (en de wachtwoordbalk) openen.
@@ -104,4 +104,43 @@ document.addEventListener('change', (e) => {
     new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; all(); }); } })
       .observe(document.body, { childList: true, subtree: true });
   }
+})();
+// "Terug"-knop (foutpagina)
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('[data-back]')) return;
+  if (history.length > 1) history.back(); else location.href = '/';
+});
+// Formulieren met data-guard: waarschuwen bij weggaan als er iets is veranderd dat nog niet is opgeslagen.
+(function () {
+  const forms = [...document.querySelectorAll('form[data-guard]')];
+  if (!forms.length) return;
+  let dirty = false;
+  let leaving = false;
+  forms.forEach((f) => {
+    f.addEventListener('input', () => { dirty = true; });
+    f.addEventListener('change', () => { dirty = true; });
+  });
+  document.addEventListener('submit', (e) => { if (!e.defaultPrevented) leaving = true; });
+  window.addEventListener('beforeunload', (e) => {
+    if (dirty && !leaving && !window.adonisLeaving) { e.preventDefault(); e.returnValue = ''; }
+  });
+})();
+// Klantpagina: foto van het automodel ophalen als die nog niet bekend is (Wikipedia, via de eigen server).
+(function () {
+  const fig = document.querySelector('figure[data-carimg-q]');
+  if (!fig || !fig.hidden || !window.fetch) return;
+  fetch('/autofoto?q=' + encodeURIComponent(fig.dataset.carimgQ), { credentials: 'same-origin' })
+    .then((r) => r.json())
+    .then((r) => {
+      if (!r.ok) return;
+      const img = fig.querySelector('img');
+      img.addEventListener('load', () => {
+        img.hidden = false; fig.hidden = false;
+        const head = fig.closest('.customer-head'); if (head) head.classList.add('has-photo');
+      }, { once: true });
+      img.src = r.img;
+      const t = fig.querySelector('[data-carimg-title]'); t.textContent = r.title; t.href = r.pageUrl;
+      const f = fig.querySelector('[data-carimg-file]'); if (r.fileUrl) f.href = r.fileUrl;
+    })
+    .catch(() => { /* geen internet: geen foto */ });
 })();

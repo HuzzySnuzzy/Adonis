@@ -22,6 +22,7 @@ const cloudflare = require('./cloudflare');
 const rdw = require('./rdw');
 const inv = require('./inventory');
 const plates = require('./plates');
+const carimage = require('./carimage');
 const registerInventory = require('./inventory-routes');
 
 const app = express();
@@ -247,6 +248,8 @@ app.post('/login', wrap(async (req, res) => {
     if (err) return res.status(500).send('Sessiefout');
     req.session.userId = user.id;
     req.session.csrf = crypto.randomBytes(24).toString('hex');
+    // "Ingelogd blijven op dit apparaat" (standaard aan): 30 dagen na het laatste gebruik, anders 12 uur.
+    if (req.body.remember === '1') req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
     // Startpagina uit de persoonlijke instellingen, tenzij er naar een specifieke pagina werd gevraagd.
     const prefs = auth.findUserById(user.id).prefs;
     setThemeCookie(res, prefs.theme);
@@ -301,6 +304,25 @@ app.get('/', (req, res) => {
   res.render('customers', { title: 'Klanten', q, customers: rows });
 });
 
+/* Startscherm: grote knoppen naar de belangrijkste onderdelen (standaard bij Eenvoudige weergave) */
+app.get('/start', (req, res) => {
+  const counts = orders.statusCounts();
+  const recent = db.prepare(
+    `SELECT o.*, c.kenteken AS c_kenteken FROM orders o JOIN customers c ON c.id = o.customer_id
+     ORDER BY o.updated_at DESC LIMIT 5`
+  ).all().map(withSummary);
+  let swaps = 0;
+  try { swaps = inv.swapList(inv.swapTarget()).wisselen.filter((i) => !i.match.uitgenodigd_at).length; } catch { /* geen bandenhotel */ }
+  const hour = Number(new Intl.DateTimeFormat('nl-NL', { hour: 'numeric', hour12: false, timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam' }).format(new Date()));
+  res.render('start', {
+    title: 'Start', counts, recent, swaps, swapTarget: inv.swapTarget(),
+    greeting: hour < 6 ? 'Goedenacht' : hour < 12 ? 'Goedemorgen' : hour < 18 ? 'Goedemiddag' : 'Goedenavond',
+    today: new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam' }).format(new Date()),
+    importOn: importer.isConfigured(),
+  });
+});
+app.get('/hulp', (req, res) => res.render('help', { title: 'Hulp' }));
+
 /* Eén klant met alle werkopdrachten */
 app.get('/klant/:id', wrap(async (req, res) => {
   const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
@@ -315,9 +337,29 @@ app.get('/klant/:id', wrap(async (req, res) => {
   const rdwData = plates.rdwApplicable(customer.kenteken) ? await rdw.forCustomer(customer) : { foreign: true, country: plates.plateInfo(customer.kenteken).country };
   res.render('customer', {
     title: customer.kenteken, customer, q, orders: rows.map(withSummary), rdwData, tyres: inv.tyresForPlate(customer.plate_key), fotos: require('./photos').firstPhotos('tyre'),
+    ...carPhoto(req, customer, rdwData),
     editing: req.query.bewerken === '1', editError: null, editValues: null, swapTarget: inv.swapTarget(),
   });
 }));
+
+/** Foto van het automodel (als de gebruiker dat wil): zoekterm, en de foto als die al bekend is. */
+function carPhoto(req, customer, rdwData) {
+  if (req.user.prefs.carimg === 'off') return { carQ: '', carImg: null };
+  const info = rdwData && rdwData.info && rdwData.info.found ? rdwData.info : null;
+  const carQ = info ? carimage.queryFor(info.merk, info.handelsbenaming) : carimage.queryFor('', customer.merk_type);
+  const hit = carQ ? carimage.cached(carQ) : null;
+  return { carQ, carImg: hit ? carimage.publicInfo(hit) : null, carYear: info && info.eersteToelating ? info.eersteToelating.slice(0, 4) : '' };
+}
+// Foto van een automodel opzoeken (Wikipedia, gratis) en van deze computer tonen.
+app.get('/autofoto', wrap(async (req, res) => {
+  const q = String(req.query.q || '').slice(0, 80);
+  res.json(q ? await carimage.lookup(q) : { ok: false });
+}));
+app.get('/autofoto/img/:id', (req, res) => {
+  const f = carimage.imagePath(req.params.id);
+  if (!f) return res.status(404).end();
+  res.set({ 'Content-Type': f.type, 'Cache-Control': 'private, max-age=2592000' }).send(fs.readFileSync(f.file));
+});
 
 // Klantgegevens wijzigen (naam, adres, telefoon, kenteken, ...).
 app.post('/klant/:id/bewerken', wrap(async (req, res) => {
@@ -337,6 +379,7 @@ app.post('/klant/:id/bewerken', wrap(async (req, res) => {
     res.status(400).render('customer', {
       title: customer.kenteken, customer, q: '', orders: rows.map(withSummary), rdwData, tyres: inv.tyresForPlate(customer.plate_key),
       fotos: require('./photos').firstPhotos('tyre'), editing: true, editError: err.message, editValues: req.body.c || {}, clashId: err.clashId || null,
+      ...carPhoto(req, customer, rdwData),
       swapTarget: inv.swapTarget(),
     });
   }
@@ -665,6 +708,8 @@ app.post('/instellingen', (req, res) => {
     // Eerst de geheime thema's (aan/uit), dan het thema: zo kan beide in één keer.
     secret: [].concat(req.body.secret || []).includes('on') ? 'on' : 'off',
     theme: req.body.theme, ink: req.body.ink, start: req.body.start, fx: req.body.fx, mscale: req.body.mscale,
+    simple: [].concat(req.body.simple || []).includes('on') ? 'on' : 'off',
+    carimg: [].concat(req.body.carimg || []).includes('on') ? 'on' : 'off',
   });
   setThemeCookie(res, prefs.theme);
   flash(req, 'ok', 'Je instellingen zijn opgeslagen.');
@@ -806,7 +851,8 @@ app.post('/systeem/cloudflare/vergeten', auth.requireOwner, (req, res) => {
 
 /* ---------- gebruikersbeheer (beheerder) ---------- */
 function renderUsers(req, res, error, status) {
-  const users = db.prepare('SELECT id, username, name, is_admin, is_owner, role, created_at FROM users ORDER BY is_owner DESC, name').all();
+  const users = db.prepare('SELECT id, username, name, is_admin, is_owner, role, created_at FROM users ORDER BY is_owner DESC, name').all()
+    .map((u) => ({ ...u, prefs: auth.findUserById(u.id).prefs }));
   res.status(status || 200).render('users', { title: 'Gebruikers', users, error, ROLES: auth.ROLES });
 }
 app.get('/gebruikers', auth.requireAdmin, (req, res) => renderUsers(req, res, null));
@@ -846,6 +892,15 @@ app.post('/gebruikers/:id/rol', auth.requireAdmin, (req, res) => {
   if (!auth.ROLES[req.body.role]) return res.redirect('/gebruikers');
   auth.setRole(target.id, req.body.role);
   flash(req, 'ok', `${target.name} is nu ${auth.ROLES[req.body.role]}.`);
+  res.redirect('/gebruikers');
+});
+// Eenvoudige weergave aan/uit voor een gebruiker (bijv. voor iemand die niet zo handig is met computers).
+app.post('/gebruikers/:id/eenvoudig', auth.requireAdmin, (req, res) => {
+  const target = auth.findUserById(req.params.id);
+  if (!target) return res.redirect('/gebruikers');
+  const on = req.body.simple === 'on';
+  auth.savePrefs(target.id, on ? { simple: 'on', start: '/start' } : { simple: 'off' });
+  flash(req, 'ok', `Eenvoudige weergave staat ${on ? 'aan' : 'uit'} voor ${target.name}.${on ? ' Bij het inloggen opent het startscherm met grote knoppen.' : ''}`);
   res.redirect('/gebruikers');
 });
 app.post('/gebruikers/:id/verwijderen', auth.requireAdmin, (req, res) => {

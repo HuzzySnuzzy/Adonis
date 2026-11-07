@@ -5,11 +5,12 @@
     <p><strong>Monteur</strong>: werkopdrachten maken en wijzigen, en naar facturatie sturen.</p>
     <p><strong>Facturatie</strong>: daarnaast werkopdrachten bij facturatie wijzigen, afronden met een factuurnummer en heropenen.</p>
     <p><strong>Beheerder</strong>: alles, plus gebruikers en rollen beheren en werkopdrachten verwijderen.</p>
+    <p><strong>Eenvoudige weergave</strong>: voor wie niet zo handig is met computers. Grote knoppen, een startscherm en alleen het belangrijkste in het menu. Dezelfde rechten als de rol.</p>
   </div>
   <% if (error) { %><div class="alert"><%= error %></div><% } %>
   <div class="table-wrap">
   <table class="list">
-    <thead><tr><th>Naam</th><th>Gebruikersnaam</th><th>Rol</th><th>Nieuw wachtwoord instellen</th><th></th></tr></thead>
+    <thead><tr><th>Naam</th><th>Gebruikersnaam</th><th>Rol</th><th>Eenvoudige weergave</th><th>Nieuw wachtwoord instellen</th><th></th></tr></thead>
     <tbody>
     <% for (const u of users) { %>
       <tr>
@@ -27,6 +28,15 @@
             <noscript><button class="btn btn-small" type="submit">Opslaan</button></noscript>
           </form>
           <% } %>
+        </td>
+        <td>
+          <form method="post" action="/gebruikers/<%= u.id %>/eenvoudig" class="inline simple-form">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <label class="check" title="Grote knoppen, startscherm, alleen het belangrijkste in het menu">
+              <input type="checkbox" name="simple" value="on" <%= u.prefs.simple === 'on' ? 'checked' : '' %> data-autosubmit> <%= u.prefs.simple === 'on' ? 'Aan' : 'Uit' %>
+            </label>
+            <noscript><button class="btn btn-small" type="submit">Opslaan</button></noscript>
+          </form>
         </td>
         <td>
           <% if (!u.is_owner || u.id === user.id) { %>

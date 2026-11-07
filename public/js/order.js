@@ -97,6 +97,76 @@
   // Opslaan of annuleren (na bevestiging) mag de pagina verlaten zonder waarschuwing.
   document.addEventListener('submit', (e) => { if (!e.defaultPrevented) dirty = false; });
 
+  /* ---------- concept bewaren op dit apparaat ----------
+   * Wat er wordt getypt, wordt elke seconde op dit apparaat bewaard. Sluit de pagina per ongeluk, is de
+   * sessie verlopen of mislukt het opslaan, dan biedt de volgende keer "Terugzetten" aan. Na een geslaagd
+   * opslaan (groene melding) wordt het concept weer verwijderd. */
+  (function drafts() {
+    if (!window.localStorage || form.querySelector('fieldset:disabled')) return;
+    const KEY = 'adonis-concept:' + new URL(form.action, location.href).pathname;
+    const SKIP = /^(_csrf|versie|zonder_factuurnr|nummer)$/; // nummer niet: dat kan intussen door een ander zijn gebruikt
+    const MAX_AGE = 7 * 24 * 3600 * 1000;
+    const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
+    const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* vol of geblokkeerd */ } };
+    const remove = (k) => { try { localStorage.removeItem(k); } catch { /* geblokkeerd */ } };
+    function snapshot() {
+      const out = {};
+      for (const el of form.elements) {
+        if (!el.name || SKIP.test(el.name) || el.type === 'submit' || el.type === 'button' || el.type === 'file') continue;
+        out[el.name] = el.type === 'checkbox' || el.type === 'radio' ? (el.checked ? el.value || 'on' : (out[el.name] ?? null)) : el.value;
+      }
+      return out;
+    }
+    function apply(values) {
+      for (const el of form.elements) {
+        if (!el.name || !(el.name in values) || SKIP.test(el.name)) continue;
+        if (el.type === 'checkbox' || el.type === 'radio') el.checked = values[el.name] === (el.value || 'on');
+        else el.value = values[el.name] ?? '';
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      updateTotals();
+    }
+    const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    // Opruimen: na een geslaagd opslaan, en concepten ouder dan een week.
+    try {
+      const ok = document.querySelector('.flash-ok');
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (!k || !k.startsWith('adonis-concept:')) continue;
+        const d = read(k);
+        if (!d || Date.now() - d.t > MAX_AGE || (ok && d.submitted)) remove(k);
+      }
+    } catch { /* geblokkeerd */ }
+    const initial = snapshot();
+    const saved = read(KEY);
+    if (saved && saved.values && !same(saved.values, initial)) {
+      const when = new Date(saved.t);
+      const today = new Date().toDateString() === when.toDateString();
+      const time = when.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+      const bar = document.createElement('div');
+      bar.className = 'draft-banner no-print';
+      bar.innerHTML = '<span></span><button type="button" class="btn btn-primary">Terugzetten</button><button type="button" class="btn">Weggooien</button>';
+      bar.querySelector('span').textContent = `Er is een niet-opgeslagen versie van deze werkopdracht bewaard (${today ? 'vandaag' : when.toLocaleDateString('nl-NL')} om ${time}). Wilt u die terugzetten?`;
+      const [restore, discard] = bar.querySelectorAll('button');
+      restore.addEventListener('click', () => { apply(saved.values); markDirty(); bar.remove(); });
+      discard.addEventListener('click', () => {
+        if (!window.confirm('De bewaarde versie weggooien? Dit kan niet ongedaan worden gemaakt.')) return;
+        remove(KEY); bar.remove();
+      });
+      toolbar.after(bar);
+    }
+    let timer = null;
+    const store = (extra = {}) => {
+      const values = snapshot();
+      if (same(values, initial) && !extra.submitted) return;
+      write(KEY, { t: Date.now(), values, ...extra });
+    };
+    form.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(store, 800); });
+    form.addEventListener('change', () => { clearTimeout(timer); timer = setTimeout(store, 300); });
+    // Bij opslaan: bewaren met een vlag; pas na de groene melding wordt het verwijderd.
+    form.addEventListener('submit', () => { clearTimeout(timer); store({ submitted: true }); });
+  })();
+
   /* ---------- Enter springt naar volgend veld i.p.v. opslaan ---------- */
   form.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || e.target.tagName !== 'INPUT' || e.ctrlKey || e.metaKey) return;

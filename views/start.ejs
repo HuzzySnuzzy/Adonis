@@ -1,0 +1,58 @@
+<%- include('/partials/head') %>
+<%
+  const tiles = [
+    { href: '/werkopdracht/nieuw', icon: 'plus', title: 'Nieuwe werkopdracht', text: 'Een nieuwe klus invullen', primary: true },
+    { href: '/', icon: 'people', title: 'Klanten', text: 'Een klant opzoeken op kenteken of naam' },
+    { href: '/werkopdrachten', icon: 'list', title: 'Werkopdrachten', text: 'Alle werkopdrachten bekijken en zoeken' },
+  ];
+  if (user.can_invoice) tiles.push({ href: '/werkopdrachten?status=klaar', icon: 'euro', title: 'Facturatie', text: counts.klaar ? (counts.klaar === 1 ? '1 werkopdracht wacht op een factuur' : counts.klaar + ' werkopdrachten wachten op een factuur') : 'Er wacht niets op een factuur', badge: counts.klaar });
+  tiles.push({ href: '/bandenhotel', icon: 'tyre', title: 'Bandenhotel', text: 'Banden van klanten in opslag' });
+  tiles.push({ href: '/bandenhotel/wissellijst', icon: 'swap', title: 'Banden wisselen', text: swaps ? swaps + ' klant' + (swaps === 1 ? '' : 'en') + ' nog bellen voor ' + (swapTarget === 'winter' ? 'winter' : 'zomer') + 'banden' : 'Wie moet komen wisselen', badge: swaps });
+  tiles.push({ href: '/voorraad', icon: 'box', title: 'Voorraad', text: 'Onderdelen en banden op de zaak' });
+  if (importOn) tiles.push({ href: '/importeren', icon: 'camera', title: 'Foto van een werkopdracht', text: 'Een papieren werkopdracht overnemen' });
+  tiles.push({ href: '/hulp', icon: 'help', title: 'Hulp', text: 'Uitleg in eenvoudige stappen' });
+  const ICONS = {
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.6.2 4.6 1.9 5.3 4.9"/>',
+    list: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    euro: '<path d="M17 6.5A6.5 6.5 0 1 0 17 17.5M5 10.5h9M5 13.5h9"/>',
+    tyre: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5"/>',
+    swap: '<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
+    box: '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
+    camera: '<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 4"/><circle cx="12" cy="17.5" r=".6" fill="currentColor"/>',
+  };
+%>
+<main class="page start-page">
+  <div class="start-hello">
+    <h1><%= greeting %>, <%= user.name.split(' ')[0] %></h1>
+    <p class="muted">Het is <%= today %>. Wat wilt u doen?</p>
+  </div>
+
+  <form class="start-search" method="get" action="/" role="search" autocomplete="off">
+    <label for="startQ">Klant zoeken</label>
+    <div class="start-search-row">
+      <input id="startQ" type="search" name="q" placeholder="Typ een kenteken of naam, bijvoorbeeld 12-ABC-3" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="search" data-1p-ignore data-lpignore="true">
+      <button class="btn btn-primary btn-big" type="submit">Zoeken</button>
+    </div>
+  </form>
+
+  <nav class="start-tiles" aria-label="Onderdelen">
+    <% for (const t of tiles) { %>
+    <a class="start-tile<%= t.primary ? ' start-tile-primary' : '' %>" href="<%= t.href %>">
+      <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><%- ICONS[t.icon] %></svg>
+      <span class="start-tile-title"><%= t.title %><% if (t.badge) { %> <span class="nav-count"><%= t.badge %></span><% } %></span>
+      <span class="start-tile-text"><%= t.text %></span>
+    </a>
+    <% } %>
+  </nav>
+
+  <% if (recent.length) { %>
+  <section class="start-recent">
+    <h2>Laatst bijgewerkte werkopdrachten</h2>
+    <%- include('/partials/orderlist', { orders: recent, showPlate: true }) %>
+  </section>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

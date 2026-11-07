@@ -1,0 +1,90 @@
+<%- include('/partials/head') %>
+<% const B = (t) => `<span class="ui-btn">${t}</span>`; %>
+<main class="page help-page">
+  <h1>Hulp</h1>
+  <p class="help-intro">Hier staat in een paar stappen hoe ADONIS werkt. Klik op een onderwerp.
+    <strong>U kunt niets kapotmaken:</strong> alles wordt bewaard en een fout is altijd te herstellen.</p>
+
+  <nav class="help-toc" aria-label="Onderwerpen">
+    <a href="#zoeken">Een klant opzoeken</a>
+    <a href="#werkopdracht">Een werkopdracht maken</a>
+    <a href="#klaar">Een werkopdracht afmaken</a>
+    <% if (user.can_invoice) { %><a href="#facturatie">Factureren</a><% } %>
+    <a href="#banden">Banden wisselen</a>
+    <a href="#fout">Iets fout gedaan?</a>
+    <a href="#groter">Alles groter maken</a>
+  </nav>
+
+  <section class="card help-sec" id="zoeken">
+    <h2>Een klant opzoeken</h2>
+    <ol class="help-steps">
+      <li>Ga naar <%- B('Start') %> of <%- B('Klanten') %>.</li>
+      <li>Typ in het zoekvak het <b>kenteken</b> (met of zonder streepjes) of de <b>naam</b> en druk op <%- B('Zoeken') %> of op Enter.</li>
+      <li>Klik op de klant. U ziet nu de gegevens, de banden en alle werkopdrachten van die auto.</li>
+    </ol>
+    <p class="help-tip">Klopt er iets niet bij de klant (telefoonnummer, adres)? Klik op <%- B('Gegevens wijzigen') %>.</p>
+  </section>
+
+  <section class="card help-sec" id="werkopdracht">
+    <h2>Een werkopdracht maken</h2>
+    <ol class="help-steps">
+      <li>Klik op <%- B('+ Nieuwe werkopdracht') %> (bovenaan op elke pagina). Komt de klant al vaker? Zoek dan eerst de klant op en klik daar op <%- B('+ Nieuwe werkopdracht voor …') %>: naam en auto staan dan al ingevuld.</li>
+      <li>Vul het formulier in zoals het papieren formulier: het <b>kenteken</b> is verplicht, de rest vult u in wat u weet.</li>
+      <li>Klik op <%- B('Opslaan') %>. Bovenaan verschijnt een groene melding: dan is alles bewaard.</li>
+    </ol>
+    <p class="help-tip">Tussendoor weggeroepen? Geen probleem: wat u typt wordt op dit apparaat bewaard. Komt u terug op de werkopdracht,
+      dan vraagt ADONIS of u het wilt <%- B('Terugzetten') %>.</p>
+  </section>
+
+  <section class="card help-sec" id="klaar">
+    <h2>Een werkopdracht afmaken</h2>
+    <ol class="help-steps">
+      <li>Open de werkopdracht en vul in wat er gedaan is.</li>
+      <li>Klik op <%- B('Klaar → naar facturatie') %>. De werkopdracht gaat dan naar degene die de factuur maakt.</li>
+    </ol>
+    <p class="help-tip">Toch nog iets vergeten? Open de werkopdracht en klik op <%- B('Terughalen naar Open') %>; dan kunt u hem weer wijzigen.</p>
+  </section>
+
+  <% if (user.can_invoice) { %>
+  <section class="card help-sec" id="facturatie">
+    <h2>Factureren</h2>
+    <ol class="help-steps">
+      <li>Klik in het menu op <%- B('Facturatie') %>. Het getal laat zien hoeveel werkopdrachten wachten.</li>
+      <li>Open een werkopdracht, maak de factuur in uw boekhouding en vul onderaan het <b>factuurnummer</b> in.</li>
+      <li>Klik op <%- B('Afronden (gefactureerd)') %>. De werkopdracht is klaar en kan niet meer per ongeluk worden gewijzigd.</li>
+    </ol>
+  </section>
+  <% } %>
+
+  <section class="card help-sec" id="banden">
+    <h2>Banden wisselen (zomer/winter)</h2>
+    <ol class="help-steps">
+      <li>Klik op <%- B('Bandenhotel') %> en dan op <%- B('Wissellijst') %>. U ziet wie er moet komen wisselen.</li>
+      <li>Bel de klant en klik op <%- B('Gebeld') %>. Zo weet iedereen dat die klant al gebeld is.</li>
+      <li>Is de klant er? Klik bij die klant op <%- B('Wisselen') %>. De banden uit de opslag staan dan "op de auto",
+        en de banden die eraf komen gaan op dezelfde plek de opslag in.</li>
+    </ol>
+  </section>
+
+  <section class="card help-sec" id="fout">
+    <h2>Iets fout gedaan?</h2>
+    <ul class="help-list">
+      <li><b>Verkeerd ingevuld?</b> Open het opnieuw, verbeter het en klik op <%- B('Opslaan') %>.</li>
+      <li><b>Pagina per ongeluk weggeklikt?</b> ADONIS vraagt eerst of u wilt weggaan als iets nog niet is opgeslagen.
+        Een werkopdracht wordt bovendien op dit apparaat bewaard.</li>
+      <li><b>Uitgelogd?</b> Log opnieuw in met uw naam en wachtwoord. Laat <i>Ingelogd blijven</i> aangevinkt staan.</li>
+      <li><b>Een melding die u niet begrijpt?</b> Klik op <%- B('Naar het begin') %> of vraag het aan de beheerder.
+        Er gaat niets verloren.</li>
+    </ul>
+  </section>
+
+  <section class="card help-sec" id="groter">
+    <h2>Alles groter maken</h2>
+    <ul class="help-list">
+      <li>Klik rechtsboven op het tandwiel (<b>Instellingen</b>) en zet <b>Eenvoudige weergave</b> aan: grotere letters en knoppen en alleen het belangrijkste in het menu.</li>
+      <li>Op de computer kunt u ook <b>Ctrl</b> ingedrukt houden en op <b>+</b> drukken om in te zoomen (<b>Ctrl</b> en <b>0</b> zet het terug).</li>
+    </ul>
+  </section>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

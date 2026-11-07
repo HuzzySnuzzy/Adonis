@@ -64,6 +64,18 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   de RDW niet geraadpleegd.
 - **Excel importeren met Claude als meekijker** (alleen beheerders): zet bestaande lijsten (.xlsx of .csv) over naar
   het bandenhotel, de overige opslag of de voorraad. Zie [Excel-import](#excel-import).
+- **Eenvoudig in gebruik.** Voor wie niet zo handig is met computers: de beheerder zet bij *Gebruikers* (of iemand zelf bij
+  *Instellingen*) **Eenvoudige weergave** aan. Dan opent ADONIS met een **startscherm** met grote knoppen en één zoekvak,
+  is alles groter, staat alleen het belangrijkste in het menu en zijn er geen animaties. Voor iedereen geldt:
+  - **Hulp** (vraagteken rechtsboven): uitleg in korte stappen met precies dezelfde knopnamen als op het scherm.
+  - Een werkopdracht wordt tijdens het typen **op het apparaat bewaard**; na een ongeluk (pagina dicht, uitgelogd,
+    opslaan mislukt) vraagt ADONIS of het **teruggezet** moet worden.
+  - Weggaan met niet-opgeslagen wijzigingen vraagt eerst om bevestiging; wisselen en uitgeven van banden ook.
+  - **Ingelogd blijven op dit apparaat** (standaard aan): 30 dagen na het laatste gebruik in plaats van 12 uur.
+  - Foutmeldingen in gewone taal, met knoppen *Terug* en *Naar het begin*.
+- **Foto van de auto** op de klantpagina (instelling, standaard aan): een voorbeeldfoto van het model (bijv. een
+  Nissan Note) om de auto snel te herkennen. Gratis via Wikipedia/Wikimedia Commons; alleen merk en model worden
+  opgezocht, nooit het kenteken of de klant. De foto wordt één keer opgehaald en daarna lokaal bewaard (map `autofotos`).
 - **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker / OLED* (puur zwart; panelen zweven met een zachte gloed eronder) en, met de voorkeur **Geheime thema's**, ook *Neon / Black Ice* (Neon: dezelfde stijl als het 2049-thema van DiscordLinked; **Black Ice** (ICE·XVIII): zwart, superionisch ijs – een kristalrooster als vloer, ionensporen die erdoorheen schieten, de gloeiende kern onderin, rijp in de hoeken en een glinstering onder de muis; beide met eigen opstartreeks). Elk thema heeft een korte opstartanimatie (eenmaal per tabblad, overslaan met een klik); *Effecten: Rustig* zet die en andere bewegingen uit, **weergave op telefoon** (Groot 100% / Normaal 90% / Compact 80% / Klein 70% / Heel klein 60%, alleen op kleine schermen), handschrift of gewone letters
   in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
   apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.
