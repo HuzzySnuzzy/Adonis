@@ -77,7 +77,9 @@ document.addEventListener('submit', async (e) => {
 });
 // Instellingen: "Weergave op telefoon" meteen laten zien (opslaan gebeurt met de knop).
 document.addEventListener('change', (e) => {
-  if (e.target.matches('[data-mscale-choice]')) document.documentElement.setAttribute('data-mscale', e.target.value);
+  if (e.target.matches('[data-mscale-choice]') && window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+    document.documentElement.setAttribute('data-mscale', e.target.value);
+  }
 });
 // Telefoon: tabellen worden kaarten (zie app.css). Elke cel krijgt de kolomkop als label,
 // lege cellen worden verborgen. Ook na live bijwerken (de lijst wordt dan vervangen).
@@ -144,3 +146,18 @@ document.addEventListener('click', (e) => {
     })
     .catch(() => { /* geen internet: geen foto */ });
 })();
+// Foto van het automodel klopt niet: voor dit model niet meer tonen.
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-carimg-wrong]');
+  if (!btn) return;
+  const fig = btn.closest('figure[data-carimg-q]');
+  const q = fig.dataset.carimgQ.replace(/\s*\(.*\)$/, '');
+  if (!window.confirm(`Klopt deze foto niet bij de auto?\n\nDan wordt voor de ${q} geen foto meer getoond (bij alle klanten met dit model).`)) return;
+  try {
+    await fetch('/autofoto/fout', { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': fig.dataset.csrf },
+      body: new URLSearchParams({ q: fig.dataset.carimgQ }) });
+  } catch { /* volgende keer */ }
+  fig.hidden = true;
+  const head = fig.closest('.customer-head'); if (head) head.classList.remove('has-photo');
+});

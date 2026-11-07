@@ -132,6 +132,8 @@ app.use(
 app.use(auth.loadUser);
 app.use((req, res, next) => {
   res.locals.path = req.path;
+  // De ADONIS-app (Windows) zet "ADONIS-app/<versie>" in de user-agent.
+  res.locals.inApp = /ADONIS-app\//.test(req.get('user-agent') || '');
   res.locals.url = req.originalUrl;
   res.locals.appInfo = {
     ...buildinfo,
@@ -355,6 +357,12 @@ app.get('/autofoto', wrap(async (req, res) => {
   const q = String(req.query.q || '').slice(0, 80);
   res.json(q ? await carimage.lookup(q) : { ok: false });
 }));
+// "Verkeerde auto": voor dit model nooit meer een foto tonen.
+app.post('/autofoto/fout', (req, res) => {
+  const q = String((req.body && req.body.q) || req.query.q || '').slice(0, 80);
+  if (q) carimage.block(q);
+  res.json({ ok: true });
+});
 app.get('/autofoto/img/:id', (req, res) => {
   const f = carimage.imagePath(req.params.id);
   if (!f) return res.status(404).end();

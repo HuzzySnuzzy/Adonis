@@ -33,17 +33,34 @@ CREATE TABLE IF NOT EXISTS car_images (
 `);
 
 // Motoraanduidingen en dergelijke horen niet in de zoekvraag ("Golf Variant 1.6 TDI" -> "Golf Variant").
-const NOISE = /^(\d[.,]\d|\d+(kw|pk|v)|tdi|tsi|tfsi|fsi|cdi|crdi|hdi|dci|tdci|cdti|vti|vtec|gti|gtd|gt|turbo|diesel|benzine|hybrid|aut|automaat|automatic|cvt|dsg|abt|business|edition|comfort|style|plus|sport|base|lpg|cng|4x4|4wd|awd|\d+d|\d+i)$/i;
-/** Merk en model uit de RDW-gegevens of het veld Merk/Type -> zoekterm, bijv. "Nissan Note". */
+const NOISE = /^(\d[.,]\d|\d+(kw|pk|v)|tdi|tsi|tfsi|fsi|cdi|crdi|hdi|dci|tdci|cdti|vti|vtec|gti|gtd|gt|turbo|diesel|benzine|hybrid|aut|automaat|automatic|cvt|dsg|abt|business|edition|comfort|style|plus|sport|base|lpg|cng|4x4|4wd|awd|\d+d|\d+i|l\d|h\d|l\dh\d)$/i;
+// Typecodes zoals "639" (Mercedes W639) of "111" (motorvariant): alleen een hint, geen modelnaam.
+const CODE = /^[a-z]?\d{3,}[a-z]?$/i;
+/**
+ * Merk en model uit de RDW-gegevens of het veld Merk/Type -> zoekterm, bijv. "Nissan Note" of
+ * "Mercedes-Benz Vito (639 111)" (tussen haakjes: typecodes die alleen helpen kiezen).
+ */
 function queryFor(merk, model) {
   const m = String(merk || '').trim();
   let words = String(model || '').replace(/[()]/g, ' ').split(/\s+/).filter(Boolean);
   if (m && words[0] && words[0].toLowerCase() === m.toLowerCase()) words = words.slice(1);
-  words = words.filter((w) => !NOISE.test(w)).slice(0, 2);
-  if (!words.length || (!m && words.length < 2)) return ''; // alleen een merk: geen herkenbaar model
-  return [m, ...words].join(' ').replace(/\s+/g, ' ').trim();
+  words = words.filter((w) => !NOISE.test(w));
+  let names = words.filter((w) => !CODE.test(w));
+  let codes = words.filter((w) => CODE.test(w));
+  if (!names.length && codes.length) { names = [codes[0]]; codes = codes.slice(1); } // Peugeot 206
+  names = names.slice(0, 2);
+  if (!names.length || (!m && names.length < 2)) return ''; // alleen een merk: geen herkenbaar model
+  return [m, ...names].join(' ').replace(/\s+/g, ' ').trim() + (codes.length ? ` (${codes.slice(0, 3).join(' ')})` : '');
 }
-const keyOf = (q) => String(q || '').toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 80);
+/** Zoekterm -> { brand, names, codes, label } */
+function parseQuery(q) {
+  const codes = ((/\(([^)]*)\)/.exec(q) || [])[1] || '').split(/\s+/).filter(Boolean);
+  const words = q.replace(/\([^)]*\)/, '').trim().split(/\s+/);
+  return { brand: words[0] || '', names: words.slice(1), codes, label: words.join(' ') };
+}
+const VERSION = 'v2|'; // andere zoekregels: oude (mogelijk verkeerde) resultaten niet meer gebruiken
+const keyOf = (q) => VERSION + String(q || '').toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 80);
+const squash = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
 function cached(q) {
   const key = keyOf(q);
@@ -51,12 +68,13 @@ function cached(q) {
   const row = db.prepare('SELECT * FROM car_images WHERE key = ?').get(key);
   if (!row) return null;
   const age = Date.now() - row.fetched_at;
-  const fresh = row.status === 'ok' ? age < OK_DAYS * 864e5 && fs.existsSync(path.join(DIR, row.id + '.jpg'))
+  const fresh = row.status === 'blocked' ? true
+    : row.status === 'ok' ? age < OK_DAYS * 864e5 && fs.existsSync(path.join(DIR, row.id + '.jpg'))
     : row.status === 'none' ? age < NONE_DAYS * 864e5 : age < ERROR_MINUTES * 6e4;
   return fresh ? row : null;
 }
 function publicInfo(row) {
-  if (!row || row.status !== 'ok') return { ok: false };
+  if (!row || row.status !== 'ok') return { ok: false, blocked: Boolean(row && row.status === 'blocked') };
   return { ok: true, img: `/autofoto/img/${row.id}`, title: row.title, pageUrl: row.page_url, fileUrl: row.file_url };
 }
 
@@ -67,22 +85,38 @@ async function getJson(params) {
   return res.json();
 }
 
-/** Beste artikel voor het model: het merk moet in de titel staan, het model liefst ook; met foto. */
+/**
+ * Beste artikel voor het model. Het merk én het model moeten in de titel staan ("Mercedes-Benz Vito ..."), anders
+ * liever geen foto dan een verkeerde. Een titel met de typecode (bijv. "W639") gaat voor.
+ */
 function pick(pages, q) {
-  const [brand, ...model] = q.toLowerCase().split(' ');
+  const { brand, names, codes } = parseQuery(q);
+  const b = squash(brand.split('-')[0]); // "Mercedes-Benz" -> "mercedes"
+  const main = squash(names[0]);
   const scored = (pages || [])
-    .filter((p) => p.thumbnail && p.thumbnail.source && p.title.toLowerCase().includes(brand))
-    .map((p) => {
-      const t = p.title.toLowerCase();
+    .filter((p) => p.thumbnail && p.thumbnail.source)
+    .map((p) => ({ p, t: squash(p.title), tokens: p.title.toLowerCase().split(/[^a-z0-9]+/) }))
+    // Het model als heel woord ("Up" niet in "Group"), of direct achter het merk ("Mercedes-Benz Vito").
+    .filter(({ t, tokens }) => t.includes(b) && main && (tokens.includes(main) || t.includes(squash(brand) + main)))
+    .map(({ p, t }) => {
       let score = 100 - (p.index || 50);
-      for (const w of model) if (t.includes(w)) score += 50;
-      if (/\(disambiguation\)|list of|logo/i.test(p.title)) score -= 200;
-      if (/\.svg$/i.test(p.pageimage || '')) score -= 80; // meestal een logo, geen auto
+      for (const w of names.slice(1)) if (t.includes(squash(w))) score += 40;
+      for (const c of codes) if (t.includes(squash(c))) score += 60;
+      if (/\(disambiguation\)|list of|logo|concept/i.test(p.title)) score -= 300;
+      if (/\.svg$/i.test(p.pageimage || '')) score -= 300; // meestal een logo, geen auto
       return { p, score };
     })
-    .filter((x) => x.score > 0 || !model.length)
-    .sort((a, b) => b.score - a.score);
+    .filter((x) => x.score > 0)
+    .sort((a, b2) => b2.score - a.score);
   return scored.length ? scored[0].p : null;
+}
+
+/** "Verkeerde auto": nooit meer een foto tonen voor dit model. */
+function block(q) {
+  const key = keyOf(q);
+  if (!key || key === VERSION) return;
+  db.prepare(`INSERT INTO car_images (key, status, fetched_at) VALUES (?, 'blocked', ?)
+              ON CONFLICT(key) DO UPDATE SET status = 'blocked', fetched_at = excluded.fetched_at`).run(key, Date.now());
 }
 
 const inFlight = new Map();
@@ -101,11 +135,20 @@ async function lookup(q) {
       return db.prepare('SELECT * FROM car_images WHERE key = ?').get(key);
     };
     try {
-      const data = await getJson({
-        action: 'query', generator: 'search', gsrsearch: q, gsrlimit: '8', gsrnamespace: '0',
+      const { brand, names, codes } = parseQuery(q);
+      const search = (term) => getJson({
+        action: 'query', generator: 'search', gsrsearch: term, gsrlimit: '10', gsrnamespace: '0',
         prop: 'pageimages|info', piprop: 'thumbnail|name', pithumbsize: '640', inprop: 'url',
-      });
-      const page = pick(data && data.query && data.query.pages, key);
+      }).then((d) => (d && d.query && d.query.pages) || []);
+      // Eerst alleen artikelen met het model in de titel; zo nodig gewoon zoeken.
+      // Wikipedia zoekt met EN: eerst merk + model, en apart met de typecode (vindt bijv. "Vito (W639)").
+      const terms = [`intitle:"${names[0]}" ${brand}`];
+      if (codes[0]) terms.push(`intitle:"${names[0]}" ${codes[0]}`);
+      const seen = new Map();
+      for (const term of terms) for (const p of await search(term)) if (!seen.has(p.title)) seen.set(p.title, p);
+      let pages = [...seen.values()];
+      let page = pick(pages, q);
+      if (!page) { pages = await search(`${brand} ${names.join(' ')}`); page = pick(pages, q); }
       if (!page) return publicInfo(save({ status: 'none' }));
       const imgRes = await fetch(page.thumbnail.source, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(10000) });
       if (!imgRes.ok) throw new Error('foto niet bereikbaar');
@@ -135,4 +178,4 @@ function imagePath(id) {
   return fs.existsSync(file) ? { file, type: id.endsWith('p') ? 'image/png' : 'image/jpeg' } : null;
 }
 
-module.exports = { queryFor, cached, publicInfo, lookup, imagePath };
+module.exports = { queryFor, parseQuery, pick, block, cached, publicInfo, lookup, imagePath };
