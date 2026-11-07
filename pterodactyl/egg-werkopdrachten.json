@@ -13,7 +13,7 @@
         "Debian": "ghcr.io/parkervcp/yolks:debian"
     },
     "file_denylist": [],
-    "startup": "./werkopdrachten-linux-x64 --port {{SERVER_PORT}} --host 0.0.0.0 --open-browser false",
+    "startup": "if [ ! -s ./werkopdrachten-linux-x64 ] && [ -n \"{{DOWNLOAD_URL}}\" ]; then echo \"Programma downloaden...\"; curl -fsSL -o werkopdrachten-linux-x64 \"{{DOWNLOAD_URL}}\" || echo \"Download mislukt - upload werkopdrachten-linux-x64 via de bestandsbeheerder.\"; fi; chmod +x ./werkopdrachten-linux-x64 2>/dev/null; ./werkopdrachten-linux-x64 --port {{SERVER_PORT}} --host 0.0.0.0 --open-browser false",
     "config": {
         "files": "{}",
         "startup": "{\r\n    \"done\": \"Werkopdrachten draait op\"\r\n}",
@@ -22,8 +22,8 @@
     },
     "scripts": {
         "installation": {
-            "script": "#!/bin/bash\n# Download het Linux-bestand. Lukt dit niet (bijv. privé repository), upload\n# werkopdrachten-linux-x64 dan zelf via de bestandsbeheerder.\napt-get update -qq && apt-get install -y -qq curl ca-certificates > /dev/null\ncd /mnt/server\nif [ -n \"${DOWNLOAD_URL}\" ]; then\n  curl -fL -o werkopdrachten-linux-x64 \"${DOWNLOAD_URL}\" || echo \"Download mislukt - upload het bestand handmatig.\"\nfi\nchmod +x werkopdrachten-linux-x64 2>/dev/null || true\necho \"Installatie klaar.\"",
-            "container": "debian:bookworm-slim",
+            "script": "#!/bin/bash\n# Werkopdrachten installeren / bijwerken. config.properties en data/ blijven bewaard.\ncd /mnt/server || exit 1\nif [ -z \"${DOWNLOAD_URL}\" ]; then\n  echo \"Geen Download-URL ingesteld: upload werkopdrachten-linux-x64 zelf via de bestandsbeheerder.\"\n  exit 0\nfi\nURL=\"${DOWNLOAD_URL}\"\n# ARM-server (bijv. Raspberry Pi / Ampere): automatisch de arm64-versie nemen\nif [ \"$(uname -m)\" = \"aarch64\" ]; then URL=\"${URL%-x64}-arm64\"; fi\necho \"Downloaden: ${URL}\"\nif curl -fL --retry 3 -o werkopdrachten-linux-x64.new \"${URL}\"; then\n  mv -f werkopdrachten-linux-x64.new werkopdrachten-linux-x64\n  chmod +x werkopdrachten-linux-x64\n  echo \"Installatie klaar.\"\nelse\n  rm -f werkopdrachten-linux-x64.new\n  echo \"FOUT: download mislukt. Bestaat er een release? Upload anders werkopdrachten-linux-x64 zelf.\"\n  exit 1\nfi",
+            "container": "ghcr.io/parkervcp/installers:debian",
             "entrypoint": "bash"
         }
     },

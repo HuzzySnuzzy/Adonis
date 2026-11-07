@@ -71,6 +71,8 @@ een systemd-service gebruiken die dit bestand start.
 2. Maak een server met deze egg. Bij installatie wordt `werkopdrachten-linux-x64` gedownload van de nieuwste release.
    Is de repository privé, of lukt de download niet? Upload het bestand dan zelf via de bestandsbeheerder.
 3. Start de server; de poort komt automatisch van de toegewezen allocatie (`SERVER_PORT`).
+   Ontbreekt het programma (bijv. omdat de download bij de installatie mislukte), dan wordt het bij het starten alsnog gedownload.
+   Bijwerken naar een nieuwe versie: *Settings → Reinstall Server* (`data/` en `config.properties` blijven bewaard).
 4. Maak het eerste account aan via `/setup`, of typ in de console:
    `create-user collin "Collin" <wachtwoord> --admin`
 
