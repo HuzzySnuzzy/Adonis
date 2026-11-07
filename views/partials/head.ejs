@@ -4,7 +4,7 @@
   const THEME_LABEL = { system: 'Systeem', light: 'Licht', dark: 'Donker', oled: 'OLED', neon: 'Neon', ice: 'Black Ice' };
   %>
 <!doctype html>
-<html lang="nl"<%- themeAttr %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>">
+<html lang="nl"<%- themeAttr %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

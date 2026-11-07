@@ -22,8 +22,9 @@ const PREF_OPTIONS = {
   ink: ['hand', 'plain'],
   start: ['/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw', '/bandenhotel', '/voorraad'],
   secret: ['off', 'on'],
+  mscale: ['100', '90', '80', '70', '60'], // weergave op telefoon (procent)
 };
-const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off' };
+const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off', mscale: '90' };
 /** Thema's die alleen zichtbaar zijn met de voorkeur "Geheime thema's". */
 const SECRET_THEMES = ['neon', 'ice'];
 /** Thema's die iemand met deze voorkeuren kan kiezen (in volgorde van het menu). */

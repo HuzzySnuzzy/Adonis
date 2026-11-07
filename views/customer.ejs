@@ -93,18 +93,68 @@
     <% } %>
   </section>
 
-  <section class="rdw-card tyre-card" aria-label="Bandenhotel" id="live-customer-tyres" data-live>
+  <%
+    const klantTyres = tyres.filter((t) => t.soort !== 'opslag');
+    const onCar = klantTyres.find((t) => t.status === 'op_auto');
+    const stored = tyres.filter((t) => t.status === 'opgeslagen');
+    const history = tyres.filter((t) => t.status === 'uitgegeven');
+    const carCls = onCar ? seasonClass(onCar.seizoen) : null;
+    const match = stored.find((t) => t.soort !== 'opslag' && seasonClass(t.seizoen) === swapTarget);
+    const needsSwap = match && carCls !== swapTarget && carCls !== 'all';
+  %>
+  <section class="rdw-card tyre-card" aria-label="Banden" id="banden">
     <div class="rdw-head">
-      <h2>Bandenhotel</h2>
-      <div class="rdw-links"><a href="/bandenhotel/nieuw?klant=<%= customer.id %>">+ Banden inslaan</a></div>
+      <h2>Banden</h2>
+      <div class="rdw-links"><a href="/bandenhotel/wissellijst">Wissellijst</a><a href="/bandenhotel/nieuw?klant=<%= customer.id %>">+ Banden inslaan</a></div>
     </div>
-    <% const stored = tyres.filter((t) => t.status === 'opgeslagen'); %>
-    <% if (!tyres.length) { %>
-      <p class="muted">Geen banden van <%= customer.kenteken %> in opslag.</p>
-    <% } else { %>
-      <p class="muted small"><%= stored.length ? stored.length + ' set' + (stored.length === 1 ? '' : 's') + ' in opslag' : 'Niets meer in opslag' %><%= tyres.length > stored.length ? ' · ' + (tyres.length - stored.length) + ' eerder uitgegeven' : '' %></p>
-      <%- include('/partials/tyrelist', { tyres, showPlate: false, showStatus: true }) %>
+    <div class="oncar">
+      <span class="oncar-label">Op de auto</span>
+      <% if (onCar) { %>
+        <a class="oncar-set" href="/bandenhotel/<%= onCar.id %>">
+          <% if (onCar.seizoen) { %><span class="season season-<%= carCls || 'mix' %>"><%= onCar.seizoen %></span><% } %>
+          <% if (onCar.maat) { %><span><%= onCar.maat %></span><% } %>
+          <%- include('/partials/tread', { t: onCar }) %>
+          <span class="muted small"><%= onCar.datum_uit ? 'sinds ' + fmtDate(onCar.datum_uit) : '' %></span>
+        </a>
+      <% } else { %>
+        <span class="muted">Niet vastgelegd</span>
+      <% } %>
+      <details class="oncar-edit">
+        <summary class="linkbtn"><%= onCar ? 'Wijzigen' : 'Vastleggen' %></summary>
+        <form method="post" action="/klant/<%= customer.id %>/op-auto" class="grid-form oncar-form" autocomplete="off">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <label>Seizoen<select name="op[seizoen]">
+            <% for (const sz of ['', ...SEASONS]) { %><option value="<%= sz %>" <%= (onCar ? seasonClass(onCar.seizoen) : '') === seasonClass(sz) && (onCar || !sz) ? 'selected' : '' %>><%= sz || 'Onbekend' %></option><% } %>
+          </select></label>
+          <label>Maat<input name="op[maat]" value="<%= onCar ? onCar.maat : (stored[0] ? stored[0].maat : '') %>" placeholder="205/55R16"></label>
+          <label>Profiel voor (mm)<input name="op[profiel_voor]" value="<%= onCar ? fmtMm(onCar.profiel_voor) : '' %>" inputmode="decimal"></label>
+          <label>Profiel achter (mm)<input name="op[profiel_achter]" value="<%= onCar ? fmtMm(onCar.profiel_achter) : '' %>" inputmode="decimal"></label>
+          <button class="btn btn-small btn-primary" type="submit">Opslaan</button>
+        </form>
+      </details>
+    </div>
+    <% if (needsSwap) { %>
+    <div class="swap-hint">
+      <span>Komende wissel: <b><%= match.seizoen.toLowerCase() %>banden</b> liggen klaar in <%= match.locatie || 'de opslag' %><%= match.label && match.label.length <= 12 ? ' (label ' + match.label + ')' : '' %>.<%= match.uitgenodigd_at ? ' Gebeld op ' + fmtDate(match.uitgenodigd_at) + '.' : '' %></span>
+      <form method="post" action="/bandenhotel/<%= match.id %>/wissel" class="inline">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn btn-small btn-primary" type="submit">Wisselen</button>
+      </form>
+    </div>
     <% } %>
+    <div id="live-customer-tyres" data-live>
+    <% if (!stored.length) { %>
+      <p class="muted small">Geen banden van <%= customer.kenteken %> in opslag.</p>
+    <% } else { %>
+      <p class="muted small"><%= stored.length %> set<%= stored.length === 1 ? '' : 's' %> in opslag</p>
+      <%- include('/partials/tyrelist', { tyres: stored, showPlate: false, showStatus: true }) %>
+    <% } %>
+    <% if (history.length) { %>
+      <details class="tyre-history"><summary class="muted small">Eerder uitgegeven (<%= history.length %>)</summary>
+        <%- include('/partials/tyrelist', { tyres: history, showPlate: false, showStatus: true }) %>
+      </details>
+    <% } %>
+    </div>
   </section>
 
   <div class="page-head">

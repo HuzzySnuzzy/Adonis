@@ -4,27 +4,26 @@
   <div class="page-head">
     <div>
       <h1><%= tyre ? (d.kenteken || d.klant_naam || 'Bandenset') : 'Banden inslaan' %>
-        <% if (tyre) { %><span class="status-pill <%= tyre.status === 'uitgegeven' ? 'status-busy' : 'status-ok' %>"><%= STATUSES[tyre.status] %></span><% } %></h1>
+        <% if (tyre) { %><span class="status-pill <%= tyre.status === 'uitgegeven' ? 'status-busy' : tyre.status === 'op_auto' ? 'status-car' : 'status-ok' %>"><%= STATUSES[tyre.status] %></span><% } %></h1>
       <% if (tyre) { %><p class="muted small">
-        <%= tyre.status === 'uitgegeven' ? 'Uitgegeven op ' + fmtDate(tyre.datum_uit) : 'In opslag' + (tyre.datum_in ? ' sinds ' + fmtDate(tyre.datum_in) : '') %>
+        <%= tyre.status === 'uitgegeven' ? 'Uitgegeven op ' + fmtDate(tyre.datum_uit) : tyre.status === 'op_auto' ? 'Op de auto' + (tyre.datum_uit ? ' sinds ' + fmtDate(tyre.datum_uit) : '') : 'In opslag' + (tyre.datum_in ? ' sinds ' + fmtDate(tyre.datum_in) : '') %>
+        <% if (tyre.uitgenodigd_at && tyre.status === 'opgeslagen') { %>· gebeld op <%= fmtDate(tyre.uitgenodigd_at) %><% } %>
         · laatst gewijzigd <%= fmtDateTime(tyre.updated_at) %><%= tyre.updated_by_name ? ' door ' + tyre.updated_by_name : '' %></p><% } %>
     </div>
-    <% if (tyre) { %>
+    <% if (tyre) { const post = (action, label, cls, hidden = {}, title = '') => `<form method="post" action="/bandenhotel/${tyre.id}/${action}" class="inline"><input type="hidden" name="_csrf" value="${csrf}">${Object.entries(hidden).map(([k, v]) => `<input type="hidden" name="${k}" value="${v}">`).join('')}<button class="btn ${cls}" type="submit"${title ? ` title="${esc(title)}"` : ''}>${label}</button></form>`; %>
     <div class="actions">
-      <% if (tyre.status === 'opgeslagen') { %>
-        <form method="post" action="/bandenhotel/<%= tyre.id %>/status" class="inline">
-          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="uitgegeven"><input type="hidden" name="wisselen" value="1">
-          <button class="btn btn-primary" type="submit" title="Deze set meegeven en meteen de andere set inslaan">Wisselen (uitgeven + andere set inslaan)</button>
-        </form>
-        <form method="post" action="/bandenhotel/<%= tyre.id %>/status" class="inline">
-          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="uitgegeven">
-          <button class="btn" type="submit">Alleen uitgeven</button>
-        </form>
+      <% if (tyre.status === 'opgeslagen' && tyre.soort === 'klant') { %>
+        <%- post('wissel', 'Wisselen: op de auto zetten', 'btn-primary', {}, 'Deze set gaat op de auto; de set die eraf komt gaat de opslag in, op deze plek') %>
+        <%- post('gebeld', tyre.uitgenodigd_at ? '✓ Gebeld' : 'Gebeld', tyre.uitgenodigd_at ? 'btn-ok' : '', {}, 'Klant gebeld / uitgenodigd om te komen wisselen') %>
+        <%- post('status', 'Uitgeven (weg)', 'btn-ghost', { status: 'uitgegeven' }, 'De klant neemt de banden mee en ze komen niet terug') %>
+      <% } else if (tyre.status === 'opgeslagen') { %>
+        <%- post('status', 'Uitgeven', '', { status: 'uitgegeven' }) %>
+      <% } else if (tyre.status === 'op_auto') { %>
+        <%- post('status', 'Eraf: in opslag nemen', 'btn-primary', { status: 'opgeslagen' }) %>
+        <%- post('status', 'Weg (uitgegeven)', 'btn-ghost', { status: 'uitgegeven' }, 'Banden zijn vervangen of afgevoerd') %>
       <% } else { %>
-        <form method="post" action="/bandenhotel/<%= tyre.id %>/status" class="inline">
-          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="opgeslagen">
-          <button class="btn" type="submit">Weer inslaan</button>
-        </form>
+        <%- post('status', 'Weer inslaan', '', { status: 'opgeslagen' }) %>
+        <% if (tyre.soort === 'klant') { %><%- post('status', 'Staat op de auto', 'btn-ghost', { status: 'op_auto' }) %><% } %>
       <% } %>
     </div>
     <% } %>

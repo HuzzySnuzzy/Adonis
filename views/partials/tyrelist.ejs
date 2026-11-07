@@ -20,7 +20,7 @@
       <td class="nowrap"><%- include('/partials/tread', { t }) %></td>
       <td><%= t.locatie %></td>
       <td><a class="tyre-label" href="/bandenhotel/<%= t.id %>"><%= t.label && t.label.length <= 12 ? t.label : t.label ? t.label.slice(0, 8) + '…' : '#' + t.id %></a><% if (!showPlate && t.soort === 'opslag') { %> <span class="out-pill" title="Staat in de overige bandenopslag">overige opslag</span><% } %></td>
-      <td class="nowrap"><% if (showStatus && t.status === 'uitgegeven') { %><span class="out-pill">Uitgegeven <%= fmtDate(t.datum_uit) %></span><% } else { %><%= fmtDate(t.datum_in) %><% } %></td>
+      <td class="nowrap"><% if (showStatus && t.status === 'uitgegeven') { %><span class="out-pill">Uitgegeven <%= fmtDate(t.datum_uit) %></span><% } else if (showStatus && t.status === 'op_auto') { %><span class="car-pill">Op de auto</span><% } else { %><%= fmtDate(t.datum_in) %><% if (t.uitgenodigd_at) { %> <span class="called-pill" title="Gebeld op <%= fmtDate(t.uitgenodigd_at) %>">gebeld</span><% } %><% } %></td>
     </tr>
   <% } %>
   </tbody>

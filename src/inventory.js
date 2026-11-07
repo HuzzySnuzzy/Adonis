@@ -68,6 +68,10 @@ CREATE INDEX IF NOT EXISTS stock_items_soort ON stock_items(soort);
 if (!db.prepare('PRAGMA table_info(tyre_storage)').all().some((c) => c.name === 'soort')) {
   db.exec("ALTER TABLE tyre_storage ADD COLUMN soort TEXT NOT NULL DEFAULT 'klant'");
 }
+// Wanneer de klant is gebeld/uitgenodigd om te komen wisselen (wordt gewist zodra er gewisseld is).
+if (!db.prepare('PRAGMA table_info(tyre_storage)').all().some((c) => c.name === 'uitgenodigd_at')) {
+  db.exec('ALTER TABLE tyre_storage ADD COLUMN uitgenodigd_at TEXT');
+}
 
 /* ---------- gedeelde hulpjes ---------- */
 const clean = (v, max = 500) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -139,7 +143,8 @@ function parseExtra(json) {
 }
 
 /* ---------- bandenhotel ---------- */
-const TYRE_STATUSES = { opgeslagen: 'Opgeslagen', uitgegeven: 'Uitgegeven' };
+const TYRE_STATUSES = { opgeslagen: 'In opslag', op_auto: 'Op de auto', uitgegeven: 'Uitgegeven' };
+const STATUS_ORDER = "CASE status WHEN 'op_auto' THEN 0 WHEN 'opgeslagen' THEN 1 ELSE 2 END";
 const TYRE_SOORTEN = { klant: 'Klantenbanden', opslag: 'Overige opslag' };
 
 const { formatPlate } = require('./plates');
@@ -217,18 +222,18 @@ function searchTyres({ soort = 'klant', q = '', status = 'opgeslagen', seizoen =
     `SELECT t.*, c.id AS customer_id FROM tyre_storage t
      LEFT JOIN customers c ON c.plate_key = t.plate_key AND t.plate_key <> ''
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-     ORDER BY t.status = 'uitgegeven', t.klant_naam COLLATE NOCASE, t.kenteken LIMIT 3000`
+     ORDER BY CASE t.status WHEN 'op_auto' THEN 0 WHEN 'opgeslagen' THEN 1 ELSE 2 END, t.klant_naam COLLATE NOCASE, t.kenteken LIMIT 3000`
   ).all(...params);
 }
 function tyresForPlate(pk) {
   if (!pk) return [];
-  return db.prepare("SELECT * FROM tyre_storage WHERE plate_key = ? ORDER BY status = 'uitgegeven', datum_in DESC, id DESC").all(pk);
+  return db.prepare(`SELECT * FROM tyre_storage WHERE plate_key = ? ORDER BY ${STATUS_ORDER}, datum_in DESC, id DESC`).all(pk);
 }
 function tyreCounts(soort = 'klant') {
   const rows = db.prepare('SELECT status, COUNT(*) AS n FROM tyre_storage WHERE soort = ? GROUP BY status').all(soort);
-  const out = { opgeslagen: 0, uitgegeven: 0 };
+  const out = { opgeslagen: 0, op_auto: 0, uitgegeven: 0 };
   for (const r of rows) out[r.status] = r.n;
-  out.alle = out.opgeslagen + out.uitgegeven;
+  out.alle = out.opgeslagen + out.op_auto + out.uitgegeven;
   out.perSoort = Object.fromEntries(Object.keys(TYRE_SOORTEN).map((k) => [k, 0]));
   for (const r of db.prepare("SELECT soort, COUNT(*) AS n FROM tyre_storage WHERE status = 'opgeslagen' GROUP BY soort").all()) out.perSoort[r.soort] = r.n;
   return out;
@@ -267,13 +272,142 @@ function distinct(table, col, where = '') {
 function setTyreStatus(id, status, userId) {
   if (!TYRE_STATUSES[status]) return;
   const today = orders.todayISO();
-  if (status === 'uitgegeven') {
-    db.prepare("UPDATE tyre_storage SET status = 'uitgegeven', datum_uit = ?, updated_by = ?, updated_at = datetime('now') WHERE id = ?").run(today, userId, id);
+  const cur = db.prepare('SELECT status FROM tyre_storage WHERE id = ?').get(id);
+  if (!cur) return;
+  if (status === 'opgeslagen') {
+    // Van de auto af (of terug) de opslag in: vanaf vandaag in opslag.
+    db.prepare(`UPDATE tyre_storage SET status = 'opgeslagen', datum_uit = '', uitgenodigd_at = NULL,
+                datum_in = CASE WHEN ? = 'op_auto' OR datum_in = '' THEN ? ELSE datum_in END,
+                updated_by = ?, updated_at = datetime('now') WHERE id = ?`).run(cur.status, today, userId, id);
   } else {
-    db.prepare("UPDATE tyre_storage SET status = 'opgeslagen', datum_uit = '', datum_in = CASE WHEN datum_in = '' THEN ? ELSE datum_in END, updated_by = ?, updated_at = datetime('now') WHERE id = ?")
-      .run(today, userId, id);
+    db.prepare(`UPDATE tyre_storage SET status = ?, datum_uit = ?, uitgenodigd_at = NULL, updated_by = ?, updated_at = datetime('now') WHERE id = ?`)
+      .run(status, today, userId, id);
   }
 }
+
+/* ---------- wisselen: welke banden staan op de auto ---------- */
+/** Seizoen in één woord: 'winter', 'zomer', 'all' of '' (onbekend of gemengd). */
+function seasonClass(s) {
+  const l = String(s || '').toLowerCase();
+  if (/all\s*-?\s*season|4\s*seizoen|vierseizoen|all\s*weather/.test(l)) return 'all';
+  const w = /winter/.test(l);
+  const z = /zomer|summer/.test(l);
+  return w && !z ? 'winter' : z && !w ? 'zomer' : '';
+}
+const SEASON_LABEL = { winter: 'Winter', zomer: 'Zomer', all: 'All season', '': 'Onbekend' };
+/** Welke kant het op gaat: van half september t/m januari naar winterbanden, anders naar zomerbanden. */
+function swapTarget(iso = orders.todayISO()) {
+  const m = Number(iso.slice(5, 7));
+  const d = Number(iso.slice(8, 10));
+  return m >= 10 || m === 1 || (m === 9 && d >= 15) ? 'winter' : 'zomer';
+}
+function onCarFor(pk, exceptId) {
+  if (!pk) return null;
+  return db.prepare("SELECT * FROM tyre_storage WHERE plate_key = ? AND soort = 'klant' AND status = 'op_auto' AND id <> ? ORDER BY datum_uit DESC, id DESC").get(pk, exceptId || 0);
+}
+/**
+ * Wisselen: deze opgeslagen set gaat op de auto. De set die er nu op staat (als ADONIS die kent) gaat de opslag in,
+ * op de plek die net vrijkwam. Geeft { off } terug: de set die eraf kwam (of null als die nog niet bekend was).
+ */
+function swapOnto(id, userId) {
+  const t = db.prepare('SELECT * FROM tyre_storage WHERE id = ?').get(id);
+  if (!t || t.status !== 'opgeslagen') return { error: 'Deze set staat niet in de opslag.' };
+  const off = onCarFor(t.plate_key, t.id);
+  db.exec('BEGIN');
+  try {
+    setTyreStatus(t.id, 'op_auto', userId);
+    if (off) {
+      setTyreStatus(off.id, 'opgeslagen', userId);
+      if (t.locatie) db.prepare('UPDATE tyre_storage SET locatie = ? WHERE id = ?').run(t.locatie, off.id);
+      // Overige banden die nog als "op de auto" stonden, kloppen niet meer.
+      db.prepare("UPDATE tyre_storage SET status = 'uitgegeven', datum_uit = ? WHERE plate_key = ? AND soort = 'klant' AND status = 'op_auto' AND id NOT IN (?, ?)")
+        .run(orders.todayISO(), t.plate_key, t.id, off.id);
+    }
+    db.exec('COMMIT');
+  } catch (err) {
+    if (db.isTransaction) db.exec('ROLLBACK');
+    throw err;
+  }
+  return { tyre: t, off: off ? { ...off, locatie: t.locatie || off.locatie } : null };
+}
+/** Vastleggen wat er nu op de auto staat (snel, vanaf de klantpagina). Werkt de bekende set bij of maakt er een. */
+function setOnCar(customer, fields, userId) {
+  const cur = onCarFor(customer.plate_key);
+  const base = cur || {};
+  const data = normalizeTyre({
+    ...base, soort: 'klant', status: 'op_auto', kenteken: customer.kenteken, klant_naam: base.klant_naam || customer.naam,
+    telefoon: base.telefoon || customer.tel_prive || customer.tel_zaak, auto: base.auto || customer.merk_type,
+    seizoen: fields.seizoen, maat: fields.maat, profiel_voor: fields.profiel_voor, profiel_achter: fields.profiel_achter,
+    datum_uit: base.datum_uit || orders.todayISO(), extra: base.extra || '{}',
+  });
+  return saveTyre({ id: cur && cur.id, data, userId });
+}
+function toggleInvited(id, userId) {
+  const t = db.prepare('SELECT uitgenodigd_at FROM tyre_storage WHERE id = ?').get(id);
+  if (!t) return null;
+  const next = t.uitgenodigd_at ? null : orders.todayISO();
+  db.prepare("UPDATE tyre_storage SET uitgenodigd_at = ?, updated_by = ?, updated_at = datetime('now') WHERE id = ?").run(next, userId, id);
+  return next;
+}
+function minTread(t) {
+  const v = [t && t.profiel_voor, t && t.profiel_achter].filter((x) => x !== null && x !== undefined);
+  return v.length ? Math.min(...v) : null;
+}
+/**
+ * Wissellijst: per klant (kenteken) in het bandenhotel of er gewisseld moet worden naar het doelseizoen.
+ *  - wisselen:    er ligt een set van het doelseizoen in opslag, en op de auto staat iets anders (of onbekend)
+ *  - klaar:       op de auto staat al het doelseizoen (of all season), of de set in opslag is van het andere seizoen
+ *  - controleren: seizoen in opslag of op de auto is onbekend/gemengd
+ */
+function swapList(target) {
+  const rows = db.prepare(
+    `SELECT t.*, c.id AS customer_id, c.naam AS c_naam, c.tel_prive AS c_tel_prive, c.tel_zaak AS c_tel_zaak
+     FROM tyre_storage t LEFT JOIN customers c ON c.plate_key = t.plate_key AND t.plate_key <> ''
+     WHERE t.soort = 'klant' AND t.status IN ('opgeslagen', 'op_auto')`
+  ).all();
+  const groups = new Map();
+  for (const r of rows) {
+    const key = r.plate_key || 'naam:' + r.klant_naam.toLowerCase() + ':' + r.id;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  }
+  const out = { target, wisselen: [], klaar: [], controleren: [] };
+  for (const list of groups.values()) {
+    const onCar = list.filter((r) => r.status === 'op_auto').sort((a, b) => (b.datum_uit || '').localeCompare(a.datum_uit || ''))[0] || null;
+    const stored = list.filter((r) => r.status === 'opgeslagen');
+    if (!stored.length) continue; // niets in opslag: niets te wisselen
+    const first = onCar || stored[0];
+    const carClass = onCar ? seasonClass(onCar.seizoen) : null;
+    const match = stored.find((r) => seasonClass(r.seizoen) === target);
+    const item = {
+      plate_key: first.plate_key, kenteken: first.kenteken, customer_id: first.customer_id,
+      naam: first.c_naam || first.klant_naam, telefoon: first.telefoon || first.c_tel_prive || first.c_tel_zaak || '',
+      auto: first.auto, onCar, carClass, stored, match, tread: minTread(onCar), matchTread: minTread(match),
+    };
+    if (carClass === target || carClass === 'all') { item.reden = `Staat al op ${SEASON_LABEL[carClass].toLowerCase()}banden`; out.klaar.push(item); continue; }
+    if (match) {
+      item.reden = onCar ? `Rijdt op ${SEASON_LABEL[carClass || ''].toLowerCase()}banden` : 'Wat er op de auto staat is niet vastgelegd (waarschijnlijk het andere seizoen)';
+      out.wisselen.push(item);
+      continue;
+    }
+    const classes = stored.map((r) => seasonClass(r.seizoen));
+    if (!onCar && classes.every((c) => c && c !== target)) {
+      item.reden = `In opslag: ${SEASON_LABEL[classes[0]].toLowerCase()}banden, dus waarschijnlijk al gewisseld`;
+      out.klaar.push(item);
+      continue;
+    }
+    item.reden = classes.includes('') ? 'Seizoen van de set in opslag is onbekend of gemengd' : 'Op de auto staat iets onbekends';
+    out.controleren.push(item);
+  }
+  const byName = (a, b) => String(a.naam || a.kenteken).localeCompare(String(b.naam || b.kenteken), 'nl');
+  // Eerst wie nog niet is gebeld, dan wie het slechtste profiel op de auto heeft, dan op naam.
+  out.wisselen.sort((a, b) => (a.match.uitgenodigd_at ? 1 : 0) - (b.match.uitgenodigd_at ? 1 : 0)
+    || (a.tread ?? 99) - (b.tread ?? 99) || byName(a, b));
+  out.klaar.sort(byName);
+  out.controleren.sort(byName);
+  return out;
+}
+
 function deleteTyre(id) {
   db.prepare('DELETE FROM tyre_storage WHERE id = ?').run(id);
 }
@@ -374,6 +508,7 @@ function deleteStock(id) {
 
 module.exports = {
   TYRE_SOORTEN, formatPlate, ensureCustomer, customerAction,
+  seasonClass, SEASON_LABEL, swapTarget, onCarFor, swapOnto, setOnCar, toggleInvited, swapList, minTread,
   TYRE_STATUSES, VELGEN, SEASONS, SOORTEN,
   normalizeTyre, saveTyre, getTyre, searchTyres, tyresForPlate, tyreCounts, setTyreStatus, deleteTyre,
   normalizeStock, saveStock, getStock, searchStock, stockCounts, adjustStock, deleteStock,

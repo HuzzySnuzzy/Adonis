@@ -1,0 +1,87 @@
+<%- include('/partials/head') %>
+<%
+  const other = target === 'winter' ? 'zomer' : 'winter';
+  const L = (c) => SEASON_LABEL[c] || 'Onbekend';
+  const rows = list[show];
+  const tabs = [
+    ['wisselen', 'Moeten komen wisselen', list.wisselen.length],
+    ['klaar', 'Al gewisseld', list.klaar.length],
+    ['controleren', 'Controleren', list.controleren.length],
+  ];
+  const called = list.wisselen.filter((i) => i.match.uitgenodigd_at).length;
+%>
+<main class="page wide">
+  <p class="crumbs"><a href="/bandenhotel">← Bandenhotel</a></p>
+  <div class="page-head">
+    <div>
+      <h1>Wissellijst: naar <%= L(target).toLowerCase() %>banden</h1>
+      <p class="muted small">Klanten van het bandenhotel met <%= L(target).toLowerCase() %>banden in opslag die er nog niet op rijden.
+        <%= list.wisselen.length %> te wisselen<%= called ? ', waarvan ' + called + ' al gebeld' : '' %>.
+        Wat er op de auto staat leg je vast op de klantpagina; zonder gegevens gaat ADONIS uit van het andere seizoen.</p>
+    </div>
+    <div class="head-buttons">
+      <button class="btn" type="button" data-print>Afdrukken</button>
+    </div>
+  </div>
+  <div class="swap-target">
+    <nav class="status-tabs" aria-label="Richting">
+      <a href="/bandenhotel/wissellijst?naar=winter" class="<%= target === 'winter' ? 'active' : '' %>">Naar winter<%= auto === 'winter' ? ' (nu)' : '' %></a>
+      <a href="/bandenhotel/wissellijst?naar=zomer" class="<%= target === 'zomer' ? 'active' : '' %>">Naar zomer<%= auto === 'zomer' ? ' (nu)' : '' %></a>
+    </nav>
+    <nav class="kind-tabs" aria-label="Lijst">
+      <% for (const [k, label, n] of tabs) { %><a href="/bandenhotel/wissellijst?naar=<%= target %><%= k === 'wisselen' ? '' : '&toon=' + k %>" class="<%= show === k ? 'active' : '' %>"><%= label %> <span class="count"><%= n %></span></a><% } %>
+    </nav>
+  </div>
+  <div id="live-swaplist" data-live>
+  <% if (!rows.length) { %>
+    <div class="empty"><p><%= show === 'wisselen' ? 'Niemand hoeft te komen wisselen. 🎉' : show === 'klaar' ? 'Nog niemand gewisseld.' : 'Niets te controleren.' %></p></div>
+  <% } else { %>
+    <div class="table-wrap">
+    <table class="list clickable swap-list">
+      <thead><tr>
+        <th>Kenteken</th><th>Klant</th><th>Telefoon</th><th>Op de auto</th>
+        <th><%= show === 'wisselen' ? 'Klaar in opslag' : 'In opslag' %></th>
+        <% if (show === 'wisselen') { %><th class="act-col">Gebeld</th><% } else { %><th>Waarom</th><% } %>
+      </tr></thead>
+      <tbody>
+      <% for (const i of rows) { const set = i.match || i.stored[0]; %>
+        <tr data-href="<%= i.customer_id ? '/klant/' + i.customer_id + '#banden' : '/bandenhotel/' + set.id %>" class="<%= i.match && i.match.uitgenodigd_at ? 'is-called' : '' %>">
+          <td><% if (i.kenteken) { %><%- include('/partials/plate', { kenteken: i.kenteken }) %><% } else { %><span class="muted small">geen kenteken</span><% } %></td>
+          <td><% if (i.customer_id) { %><a href="/klant/<%= i.customer_id %>#banden"><%= i.naam || 'klant' %></a><% } else { %><%= i.naam %><% } %><% if (i.auto) { %><br><span class="muted small"><%= i.auto %></span><% } %></td>
+          <td class="nowrap"><% if (i.telefoon) { %><a href="tel:<%= i.telefoon.replace(/[^\d+]/g, '') %>"><%= i.telefoon %></a><% } %></td>
+          <td>
+            <% if (i.onCar) { %>
+              <span class="season season-<%= i.carClass || 'mix' %>"><%= i.onCar.seizoen || 'Onbekend' %></span>
+              <% if (i.onCar.profiel_voor !== null || i.onCar.profiel_achter !== null) { %> <%- include('/partials/tread', { t: i.onCar }) %><% } %>
+            <% } else { %><span class="muted small" title="Niet vastgelegd">waarschijnlijk <%= show === 'wisselen' ? L(other).toLowerCase() : '?' %></span><% } %>
+          </td>
+          <td>
+            <a class="stored-set" href="/bandenhotel/<%= set.id %>">
+              <span><span class="season season-<%= seasonClass(set.seizoen) || 'mix' %>"><%= set.seizoen || 'Onbekend' %></span> <%= set.maat %></span>
+              <small><%= set.locatie || 'locatie onbekend' %><%= set.label && set.label.length <= 12 ? ' · ' + set.label : '' %>
+                <% if (set.profiel_voor !== null || set.profiel_achter !== null) { %> · <%- include('/partials/tread', { t: set }) %><% } %>
+                <% if (i.matchTread !== null && i.matchTread !== undefined && i.matchTread < (target === 'winter' ? 4 : 3)) { %> <span class="warn-mark" title="Weinig profiel: misschien nieuwe banden nodig">!</span><% } %></small>
+            </a>
+          </td>
+          <% if (show === 'wisselen') { %>
+          <td class="act-col">
+            <form method="post" action="/bandenhotel/<%= i.match.id %>/gebeld" class="inline call-form">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn btn-small <%= i.match.uitgenodigd_at ? 'btn-ok' : '' %>" type="submit" title="<%= i.match.uitgenodigd_at ? 'Gebeld op ' + fmtDate(i.match.uitgenodigd_at) + ' (klik om te wissen)' : 'Markeer als gebeld / uitgenodigd' %>"><%= i.match.uitgenodigd_at ? '✓ ' + fmtDate(i.match.uitgenodigd_at) : 'Gebeld' %></button>
+            </form>
+            <form method="post" action="/bandenhotel/<%= i.match.id %>/wissel" class="inline">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn btn-small btn-primary" type="submit" title="Klant is er: deze set op de auto, de andere de opslag in">Wisselen</button>
+            </form>
+          </td>
+          <% } else { %><td class="why"><%= i.reden %></td><% } %>
+        </tr>
+      <% } %>
+      </tbody>
+    </table>
+    </div>
+  <% } %>
+  </div>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

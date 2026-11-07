@@ -22,7 +22,7 @@ module.exports = function register(app, { flash, wrap }) {
   app.get('/bandenhotel', (req, res) => {
     const soort = inv.TYRE_SOORTEN[req.query.soort] ? req.query.soort : 'klant';
     const q = String(req.query.q || '').trim();
-    const status = ['opgeslagen', 'uitgegeven', 'alle'].includes(req.query.status) ? req.query.status : 'opgeslagen';
+    const status = ['opgeslagen', 'op_auto', 'uitgegeven', 'alle'].includes(req.query.status) ? req.query.status : 'opgeslagen';
     const seizoen = String(req.query.seizoen || '');
     const locatie = String(req.query.locatie || '');
     res.render('tyres', {
@@ -59,9 +59,20 @@ module.exports = function register(app, { flash, wrap }) {
       if (prev) {
         for (const k of ['soort', 'kenteken', 'plate_key', 'klant_naam', 'telefoon', 'auto', 'maat', 'locatie']) d[k] = (k !== 'soort' && d[k]) || prev[k];
         d.seizoen = /winter/i.test(prev.seizoen) ? 'Zomer' : /zomer/i.test(prev.seizoen) ? 'Winter' : '';
+        d.soort = prev.soort;
       }
     }
     renderTyre(res, { tyre: null, data: d });
+  });
+
+  // Wissellijst: wie moet komen wisselen (er ligt een set van het komende seizoen in opslag)?
+  app.get('/bandenhotel/wissellijst', (req, res) => {
+    const target = ['winter', 'zomer'].includes(req.query.naar) ? req.query.naar : inv.swapTarget();
+    const list = inv.swapList(target);
+    res.render('swaplist', {
+      title: 'Wissellijst', list, target, auto: inv.swapTarget(), SEASON_LABEL: inv.SEASON_LABEL,
+      show: ['wisselen', 'klaar', 'controleren'].includes(req.query.toon) ? req.query.toon : 'wisselen',
+    });
   });
 
   // Klantgegevens bij een kenteken (formulier vult lege velden aan).
@@ -108,10 +119,35 @@ module.exports = function register(app, { flash, wrap }) {
     res.redirect(`/bandenhotel/${tyre.id}`);
   });
 
+  // Wisselen: deze set gaat op de auto; de set die eraf komt gaat de opslag in (op dezelfde plek).
+  app.post('/bandenhotel/:id/wissel', (req, res) => {
+    const tyre = inv.getTyre(req.params.id);
+    if (!tyre) return notFound(res, 'Deze bandenset');
+    const r = inv.swapOnto(tyre.id, req.user.id);
+    if (r.error) { flash(req, 'err', r.error); return res.redirect(`/bandenhotel/${tyre.id}`); }
+    announce(req, 'bandenhotel', { id: tyre.id });
+    const on = (tyre.seizoen || 'de').toLowerCase();
+    if (r.off) {
+      const offSz = (r.off.seizoen || '').toLowerCase();
+      flash(req, 'ok', `Gewisseld: ${on === 'de' ? 'de set' : on + 'banden'} op de auto, de ${/^(zomer|winter)$/.test(offSz) ? offSz + 'set' : 'andere set'} ligt nu in ${r.off.locatie || 'de opslag'}. Werk het profiel bij als dat nodig is.`);
+      return res.redirect(`/bandenhotel/${r.off.id}`);
+    }
+    flash(req, 'ok', `De ${/^(zomer|winter)$/.test(on) ? on + 'set' : 'set'} staat nu op de auto. Vul hieronder de banden in die eraf kwamen (die gaan de opslag in).`);
+    res.redirect(`/bandenhotel/nieuw?van=${tyre.id}`);
+  });
+  // Gebeld/uitgenodigd om te komen wisselen (aan/uit).
+  app.post('/bandenhotel/:id/gebeld', (req, res) => {
+    const at = inv.toggleInvited(req.params.id, req.user.id);
+    announce(req, 'bandenhotel', { id: Number(req.params.id) });
+    if (wantsJson(req)) return res.json({ ok: true, uitgenodigd_at: at });
+    const back = req.get('referer') && /\/bandenhotel/.test(req.get('referer')) ? req.get('referer') : `/bandenhotel/${req.params.id}`;
+    res.redirect(back);
+  });
+
   app.post('/bandenhotel/:id/status', (req, res) => {
     const tyre = inv.getTyre(req.params.id);
     if (!tyre) return notFound(res, 'Deze bandenset');
-    const status = req.body.status === 'uitgegeven' ? 'uitgegeven' : 'opgeslagen';
+    const status = ['uitgegeven', 'op_auto', 'opgeslagen'].includes(req.body.status) ? req.body.status : 'opgeslagen';
     inv.setTyreStatus(tyre.id, status, req.user.id);
     announce(req, 'bandenhotel', { id: tyre.id });
     if (status === 'uitgegeven' && req.body.wisselen === '1') {
@@ -120,7 +156,7 @@ module.exports = function register(app, { flash, wrap }) {
     }
     flash(req, 'ok', status === 'uitgegeven'
       ? (tyre.soort === 'opslag' ? 'De banden zijn als uitgegeven gemarkeerd (gebruikt of meegegeven).' : 'De banden zijn als uitgegeven gemarkeerd (meegegeven aan de klant).')
-      : 'De banden staan weer in de opslag.');
+      : status === 'op_auto' ? 'De banden staan nu als "op de auto".' : 'De banden staan weer in de opslag.');
     res.redirect(`/bandenhotel/${tyre.id}`);
   });
 

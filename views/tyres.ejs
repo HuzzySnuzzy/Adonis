@@ -11,7 +11,12 @@
       <button class="btn" type="submit">Zoeken</button>
       <% if (q) { %><a class="btn btn-ghost" href="/bandenhotel">Wissen</a><% } %>
     </form>
-    <a class="btn btn-primary" href="/bandenhotel/nieuw<%= soort === 'opslag' ? '?soort=opslag' : '' %>">+ Banden inslaan</a>
+    <div class="head-buttons">
+      <% if (soort === 'klant') { %><a class="btn" href="/bandenhotel/wissellijst">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M7 7h11l-3-3 1.4-1.4L22.8 9l-6.4 6.4L15 14l3-3H7zM17 17H6l3 3-1.4 1.4L1.2 15l6.4-6.4L9 10l-3 3h11z"/></svg>
+        Wissellijst</a><% } %>
+      <a class="btn btn-primary" href="/bandenhotel/nieuw<%= soort === 'opslag' ? '?soort=opslag' : '' %>">+ Banden inslaan</a>
+    </div>
   </div>
   <%
     const qs = (o) => {
@@ -34,6 +39,7 @@
   <div class="filter-bar">
     <nav class="status-tabs" aria-label="Filter op status">
       <a href="<%= qs({ status: 'opgeslagen' }) %>" class="<%= status === 'opgeslagen' ? 'active' : '' %>">In opslag<span class="count"><%= counts.opgeslagen %></span></a>
+      <% if (soort === 'klant') { %><a href="<%= qs({ status: 'op_auto' }) %>" class="<%= status === 'op_auto' ? 'active' : '' %>">Op de auto<span class="count"><%= counts.op_auto %></span></a><% } %>
       <a href="<%= qs({ status: 'uitgegeven' }) %>" class="<%= status === 'uitgegeven' ? 'active' : '' %>">Uitgegeven<span class="count"><%= counts.uitgegeven %></span></a>
       <a href="<%= qs({ status: 'alle' }) %>" class="<%= status === 'alle' ? 'active' : '' %>">Alle<span class="count"><%= counts.alle %></span></a>
     </nav>

@@ -57,3 +57,25 @@ if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
     });
   });
 })();
+// Afdrukknop
+document.addEventListener('click', (e) => { if (e.target.closest('[data-print]')) window.print(); });
+// Wissellijst: "Gebeld" aan/uit zonder de pagina te herladen (je blijft op je plek in de lijst).
+document.addEventListener('submit', async (e) => {
+  const form = e.target.closest('form.call-form');
+  if (!form || !window.fetch) return;
+  e.preventDefault();
+  const btn = form.querySelector('button');
+  try {
+    const res = await fetch(form.action, { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'X-CSRF-Token': form.querySelector('[name=_csrf]').value } });
+    if (!res.ok) throw new Error();
+    const r = await res.json();
+    const d = r.uitgenodigd_at ? r.uitgenodigd_at.split('-').reverse().map((x, i) => (i === 2 ? x.slice(2) : x)).join('-') : '';
+    btn.textContent = d ? '✓ ' + d : 'Gebeld';
+    btn.classList.toggle('btn-ok', Boolean(d));
+    form.closest('tr').classList.toggle('is-called', Boolean(d));
+  } catch { form.submit(); }
+});
+// Instellingen: "Weergave op telefoon" meteen laten zien (opslaan gebeurt met de knop).
+document.addEventListener('change', (e) => {
+  if (e.target.matches('[data-mscale-choice]')) document.documentElement.setAttribute('data-mscale', e.target.value);
+});

@@ -191,6 +191,8 @@ app.locals.fmtMm = inv.fmtMm;
 app.locals.plateInfo = plates.plateInfo;
 app.locals.PLATE_STARS = plates.STARS_SVG;
 app.locals.treadClass = inv.treadClass;
+app.locals.seasonClass = inv.seasonClass;
+app.locals.SEASONS = inv.SEASONS;
 function flash(req, type, text) {
   req.session.flash = { type, text };
 }
@@ -313,7 +315,7 @@ app.get('/klant/:id', wrap(async (req, res) => {
   const rdwData = plates.rdwApplicable(customer.kenteken) ? await rdw.forCustomer(customer) : { foreign: true, country: plates.plateInfo(customer.kenteken).country };
   res.render('customer', {
     title: customer.kenteken, customer, q, orders: rows.map(withSummary), rdwData, tyres: inv.tyresForPlate(customer.plate_key), fotos: require('./photos').firstPhotos('tyre'),
-    editing: req.query.bewerken === '1', editError: null, editValues: null,
+    editing: req.query.bewerken === '1', editError: null, editValues: null, swapTarget: inv.swapTarget(),
   });
 }));
 
@@ -335,9 +337,20 @@ app.post('/klant/:id/bewerken', wrap(async (req, res) => {
     res.status(400).render('customer', {
       title: customer.kenteken, customer, q: '', orders: rows.map(withSummary), rdwData, tyres: inv.tyresForPlate(customer.plate_key),
       fotos: require('./photos').firstPhotos('tyre'), editing: true, editError: err.message, editValues: req.body.c || {}, clashId: err.clashId || null,
+      swapTarget: inv.swapTarget(),
     });
   }
 }));
+
+// Vastleggen welke banden er nu op de auto staan (klantpagina, bandenhotel).
+app.post('/klant/:id/op-auto', (req, res) => {
+  const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+  if (!customer) return res.redirect('/');
+  inv.setOnCar(customer, req.body.op || {}, req.user.id);
+  events.broadcast({ type: 'data', area: 'bandenhotel', by: req.user.name, byId: req.user.id });
+  flash(req, 'ok', 'Vastgelegd welke banden er op de auto staan.');
+  res.redirect(`/klant/${customer.id}#banden`);
+});
 
 // RDW-gegevens opnieuw ophalen (knop op de klantpagina).
 app.post('/klant/:id/rdw', wrap(async (req, res) => {
@@ -651,7 +664,7 @@ app.post('/instellingen', (req, res) => {
   const prefs = auth.savePrefs(req.user.id, {
     // Eerst de geheime thema's (aan/uit), dan het thema: zo kan beide in één keer.
     secret: [].concat(req.body.secret || []).includes('on') ? 'on' : 'off',
-    theme: req.body.theme, ink: req.body.ink, start: req.body.start, fx: req.body.fx,
+    theme: req.body.theme, ink: req.body.ink, start: req.body.start, fx: req.body.fx, mscale: req.body.mscale,
   });
   setThemeCookie(res, prefs.theme);
   flash(req, 'ok', 'Je instellingen zijn opgeslagen.');

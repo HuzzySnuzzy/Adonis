@@ -40,6 +40,11 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   formulier voor de set die je inslaat (auto en maat staan al ingevuld, seizoen omgedraaid). Een klant uit het
   bandenhotel komt automatisch op de **Klanten**-pagina (op kenteken; bestaande klantgegevens worden niet overschreven,
   alleen lege velden aangevuld), en op de klantpagina staan zijn banden.
+  Per klant zie je ook welke banden **op de auto** staan (vastleggen op de klantpagina). **Wisselen** zet de set uit
+  de opslag op de auto en legt de set die eraf komt op dezelfde plek in de opslag. De **Wissellijst** toont wie moet
+  komen wisselen: klanten met banden van het komende seizoen in opslag die daar nog niet op rijden (van half september
+  t/m januari naar winter, anders naar zomer; ook handmatig te kiezen). Nog niet gebelde klanten en het slechtste profiel
+  op de auto staan bovenaan; met **Gebeld** houd je bij wie al is uitgenodigd. Afdrukken kan ook.
   Daarnaast is er **Overige opslag (noodbanden)** voor banden die niet bij één vaste klant horen; zoek je in de voorraad op
   een maat, dan zie je ook hoeveel sets van die maat daar liggen.
 - **Voorraad:** onderdelen en banden die op de zaak liggen, met aantal (knoppen − en +), merk, artikelnummer,
@@ -59,7 +64,7 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   de RDW niet geraadpleegd.
 - **Excel importeren met Claude als meekijker** (alleen beheerders): zet bestaande lijsten (.xlsx of .csv) over naar
   het bandenhotel, de overige opslag of de voorraad. Zie [Excel-import](#excel-import).
-- **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker / OLED* (puur zwart; panelen zweven met een zachte gloed eronder) en, met de voorkeur **Geheime thema's**, ook *Neon / Black Ice* (Neon: dezelfde stijl als het 2049-thema van DiscordLinked; **Black Ice** (ICE·XVIII): zwart, superionisch ijs – een kristalrooster als vloer, ionensporen die erdoorheen schieten, de gloeiende kern onderin, rijp in de hoeken en een glinstering onder de muis; beide met eigen opstartreeks). Elk thema heeft een korte opstartanimatie (eenmaal per tabblad, overslaan met een klik); *Effecten: Rustig* zet die en andere bewegingen uit, handschrift of gewone letters
+- **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker / OLED* (puur zwart; panelen zweven met een zachte gloed eronder) en, met de voorkeur **Geheime thema's**, ook *Neon / Black Ice* (Neon: dezelfde stijl als het 2049-thema van DiscordLinked; **Black Ice** (ICE·XVIII): zwart, superionisch ijs – een kristalrooster als vloer, ionensporen die erdoorheen schieten, de gloeiende kern onderin, rijp in de hoeken en een glinstering onder de muis; beide met eigen opstartreeks). Elk thema heeft een korte opstartanimatie (eenmaal per tabblad, overslaan met een klik); *Effecten: Rustig* zet die en andere bewegingen uit, **weergave op telefoon** (Groot 100% / Normaal 90% / Compact 80% / Klein 70% / Heel klein 60%, alleen op kleine schermen), handschrift of gewone letters
   in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
   apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.
 

@@ -975,3 +975,48 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 @keyframes app-boot-land { from { opacity: 0; transform: translateY(28px) scale(.985); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 @media (prefers-reduced-motion: reduce) { .app-boot { display: none; } }
 @media print { .app-boot { display: none !important; } }
+
+/* ---------- Banden op de auto / wissellijst ---------- */
+.status-car::before { background: var(--primary); }
+.car-pill { font-size: .75rem; padding: .1rem .5rem; border-radius: 999px; background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--text); border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); white-space: nowrap; }
+.called-pill { font-size: .7rem; padding: 0 .35rem; border-radius: 4px; background: var(--ok-bg); color: var(--ok-text); }
+.head-buttons { display: flex; gap: .5rem; flex-wrap: wrap; }
+.tyre-card .rdw-links { display: flex; gap: 1rem; }
+.oncar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .6rem 0 .8rem; border-bottom: 1px solid var(--border-soft); margin-bottom: .6rem; }
+.oncar-label { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+.oncar-set { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--text); }
+.oncar-edit { flex: 1 1 100%; }
+.oncar-edit > summary { display: inline; cursor: pointer; font-size: .9rem; color: var(--link); list-style: none; }
+.oncar-edit > summary::-webkit-details-marker { display: none; }
+.oncar-edit[open] > summary { margin-bottom: .6rem; display: inline-block; }
+.oncar-form { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.oncar-form select { display: block; width: 100%; margin-top: .3rem; padding: .5rem .6rem; font: inherit; color: var(--text); background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; }
+.oncar-form .btn { align-self: end; margin-bottom: 2px; }
+.swap-hint { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; padding: .6rem .8rem; margin-bottom: .8rem; border-radius: 8px; background: var(--warn-bg); color: var(--warn-text); border: 1px solid var(--warn-border); }
+.tyre-history { margin-top: .6rem; }
+.tyre-history > summary { cursor: pointer; }
+.swap-target { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin: -.3rem 0 1rem; }
+.swap-target .status-tabs { margin: 0; }
+.swap-list td.why { color: var(--muted); font-size: .85rem; max-width: 30ch; }
+.swap-list .stored-set { display: flex; flex-direction: column; gap: .15rem; }
+.swap-list .stored-set small { color: var(--muted); }
+.swap-list .call-form button { white-space: nowrap; }
+.swap-list tr.is-called td { opacity: .75; }
+.warn-mark { color: var(--danger); font-weight: 700; }
+@media print {
+  .swap-list .call-form, .swap-list .act-col, .swap-target, .head-buttons { display: none !important; }
+}
+.swap-list .act-col { white-space: nowrap; } .swap-list .act-col form + form { margin-left: .3rem; }
+
+/* ---------- Weergave op telefoon (Instellingen): alles kleiner op kleine schermen ---------- */
+@media (max-width: 900px) {
+  :root[data-mscale="90"] { zoom: .9; }
+  :root[data-mscale="80"] { zoom: .8; }
+  :root[data-mscale="70"] { zoom: .7; }
+  :root[data-mscale="60"] { zoom: .6; }
+}
+@media print { :root[data-mscale] { zoom: 1 !important; } }
+.mscale-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.mscale-sample { display: flex; align-items: flex-end; justify-content: center; height: 44px; font-weight: 700; line-height: 1; color: var(--text); }
+.mscale-100 { font-size: 34px; } .mscale-90 { font-size: 30px; } .mscale-80 { font-size: 26px; } .mscale-70 { font-size: 22px; } .mscale-60 { font-size: 18px; }
+@media (max-width: 760px) { .mscale-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .mscale-grid .choice-help { display: block; } }

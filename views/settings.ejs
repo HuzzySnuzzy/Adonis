@@ -90,6 +90,20 @@
     </section>
 
     <section class="card">
+      <h2>Weergave op telefoon</h2>
+      <p class="muted small">Hoe groot ADONIS op een telefoon of kleine tablet wordt getoond. Kleiner = meer op het scherm.
+        Op een computer verandert er niets. Op je telefoon zie je het meteen.</p>
+      <div class="choice-grid mscale-grid" role="radiogroup" aria-label="Weergave op telefoon">
+        <% for (const [v, label] of [['100', 'Groot'], ['90', 'Normaal'], ['80', 'Compact'], ['70', 'Klein'], ['60', 'Heel klein']]) { %>
+        <label class="choice">
+          <input type="radio" name="mscale" value="<%= v %>" <%= (p.mscale || '90') === v ? 'checked' : '' %> data-mscale-choice>
+          <span class="choice-body"><span class="mscale-sample mscale-<%= v %>" aria-hidden="true">Aa</span><span class="choice-label"><%= label %></span><span class="choice-help"><%= v %>%</span></span>
+        </label>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>Werkopdrachtformulier</h2>
       <p class="muted small">Hoe ingevulde tekst op het formulier wordt weergegeven. Afdrukken gebeurt altijd op wit papier.</p>
       <div class="choice-grid two" role="radiogroup" aria-label="Letters in het formulier">
