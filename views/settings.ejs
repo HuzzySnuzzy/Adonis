@@ -5,6 +5,7 @@
     { value: 'system', label: 'Systeem', help: 'Volgt de instelling van je apparaat' },
     { value: 'light', label: 'Licht', help: 'Altijd licht' },
     { value: 'dark', label: 'Donker', help: 'Altijd donker, prettig in een donkere werkplaats' },
+    { value: 'neon', label: 'Neon', help: 'Futuristisch: neon, hologrammen en animaties' },
   ];
   const STARTS = [
     { value: '/', label: 'Klanten' },
@@ -23,7 +24,7 @@
 
     <section class="card">
       <h2>Thema</h2>
-      <div class="choice-grid three" role="radiogroup" aria-label="Thema">
+      <div class="choice-grid four" role="radiogroup" aria-label="Thema">
         <% for (const t of THEMES) { %>
         <label class="choice">
           <input type="radio" name="theme" value="<%= t.value %>" <%= p.theme === t.value ? 'checked' : '' %>>

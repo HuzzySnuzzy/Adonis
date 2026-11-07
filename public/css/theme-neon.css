@@ -1,0 +1,291 @@
+/* =====================================================================
+   ADONIS – thema "Neon"
+   Futuristische interface: donkere nevel, oranje/cyaan neon, HUD-hoeken,
+   scanlijnen en glitch-animaties. Alleen geladen bij thema Neon.
+   ===================================================================== */
+:root[data-theme="neon"] {
+  --neon-orange: #ff9d3d;
+  --neon-amber: #ffc46b;
+  --neon-cyan: #3de0e6;
+  --neon-magenta: #ff3d81;
+  --glow-o: 0 0 6px rgba(255,157,61,.75), 0 0 18px rgba(255,157,61,.35);
+  --glow-c: 0 0 6px rgba(61,224,230,.7), 0 0 18px rgba(61,224,230,.3);
+
+  --bg: #07090c;
+  --surface: rgba(12, 20, 26, .72);
+  --surface-2: rgba(61, 224, 230, .06);
+  --hover: rgba(255, 157, 61, .08);
+  --text: #e9f6f7;
+  --muted: #7fa3a8;
+  --border: rgba(61, 224, 230, .28);
+  --border-soft: rgba(61, 224, 230, .12);
+  --input-bg: rgba(3, 8, 11, .8);
+  --brand: #ff9d3d;
+  --accent: #3de0e6;
+  --primary: #ff9d3d;
+  --primary-hover: #ffb35f;
+  --link: #3de0e6;
+  --danger: #ff4f6d;
+  --danger-border: rgba(255, 79, 109, .5);
+  --ok-bg: rgba(61, 224, 140, .1);
+  --ok-text: #6dffb0;
+  --err-bg: rgba(255, 61, 110, .12);
+  --err-text: #ff8aa3;
+  --warn-bg: rgba(255, 157, 61, .12);
+  --warn-text: #ffc46b;
+  --warn-border: rgba(255, 157, 61, .45);
+  --code-bg: rgba(61, 224, 230, .1);
+  --shadow: 0 0 0 1px rgba(61,224,230,.15), 0 12px 40px rgba(0,0,0,.6);
+  --topbar-bg: rgba(5, 8, 11, .85);
+  --topbar-text: #9fd9dd;
+  --topbar-hover: rgba(61, 224, 230, .1);
+  --topbar-active: rgba(255, 157, 61, .14);
+  --ordernr: #ff6b5b;
+  --plate: #f2c200;
+  /* hologram-werkopdracht */
+  --paper: rgba(6, 14, 19, .92);
+  --form-grey: rgba(61, 224, 230, .07);
+  --form-grey-dark: rgba(61, 224, 230, .15);
+  --label: #7fdfe4;
+  --ink: #ffb347;
+  --red: #ff5a6e;
+  --ink-hover: rgba(255, 157, 61, .06);
+  --ink-focus: rgba(255, 157, 61, .12);
+  --placeholder: rgba(255, 179, 71, .35);
+  --box-bg: rgba(61, 224, 230, .08);
+  --box-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 2.5 14 13.5M13.5 2 2.5 14' stroke='%23ffb347' stroke-width='2.4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+  --tread-bad: rgba(255, 61, 110, .35);
+  --tread-warn: rgba(255, 157, 61, .3);
+  --desk: transparent;
+  --toolbar-bg: rgba(5, 9, 12, .82);
+  --wo-title: #e9f6f7;
+  --sheet-shadow: 0 0 0 1px rgba(61,224,230,.35), 0 0 40px rgba(61,224,230,.12), 0 20px 60px rgba(0,0,0,.7);
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+
+/* ---------- achtergrond: nevel, gloed en scanlijnen ---------- */
+[data-theme="neon"] body {
+  background:
+    radial-gradient(120% 80% at 15% 120%, rgba(255, 120, 30, .22), transparent 55%),
+    radial-gradient(90% 70% at 105% -10%, rgba(61, 224, 230, .16), transparent 60%),
+    linear-gradient(180deg, #05070a 0%, #0a0f14 55%, #120c08 100%) fixed;
+  background-color: #07090c;
+}
+[data-theme="neon"] body::before,
+[data-theme="neon"] body::after {
+  content: ""; position: fixed; pointer-events: none; z-index: 9990;
+}
+/* fijne scanlijnen + één langzaam lopende scanbalk */
+[data-theme="neon"] body::before {
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(61,224,230,.07) 48%, rgba(61,224,230,.14) 50%, rgba(61,224,230,.07) 52%, transparent 100%) 0 0 / 100% 220px no-repeat,
+    repeating-linear-gradient(180deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px);
+  animation: neon-scan 7s linear infinite;
+  mix-blend-mode: screen;
+}
+/* drijvende nevel */
+[data-theme="neon"] body::after {
+  inset: -20%;
+  z-index: -1;
+  background:
+    radial-gradient(35% 30% at 30% 70%, rgba(255,140,40,.10), transparent 70%),
+    radial-gradient(30% 25% at 75% 30%, rgba(61,224,230,.08), transparent 70%);
+  filter: blur(20px);
+  animation: neon-haze 26s ease-in-out infinite alternate;
+}
+@keyframes neon-scan { from { background-position: 0 -220px, 0 0; } to { background-position: 0 calc(100vh + 220px), 0 0; } }
+@keyframes neon-haze { from { transform: translate3d(-3%, 2%, 0) scale(1); } to { transform: translate3d(4%, -3%, 0) scale(1.08); } }
+
+/* ---------- typografie ---------- */
+[data-theme="neon"] h1, [data-theme="neon"] h2,
+[data-theme="neon"] table.list th, [data-theme="neon"] .tb-title strong,
+[data-theme="neon"] .mainnav a, [data-theme="neon"] .btn, [data-theme="neon"] label,
+[data-theme="neon"] .facts dt, [data-theme="neon"] .apk-label, [data-theme="neon"] .status-badge,
+[data-theme="neon"] .app-footer {
+  font-family: var(--mono);
+}
+[data-theme="neon"] h1 {
+  text-transform: uppercase; letter-spacing: .14em; font-weight: 600; color: #f4fbfb;
+  text-shadow: var(--glow-c);
+  animation: neon-glitch 7s steps(1) infinite;
+}
+[data-theme="neon"] h2 { text-transform: uppercase; letter-spacing: .12em; font-weight: 600; color: var(--neon-amber); text-shadow: 0 0 10px rgba(255,157,61,.35); }
+[data-theme="neon"] h1::before { content: "› "; color: var(--neon-orange); text-shadow: var(--glow-o); }
+@keyframes neon-glitch {
+  0%, 91%, 100% { text-shadow: var(--glow-c); transform: none; }
+  92% { text-shadow: -2px 0 var(--neon-magenta), 2px 0 var(--neon-cyan); transform: translateX(1px) skewX(-6deg); }
+  93% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); transform: translateX(-2px); clip-path: inset(10% 0 40% 0); }
+  94% { text-shadow: -1px 0 var(--neon-orange), 1px 0 var(--neon-cyan); transform: none; clip-path: none; }
+  95% { text-shadow: 3px 0 var(--neon-magenta), -3px 0 var(--neon-cyan); transform: translateX(2px) skewX(4deg); }
+  96% { text-shadow: var(--glow-c); transform: none; }
+}
+[data-theme="neon"] .muted { color: var(--muted); }
+[data-theme="neon"] a { text-shadow: 0 0 8px rgba(61,224,230,.25); }
+
+/* ---------- menubalk ---------- */
+[data-theme="neon"] .topbar {
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,157,61,.35);
+}
+[data-theme="neon"] .topbar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--neon-orange) 45%, #fff 50%, var(--neon-cyan) 55%, transparent 100%) 0 0 / 40% 100% no-repeat;
+  filter: drop-shadow(0 0 6px var(--neon-orange));
+  animation: neon-beam 4.5s cubic-bezier(.6,0,.4,1) infinite;
+}
+@keyframes neon-beam { from { background-position: -60% 0; } to { background-position: 160% 0; } }
+[data-theme="neon"] .mainnav a { text-transform: uppercase; font-size: .78rem; letter-spacing: .12em; }
+[data-theme="neon"] .mainnav a.active { box-shadow: inset 0 -2px 0 var(--neon-orange), 0 0 14px rgba(255,157,61,.25); color: #fff; }
+[data-theme="neon"] .logo-mark { filter: drop-shadow(0 0 6px rgba(255,157,61,.8)); animation: neon-pulse 3.2s ease-in-out infinite; }
+[data-theme="neon"] .logo-word { text-shadow: var(--glow-o); letter-spacing: .32em; }
+[data-theme="neon"] .logo-sub { color: var(--neon-cyan); opacity: .9; }
+@keyframes neon-pulse { 0%, 100% { filter: drop-shadow(0 0 4px rgba(255,157,61,.6)); } 50% { filter: drop-shadow(0 0 12px rgba(255,157,61,1)); } }
+
+/* ---------- panelen met HUD-hoeken ---------- */
+[data-theme="neon"] .card, [data-theme="neon"] .table-wrap, [data-theme="neon"] .customer-head,
+[data-theme="neon"] .rdw-card, [data-theme="neon"] .empty, [data-theme="neon"] .auth-card, [data-theme="neon"] .choice-body {
+  position: relative; border-radius: 2px; border: 1px solid var(--border);
+  background: linear-gradient(160deg, rgba(14,26,33,.78), rgba(8,13,17,.78));
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  box-shadow: inset 0 0 30px rgba(61,224,230,.05), 0 0 0 1px rgba(0,0,0,.4);
+}
+[data-theme="neon"] .card::before, [data-theme="neon"] .table-wrap::before, [data-theme="neon"] .customer-head::before,
+[data-theme="neon"] .rdw-card::before, [data-theme="neon"] .auth-card::before, [data-theme="neon"] .empty::before,
+[data-theme="neon"] .card::after, [data-theme="neon"] .table-wrap::after, [data-theme="neon"] .customer-head::after,
+[data-theme="neon"] .rdw-card::after, [data-theme="neon"] .auth-card::after, [data-theme="neon"] .empty::after {
+  content: ""; position: absolute; width: 14px; height: 14px; pointer-events: none;
+  border: 2px solid var(--neon-orange); filter: drop-shadow(0 0 4px var(--neon-orange));
+}
+[data-theme="neon"] .card::before, [data-theme="neon"] .table-wrap::before, [data-theme="neon"] .customer-head::before,
+[data-theme="neon"] .rdw-card::before, [data-theme="neon"] .auth-card::before, [data-theme="neon"] .empty::before {
+  top: 0; left: 0; border-right: 0; border-bottom: 0;
+}
+[data-theme="neon"] .card::after, [data-theme="neon"] .table-wrap::after, [data-theme="neon"] .customer-head::after,
+[data-theme="neon"] .rdw-card::after, [data-theme="neon"] .auth-card::after, [data-theme="neon"] .empty::after {
+  bottom: 0; right: 0; border-left: 0; border-top: 0;
+}
+
+/* ---------- opstartanimatie bij het laden ---------- */
+[data-theme="neon"] main > *, [data-theme="neon"] .sheet, [data-theme="neon"] .order-toolbar {
+  animation: neon-boot .7s cubic-bezier(.2,.7,.2,1) both;
+}
+[data-theme="neon"] main > *:nth-child(2) { animation-delay: .06s; }
+[data-theme="neon"] main > *:nth-child(3) { animation-delay: .12s; }
+[data-theme="neon"] main > *:nth-child(4) { animation-delay: .18s; }
+[data-theme="neon"] main > *:nth-child(5) { animation-delay: .24s; }
+[data-theme="neon"] main > *:nth-child(n+6) { animation-delay: .3s; }
+[data-theme="neon"] .sheet.back { animation-delay: .2s; }
+@keyframes neon-boot {
+  0% { opacity: 0; transform: translateY(10px) scaleY(.98); filter: brightness(2) saturate(0); }
+  35% { opacity: .9; }
+  45% { opacity: .2; }
+  60% { opacity: 1; filter: brightness(1.4); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+[data-theme="neon"] table.list tbody tr { animation: neon-row .5s ease-out both; }
+[data-theme="neon"] table.list tbody tr:nth-child(1) { animation-delay: .15s; }
+[data-theme="neon"] table.list tbody tr:nth-child(2) { animation-delay: .2s; }
+[data-theme="neon"] table.list tbody tr:nth-child(3) { animation-delay: .25s; }
+[data-theme="neon"] table.list tbody tr:nth-child(4) { animation-delay: .3s; }
+[data-theme="neon"] table.list tbody tr:nth-child(5) { animation-delay: .35s; }
+[data-theme="neon"] table.list tbody tr:nth-child(n+6) { animation-delay: .4s; }
+@keyframes neon-row { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+
+/* ---------- tabellen ---------- */
+[data-theme="neon"] table.list th { background: rgba(61,224,230,.06); color: var(--neon-cyan); font-weight: 500; letter-spacing: .14em; }
+[data-theme="neon"] table.list.clickable tbody tr { position: relative; }
+[data-theme="neon"] table.list.clickable tbody tr:hover {
+  background: linear-gradient(90deg, rgba(255,157,61,.0) 0%, rgba(255,157,61,.16) 50%, rgba(255,157,61,0) 100%) -100% 0 / 60% 100% no-repeat, rgba(255,157,61,.05);
+  animation: neon-rowscan .9s ease-out forwards;
+  box-shadow: inset 3px 0 0 var(--neon-orange);
+}
+@keyframes neon-rowscan { to { background-position: 220% 0, 0 0; } }
+[data-theme="neon"] .ordernr { color: var(--neon-orange); text-shadow: var(--glow-o); }
+
+/* ---------- knoppen ---------- */
+[data-theme="neon"] .btn {
+  border-radius: 2px; text-transform: uppercase; letter-spacing: .1em; font-size: .82rem;
+  background: rgba(61,224,230,.06); border: 1px solid rgba(61,224,230,.55); color: var(--neon-cyan);
+  transition: box-shadow .2s, background .2s, color .2s;
+}
+[data-theme="neon"] .btn:hover { background: rgba(61,224,230,.14); box-shadow: var(--glow-c); color: #fff; animation: neon-btn-glitch .35s steps(2) 1; }
+[data-theme="neon"] .btn-primary {
+  background: rgba(255,157,61,.14); border-color: var(--neon-orange); color: var(--neon-amber);
+  box-shadow: 0 0 10px rgba(255,157,61,.3), inset 0 0 12px rgba(255,157,61,.15);
+  animation: neon-breathe 3s ease-in-out infinite;
+}
+[data-theme="neon"] .btn-primary:hover { background: rgba(255,157,61,.26); color: #fff; box-shadow: var(--glow-o); animation: neon-btn-glitch .35s steps(2) 1; }
+[data-theme="neon"] .btn-danger { border-color: var(--danger-border); color: var(--danger); background: rgba(255,61,110,.06); }
+[data-theme="neon"] .btn-ok { background: rgba(61,224,140,.12); border-color: #3de08c; color: #8dffc4; }
+[data-theme="neon"] .btn-ghost { border-color: transparent; background: transparent; }
+@keyframes neon-breathe { 0%, 100% { box-shadow: 0 0 8px rgba(255,157,61,.25), inset 0 0 10px rgba(255,157,61,.1); } 50% { box-shadow: 0 0 18px rgba(255,157,61,.55), inset 0 0 16px rgba(255,157,61,.2); } }
+@keyframes neon-btn-glitch {
+  0% { clip-path: inset(0 0 55% 0); transform: translateX(-2px); }
+  50% { clip-path: inset(45% 0 0 0); transform: translateX(2px); }
+  100% { clip-path: none; transform: none; }
+}
+
+/* ---------- invoervelden ---------- */
+[data-theme="neon"] .page input:not([type=checkbox]):not([type=radio]):not(.ink),
+[data-theme="neon"] .auth-card input, [data-theme="neon"] select {
+  border-radius: 2px; border-color: rgba(61,224,230,.35); font-family: var(--mono); color: var(--neon-amber); caret-color: var(--neon-orange);
+}
+[data-theme="neon"] input:focus-visible, [data-theme="neon"] select:focus-visible, [data-theme="neon"] textarea:focus-visible {
+  outline: 1px solid var(--neon-orange); box-shadow: var(--glow-o);
+}
+
+/* ---------- labels, meldingen, voettekst ---------- */
+[data-theme="neon"] .status-badge { border-radius: 2px; text-transform: uppercase; letter-spacing: .08em; }
+[data-theme="neon"] .status-klaar { animation: neon-blink 2.4s ease-in-out infinite; }
+@keyframes neon-blink { 0%, 100% { box-shadow: 0 0 0 rgba(255,157,61,0); } 50% { box-shadow: 0 0 10px rgba(255,157,61,.6); } }
+[data-theme="neon"] .nav-count { background: var(--neon-orange); box-shadow: var(--glow-o); border-radius: 2px; }
+[data-theme="neon"] .flash { border-radius: 2px; border: 1px solid currentColor; box-shadow: 0 0 14px currentColor inset; animation: neon-boot .6s both; }
+[data-theme="neon"] .live-toast { border-radius: 2px; border-left-color: var(--neon-orange); backdrop-filter: blur(8px); animation: neon-toast .45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes neon-toast { from { opacity: 0; transform: translateX(30px) skewX(-8deg); } to { opacity: 1; transform: none; } }
+[data-theme="neon"] .app-footer { letter-spacing: .1em; color: var(--neon-cyan); opacity: .55; }
+[data-theme="neon"] .app-footer::after { content: "_"; margin-left: .2rem; color: var(--neon-orange); animation: neon-cursor 1s steps(1) infinite; }
+@keyframes neon-cursor { 50% { opacity: 0; } }
+[data-theme="neon"] .apk-box { border-radius: 2px; border: 1px solid currentColor; box-shadow: 0 0 16px currentColor inset; }
+[data-theme="neon"] .plate { box-shadow: 0 0 12px rgba(242,194,0,.35); }
+[data-theme="neon"] .choice input:checked + .choice-body { border-color: var(--neon-orange); box-shadow: var(--glow-o); }
+
+/* ---------- werkopdracht als hologram ---------- */
+[data-theme="neon"] .order-page { background: transparent; }
+[data-theme="neon"] .sheet {
+  border-radius: 0; position: relative;
+  background: linear-gradient(170deg, rgba(10,22,28,.9), rgba(5,10,14,.92));
+  clip-path: polygon(0 18px, 18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px));
+}
+[data-theme="neon"] .sheet::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(61,224,230,.06) 50%, transparent 100%) 0 0 / 100% 160px no-repeat;
+  animation: neon-sheetscan 6s linear infinite;
+}
+@keyframes neon-sheetscan { from { background-position: 0 -160px; } to { background-position: 0 calc(100% + 160px); } }
+[data-theme="neon"] .ink { text-shadow: 0 0 6px rgba(255,179,71,.55); }
+[data-theme="neon"] .red-nr { text-shadow: 0 0 8px rgba(255,90,110,.8); font-family: var(--mono); }
+[data-theme="neon"] .wo-title { font-family: var(--mono); letter-spacing: .25em; text-shadow: var(--glow-c); }
+[data-theme="neon"] .lbl { color: var(--label); }
+[data-theme="neon"] table.grid th, [data-theme="neon"] .work-head, [data-theme="neon"] .block-head { color: var(--neon-cyan); font-family: var(--mono); font-weight: 500; letter-spacing: 0; font-size: 12px; }
+[data-theme="neon"] .head-grid .title-cell, [data-theme="neon"] .work-row.foot { background: transparent; }
+[data-theme="neon"] .side-title { color: var(--neon-cyan); font-family: var(--mono); letter-spacing: .3em; }
+[data-theme="neon"] .status-bar { font-family: var(--mono); letter-spacing: .03em; }
+
+/* ---------- rustig aan: geen animaties als het apparaat daarom vraagt ---------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="neon"] *, [data-theme="neon"] *::before, [data-theme="neon"] *::after,
+  [data-theme="neon"] body::before, [data-theme="neon"] body::after {
+    animation: none !important; transition: none !important;
+  }
+}
+
+/* ---------- afdrukken: gewoon wit papier ---------- */
+@media print {
+  [data-theme="neon"] body { background: #fff !important; }
+  [data-theme="neon"] body::before, [data-theme="neon"] body::after, [data-theme="neon"] .sheet::after { display: none !important; }
+  [data-theme="neon"] .sheet { clip-path: none; background: #fff !important; animation: none !important; }
+  [data-theme="neon"] .ink, [data-theme="neon"] .red-nr, [data-theme="neon"] .wo-title, [data-theme="neon"] h1 { text-shadow: none !important; }
+  [data-theme="neon"] .wo-title, [data-theme="neon"] table.grid th, [data-theme="neon"] .work-head, [data-theme="neon"] .block-head { font-family: Arial, Helvetica, sans-serif; letter-spacing: normal; color: #2f2f2f; }
+}

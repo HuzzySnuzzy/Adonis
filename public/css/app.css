@@ -407,15 +407,17 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
 .narrow-form { max-width: 420px; }
 .settings-page .card h2 { margin-bottom: .5rem; }
 
-.choice-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.choice-grid.three, .choice-grid.four { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.choice-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 760px) {
   .usernav { flex-wrap: wrap; gap: .5rem .8rem; }
   .usernav .btn-primary { flex: 1 1 100%; }
   .usernav .uname { display: none; }
   .usernav .username svg { width: 20px; height: 20px; }
-  .choice-grid.three .choice-help { display: none; }
-  .choice-grid.three .theme-preview { height: 56px; }
-  .choice-grid.three .choice-body { padding: .5rem; }
+  .choice-grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .choice-grid.three .choice-help, .choice-grid.four .choice-help { display: none; }
+  .choice-grid.three .theme-preview, .choice-grid.four .theme-preview { height: 56px; }
+  .choice-grid.three .choice-body, .choice-grid.four .choice-body { padding: .5rem; }
 }
 
 /* ---------- voettekst: versie en updates (klein, valt niet op) ---------- */
@@ -518,3 +520,10 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
 .rdw-pop dd { margin: 0; }
 .rdw-pop .actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; align-items: center; }
 .rdw-pop .close { position: absolute; top: .4rem; right: .5rem; border: 0; background: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
+
+/* voorbeeld van het neon-thema in Instellingen */
+.theme-preview-neon { background: radial-gradient(120% 90% at 20% 110%, rgba(255,140,40,.45), transparent 60%), radial-gradient(90% 80% at 100% 0%, rgba(61,224,230,.35), transparent 60%), #07090c; }
+.theme-preview-neon .tp-bar { background: #07090c; border-bottom-color: #ff9d3d; box-shadow: 0 0 8px #ff9d3d; }
+.theme-preview-neon .tp-card { background: rgba(10,20,26,.7); border: 1px solid rgba(61,224,230,.6); box-shadow: 0 0 10px rgba(61,224,230,.35) inset; }
+.theme-preview-neon .tp-card span { background: #ff9d3d; box-shadow: 0 0 6px #ff9d3d; opacity: .85; }
+.theme-preview-neon .tp-card span:nth-child(2) { background: #3de0e6; box-shadow: 0 0 6px #3de0e6; }
