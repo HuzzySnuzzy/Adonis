@@ -17,6 +17,7 @@
   <nav class="mainnav">
     <a href="/" class="<%= path === '/' || path.startsWith('/klant') ? 'active' : '' %>">Klanten</a>
     <a href="/werkopdrachten" class="<%= path === '/werkopdrachten' ? 'active' : '' %>">Alle werkopdrachten</a>
+    <a href="/importeren" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Foto importeren</a>
     <% if (user.is_admin) { %><a href="/gebruikers" class="<%= path === '/gebruikers' ? 'active' : '' %>">Gebruikers</a><% } %>
   </nav>
   <div class="usernav">

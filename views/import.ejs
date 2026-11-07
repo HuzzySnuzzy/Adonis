@@ -1,0 +1,48 @@
+<%- include('/partials/head') %>
+<main class="page narrow import-page">
+  <h1>Werkopdracht importeren</h1>
+  <p class="muted">Maak een foto van een papieren werkopdracht. De tekst wordt automatisch uitgelezen en in het formulier gezet.
+    Daarna controleer je alles en bevestig je de import, of annuleer je hem.</p>
+
+  <% if (!configured) { %>
+    <div class="alert">
+      <strong>Foto-import is nog niet ingesteld.</strong><br>
+      Het uitlezen van handschrift gebeurt via de Claude-API van Anthropic en heeft internet en een API-sleutel nodig.
+      Vraag de beheerder om <code>anthropic-api-key=...</code> in <code>config.properties</code> in te vullen
+      (sleutel aanmaken op console.anthropic.com) en het programma opnieuw te starten.
+    </div>
+  <% } else { %>
+  <section class="card" id="importCard" data-csrf="<%= csrf %>" data-max="<%= maxImages %>">
+    <ol class="steps">
+      <li>Leg het formulier plat neer, in goed licht, en zorg dat het hele vel op de foto staat.</li>
+      <li>Voorkant en achterkant? Maak twee foto's. Maximaal <%= maxImages %> foto's.</li>
+    </ol>
+
+    <div class="capture-buttons">
+      <label class="btn btn-primary btn-big">
+        <input type="file" accept="image/*" capture="environment" id="cameraInput" hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+        Foto maken
+      </label>
+      <label class="btn btn-big">
+        <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/*" multiple id="fileInput" hidden>
+        Kies uit galerij / bestanden
+      </label>
+    </div>
+
+    <div class="thumbs" id="thumbs"></div>
+    <div class="alert" id="importError" hidden></div>
+
+    <button class="btn btn-primary btn-block btn-big" id="startImport" type="button" disabled>Uitlezen en controleren</button>
+    <div class="busy" id="busy" hidden>
+      <div class="spinner"></div>
+      <div><strong>Bezig met uitlezen…</strong><br><span class="muted small">Dit duurt meestal 20 tot 60 seconden. Laat deze pagina open.</span></div>
+    </div>
+  </section>
+  <p class="muted small">Privacy: de foto's worden voor het uitlezen naar Anthropic (Claude) gestuurd. Ze worden hier pas als
+    werkopdracht opgeslagen nadat je de import bevestigt.</p>
+  <% } %>
+</main>
+<script src="/static/js/common.js"></script>
+<script src="/static/js/import.js"></script>
+<%- include('/partials/foot') %>

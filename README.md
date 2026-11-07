@@ -14,6 +14,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   - links: onderdelen (22 regels), vloeistoffen en diversen
   - rechts: kop (monteur, datum, kenteken, km-stand, …), werkzaamheden met code/tijd, factuurnummer en uren
   - achterkant: bandenprofiel per band (kleurt geel onder 3 mm, rood onder 1,6 mm), A.p.k./afkeurpunten, aandachtspunten en notities
+- **Foto importeren:** maak met de telefoon een foto van een papieren werkopdracht (voor- en achterkant). De handgeschreven
+  tekst wordt uitgelezen en in het formulier gezet. Je controleert alles naast de foto, verbetert wat nodig is en klikt op
+  *Bevestigen en opslaan*, of *Annuleren*. Twijfelachtige waarden worden apart genoemd. Zie [Foto-import](#foto-import).
 - **Datum invoer** wordt automatisch ingevuld met de datum waarop de werkopdracht is aangemaakt.
 - **Werkopdrachtnummer** loopt automatisch op en kan zo nodig worden aangepast.
 - **Afdrukken** op A4 liggend: pagina 1 is de voorkant, pagina 2 de achterkant.
@@ -100,9 +103,25 @@ Dezelfde opdrachten werken ook los, bijv. `werkopdrachten.exe reset-password col
 | `secure-cookies` | `false` | `true` als de site via HTTPS bereikbaar is |
 | `trust-proxy` | `false` | `true` achter een reverse proxy (nginx, Caddy, Cloudflare) |
 | `timezone` | `Europe/Amsterdam` | Tijdzone voor “Datum invoer” |
+| `anthropic-api-key` | leeg | API-sleutel voor foto-import; leeg = uit |
 
+Nieuwe instellingen na een update worden automatisch onderaan `config.properties` toegevoegd.
 Alles kan ook als opdrachtregeloptie (`--port 8080`) of omgevingsvariabele (`SERVER_PORT`/`PORT`, `DATA_DIR`,
-`START_ORDER_NUMBER`, `APP_TIMEZONE`, `COOKIE_SECURE`, `TRUST_PROXY`). Volgorde: opdrachtregel > omgeving > config.properties.
+`START_ORDER_NUMBER`, `APP_TIMEZONE`, `COOKIE_SECURE`, `TRUST_PROXY`, `ANTHROPIC_API_KEY`). Volgorde: opdrachtregel > omgeving > config.properties.
+
+### Foto-import
+
+Handschrift uitlezen gebeurt met Claude (Anthropic, model `claude-opus-5-5`) en heeft daarom **internet en een API-sleutel** nodig.
+De rest van de site werkt gewoon offline.
+
+1. Maak een sleutel aan op <https://console.anthropic.com> (betaald per gebruik; een foto uitlezen kost enkele centen).
+2. Zet hem in `config.properties`: `anthropic-api-key=sk-ant-...` (Pterodactyl: de variabele *Anthropic API-sleutel*).
+3. Herstart. In het venster staat dan `Foto-import: aan`.
+
+Werkt op elke telefoon via het netwerk (http is genoeg; de camera wordt via de gewone bestandskiezer geopend).
+De foto's gaan voor het uitlezen naar Anthropic; ze worden hier alleen bewaard zolang de import nog niet is bevestigd
+of geannuleerd (en maximaal 3 dagen). Bij een (onterechte) weigering van het model probeert de API automatisch een ander
+Claude-model (`fallbacks: "default"`).
 
 ### Beveiliging
 
@@ -140,3 +159,4 @@ GitHub Actions bouwt en test de bestanden automatisch bij elke push. Een release
 - `src/main.js` – opstarten, config.properties, console-opdrachten · `src/server.js` – routes · `src/assets.js` – ingebakken bestanden
 - `scripts/build.js` – bouwt de losse executables · `src/orders.js` – werkopdracht-velden en opslag · `src/auth.js` – inloggen, CSRF-bescherming, rate limiting
 - `views/order.ejs` + `public/css/werkopdracht.css` – het formulier
+- `src/import.js` – foto-import (Claude vision + JSON-schema afgeleid van de formuliervelden), `public/js/import.js` – camera en verkleinen

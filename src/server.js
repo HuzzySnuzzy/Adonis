@@ -12,6 +12,7 @@ const SqliteStore = require('./session-store');
 const auth = require('./auth');
 const orders = require('./orders');
 const assets = require('./assets');
+const importer = require('./import');
 
 const app = express();
 // HTTPS (achter een reverse proxy): alleen dan beveiligde cookies en HSTS.
@@ -270,11 +271,11 @@ function withSummary(row) {
 }
 
 /* ---------- werkopdracht formulier ---------- */
-function renderOrder(res, { order, data, nummer, error, status }) {
+function renderOrder(res, { order, data, nummer, error, status, draft, datumInvoer }) {
   res.status(status || 200).render('order', {
-    title: order ? `Werkopdracht ${order.nummer}` : 'Nieuwe werkopdracht',
-    order, data, nummer, error,
-    datumInvoer: order ? order.datum_invoer : orders.todayISO(),
+    title: draft ? 'Import controleren' : order ? `Werkopdracht ${order.nummer}` : 'Nieuwe werkopdracht',
+    order, data, nummer, error, draft: draft || null,
+    datumInvoer: datumInvoer || (order ? order.datum_invoer : orders.todayISO()),
   });
 }
 
@@ -349,6 +350,72 @@ app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
   flash(req, 'ok', `Werkopdracht ${order.nummer} is verwijderd.`);
   const stillExists = db.prepare('SELECT 1 FROM customers WHERE id = ?').get(customerId);
   res.redirect(stillExists ? `/klant/${customerId}` : '/');
+});
+
+/* ---------- foto-import ---------- */
+app.get('/importeren', (req, res) => {
+  res.render('import', { title: 'Foto importeren', configured: importer.isConfigured(), maxImages: importer.MAX_IMAGES });
+});
+
+app.post('/importeren', express.json({ limit: '30mb' }), wrap(async (req, res) => {
+  try {
+    const id = await importer.createDraft(req.body && req.body.images, req.user.id);
+    res.json({ redirect: `/importeren/${id}` });
+  } catch (err) {
+    if (!(err instanceof importer.ImportError)) console.error(err);
+    res.status(400).json({ error: err instanceof importer.ImportError ? err.message : 'Er ging iets mis bij het importeren.' });
+  }
+}));
+
+function loadDraft(req, res) {
+  const draft = importer.getDraft(req.params.id);
+  if (!draft) {
+    res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze import bestaat niet (meer). Misschien is hij al bevestigd of geannuleerd.' });
+    return null;
+  }
+  return draft;
+}
+
+app.get('/importeren/:id', (req, res) => {
+  const draft = loadDraft(req, res);
+  if (!draft) return;
+  const r = draft.result;
+  const nr = parseNummer(r.nummer);
+  const clash = nr && db.prepare('SELECT 1 FROM orders WHERE nummer = ?').get(nr);
+  const onzeker = clash ? [`Werkopdrachtnummer ${nr} bestaat al – kies een ander nummer.`, ...r.onzeker] : r.onzeker;
+  renderOrder(res, {
+    order: null, data: r.data, nummer: nr || orders.nextOrderNumber(),
+    draft: { ...draft, onzeker }, datumInvoer: r.datum_invoer || orders.todayISO(),
+  });
+});
+
+app.get('/importeren/:id/foto/:n', (req, res) => {
+  const draft = importer.getDraft(req.params.id);
+  const img = draft && draft.images[parseInt(req.params.n, 10)];
+  if (!img) return res.status(404).end();
+  res.set({ 'Content-Type': img.media_type, 'Cache-Control': 'private, max-age=3600' }).send(Buffer.from(img.data, 'base64'));
+});
+
+app.post('/importeren/:id/bevestigen', (req, res) => {
+  const draft = loadDraft(req, res);
+  if (!draft) return;
+  const data = orders.normalizeOrderData(req.body.d);
+  const nummer = parseNummer(req.body.nummer);
+  const datumInvoer = /^\d{4}-\d{2}-\d{2}$/.test(req.body.datum_invoer || '') ? req.body.datum_invoer : orders.todayISO();
+  const error = validateOrder(data, nummer, null);
+  if (error) {
+    return renderOrder(res, { order: null, data, nummer: req.body.nummer, error, status: 400, draft, datumInvoer });
+  }
+  const id = orders.saveOrder({ nummer, data, userId: req.user.id, datumInvoer });
+  importer.deleteDraft(draft.id);
+  flash(req, 'ok', `Import bevestigd: werkopdracht ${nummer} is opgeslagen.`);
+  res.redirect(`/werkopdracht/${id}`);
+});
+
+app.post('/importeren/:id/annuleren', (req, res) => {
+  importer.deleteDraft(req.params.id);
+  flash(req, 'ok', 'Import geannuleerd – er is niets opgeslagen.');
+  res.redirect('/importeren');
 });
 
 /* ---------- eigen account ---------- */

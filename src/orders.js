@@ -157,7 +157,7 @@ function refreshCustomer(customerId) {
   );
 }
 
-function saveOrder({ id, nummer, data, userId }) {
+function saveOrder({ id, nummer, data, userId, datumInvoer }) {
   const customer = getOrCreateCustomer(data.kenteken);
   const searchText = [nummer, ...flattenText(data)].join(' \n ');
   let orderId = id;
@@ -174,7 +174,7 @@ function saveOrder({ id, nummer, data, userId }) {
       const res = db.prepare(
         `INSERT INTO orders (nummer, customer_id, datum_invoer, data, search_text, created_by, updated_by)
          VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).run(nummer, customer.id, todayISO(), JSON.stringify(data), searchText, userId, userId);
+      ).run(nummer, customer.id, datumInvoer || todayISO(), JSON.stringify(data), searchText, userId, userId);
       orderId = Number(res.lastInsertRowid);
     }
     refreshCustomer(customer.id);

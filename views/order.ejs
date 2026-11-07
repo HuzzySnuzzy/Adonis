@@ -10,6 +10,42 @@
     `<label class="box"><input type="checkbox" name="d[diversen][${field}]" ${dv[field] ? 'checked' : ''}> ${label}</label>`;
 %>
 
+<% if (draft) { %>
+<div class="order-toolbar import-toolbar no-print">
+  <div class="tb-left">
+    <div class="tb-title">
+      <strong>Import controleren</strong>
+      <span class="muted small">Nog niet opgeslagen. Vergelijk met de foto, verbeter waar nodig en bevestig.</span>
+    </div>
+  </div>
+  <div class="tb-right">
+    <button class="btn btn-danger" type="submit" form="cancelImportForm">Annuleren</button>
+    <button class="btn btn-primary" type="submit" form="orderForm" id="saveBtn">Bevestigen en opslaan</button>
+  </div>
+</div>
+<form id="cancelImportForm" method="post" action="/importeren/<%= draft.id %>/annuleren" class="no-print"
+      data-confirm="Import annuleren? De uitgelezen gegevens worden weggegooid.">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+</form>
+<section class="import-review no-print">
+  <% if (draft.onzeker && draft.onzeker.length) { %>
+  <div class="import-warn">
+    <strong>Controleer deze punten extra goed:</strong>
+    <ul><% for (const o of draft.onzeker) { %><li><%= o %></li><% } %></ul>
+  </div>
+  <% } else { %>
+  <div class="import-ok">Alles leek goed leesbaar. Controleer de gegevens toch even met de foto.</div>
+  <% } %>
+  <details class="import-photos" open>
+    <summary>Foto's (<%= draft.imageCount %>) – tik om te vergroten</summary>
+    <div class="photo-strip">
+      <% for (let i = 0; i < draft.imageCount; i++) { %>
+        <a href="/importeren/<%= draft.id %>/foto/<%= i %>" target="_blank" rel="noopener"><img src="/importeren/<%= draft.id %>/foto/<%= i %>" alt="Foto <%= i + 1 %>"></a>
+      <% } %>
+    </div>
+  </details>
+</section>
+<% } else { %>
 <div class="order-toolbar no-print">
   <div class="tb-left">
     <% if (order) { %>
@@ -33,9 +69,11 @@
   </div>
 </div>
 
+<% } %>
+
 <% if (error) { %><div class="alert alert-wide no-print"><%= error %></div><% } %>
 
-<form id="orderForm" method="post" action="<%= order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off">
+<form id="orderForm" method="post" action="<%= draft ? '/importeren/' + draft.id + '/bevestigen' : order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off">
   <input type="hidden" name="_csrf" value="<%= csrf %>">
   <% if (order) { %><input type="hidden" name="versie" value="<%= order.updated_at %>"><% } %>
 
@@ -146,7 +184,7 @@
           <input class="red-nr nr-input" name="nummer" value="<%= nummer %>" inputmode="numeric" required aria-label="Werkopdrachtnummer" autocomplete="off">
         </div>
 
-        <div class="cell"><span class="lbl">Datum invoer</span><span class="ink static" title="Wordt automatisch ingevuld bij aanmaken"><%= fmtDate(datumInvoer) %></span></div>
+        <div class="cell"><span class="lbl">Datum invoer</span><% if (draft) { %><input class="ink" type="date" name="datum_invoer" value="<%= datumInvoer %>" title="Datum van de papieren werkopdracht"><% } else { %><span class="ink static" title="Wordt automatisch ingevuld bij aanmaken"><%= fmtDate(datumInvoer) %></span><% } %></div>
         <div class="cell"><span class="lbl">Naam</span><%- inp('naam', d.naam) %></div>
 
         <div class="cell"><span class="lbl">Datum gereed</span><%- inp('datum_gereed', d.datum_gereed, 'type="date"') %></div>
@@ -249,7 +287,8 @@
   </div>
 
   <div class="form-actions no-print">
-    <button class="btn btn-primary" type="submit">Opslaan</button>
+    <% if (draft) { %><button class="btn btn-danger" type="submit" form="cancelImportForm">Annuleren</button><% } %>
+    <button class="btn btn-primary" type="submit"><%= draft ? 'Bevestigen en opslaan' : 'Opslaan' %></button>
   </div>
 </form>
 

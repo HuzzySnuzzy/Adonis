@@ -59,7 +59,7 @@
       if (isNaN(qty) || qty === 0) qty = 1;
       total += price * qty;
     });
-    totalsEl.textContent = total ? 'Totaal materiaal: ' + euro.format(total) : '';
+    if (totalsEl) totalsEl.textContent = total ? 'Totaal materiaal: ' + euro.format(total) : '';
   }
 
   /* ---------- bandenprofiel kleuren ---------- */
@@ -88,11 +88,13 @@
   updateTotals();
 
   /* ---------- niet-opgeslagen wijzigingen ---------- */
-  let dirty = document.querySelector('.alert-wide') !== null; // na een fout staan wijzigingen nog niet opgeslagen
+  // Na een fout, of bij een nog niet bevestigde import, is er nog niets opgeslagen.
+  let dirty = document.querySelector('.alert-wide, .import-review') !== null;
   function markDirty() { dirty = true; toolbar.classList.add('dirty'); }
   if (dirty) toolbar.classList.add('dirty');
   window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
-  form.addEventListener('submit', () => { dirty = false; });
+  // Opslaan of annuleren (na bevestiging) mag de pagina verlaten zonder waarschuwing.
+  document.addEventListener('submit', (e) => { if (!e.defaultPrevented) dirty = false; });
 
   /* ---------- Enter springt naar volgend veld i.p.v. opslaan ---------- */
   form.addEventListener('keydown', (e) => {
@@ -111,7 +113,8 @@
     }
   });
 
-  document.getElementById('printBtn').addEventListener('click', () => {
+  const printBtn = document.getElementById('printBtn');
+  if (printBtn) printBtn.addEventListener('click', () => {
     fitAll();
     window.print();
   });

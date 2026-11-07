@@ -57,6 +57,16 @@
             "user_editable": true,
             "rules": "required|string|max:64",
             "field_type": "text"
+        },
+        {
+            "name": "Anthropic API-sleutel (foto-import)",
+            "description": "Sleutel voor het uitlezen van foto's van papieren werkopdrachten (console.anthropic.com). Leeg = foto-import uit.",
+            "env_variable": "ANTHROPIC_API_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:300",
+            "field_type": "text"
         }
     ]
 }

@@ -30,6 +30,7 @@ const DEFAULTS = [
   ['secure-cookies', 'false', 'Zet op true als de site via HTTPS wordt bereikt (bijv. achter een reverse proxy).'],
   ['trust-proxy', 'false', 'Zet op true als de site achter een reverse proxy draait (nginx, Caddy, Cloudflare...).'],
   ['timezone', 'Europe/Amsterdam', 'Tijdzone voor "Datum invoer".'],
+  ['anthropic-api-key', '', 'API-sleutel voor foto-import (handschrift uitlezen met Claude). Aanmaken op https://console.anthropic.com – leeg = foto-import uit. Vereist internet.'],
 ];
 
 const ENV_NAMES = {
@@ -40,6 +41,7 @@ const ENV_NAMES = {
   'open-browser': ['OPEN_BROWSER'],
   'secure-cookies': ['COOKIE_SECURE'],
   'trust-proxy': ['TRUST_PROXY'],
+  'anthropic-api-key': ['ANTHROPIC_API_KEY'],
   timezone: ['APP_TIMEZONE'], // bewust niet TZ: Pterodactyl/Docker zetten die vaak op UTC
 };
 
@@ -92,6 +94,18 @@ function load(argv = []) {
   } catch {
     /* geen bestand */
   }
+  // Nieuwe instellingen (na een update) onderaan een bestaand bestand toevoegen.
+  if (!created && fs.existsSync(CONFIG_FILE)) {
+    const missing = DEFAULTS.filter(([key]) => !(key in fileValues));
+    if (missing.length) {
+      try {
+        const lines = ['', ...missing.flatMap(([key, value, help]) => [`# ${help}`, `${key}=${value}`, ''])];
+        fs.appendFileSync(CONFIG_FILE, lines.join('\n'), 'utf8');
+      } catch {
+        /* niet schrijfbaar: standaardwaarden gebruiken */
+      }
+    }
+  }
   const args = parseArgs(argv);
   const cfg = {};
   for (const [key, def] of DEFAULTS) {
@@ -111,6 +125,7 @@ function load(argv = []) {
     secureCookies: bool(cfg['secure-cookies']),
     trustProxy: bool(cfg['trust-proxy']),
     timezone: cfg.timezone,
+    anthropicApiKey: cfg['anthropic-api-key'],
   };
 }
 
