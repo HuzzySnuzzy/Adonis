@@ -1,0 +1,23 @@
+<%# Knoppen voor opslaan en status, afhankelijk van status en rol. Gebruikt in de werkbalk en onderaan. %>
+<%
+  const st = order ? order.status : 'open';
+  const can = (t) => transitions.includes(t);
+  const top = locals.where === 'top';
+%>
+<% if (editable) { %>
+  <button class="btn<%= st === 'open' ? '' : ' btn-primary' %>" type="submit" form="orderForm"<%- top ? ' id="saveBtn"' : '' %>>Opslaan</button>
+  <% if (st === 'open' && can('klaar')) { %>
+    <button class="btn btn-primary" type="submit" form="orderForm" name="next_status" value="klaar"
+            title="Opslaan en doorsturen naar facturatie">Klaar → naar facturatie</button>
+  <% } %>
+  <% if (st === 'klaar' && can('gefactureerd')) { %>
+    <button class="btn btn-ok" type="submit" form="orderForm" name="next_status" value="gefactureerd"
+            title="Opslaan en afronden; het factuurnummer moet ingevuld zijn">Afronden (gefactureerd)</button>
+  <% } %>
+<% } %>
+<% if (order && st === 'klaar' && can('open')) { %>
+  <button class="btn" type="submit" form="statusOpen"><%= user.can_invoice ? 'Terugsturen naar monteur' : 'Terughalen naar Open' %></button>
+<% } %>
+<% if (order && st === 'gefactureerd' && can('klaar')) { %>
+  <button class="btn" type="submit" form="statusReopen">Heropenen</button>
+<% } %>

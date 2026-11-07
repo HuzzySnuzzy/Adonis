@@ -17,13 +17,14 @@
   <link rel="stylesheet" href="/static/css/app.css">
   <% if (typeof extraCss !== 'undefined') { %><link rel="stylesheet" href="/static/css/<%= extraCss %>"><% } %>
 </head>
-<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>"<% } %>>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>"<%- user.can_invoice ? ' data-can-invoice="1"' : '' %><% } %>>
 <% if (locals.user) { %>
 <header class="topbar no-print">
   <a class="brand" href="/" title="ADONIS – naar het overzicht"><%- include('/partials/logo') %></a>
   <nav class="mainnav">
     <a href="/" class="<%= path === '/' || path.startsWith('/klant') ? 'active' : '' %>">Klanten</a>
     <a href="/werkopdrachten" class="<%= path === '/werkopdrachten' ? 'active' : '' %>">Alle werkopdrachten</a>
+    <% if (user.can_invoice) { %><a href="/werkopdrachten?status=klaar" class="<%= path === '/werkopdrachten' && locals.url && locals.url.includes('status=klaar') ? 'active' : '' %>">Facturatie<span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span></a><% } %>
     <a href="/importeren" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Foto importeren</a>
     <% if (user.is_admin) { %><a href="/gebruikers" class="<%= path === '/gebruikers' ? 'active' : '' %>">Gebruikers</a><% } %>
     <% if (user.is_owner) { %><a href="/systeem" class="<%= path === '/systeem' ? 'active' : '' %>">Systeem</a><% } %>

@@ -1,8 +1,11 @@
 <%- include('/partials/head') %>
 <main class="page">
   <h1>Gebruikers</h1>
-  <p class="muted">Iedereen met een account kan werkopdrachten bekijken, aanmaken en wijzigen.
-    Beheerders kunnen daarnaast gebruikers beheren en werkopdrachten verwijderen.</p>
+  <div class="role-help muted small">
+    <p><strong>Monteur</strong>: werkopdrachten maken en wijzigen, en naar facturatie sturen.</p>
+    <p><strong>Facturatie</strong>: daarnaast werkopdrachten bij facturatie wijzigen, afronden met een factuurnummer en heropenen.</p>
+    <p><strong>Beheerder</strong>: alles, plus gebruikers en rollen beheren en werkopdrachten verwijderen.</p>
+  </div>
   <% if (error) { %><div class="alert"><%= error %></div><% } %>
   <div class="table-wrap">
   <table class="list">
@@ -15,11 +18,13 @@
         <td>
           <% if (u.is_owner) { %>
             <span class="role-owner" title="Eerste account: kan niet worden verwijderd of gedegradeerd">ADONIS-beheerder</span><%= u.id === user.id ? ' (jij)' : '' %>
-          <% } else if (u.id === user.id) { %><%= u.is_admin ? 'Beheerder' : 'Monteur' %> (jij)<% } else { %>
-          <form method="post" action="/gebruikers/<%= u.id %>/beheerder" class="inline">
+          <% } else if (u.id === user.id) { %><%= ROLES[u.role] || 'Monteur' %> (jij)<% } else { %>
+          <form method="post" action="/gebruikers/<%= u.id %>/rol" class="inline role-form">
             <input type="hidden" name="_csrf" value="<%= csrf %>">
-            <%= u.is_admin ? 'Beheerder' : 'Monteur' %>
-            <button class="linkbtn" type="submit"><%= u.is_admin ? '(maak monteur)' : '(maak beheerder)' %></button>
+            <select name="role" aria-label="Rol van <%= u.name %>" data-autosubmit>
+              <% for (const [k, label] of Object.entries(ROLES)) { %><option value="<%= k %>" <%= u.role === k ? 'selected' : '' %>><%= label %></option><% } %>
+            </select>
+            <noscript><button class="btn btn-small" type="submit">Opslaan</button></noscript>
           </form>
           <% } %>
         </td>
@@ -53,7 +58,11 @@
       <label>Naam <input name="name" placeholder="bv. Collin" required></label>
       <label>Gebruikersnaam <input name="username" autocapitalize="none" required></label>
       <label>Wachtwoord <input type="password" name="password" minlength="8" autocomplete="new-password" required></label>
-      <label class="check"><input type="checkbox" name="is_admin"> Beheerder</label>
+      <label>Rol
+        <select name="role">
+          <% for (const [k, label] of Object.entries(ROLES)) { %><option value="<%= k %>"><%= label %></option><% } %>
+        </select>
+      </label>
       <button class="btn btn-primary" type="submit">Gebruiker toevoegen</button>
     </form>
   </section>

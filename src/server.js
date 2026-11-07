@@ -236,11 +236,17 @@ app.post('/logout', (req, res) => {
 /* ---------- alles hieronder vereist inloggen ---------- */
 app.use(auth.requireLogin);
 
+// Teller "Facturatie" in het menu voor wie mag factureren.
+app.use((req, res, next) => {
+  if (req.user && req.user.can_invoice) res.locals.invoiceCount = orders.statusCounts().klaar;
+  next();
+});
+
 /* Live bijwerken: open verbinding per scherm */
 app.get('/events', (req, res) => events.subscribe(req, res));
 function announce(req, action, order) {
   events.broadcast({
-    type: 'order', action, id: order.id, nummer: order.nummer, kenteken: order.kenteken || '',
+    type: 'order', action, id: order.id, nummer: order.nummer, kenteken: order.kenteken || '', status: order.status || null,
     customerId: order.customerId || null, by: req.user.name, byId: req.user.id,
   });
 }
@@ -283,12 +289,25 @@ app.get('/klant/:id', (req, res) => {
 /* Alle werkopdrachten doorzoeken */
 app.get('/werkopdrachten', (req, res) => {
   const q = String(req.query.q || '').trim();
-  const sql = `SELECT o.*, c.kenteken AS c_kenteken FROM orders o JOIN customers c ON c.id = o.customer_id`;
-  const rows = q
-    ? db.prepare(`${sql} WHERE o.search_text LIKE ? ESCAPE '\\' OR c.plate_key LIKE ? ESCAPE '\\'
-                  ORDER BY o.nummer DESC LIMIT 500`).all(likeTerm(q), likeTerm(plateKey(q) || q))
-    : db.prepare(`${sql} ORDER BY o.nummer DESC LIMIT 200`).all();
-  res.render('orders', { title: 'Werkopdrachten', q, orders: rows.map(withSummary) });
+  const status = orders.STATUSES[req.query.status] ? req.query.status : '';
+  const where = [];
+  const params = [];
+  if (q) {
+    where.push(`(o.search_text LIKE ? ESCAPE '\\' OR c.plate_key LIKE ? ESCAPE '\\')`);
+    params.push(likeTerm(q), likeTerm(plateKey(q) || q));
+  }
+  if (status) { where.push('o.status = ?'); params.push(status); }
+  // Te factureren: oudste eerst (wie het langst wacht, staat bovenaan).
+  const order = status === 'klaar' ? 'o.status_at ASC, o.nummer ASC' : 'o.nummer DESC';
+  const rows = db.prepare(
+    `SELECT o.*, c.kenteken AS c_kenteken, su.name AS status_by_name
+     FROM orders o JOIN customers c ON c.id = o.customer_id LEFT JOIN users su ON su.id = o.status_by
+     ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY ${order} LIMIT ${q || status ? 500 : 200}`
+  ).all(...params);
+  res.render('orders', {
+    title: status === 'klaar' ? 'Facturatie' : 'Werkopdrachten', q, status, counts: orders.statusCounts(),
+    STATUSES: orders.STATUSES, orders: rows.map(withSummary),
+  });
 });
 
 function withSummary(row) {
@@ -299,9 +318,14 @@ function withSummary(row) {
 
 /* ---------- werkopdracht formulier ---------- */
 function renderOrder(res, { order, data, nummer, error, status, draft, datumInvoer }) {
+  const user = res.locals.user;
   res.status(status || 200).render('order', {
     title: draft ? 'Import controleren' : order ? `Werkopdracht ${order.nummer}` : 'Nieuwe werkopdracht',
     order, data, nummer, error, draft: draft || null,
+    STATUSES: orders.STATUSES,
+    editable: draft ? true : orders.canEdit(user, order),
+    transitions: order ? orders.allowedTransitions(user, order) : ['klaar'],
+    history: order ? orders.history(order.id) : [],
     datumInvoer: draft ? (datumInvoer || '') : datumInvoer || (order ? order.datum_invoer : orders.todayISO()),
   });
 }
@@ -335,15 +359,22 @@ app.post('/werkopdracht', (req, res) => {
   const error = validateOrder(data, nummer, null);
   if (error) return renderOrder(res, { order: null, data, nummer: req.body.nummer, error, status: 400 });
   const id = orders.saveOrder({ nummer, data, userId: req.user.id });
-  announce(req, 'created', { id, nummer, kenteken: data.kenteken });
-  flash(req, 'ok', `Werkopdracht ${nummer} is opgeslagen.`);
+  orders.logAction(id, req.user, 'aangemaakt');
+  let msg = `Werkopdracht ${nummer} is opgeslagen.`;
+  if (req.body.next_status === 'klaar') {
+    orders.setStatus(id, 'klaar', req.user);
+    msg = `Werkopdracht ${nummer} is opgeslagen en naar facturatie gestuurd.`;
+  }
+  announce(req, 'created', { id, nummer, kenteken: data.kenteken, status: req.body.next_status === 'klaar' ? 'klaar' : 'open' });
+  flash(req, 'ok', msg);
   res.redirect(`/werkopdracht/${id}`);
 });
 
 function loadOrder(id) {
   return db.prepare(
-    `SELECT o.*, cu.name AS created_by_name, uu.name AS updated_by_name
+    `SELECT o.*, cu.name AS created_by_name, uu.name AS updated_by_name, su.name AS status_by_name
      FROM orders o LEFT JOIN users cu ON cu.id = o.created_by LEFT JOIN users uu ON uu.id = o.updated_by
+     LEFT JOIN users su ON su.id = o.status_by
      WHERE o.id = ?`
   ).get(id);
 }
@@ -357,9 +388,20 @@ app.get('/werkopdracht/:id', (req, res) => {
 app.post('/werkopdracht/:id', (req, res) => {
   const order = loadOrder(req.params.id);
   if (!order) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze werkopdracht bestaat niet.' });
+  if (!orders.canEdit(req.user, order)) {
+    flash(req, 'err', order.status === 'gefactureerd'
+      ? 'Deze werkopdracht is gefactureerd en kan niet meer worden gewijzigd. Facturatie of een beheerder kan hem heropenen.'
+      : 'Deze werkopdracht ligt bij facturatie. Haal hem eerst terug naar Open om hem te wijzigen.');
+    return res.redirect(`/werkopdracht/${order.id}`);
+  }
   const data = orders.normalizeOrderData(req.body.d);
   const nummer = parseNummer(req.body.nummer);
+  const next = req.body.next_status;
   let error = validateOrder(data, nummer, order.id);
+  if (!error && next && !orders.allowedTransitions(req.user, order).includes(next)) error = 'Deze statuswijziging is niet toegestaan.';
+  if (!error && next === 'gefactureerd' && !data.faktuurnr.trim()) {
+    error = 'Vul eerst het factuurnummer in (onderaan het formulier: "Berekend op faktuurnr.") en klik dan opnieuw op Afronden.';
+  }
   if (!error && req.body.versie !== order.updated_at) {
     error = `Iemand anders (${order.updated_by_name || 'onbekend'}) heeft deze werkopdracht intussen gewijzigd ` +
       `(${fmtDateTime(order.updated_at)}). Open de werkopdracht opnieuw om de laatste versie te zien – ` +
@@ -368,8 +410,32 @@ app.post('/werkopdracht/:id', (req, res) => {
   if (error) return renderOrder(res, { order, data, nummer: req.body.nummer, error, status: 400 });
   // Datum invoer is bij een bestaande werkopdracht aan te passen (bijv. een verkeerd geïmporteerde datum).
   orders.saveOrder({ id: order.id, nummer, data, userId: req.user.id, datumInvoer: orders.parseDate(req.body.datum_invoer) || null });
-  announce(req, 'updated', { id: order.id, nummer, kenteken: data.kenteken });
-  flash(req, 'ok', `Werkopdracht ${nummer} is opgeslagen.`);
+  orders.logAction(order.id, req.user, 'gewijzigd');
+  let msg = `Werkopdracht ${nummer} is opgeslagen.`;
+  if (next) {
+    orders.setStatus(order.id, next, req.user);
+    msg = next === 'klaar' ? `Werkopdracht ${nummer} is naar facturatie gestuurd.`
+      : next === 'gefactureerd' ? `Werkopdracht ${nummer} is afgerond (factuur ${data.faktuurnr}).` : msg;
+  }
+  announce(req, next ? 'status' : 'updated', { id: order.id, nummer, kenteken: data.kenteken, status: next || order.status });
+  flash(req, 'ok', msg);
+  res.redirect(`/werkopdracht/${order.id}`);
+});
+
+// Status wijzigen zonder het formulier op te slaan (terughalen, terugsturen, heropenen).
+app.post('/werkopdracht/:id/status', (req, res) => {
+  const order = loadOrder(req.params.id);
+  if (!order) return res.redirect('/');
+  const next = req.body.status;
+  if (!orders.allowedTransitions(req.user, order).includes(next) || next === 'gefactureerd') {
+    flash(req, 'err', 'Deze statuswijziging is niet toegestaan.');
+    return res.redirect(`/werkopdracht/${order.id}`);
+  }
+  orders.setStatus(order.id, next, req.user);
+  announce(req, 'status', { id: order.id, nummer: order.nummer, status: next });
+  flash(req, 'ok', next === 'open'
+    ? `Werkopdracht ${order.nummer} staat weer op Open en kan worden gewijzigd.`
+    : `Werkopdracht ${order.nummer} is heropend en staat weer bij facturatie.`);
   res.redirect(`/werkopdracht/${order.id}`);
 });
 
@@ -441,6 +507,7 @@ app.post('/importeren/:id/bevestigen', (req, res) => {
     return renderOrder(res, { order: null, data, nummer: req.body.nummer, error, status: 400, draft, datumInvoer });
   }
   const id = orders.saveOrder({ nummer, data, userId: req.user.id, datumInvoer });
+  orders.logAction(id, req.user, 'aangemaakt (foto-import)');
   announce(req, 'created', { id, nummer, kenteken: data.kenteken });
   importer.deleteDraft(draft.id);
   flash(req, 'ok', `Import bevestigd: werkopdracht ${nummer} is opgeslagen.`);
@@ -602,14 +669,14 @@ app.post('/systeem/cloudflare/vergeten', auth.requireOwner, (req, res) => {
 
 /* ---------- gebruikersbeheer (beheerder) ---------- */
 function renderUsers(req, res, error, status) {
-  const users = db.prepare('SELECT id, username, name, is_admin, is_owner, created_at FROM users ORDER BY is_owner DESC, name').all();
-  res.status(status || 200).render('users', { title: 'Gebruikers', users, error });
+  const users = db.prepare('SELECT id, username, name, is_admin, is_owner, role, created_at FROM users ORDER BY is_owner DESC, name').all();
+  res.status(status || 200).render('users', { title: 'Gebruikers', users, error, ROLES: auth.ROLES });
 }
 app.get('/gebruikers', auth.requireAdmin, (req, res) => renderUsers(req, res, null));
 app.post('/gebruikers', auth.requireAdmin, wrap(async (req, res) => {
   try {
     await auth.createUser({
-      username: req.body.username, name: req.body.name, password: req.body.password, isAdmin: req.body.is_admin === 'on',
+      username: req.body.username, name: req.body.name, password: req.body.password, role: req.body.role,
     });
   } catch (err) {
     return renderUsers(req, res, err.message, 400);
@@ -632,12 +699,16 @@ app.post('/gebruikers/:id/wachtwoord', auth.requireAdmin, wrap(async (req, res) 
   flash(req, 'ok', `Wachtwoord van ${target.username} is gewijzigd.`);
   res.redirect('/gebruikers');
 }));
-app.post('/gebruikers/:id/beheerder', auth.requireAdmin, (req, res) => {
+app.post('/gebruikers/:id/rol', auth.requireAdmin, (req, res) => {
   const target = auth.findUserById(req.params.id);
-  if (target && target.id !== req.user.id && !target.is_owner) {
-    db.prepare('UPDATE users SET is_admin = ? WHERE id = ?').run(target.is_admin ? 0 : 1, target.id);
-    flash(req, 'ok', `${target.username} is ${target.is_admin ? 'geen' : 'nu'} beheerder.`);
+  if (!target || target.is_owner) return res.redirect('/gebruikers');
+  if (target.id === req.user.id) {
+    flash(req, 'err', 'Je kunt je eigen rol niet wijzigen; vraag een andere beheerder.');
+    return res.redirect('/gebruikers');
   }
+  if (!auth.ROLES[req.body.role]) return res.redirect('/gebruikers');
+  auth.setRole(target.id, req.body.role);
+  flash(req, 'ok', `${target.name} is nu ${auth.ROLES[req.body.role]}.`);
   res.redirect('/gebruikers');
 });
 app.post('/gebruikers/:id/verwijderen', auth.requireAdmin, (req, res) => {

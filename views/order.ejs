@@ -54,7 +54,8 @@
       <a class="btn btn-ghost" href="/">← Terug</a>
     <% } %>
     <div class="tb-title">
-      <strong><%= order ? 'Werkopdracht ' + order.nummer : 'Nieuwe werkopdracht' %></strong>
+      <strong><%= order ? 'Werkopdracht ' + order.nummer : 'Nieuwe werkopdracht' %>
+        <% if (order) { %><span class="status-badge status-<%= order.status %>"><%= STATUSES[order.status] %></span><% } %></strong>
       <% if (order) { %>
         <span class="muted small">Aangemaakt door <%= order.created_by_name || 'onbekend' %> op <%= fmtDateTime(order.created_at) %>
         <% if (order.updated_at !== order.created_at) { %> · gewijzigd door <%= order.updated_by_name || 'onbekend' %> op <%= fmtDateTime(order.updated_at) %><% } %></span>
@@ -65,9 +66,34 @@
     <span class="totals muted small" id="totals" title="Som van aantal × prijs p.eenh. van onderdelen, vloeistoffen en diversen"></span>
     <a class="btn btn-ghost" href="#achterkant">Achterkant ↓</a>
     <button class="btn" type="button" id="printBtn">Afdrukken</button>
-    <button class="btn btn-primary" type="submit" form="orderForm" id="saveBtn">Opslaan</button>
+    <%- include('/partials/order-actions', { where: 'top' }) %>
   </div>
 </div>
+<% if (order) { %>
+  <form id="statusOpen" method="post" action="/werkopdracht/<%= order.id %>/status" hidden
+        <% if (user.can_invoice) { %>data-confirm="Werkopdracht terugsturen naar de monteur (status Open)?"<% } %>>
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="open">
+  </form>
+  <form id="statusReopen" method="post" action="/werkopdracht/<%= order.id %>/status" hidden
+        data-confirm="Gefactureerde werkopdracht heropenen? Hij komt weer bij facturatie te staan.">
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="klaar">
+  </form>
+  <% if (order.status === 'klaar') { %>
+    <div class="status-bar status-bar-klaar no-print">
+      <strong>Klaar voor facturatie</strong> · door <%= order.status_by_name || 'onbekend' %> op <%= fmtDateTime(order.status_at) %>.
+      <% if (user.can_invoice) { %>
+        Controleer de werkopdracht, vul het factuurnummer in (onderaan: <em>Berekend op faktuurnr.</em>) en klik op <strong>Afronden</strong>.
+      <% } else { %>
+        Je kunt hem nu alleen bekijken. Moet er nog iets veranderen? Klik op <strong>Terughalen naar Open</strong>.
+      <% } %>
+    </div>
+  <% } else if (order.status === 'gefactureerd') { %>
+    <div class="status-bar status-bar-gefactureerd no-print">
+      <strong>Gefactureerd</strong><%= data.faktuurnr ? ' · factuurnr. ' + data.faktuurnr : '' %> · door <%= order.status_by_name || 'onbekend' %> op <%= fmtDateTime(order.status_at) %>.
+      Deze werkopdracht is vergrendeld<%= user.can_invoice ? ' – klik op Heropenen om iets te wijzigen' : '' %>.
+    </div>
+  <% } %>
+<% } %>
 
 <% } %>
 
@@ -78,6 +104,7 @@
   <input type="hidden" name="_csrf" value="<%= csrf %>">
   <% if (order) { %><input type="hidden" name="versie" value="<%= order.updated_at %>"><% } %>
 
+  <fieldset class="order-fieldset"<%= editable ? '' : ' disabled' %>>
   <!-- ===================== VOORKANT ===================== -->
   <div class="sheet-scroll">
   <section class="sheet front" aria-label="Voorkant werkopdracht">
@@ -287,11 +314,25 @@
   </section>
   </div>
 
-  <div class="form-actions no-print">
-    <% if (draft) { %><button class="btn btn-danger" type="submit" form="cancelImportForm">Annuleren</button><% } %>
-    <button class="btn btn-primary" type="submit"><%= draft ? 'Bevestigen en opslaan' : 'Opslaan' %></button>
-  </div>
+  </fieldset>
 </form>
+  <div class="form-actions no-print">
+    <% if (draft) { %>
+      <button class="btn btn-danger" type="submit" form="cancelImportForm">Annuleren</button>
+      <button class="btn btn-primary" type="submit" form="orderForm">Bevestigen en opslaan</button>
+    <% } else { %>
+      <%- include('/partials/order-actions', { where: 'bottom' }) %>
+    <% } %>
+  </div>
+
+<% if (order && history.length) { %>
+<details class="order-history no-print">
+  <summary>Geschiedenis</summary>
+  <ul>
+    <% for (const h of history) { %><li><span class="muted"><%= fmtDateTime(h.created_at) %></span> – <%= h.user_name || 'onbekend' %>: <%= h.action %></li><% } %>
+  </ul>
+</details>
+<% } %>
 
 <% if (order && user.is_admin) { %>
 <form method="post" action="/werkopdracht/<%= order.id %>/verwijderen" class="delete-form no-print"

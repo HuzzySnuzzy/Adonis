@@ -50,11 +50,36 @@ if (!db.prepare('SELECT 1 FROM users WHERE is_owner = 1').get()) {
   if (first) db.prepare('UPDATE users SET is_owner = 1, is_admin = 1 WHERE id = ?').run(first.id);
 }
 
+/* ---------- Rollen ----------
+ * monteur:    werkopdrachten maken/wijzigen en naar facturatie sturen
+ * facturatie: daarnaast werkopdrachten afronden (factuurnummer) en heropenen
+ * beheerder:  alles, plus gebruikers beheren en werkopdrachten verwijderen
+ * De eigenaar (ADONIS-beheerder) is altijd beheerder.
+ */
+const ROLES = {
+  monteur: 'Monteur',
+  facturatie: 'Facturatie',
+  beheerder: 'Beheerder',
+};
+if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'role')) {
+  db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'monteur'");
+  db.exec("UPDATE users SET role = 'beheerder' WHERE is_admin = 1 OR is_owner = 1");
+}
+
 function findUserById(id) {
-  const row = db.prepare('SELECT id, username, name, is_admin, is_owner, preferences FROM users WHERE id = ?').get(id);
+  const row = db.prepare('SELECT id, username, name, is_admin, is_owner, role, preferences FROM users WHERE id = ?').get(id);
   if (!row) return row;
   const { preferences, ...user } = row;
+  if (user.is_owner) user.role = 'beheerder';
+  if (!ROLES[user.role]) user.role = 'monteur';
+  user.is_admin = user.role === 'beheerder' ? 1 : 0;
+  user.can_invoice = user.role === 'facturatie' || user.role === 'beheerder';
   return { ...user, prefs: parsePrefs(preferences) };
+}
+
+function setRole(userId, role) {
+  if (!ROLES[role]) throw new Error('Onbekende rol.');
+  db.prepare('UPDATE users SET role = ?, is_admin = ? WHERE id = ? AND is_owner = 0').run(role, role === 'beheerder' ? 1 : 0, userId);
 }
 
 async function verifyLogin(username, password) {
@@ -73,7 +98,7 @@ function validatePassword(password) {
   return null;
 }
 
-async function createUser({ username, name, password, isAdmin }) {
+async function createUser({ username, name, password, isAdmin, role }) {
   username = String(username || '').trim();
   name = String(name || '').trim() || username;
   if (!/^[A-Za-z0-9._-]{2,40}$/.test(username)) {
@@ -86,8 +111,10 @@ async function createUser({ username, name, password, isAdmin }) {
   }
   const hash = await bcrypt.hash(password, 12);
   const first = userCount() === 0; // het allereerste account wordt eigenaar
-  db.prepare('INSERT INTO users (username, name, password_hash, is_admin, is_owner) VALUES (?, ?, ?, ?, ?)').run(
-    username, name.slice(0, 80), hash, isAdmin || first ? 1 : 0, first ? 1 : 0
+  let r = ROLES[role] ? role : isAdmin ? 'beheerder' : 'monteur';
+  if (first) r = 'beheerder';
+  db.prepare('INSERT INTO users (username, name, password_hash, is_admin, is_owner, role) VALUES (?, ?, ?, ?, ?, ?)').run(
+    username, name.slice(0, 80), hash, r === 'beheerder' ? 1 : 0, first ? 1 : 0, r
   );
 }
 
@@ -177,7 +204,7 @@ setInterval(() => {
 }, WINDOW).unref();
 
 module.exports = {
-  PREF_OPTIONS, savePrefs,
+  PREF_OPTIONS, savePrefs, ROLES, setRole,
   userCount, findUserById, verifyLogin, createUser, setPassword, checkPassword,
   loadUser, requireLogin, requireAdmin, requireOwner, csrfProtection,
   loginBlocked, loginFailed, loginSucceeded,

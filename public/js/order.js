@@ -110,6 +110,7 @@
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
+      if (form.querySelector('fieldset:disabled')) return; // alleen-lezen
       form.requestSubmit();
     }
   });

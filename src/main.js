@@ -73,9 +73,9 @@ async function runAdminCommand(cmd, args, { askPassword }) {
   const pos = args.filter((a) => !a.startsWith('--'));
   switch (cmd) {
     case 'users': {
-      const rows = db.prepare('SELECT username, name, is_admin, is_owner FROM users ORDER BY is_owner DESC, username').all();
+      const rows = db.prepare('SELECT username, name, role, is_owner FROM users ORDER BY is_owner DESC, username').all();
       if (!rows.length) console.log('  Nog geen gebruikers.');
-      for (const u of rows) console.log(`  ${u.username.padEnd(20)} ${u.name.padEnd(24)} ${u.is_owner ? 'ADONIS-beheerder (eigenaar)' : u.is_admin ? 'beheerder' : 'monteur'}`);
+      for (const u of rows) console.log(`  ${u.username.padEnd(20)} ${u.name.padEnd(24)} ${u.is_owner ? 'ADONIS-beheerder (eigenaar)' : u.role}`);
       return true;
     }
     case 'create-user': {
@@ -102,9 +102,17 @@ async function runAdminCommand(cmd, args, { askPassword }) {
       console.log(`  Wachtwoord van "${username}" is gewijzigd.`);
       return true;
     }
-    case 'make-admin': {
-      const r = db.prepare('UPDATE users SET is_admin = 1 WHERE username = ?').run(pos[0] || '');
-      console.log(r.changes ? `  ${pos[0]} is nu beheerder.` : '  Gebruiker niet gevonden.');
+    case 'make-admin':
+    case 'set-role': {
+      const role = cmd === 'make-admin' ? 'beheerder' : pos[1];
+      if (!auth.ROLES[role]) {
+        console.log('  Gebruik: set-role <gebruiker> <monteur|facturatie|beheerder>');
+        return true;
+      }
+      const row = db.prepare('SELECT id, is_owner FROM users WHERE username = ?').get(pos[0] || '');
+      if (!row) console.log('  Gebruiker niet gevonden.');
+      else if (row.is_owner) console.log('  De ADONIS-beheerder is altijd beheerder.');
+      else { auth.setRole(row.id, role); console.log(`  ${pos[0]} is nu ${auth.ROLES[role]}.`); }
       return true;
     }
     default:
@@ -119,7 +127,7 @@ const HELP = `
     create-user <gebruiker> "<naam>" [ww] [--admin]
                                               gebruiker aanmaken
     reset-password <gebruiker> [ww]           wachtwoord opnieuw instellen
-    make-admin <gebruiker>                    gebruiker beheerder maken
+    set-role <gebruiker> <rol>                rol: monteur, facturatie of beheerder
     update                                    nu naar een nieuwe versie zoeken
     stop                                      server netjes stoppen
 `;

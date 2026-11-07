@@ -23,6 +23,10 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - Waarschuwing als iemand anders de werkopdracht tegelijk heeft gewijzigd, zodat er niets wordt overschreven.
 - Beheerders kunnen gebruikers toevoegen en verwijderen, wachtwoorden opnieuw instellen en werkopdrachten verwijderen.
 
+- **Rollen en facturatie:** een beheerder geeft iedereen een rol (*Monteur*, *Facturatie* of *Beheerder*).
+  De monteur klikt **Klaar → naar facturatie**; de werkopdracht verschijnt dan bij **Facturatie** (met teller in het
+  menu en een melding). Facturatie vult het factuurnummer in en klikt **Afronden**: de werkopdracht is dan vergrendeld.
+  Terughalen, terugsturen en heropenen kan ook; de geschiedenis laat zien wie wat wanneer deed.
 - **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker*, handschrift of gewone letters
   in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
   apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.
@@ -90,7 +94,7 @@ In het venster / de Pterodactyl-console kun je typen:
 | `users` | gebruikers tonen |
 | `create-user <gebruiker> "<naam>" <wachtwoord> [--admin]` | gebruiker aanmaken |
 | `reset-password <gebruiker> <nieuw wachtwoord>` | wachtwoord vergeten? zo stel je een nieuw in |
-| `make-admin <gebruiker>` | gebruiker beheerder maken |
+| `set-role <gebruiker> <rol>` | rol instellen: `monteur`, `facturatie` of `beheerder` |
 | `update` | nu naar een nieuwe versie zoeken (daarna herstarten) |
 | `stop` | netjes afsluiten |
 

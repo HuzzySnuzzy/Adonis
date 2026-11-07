@@ -145,6 +145,76 @@ function parseDate(value) {
   return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
+/* ---------- Status: open -> klaar (voor facturatie) -> gefactureerd ---------- */
+const STATUSES = {
+  open: 'Open',
+  klaar: 'Klaar voor facturatie',
+  gefactureerd: 'Gefactureerd',
+};
+{
+  const cols = db.prepare('PRAGMA table_info(orders)').all().map((c) => c.name);
+  if (!cols.includes('status')) db.exec("ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'open'");
+  if (!cols.includes('status_at')) db.exec('ALTER TABLE orders ADD COLUMN status_at TEXT');
+  if (!cols.includes('status_by')) db.exec('ALTER TABLE orders ADD COLUMN status_by INTEGER REFERENCES users(id) ON DELETE SET NULL');
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS orders_status ON orders(status);
+    CREATE TABLE IF NOT EXISTS order_log (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id   INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      user_name  TEXT NOT NULL DEFAULT '',
+      action     TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+}
+
+/** Wie mag de inhoud van een werkopdracht wijzigen? */
+function canEdit(user, order) {
+  const status = order ? order.status : 'open';
+  if (status === 'open') return true;
+  if (status === 'klaar') return Boolean(user.can_invoice);
+  return false; // gefactureerd: eerst heropenen
+}
+
+/** Welke statuswijzigingen mag deze gebruiker doen vanuit de huidige status? */
+function allowedTransitions(user, order) {
+  switch (order.status) {
+    case 'open': return ['klaar'];
+    case 'klaar': return user.can_invoice ? ['open', 'gefactureerd'] : ['open'];
+    case 'gefactureerd': return user.can_invoice ? ['klaar'] : [];
+    default: return [];
+  }
+}
+
+const LOG_TEXT = {
+  open: 'teruggezet naar Open', klaar: 'naar facturatie gestuurd', gefactureerd: 'gefactureerd (afgerond)',
+};
+
+function setStatus(orderId, status, user) {
+  if (!STATUSES[status]) throw new Error('Onbekende status');
+  const prev = (db.prepare('SELECT status FROM orders WHERE id = ?').get(orderId) || {}).status;
+  db.prepare("UPDATE orders SET status = ?, status_at = datetime('now'), status_by = ?, updated_at = datetime('now') WHERE id = ?")
+    .run(status, user.id, orderId);
+  logAction(orderId, user, prev === 'gefactureerd' && status === 'klaar' ? 'heropend'
+    : prev === 'klaar' && status === 'open' ? 'teruggezet naar Open (terug naar monteur)' : LOG_TEXT[status]);
+}
+
+function logAction(orderId, user, action) {
+  db.prepare('INSERT INTO order_log (order_id, user_id, user_name, action) VALUES (?, ?, ?, ?)')
+    .run(orderId, user ? user.id : null, user ? user.name : '', action);
+}
+
+function history(orderId) {
+  return db.prepare('SELECT * FROM order_log WHERE order_id = ? ORDER BY id DESC LIMIT 50').all(orderId);
+}
+
+function statusCounts() {
+  const counts = { open: 0, klaar: 0, gefactureerd: 0 };
+  for (const r of db.prepare('SELECT status, COUNT(*) AS n FROM orders GROUP BY status').all()) counts[r.status] = r.n;
+  return counts;
+}
+
 function nextOrderNumber() {
   const row = db.prepare('SELECT MAX(nummer) AS max FROM orders').get();
   const start = parseInt(process.env.START_ORDER_NUMBER || '1', 10) || 1;
@@ -231,4 +301,5 @@ module.exports = {
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS,
   emptyOrderData, normalizeOrderData, parseOrderData,
   nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate,
+  STATUSES, canEdit, allowedTransitions, setStatus, logAction, history, statusCounts,
 };

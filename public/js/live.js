@@ -82,7 +82,10 @@
         return;
       }
     }
-    if (byOther && ev.action === 'created') toast(`${label} toegevoegd door ${ev.by}`, `/werkopdracht/${ev.id}`);
+    if (byOther && ev.action === 'created' && ev.status !== 'klaar') toast(`${label} toegevoegd door ${ev.by}`, `/werkopdracht/${ev.id}`);
+    if (byOther && ev.status === 'klaar' && ev.action !== 'updated' && document.body.dataset.canInvoice) {
+      toast(`${label} is klaar voor facturatie (door ${ev.by})`, `/werkopdracht/${ev.id}`);
+    }
     refreshLists();
   }
 
