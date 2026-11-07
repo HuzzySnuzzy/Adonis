@@ -19,6 +19,30 @@
   <p class="muted">Ingelogd als <strong><%= user.username %></strong> (<%= user.name %>)<%= user.is_admin ? ' · beheerder' : '' %>.
     Deze instellingen gelden alleen voor jou, op elk apparaat waarop je inlogt.</p>
 
+  <section class="card app-download" id="app">
+    <h2>ADONIS-app voor Windows</h2>
+    <% if (inApp) { %>
+    <p class="app-in-use">✔ Je gebruikt de ADONIS-app<%= inAppVersion ? ' (versie ' + inAppVersion + ')' : '' %>. Met <b>Ctrl + ,</b> wijzig je het adres van de server.</p>
+    <p class="muted small">Op een andere pc installeren? <a href="<%= appDownload %>">Download ADONIS-app.exe</a> · <a href="/instellingen/adonis-app.json">adonis-app.json</a></p>
+  </section>
+    <% } else { %>
+    <p class="muted small">Een eigen venster voor ADONIS, met eigen icoon in de taakbalk: geen tabbladen of adresbalk, dus ADONIS
+      raakt niet meer kwijt tussen de tabbladen van de browser. Geen installatie nodig.</p>
+    <ol class="sys-steps">
+      <li>Download <strong>ADONIS-app.exe</strong> en zet hem in een eigen map (bijv. op het bureaublad of in <code>C:\ADONIS</code>).</li>
+      <li>Start hem. De eerste keer vraagt de app het adres van de server: <code><%= serverUrl %></code></li>
+      <li>Meerdere pc's tegelijk instellen? Zet het bestand <strong>adonis-app.json</strong> naast de .exe; dan vraagt de app niets.</li>
+    </ol>
+    <div class="settings-actions app-actions">
+      <a class="btn btn-primary" href="<%= appDownload %>">ADONIS-app.exe downloaden</a>
+      <a class="btn" href="/instellingen/adonis-app.json">adonis-app.json (met dit adres)</a>
+    </div>
+    <p class="muted small">In de app: <b>Ctrl + ,</b> wijzigt het adres, <b>Ctrl + R</b> herlaadt, <b>F11</b> = volledig scherm.
+      Windows kan bij de eerste keer waarschuwen dat de app onbekend is: klik op <em>Meer informatie → Toch uitvoeren</em>.</p>
+  </section>
+    <% } %>
+
+
   <form method="post" action="/instellingen" class="settings-form">
     <input type="hidden" name="_csrf" value="<%= csrf %>">
 
@@ -92,23 +116,6 @@
       <button class="btn btn-primary" type="submit">Instellingen opslaan</button>
     </div>
   </form>
-
-  <section class="card app-download">
-    <h2>ADONIS-app voor Windows</h2>
-    <p class="muted small">Een eigen venster voor ADONIS, met eigen icoon in de taakbalk: geen tabbladen of adresbalk, dus ADONIS
-      raakt niet meer kwijt tussen de tabbladen van de browser. Geen installatie nodig.</p>
-    <ol class="sys-steps">
-      <li>Download <strong>ADONIS-app.exe</strong> en zet hem in een eigen map (bijv. op het bureaublad of in <code>C:\ADONIS</code>).</li>
-      <li>Start hem. De eerste keer vraagt de app het adres van de server: <code><%= serverUrl %></code></li>
-      <li>Meerdere pc's tegelijk instellen? Zet het bestand <strong>adonis-app.json</strong> naast de .exe; dan vraagt de app niets.</li>
-    </ol>
-    <div class="settings-actions app-actions">
-      <a class="btn btn-primary" href="<%= appDownload %>">ADONIS-app.exe downloaden</a>
-      <a class="btn" href="/instellingen/adonis-app.json">adonis-app.json (met dit adres)</a>
-    </div>
-    <p class="muted small">In de app: <b>Ctrl + ,</b> wijzigt het adres, <b>Ctrl + R</b> herlaadt, <b>F11</b> = volledig scherm.
-      Windows kan bij de eerste keer waarschuwen dat de app onbekend is: klik op <em>Meer informatie → Toch uitvoeren</em>.</p>
-  </section>
 
   <section class="card">
     <h2>Wachtwoord wijzigen</h2>

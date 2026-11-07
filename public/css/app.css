@@ -537,3 +537,4 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
 
 .app-actions { justify-content: flex-start; gap: .6rem; flex-wrap: wrap; }
 .app-download .sys-steps { padding-left: 1.2rem; line-height: 1.6; }
+.app-in-use { margin: 0 0 .4rem; color: var(--ok-text); font-weight: 600; }

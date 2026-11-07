@@ -592,6 +592,9 @@ function renderSettings(res, { error = null, status = 200 } = {}) {
   res.status(status).render('settings', {
     title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS,
     serverUrl: serverOrigin(res.req),
+    // De ADONIS-app zet "ADONIS-app/<versie>" in de user-agent.
+    inApp: /ADONIS-app\//.test(res.req.get('user-agent') || ''),
+    inAppVersion: ((res.req.get('user-agent') || '').match(/ADONIS-app\/([\d.]+)/) || [])[1] || '',
     appDownload: `https://github.com/${repo}/releases/latest/download/ADONIS-app.exe`,
   });
 }

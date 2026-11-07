@@ -200,6 +200,8 @@ if (!app.requestSingleInstanceLock()) {
   app.setAppUserModelId('nl.adonis.werkopdrachten'); // eigen icoon/groep in de Windows-taakbalk
   app.whenReady().then(() => {
     config = loadConfig();
+    // Laat de server weten dat dit de ADONIS-app is (Instellingen toont dan geen downloadknop).
+    session.defaultSession.setUserAgent(`${session.defaultSession.getUserAgent()} ADONIS-app/${app.getVersion()}`);
     // Rechten (camera, meldingen…) alleen voor de eigen ADONIS-server.
     session.defaultSession.setPermissionRequestHandler((wc, permission, callback, details) => {
       callback(sameOrigin(details.requestingUrl || wc.getURL()));
