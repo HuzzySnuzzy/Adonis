@@ -115,6 +115,7 @@ app.use(
 app.use(auth.loadUser);
 app.use((req, res, next) => {
   res.locals.path = req.path;
+  res.locals.url = req.originalUrl;
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;
   next();
@@ -205,7 +206,10 @@ app.post('/login', wrap(async (req, res) => {
     if (err) return res.status(500).send('Sessiefout');
     req.session.userId = user.id;
     req.session.csrf = crypto.randomBytes(24).toString('hex');
-    res.redirect(next);
+    // Startpagina uit de persoonlijke instellingen, tenzij er naar een specifieke pagina werd gevraagd.
+    const prefs = auth.findUserById(user.id).prefs;
+    setThemeCookie(res, prefs.theme);
+    res.redirect(next === '/' ? prefs.start : next);
   });
 }));
 app.post('/logout', (req, res) => {
@@ -420,8 +424,53 @@ app.post('/importeren/:id/annuleren', (req, res) => {
   res.redirect('/importeren');
 });
 
-/* ---------- eigen account ---------- */
-app.get('/account', (req, res) => res.render('account', { title: 'Mijn account', error: null }));
+/* ---------- instellingen (persoonlijke voorkeuren + wachtwoord) ---------- */
+function setThemeCookie(res, theme) {
+  // Onthoudt het thema op dit apparaat, zodat ook de inlogpagina in het gekozen thema verschijnt.
+  res.cookie('wo_theme', theme, { maxAge: 365 * 24 * 3600 * 1000, httpOnly: true, sameSite: 'lax', secure: SECURE });
+}
+function renderSettings(res, { error = null, status = 200 } = {}) {
+  res.status(status).render('settings', { title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS });
+}
+app.get('/instellingen', (req, res) => renderSettings(res));
+app.get('/account', (req, res) => res.redirect('/instellingen'));
+
+app.post('/instellingen', (req, res) => {
+  const prefs = auth.savePrefs(req.user.id, {
+    theme: req.body.theme, ink: req.body.ink, start: req.body.start,
+  });
+  setThemeCookie(res, prefs.theme);
+  flash(req, 'ok', 'Je instellingen zijn opgeslagen.');
+  res.redirect('/instellingen');
+});
+
+// Snel wisselen via de knop in de menubalk: systeem → licht → donker → systeem.
+app.post('/instellingen/thema', (req, res) => {
+  const order = auth.PREF_OPTIONS.theme;
+  const next = order[(order.indexOf(req.user.prefs.theme) + 1) % order.length];
+  auth.savePrefs(req.user.id, { theme: next });
+  setThemeCookie(res, next);
+  res.redirect(safeNext(req.body.next));
+});
+
+app.post('/instellingen/wachtwoord', wrap(async (req, res) => {
+  const { current, password, password2 } = req.body;
+  try {
+    if (!(await auth.checkPassword(req.user.id, current))) throw new Error('Huidig wachtwoord is onjuist.');
+    if (password !== password2) throw new Error('De nieuwe wachtwoorden komen niet overeen.');
+    await auth.setPassword(req.user.id, password);
+  } catch (err) {
+    return renderSettings(res, { error: err.message, status: 400 });
+  }
+  // setPassword logt alle sessies uit; maak een nieuwe sessie voor deze gebruiker.
+  const userId = req.user.id;
+  req.session.regenerate(() => {
+    req.session.userId = userId;
+    req.session.csrf = crypto.randomBytes(24).toString('hex');
+    flash(req, 'ok', 'Je wachtwoord is gewijzigd.');
+    res.redirect('/instellingen');
+  });
+}));
 app.post('/account/wachtwoord', wrap(async (req, res) => {
   const { current, password, password2 } = req.body;
   try {

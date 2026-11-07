@@ -1,24 +1,24 @@
 /* Digitale replica van het papieren werkopdrachtformulier */
 :root {
   --row: 30px;
-  --paper: #fbfaf6;
-  --form-grey: #cbcbcb;
-  --form-grey-dark: #bdbdbd;
-  --rule: #fbfaf6;            /* witte lijnen tussen de vakken */
+  --rule: var(--paper);       /* lijnen tussen de vakken = kleur van het papier */
   --rule-w: 2px;
-  --label: #2f2f2f;
-  --ink: #1d2b8f;             /* blauwe pen */
-  --red: #c8302c;
   --hand: "Patrick Hand", "Segoe Print", "Bradley Hand", cursive;
+  --ink-size: 20px;
   --print: Arial, Helvetica, sans-serif;
 }
-.order-page { background: #e9e7e2; }
+/* Instelling "Gewone letters" */
+:root[data-ink="plain"] {
+  --hand: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --ink-size: 16px;
+}
+.order-page { background: var(--desk); }
 
 /* ---------- werkbalk ---------- */
 .order-toolbar {
   position: sticky; top: 52px; z-index: 15;
   display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between;
-  padding: .55rem 1rem; background: rgba(255,255,255,.96); border-bottom: 1px solid #d8d6d0;
+  padding: .55rem 1rem; background: var(--toolbar-bg); border-bottom: 1px solid var(--border);
   backdrop-filter: blur(4px);
 }
 .tb-left, .tb-right { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
@@ -32,14 +32,14 @@
   display: flex; gap: 22px; align-items: stretch;
   max-width: 1440px; min-width: 1120px; margin: 0 auto; padding: 22px 26px 26px;
   background: var(--paper); border-radius: 3px;
-  box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 8px 24px rgba(0,0,0,.10);
+  box-shadow: var(--sheet-shadow);
   font-family: var(--print); color: var(--label);
 }
 .panel { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
 .panel-left { flex-basis: 49%; }
 .panel-right { flex-basis: 51%; }
 
-.side-title { max-width: 1440px; margin: 1.2rem auto -.4rem; padding: 0 1rem; font-size: 1rem; color: #555; text-transform: uppercase; letter-spacing: .08em; }
+.side-title { max-width: 1440px; margin: 1.2rem auto -.4rem; padding: 0 1rem; font-size: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 
 /* rood ordernummer */
 .red-nr {
@@ -50,7 +50,7 @@
 .nr-input {
   border: 0; background: transparent; width: 6.5ch; text-align: right; padding: 0; margin-left: auto;
 }
-.nr-input:hover, .nr-input:focus { background: rgba(255,255,255,.6); outline: none; box-shadow: inset 0 -2px 0 var(--red); }
+.nr-input:hover, .nr-input:focus { background: var(--ink-focus); outline: none; box-shadow: inset 0 -2px 0 var(--red); }
 
 /* ---------- tabellen ---------- */
 table.grid {
@@ -86,19 +86,19 @@ td.rowlabel { font-size: 13.5px; padding: 0 6px; }
 .ink {
   display: block; width: 100%; height: 100%; min-width: 0; margin: 0; padding: 0 5px;
   border: 0; border-radius: 0; background: transparent; color: var(--ink);
-  font-family: var(--hand); font-size: 20px; line-height: var(--row);
+  font-family: var(--hand); font-size: var(--ink-size); line-height: var(--row);
 }
-.ink:hover { background: rgba(255,255,255,.28); }
-.ink:focus { outline: none; background: rgba(255,255,255,.55); box-shadow: inset 0 -2px 0 var(--ink); }
+.ink:hover { background: var(--ink-hover); }
+.ink:focus { outline: none; background: var(--ink-focus); box-shadow: inset 0 -2px 0 var(--ink); }
 .ink.center { text-align: center; }
 .ink.right { text-align: right; }
 .ink.upper { text-transform: uppercase; }
 .ink.visc { width: 2.6em; flex: 0 0 auto; }
-.ink::placeholder { color: rgba(29,43,143,.35); font-size: 15px; }
+.ink::placeholder { color: var(--placeholder); font-size: 15px; }
 .ink.static { padding-left: 8px; white-space: nowrap; }
 .ink[type=date] { padding-right: 0; }
 .ink[type=date]::-webkit-calendar-picker-indicator { opacity: .35; cursor: pointer; margin-left: 0; }
-.ink[type=date].is-empty::-webkit-datetime-edit { color: rgba(29,43,143,.25); }
+.ink[type=date].is-empty::-webkit-datetime-edit { color: var(--placeholder); }
 
 .labelled { display: flex; align-items: center; height: var(--row); min-width: 0; }
 .labelled .ink { flex: 1 1 auto; width: auto; }
@@ -111,11 +111,9 @@ td.rowlabel { font-size: 13.5px; padding: 0 6px; }
 .box { display: inline-flex; align-items: center; gap: .45rem; font-size: 13.5px; color: var(--label); cursor: pointer; }
 .box input {
   appearance: none; -webkit-appearance: none; width: 14px; height: 14px; margin: 0;
-  border: 1.5px solid #3c3c3c; background: #e4e4e4 center / 15px no-repeat; cursor: pointer;
+  border: 1.5px solid var(--label); background: var(--box-bg) center / 15px no-repeat; cursor: pointer;
 }
-.box input:checked {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 2.5 14 13.5M13.5 2 2.5 14' stroke='%231d2b8f' stroke-width='2.4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
-}
+.box input:checked { background-image: var(--box-check); }
 
 /* ---------- kop rechts ---------- */
 .head-grid {
@@ -129,7 +127,7 @@ td.rowlabel { font-size: 13.5px; padding: 0 6px; }
 .head-grid .cell:nth-child(odd) { border-right: var(--rule-w) solid var(--rule); }
 .head-grid .cell:nth-child(1) { height: 38px; }
 .head-grid .title-cell { height: 38px; background: var(--paper); padding: 0 4px 0 12px; }
-.wo-title { font-family: var(--print); font-weight: 700; font-size: 19px; letter-spacing: .02em; color: #2a2a2a; }
+.wo-title { font-family: var(--print); font-weight: 700; font-size: 19px; letter-spacing: .02em; color: var(--wo-title); }
 .head-grid .cell .ink { flex: 1 1 auto; width: auto; }
 
 .janee { display: inline-flex; align-items: center; gap: 1px; font-size: 13.5px; padding-right: 6px; margin-left: auto; }
@@ -165,7 +163,7 @@ textarea.lined {
     var(--rule) calc(var(--row) - var(--rule-w)), var(--rule) var(--row));
   background-attachment: local;
 }
-textarea.lined:focus { background-color: rgba(255,255,255,.35); box-shadow: none; }
+textarea.lined:focus { background-color: var(--ink-focus); box-shadow: none; }
 .w-check textarea.lined { text-align: center; padding: 0; }
 .w-code textarea.lined, .w-tijd textarea.lined { text-align: center; padding: 0 2px; }
 
@@ -183,10 +181,10 @@ textarea.lined:focus { background-color: rgba(255,255,255,.35); box-shadow: none
 .tread-legend { font-size: 12px; margin: 6px 0 0; display: flex; gap: 1rem; }
 .tread { padding-left: 14px; position: relative; }
 .tread::before { content: ""; position: absolute; left: 0; top: 2px; width: 10px; height: 10px; border-radius: 2px; }
-.tread.bad::before { background: #f2b8b5; }
-.tread.warn::before { background: #f7dc8d; }
-td.tread-bad { background: #f2b8b5; }
-td.tread-warn { background: #f7dc8d; }
+.tread.bad::before { background: var(--tread-bad); }
+.tread.warn::before { background: var(--tread-warn); }
+td.tread-bad { background: var(--tread-bad); }
+td.tread-warn { background: var(--tread-warn); }
 
 .form-actions { max-width: 1440px; margin: 0 auto; padding: 0 1rem 1rem; display: flex; justify-content: flex-end; }
 .delete-form { max-width: 1440px; margin: 0 auto 3rem; padding: 0 1rem; text-align: right; }
@@ -218,7 +216,6 @@ td.tread-warn { background: #f7dc8d; }
   .sheet.back { break-after: auto; page-break-after: auto; }
   .sheet .panel { min-width: 0; }
   .sheet, .sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  :root { --paper: #fff; --rule: #fff; }
   .ink:focus, .ink:hover { background: transparent; box-shadow: none; }
   .ink[type=date]::-webkit-calendar-picker-indicator { display: none; }
   .ink[type=date].is-empty::-webkit-datetime-edit { color: transparent; }

@@ -1,4 +1,4 @@
-# Werkopdrachten
+# ADONIS Werkopdrachten
 
 Website voor het maken, bewaren en terugzoeken van werkopdrachten voor de garage.
 Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor- en achterkant).
@@ -22,6 +22,10 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Afdrukken** op A4 liggend: pagina 1 is de voorkant, pagina 2 de achterkant.
 - Waarschuwing als iemand anders de werkopdracht tegelijk heeft gewijzigd, zodat er niets wordt overschreven.
 - Beheerders kunnen gebruikers toevoegen en verwijderen, wachtwoorden opnieuw instellen en werkopdrachten verwijderen.
+
+- **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker*, handschrift of gewone letters
+  in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
+  apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.
 
 Sneltoetsen in het formulier: `Ctrl+S` slaat op, `Enter` springt naar het volgende vak.
 

@@ -1,7 +1,7 @@
 <%- include('/partials/head') %>
 <main class="auth-card">
-  <h1>Werkopdrachten</h1>
-  <p class="muted">Log in om verder te gaan.</p>
+  <div class="auth-logo"><%- include('/partials/logo', { big: true }) %></div>
+  <p class="muted center">Log in om verder te gaan.</p>
   <% if (error) { %><div class="alert"><%= error %></div><% } %>
   <form method="post" action="/login">
     <input type="hidden" name="_csrf" value="<%= csrf %>">

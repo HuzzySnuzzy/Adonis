@@ -174,7 +174,7 @@ function startServer() {
   server.on('listening', () => {
     const local = `http://localhost:${cfg.port}`;
     console.log('');
-    console.log(`  Werkopdrachten v${VERSION}`);
+    console.log(`  ADONIS Werkopdrachten v${VERSION}`);
     console.log('  ------------------------------------------------------------');
     console.log(`  Werkopdrachten draait op ${local}`);
     if (cfg.host === '0.0.0.0' || cfg.host === '::') {
@@ -240,7 +240,7 @@ function startServer() {
 /* ------------------------------------------------------------------ */
 (async () => {
   if (command === 'help' || argv.includes('--help') || argv.includes('-h')) {
-    console.log(`\n  Werkopdrachten v${VERSION}\n\n  Start zonder opdracht om de server te starten.\n  Opties: --port <poort>  --host <adres>  --data-dir <map>\n${HELP}`);
+    console.log(`\n  ADONIS Werkopdrachten v${VERSION}\n\n  Start zonder opdracht om de server te starten.\n  Opties: --port <poort>  --host <adres>  --data-dir <map>\n${HELP}`);
     return;
   }
   if (argv.includes('--version') || argv.includes('-v')) {

@@ -11,8 +11,39 @@ function userCount() {
   return db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
 }
 
+// Persoonlijke voorkeuren (thema enz.) per gebruiker.
+if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'preferences')) {
+  db.exec("ALTER TABLE users ADD COLUMN preferences TEXT NOT NULL DEFAULT '{}'");
+}
+
+const PREF_OPTIONS = {
+  theme: ['system', 'light', 'dark'],
+  ink: ['hand', 'plain'],
+  start: ['/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw'],
+};
+const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/' };
+
+function parsePrefs(json) {
+  let raw = {};
+  try { raw = JSON.parse(json || '{}'); } catch { /* standaard */ }
+  const out = {};
+  for (const [k, opts] of Object.entries(PREF_OPTIONS)) out[k] = opts.includes(raw[k]) ? raw[k] : PREF_DEFAULTS[k];
+  return out;
+}
+
+function savePrefs(userId, changes) {
+  const row = db.prepare('SELECT preferences FROM users WHERE id = ?').get(userId);
+  const prefs = parsePrefs(row && row.preferences);
+  for (const [k, v] of Object.entries(changes)) if (PREF_OPTIONS[k] && PREF_OPTIONS[k].includes(v)) prefs[k] = v;
+  db.prepare('UPDATE users SET preferences = ? WHERE id = ?').run(JSON.stringify(prefs), userId);
+  return prefs;
+}
+
 function findUserById(id) {
-  return db.prepare('SELECT id, username, name, is_admin FROM users WHERE id = ?').get(id);
+  const row = db.prepare('SELECT id, username, name, is_admin, preferences FROM users WHERE id = ?').get(id);
+  if (!row) return row;
+  const { preferences, ...user } = row;
+  return { ...user, prefs: parsePrefs(preferences) };
 }
 
 async function verifyLogin(username, password) {
@@ -69,6 +100,9 @@ function loadUser(req, res, next) {
   if (req.session.userId && !req.user) delete req.session.userId; // user was deleted
   if (!req.session.csrf) req.session.csrf = crypto.randomBytes(24).toString('hex');
   res.locals.user = req.user;
+  // Thema: van de gebruiker, of (op de inlogpagina) van de laatst gekozen instelling op dit apparaat.
+  const cookieTheme = /(?:^|;\s*)wo_theme=(light|dark|system)/.exec(req.headers.cookie || '');
+  res.locals.prefs = req.user ? req.user.prefs : { ...PREF_DEFAULTS, theme: cookieTheme ? cookieTheme[1] : 'system' };
   res.locals.csrf = req.session.csrf;
   next();
 }
@@ -126,6 +160,7 @@ setInterval(() => {
 }, WINDOW).unref();
 
 module.exports = {
+  PREF_OPTIONS, savePrefs,
   userCount, findUserById, verifyLogin, createUser, setPassword, checkPassword,
   loadUser, requireLogin, requireAdmin, csrfProtection,
   loginBlocked, loginFailed, loginSucceeded,

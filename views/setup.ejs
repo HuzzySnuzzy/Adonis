@@ -1,6 +1,7 @@
 <%- include('/partials/head') %>
 <main class="auth-card">
-  <h1>Welkom</h1>
+  <div class="auth-logo"><%- include('/partials/logo', { big: true }) %></div>
+  <h1 class="center">Welkom bij ADONIS</h1>
   <p class="muted">Er zijn nog geen accounts. Maak het eerste account aan; dit wordt de beheerder
     die later andere monteurs kan toevoegen.</p>
   <% if (error) { %><div class="alert"><%= error %></div><% } %>

@@ -1,0 +1,93 @@
+<%- include('/partials/head') %>
+<%
+  const p = user.prefs;
+  const THEMES = [
+    { value: 'system', label: 'Systeem', help: 'Volgt de instelling van je apparaat' },
+    { value: 'light', label: 'Licht', help: 'Altijd licht' },
+    { value: 'dark', label: 'Donker', help: 'Altijd donker, prettig in een donkere werkplaats' },
+  ];
+  const STARTS = [
+    { value: '/', label: 'Klanten' },
+    { value: '/werkopdrachten', label: 'Alle werkopdrachten' },
+    { value: '/werkopdracht/nieuw', label: 'Nieuwe werkopdracht' },
+    { value: '/importeren', label: 'Foto importeren' },
+  ];
+%>
+<main class="page settings-page">
+  <h1>Instellingen</h1>
+  <p class="muted">Ingelogd als <strong><%= user.username %></strong> (<%= user.name %>)<%= user.is_admin ? ' · beheerder' : '' %>.
+    Deze instellingen gelden alleen voor jou, op elk apparaat waarop je inlogt.</p>
+
+  <form method="post" action="/instellingen" class="settings-form">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+    <section class="card">
+      <h2>Thema</h2>
+      <div class="choice-grid three" role="radiogroup" aria-label="Thema">
+        <% for (const t of THEMES) { %>
+        <label class="choice">
+          <input type="radio" name="theme" value="<%= t.value %>" <%= p.theme === t.value ? 'checked' : '' %>>
+          <span class="choice-body">
+            <span class="theme-preview theme-preview-<%= t.value %>" aria-hidden="true">
+              <span class="tp-bar"></span><span class="tp-card"><span></span><span></span><span></span></span>
+            </span>
+            <span class="choice-label"><%= t.label %></span>
+            <span class="choice-help"><%= t.help %></span>
+          </span>
+        </label>
+        <% } %>
+      </div>
+      <p class="muted small">Tip: met de knop naast “Nieuwe werkopdracht” in de menubalk wissel je snel van thema.</p>
+    </section>
+
+    <section class="card">
+      <h2>Werkopdrachtformulier</h2>
+      <p class="muted small">Hoe ingevulde tekst op het formulier wordt weergegeven. Afdrukken gebeurt altijd op wit papier.</p>
+      <div class="choice-grid two" role="radiogroup" aria-label="Letters in het formulier">
+        <label class="choice">
+          <input type="radio" name="ink" value="hand" <%= p.ink === 'hand' ? 'checked' : '' %>>
+          <span class="choice-body">
+            <span class="ink-preview ink-hand">Accu vervangen – 121665 km</span>
+            <span class="choice-label">Handschrift</span>
+            <span class="choice-help">Lijkt op het papieren formulier</span>
+          </span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="ink" value="plain" <%= p.ink === 'plain' ? 'checked' : '' %>>
+          <span class="choice-body">
+            <span class="ink-preview ink-plain">Accu vervangen – 121665 km</span>
+            <span class="choice-label">Gewone letters</span>
+            <span class="choice-help">Zo goed mogelijk leesbaar</span>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Startpagina</h2>
+      <label>Na het inloggen openen
+        <select name="start">
+          <% for (const s of STARTS) { %><option value="<%= s.value %>" <%= p.start === s.value ? 'selected' : '' %>><%= s.label %></option><% } %>
+        </select>
+      </label>
+    </section>
+
+    <div class="settings-actions">
+      <button class="btn btn-primary" type="submit">Instellingen opslaan</button>
+    </div>
+  </form>
+
+  <section class="card">
+    <h2>Wachtwoord wijzigen</h2>
+    <% if (error) { %><div class="alert"><%= error %></div><% } %>
+    <form method="post" action="/instellingen/wachtwoord" class="stack narrow-form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label>Huidig wachtwoord <input type="password" name="current" autocomplete="current-password" required></label>
+      <label>Nieuw wachtwoord (minimaal 8 tekens) <input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Herhaal nieuw wachtwoord <input type="password" name="password2" autocomplete="new-password" minlength="8" required></label>
+      <button class="btn" type="submit">Wachtwoord wijzigen</button>
+    </form>
+  </section>
+</main>
+<script src="/static/js/common.js"></script>
+<%- include('/partials/foot') %>
