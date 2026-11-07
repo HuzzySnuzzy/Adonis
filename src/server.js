@@ -616,11 +616,18 @@ app.post('/instellingen', (req, res) => {
 });
 
 // Snel wisselen via de knop in de menubalk: systeem → licht → donker → systeem.
+// Thema kiezen via het menu in de menubalk (JSON), of zonder JavaScript: naar het volgende thema.
 app.post('/instellingen/thema', (req, res) => {
-  const order = auth.PREF_OPTIONS.theme;
-  const next = order[(order.indexOf(req.user.prefs.theme) + 1) % order.length];
-  auth.savePrefs(req.user.id, { theme: next });
-  setThemeCookie(res, next);
+  const changes = {};
+  if (auth.PREF_OPTIONS.theme.includes(req.body.theme)) changes.theme = req.body.theme;
+  if (auth.PREF_OPTIONS.fx.includes(req.body.fx)) changes.fx = req.body.fx;
+  if (!Object.keys(changes).length) {
+    const order = auth.PREF_OPTIONS.theme;
+    changes.theme = order[(order.indexOf(req.user.prefs.theme) + 1) % order.length];
+  }
+  const prefs = auth.savePrefs(req.user.id, changes);
+  setThemeCookie(res, prefs.theme);
+  if ((req.get('accept') || '').includes('application/json')) return res.json({ ok: true, theme: prefs.theme, fx: prefs.fx });
   res.redirect(safeNext(req.body.next));
 });
 

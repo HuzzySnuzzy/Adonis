@@ -519,3 +519,26 @@
    een horizontale schuifbalk. Zelfde oplossing als in DiscordLinked (overflow-x: clip op de menubalk). */
 :root[data-theme="neon"] .topbar { overflow-x: clip; }
 :root[data-theme="neon"], :root[data-theme="neon"] body { overflow-x: clip; }
+
+/* ---------- Themamenu in Neon (zoals DiscordLinked 2049) ---------- */
+:root[data-theme="neon"] .theme-menu {
+  --hud-w: 1px; --hud-l: 8px; border-radius: 2px; border-color: rgba(255, 166, 48, .45); background-color: var(--surface);
+  background-image:
+    linear-gradient(var(--hud-c) 0 0), linear-gradient(var(--hud-c) 0 0), linear-gradient(var(--hud-c) 0 0), linear-gradient(var(--hud-c) 0 0),
+    linear-gradient(var(--hud-c) 0 0), linear-gradient(var(--hud-c) 0 0), linear-gradient(var(--hud-c) 0 0), linear-gradient(var(--hud-c) 0 0);
+  background-size: var(--hud-l) var(--hud-w), var(--hud-w) var(--hud-l), var(--hud-l) var(--hud-w), var(--hud-w) var(--hud-l),
+    var(--hud-l) var(--hud-w), var(--hud-w) var(--hud-l), var(--hud-l) var(--hud-w), var(--hud-w) var(--hud-l);
+  background-position: 0 0, 0 0, 100% 0, 100% 0, 0 100%, 0 100%, 100% 100%, 100% 100%;
+  background-repeat: no-repeat; background-origin: border-box;
+  animation: hud-wipe-down .2s var(--hud-cut) both;
+}
+@keyframes hud-wipe-down { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+:root[data-theme="neon"] :is(.theme-item, .theme-fx-item) { border-radius: 1px; }
+:root[data-theme="neon"] .theme-menu .theme-name { text-transform: uppercase; letter-spacing: .08em; font-size: 13px; }
+:root[data-theme="neon"] .theme-menu [aria-checked="true"] { background: rgba(255, 166, 48, .12); box-shadow: inset 2px 0 0 var(--accent); }
+:root[data-theme="neon"] .theme-menu .theme-item[aria-checked="true"]::after { content: ""; width: 8px; height: 8px; justify-self: center; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+:root[data-theme="neon"] .theme-fx-item { border-color: var(--glass-border); }
+:root[data-theme="neon"] .theme-fx-item[aria-checked="true"] { border-color: var(--accent); box-shadow: none; }
+:root[data-theme="neon"] .theme-fx-label { font-family: var(--f-mono); font-weight: 400; letter-spacing: .14em; color: var(--holo); }
+:root[data-theme="neon"] .theme-sep { background: var(--glass-border); }
+:root[data-theme="neon"] .theme-btn[aria-expanded="true"] { background: rgba(255, 166, 48, .12); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px rgba(255, 166, 48, .35); }
