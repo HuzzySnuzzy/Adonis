@@ -108,11 +108,12 @@ Dezelfde opdrachten werken ook los, bijv. `werkopdrachten.exe reset-password col
 | `timezone` | `Europe/Amsterdam` | Tijdzone voor “Datum invoer” |
 | `auto-update` | `true` | Bij het starten automatisch bijwerken naar de nieuwste release |
 | `update-repo` | `huzzysnuzzy/adonis` | GitHub-repository waar updates vandaan komen |
+| `import-limit-per-day` | `30` | Maximaal aantal foto-imports per dag; 0 = geen limiet |
 | `anthropic-api-key` | leeg | API-sleutel voor foto-import; leeg = uit |
 
 Nieuwe instellingen na een update worden automatisch onderaan `config.properties` toegevoegd.
 Alles kan ook als opdrachtregeloptie (`--port 8080`) of omgevingsvariabele (`SERVER_PORT`/`PORT`, `DATA_DIR`,
-`START_ORDER_NUMBER`, `APP_TIMEZONE`, `COOKIE_SECURE`, `TRUST_PROXY`, `ANTHROPIC_API_KEY`, `AUTO_UPDATE`). Volgorde: opdrachtregel > omgeving > config.properties.
+`START_ORDER_NUMBER`, `APP_TIMEZONE`, `COOKIE_SECURE`, `TRUST_PROXY`, `ANTHROPIC_API_KEY`, `AUTO_UPDATE`, `IMPORT_LIMIT_PER_DAY`). Volgorde: opdrachtregel > omgeving > config.properties.
 
 ### Automatisch bijwerken
 
@@ -131,9 +132,18 @@ gecontroleerd (juiste grootte en versie) en geïnstalleerd, en start meteen de n
 Handschrift uitlezen gebeurt met Claude (Anthropic, model `claude-opus-5-5`) en heeft daarom **internet en een API-sleutel** nodig.
 De rest van de site werkt gewoon offline.
 
-1. Maak een sleutel aan op <https://console.anthropic.com> (betaald per gebruik; een foto uitlezen kost enkele centen).
+1. Maak een sleutel aan op <https://console.anthropic.com>. Gebruik bij voorkeur een aparte workspace met een
+   maandelijkse bestedingslimiet, of prepaid tegoed zonder automatisch opwaarderen.
 2. Zet hem in `config.properties`: `anthropic-api-key=sk-ant-...` (Pterodactyl: de variabele *Anthropic API-sleutel*).
 3. Herstart. In het venster staat dan `Foto-import: aan`.
+
+**Kosten:** je betaalt per gebruik aan Anthropic (los van een eventueel Claude Pro/Max-abonnement). Eén import kost naar
+schatting **$0,10–0,25** (1–2 foto's), maximaal ongeveer $0,40. Ook een import die je daarna annuleert is betaald;
+een import die mislukt doordat er geen verbinding is niet. Om onverwachte kosten te voorkomen:
+
+- `import-limit-per-day` (standaard 30) begrenst het aantal imports per dag; 0 = geen limiet.
+- Op de importpagina staat hoeveel imports er vandaag zijn gedaan; beheerders zien ook het aantal en de geschatte
+  kosten van deze maand. De exacte bedragen staan in de Anthropic Console.
 
 Werkt op elke telefoon via het netwerk (http is genoeg; de camera wordt via de gewone bestandskiezer geopend).
 De foto's gaan voor het uitlezen naar Anthropic; ze worden hier alleen bewaard zolang de import nog niet is bevestigd

@@ -77,6 +77,16 @@
             "user_editable": true,
             "rules": "nullable|string|max:300",
             "field_type": "text"
+        },
+        {
+            "name": "Foto-imports per dag",
+            "description": "Maximaal aantal foto-imports per dag, om de kosten te beperken (ca. $0,10–0,25 per import). 0 = geen limiet.",
+            "env_variable": "IMPORT_LIMIT_PER_DAY",
+            "default_value": "30",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:0",
+            "field_type": "text"
         }
     ]
 }

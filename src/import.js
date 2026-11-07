@@ -21,11 +21,58 @@ CREATE TABLE IF NOT EXISTS import_drafts (
 );
 `);
 
+// Elke (betaalde) uitleespoging, voor de daglimiet en het verbruiksoverzicht.
+db.exec(`
+CREATE TABLE IF NOT EXISTS import_log (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id       INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  day           TEXT NOT NULL,              -- YYYY-MM-DD (Nederlandse tijd)
+  status        TEXT NOT NULL,              -- 'bezig', 'ok', 'mislukt'
+  model         TEXT NOT NULL DEFAULT '',
+  input_tokens  INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS import_log_day ON import_log(day);
+`);
+
 function cleanupDrafts() {
   db.prepare("DELETE FROM import_drafts WHERE created_at < datetime('now', '-3 days')").run();
 }
 setInterval(cleanupDrafts, 6 * 60 * 60 * 1000).unref();
 cleanupDrafts();
+
+/** Daglimiet uit config.properties (import-limit-per-day). 0 = geen limiet. */
+function dailyLimit() {
+  const n = parseInt(process.env.IMPORT_LIMIT_PER_DAY ?? '30', 10);
+  return Number.isFinite(n) && n >= 0 ? n : 30;
+}
+
+// Prijzen per miljoen tokens (USD) – alleen voor de schatting in het overzicht.
+const PRICES = { 'claude-opus-5-5': [4, 20] };
+const DEFAULT_PRICE = [5, 25]; // voor een eventueel fallback-model: liever iets te hoog geschat
+
+function estimateUsd(row) {
+  const [inP, outP] = PRICES[row.model] || DEFAULT_PRICE;
+  return (row.input_tokens * inP + row.output_tokens * outP) / 1e6;
+}
+
+/** Verbruik vandaag en deze maand. */
+function usage() {
+  const today = orders.todayISO();
+  const month = today.slice(0, 7);
+  const todayCount = db.prepare("SELECT COUNT(*) AS n FROM import_log WHERE day = ?").get(today).n;
+  const rows = db.prepare("SELECT model, input_tokens, output_tokens FROM import_log WHERE day LIKE ?").all(month + '%');
+  const monthUsd = rows.reduce((sum, r) => sum + estimateUsd(r), 0);
+  const limit = dailyLimit();
+  return {
+    today: todayCount,
+    limit,
+    remaining: limit === 0 ? Infinity : Math.max(0, limit - todayCount),
+    monthCount: rows.length,
+    monthUsd,
+  };
+}
 
 function isConfigured() {
   return Boolean(process.env.ANTHROPIC_API_KEY);
@@ -150,18 +197,26 @@ async function readWithClaude(images) {
     if (status >= 500) throw new ImportError('De uitleesdienst is tijdelijk niet beschikbaar. Probeer het later opnieuw.');
     throw new ImportError('Geen verbinding met de uitleesdienst (is er internet?). ' + (err && err.message ? `(${err.message})` : ''));
   }
-  if (response.stop_reason === 'refusal') throw new ImportError('De foto kon niet worden uitgelezen. Probeer een andere foto.');
-  if (response.stop_reason === 'max_tokens') throw new ImportError('Het uitlezen werd afgebroken (te veel tekst). Probeer minder foto\'s tegelijk.');
+  // Vanaf hier is de aanroep gelukt en dus betaald: verbruik altijd doorgeven, ook bij een fout.
+  const used = {
+    model: response.model || MODEL,
+    input: (response.usage?.input_tokens || 0) + (response.usage?.cache_read_input_tokens || 0) + (response.usage?.cache_creation_input_tokens || 0),
+    output: response.usage?.output_tokens || 0,
+  };
+  const billedError = (msg) => Object.assign(new ImportError(msg), { usage: used });
+  if (response.stop_reason === 'refusal') throw billedError('De foto kon niet worden uitgelezen. Probeer een andere foto.');
+  if (response.stop_reason === 'max_tokens') throw billedError('Het uitlezen werd afgebroken (te veel tekst). Probeer minder foto\'s tegelijk.');
   const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
   let parsed;
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new ImportError('Het resultaat kon niet worden gelezen. Probeer het opnieuw.');
+    throw billedError('Het resultaat kon niet worden gelezen. Probeer het opnieuw.');
   }
   const nummer = String(parsed.nummer || '').replace(/\D/g, '');
   const datum = /^\d{4}-\d{2}-\d{2}$/.test(parsed.datum_invoer || '') ? parsed.datum_invoer : '';
   return {
+    usage: used,
     nummer,
     datum_invoer: datum,
     onzeker: Array.isArray(parsed.onzeker) ? parsed.onzeker.map(String).slice(0, 30) : [],
@@ -173,7 +228,42 @@ async function readWithClaude(images) {
 async function createDraft(imageUrls, userId) {
   if (!isConfigured()) throw new ImportError('Foto-import is niet ingesteld: vul anthropic-api-key in config.properties in.');
   const images = parseImages(imageUrls);
-  const result = await readWithClaude(images);
+
+  // Daglimiet: eerst een plek reserveren (zo kunnen twee gelijktijdige imports de limiet niet omzeilen).
+  const limit = dailyLimit();
+  const today = orders.todayISO();
+  let logId;
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    const n = db.prepare("SELECT COUNT(*) AS n FROM import_log WHERE day = ?").get(today).n;
+    if (limit > 0 && n >= limit) {
+      db.exec('ROLLBACK');
+      throw new ImportError(`De daglimiet van ${limit} imports is bereikt. Morgen kan het weer, of vraag de beheerder de limiet (import-limit-per-day) te verhogen.`);
+    }
+    logId = Number(db.prepare("INSERT INTO import_log (user_id, day, status) VALUES (?, ?, 'bezig')").run(userId, today).lastInsertRowid);
+    db.exec('COMMIT');
+  } catch (err) {
+    if (db.isTransaction) db.exec('ROLLBACK');
+    throw err;
+  }
+
+  let result;
+  try {
+    result = await readWithClaude(images);
+  } catch (err) {
+    if (err.usage) {
+      // Wel betaald: meetellen.
+      db.prepare("UPDATE import_log SET status = 'mislukt', model = ?, input_tokens = ?, output_tokens = ? WHERE id = ?")
+        .run(err.usage.model, err.usage.input, err.usage.output, logId);
+    } else {
+      // Geen antwoord van de API (dus niet betaald): telt niet mee voor de limiet.
+      db.prepare('DELETE FROM import_log WHERE id = ?').run(logId);
+    }
+    throw err;
+  }
+  db.prepare("UPDATE import_log SET status = 'ok', model = ?, input_tokens = ?, output_tokens = ? WHERE id = ?")
+    .run(result.usage.model, result.usage.input, result.usage.output, logId);
+  delete result.usage;
   const res = db.prepare('INSERT INTO import_drafts (user_id, result, images) VALUES (?, ?, ?)').run(
     userId, JSON.stringify(result), JSON.stringify(images)
   );
@@ -192,5 +282,5 @@ function deleteDraft(id) {
 }
 
 module.exports = {
-  isConfigured, createDraft, getDraft, deleteDraft, setClientFactory, ImportError, RESULT_SCHEMA, MAX_IMAGES,
+  isConfigured, createDraft, usage, dailyLimit, getDraft, deleteDraft, setClientFactory, ImportError, RESULT_SCHEMA, MAX_IMAGES,
 };

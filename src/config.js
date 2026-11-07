@@ -32,6 +32,7 @@ const DEFAULTS = [
   ['timezone', 'Europe/Amsterdam', 'Tijdzone voor "Datum invoer".'],
   ['auto-update', 'true', 'Bij het starten automatisch de nieuwste versie van GitHub installeren (true/false). Gegevens blijven bewaard.'],
   ['update-repo', 'huzzysnuzzy/adonis', 'GitHub-repository waar updates vandaan komen.'],
+  ['import-limit-per-day', '30', 'Maximaal aantal foto-imports per dag (kosten beperken; ca. $0,10–0,25 per import). 0 = geen limiet.'],
   ['anthropic-api-key', '', 'API-sleutel voor foto-import (handschrift uitlezen met Claude). Aanmaken op https://console.anthropic.com – leeg = foto-import uit. Vereist internet.'],
 ];
 
@@ -45,6 +46,7 @@ const ENV_NAMES = {
   'trust-proxy': ['TRUST_PROXY'],
   'anthropic-api-key': ['ANTHROPIC_API_KEY'],
   'auto-update': ['AUTO_UPDATE'],
+  'import-limit-per-day': ['IMPORT_LIMIT_PER_DAY'],
   timezone: ['APP_TIMEZONE'], // bewust niet TZ: Pterodactyl/Docker zetten die vaak op UTC
 };
 
@@ -130,6 +132,7 @@ function load(argv = []) {
     timezone: cfg.timezone,
     anthropicApiKey: cfg['anthropic-api-key'],
     autoUpdate: bool(cfg['auto-update']),
+    importLimitPerDay: Math.max(0, parseInt(cfg['import-limit-per-day'], 10) || 0),
     updateRepo: cfg['update-repo'],
   };
 }

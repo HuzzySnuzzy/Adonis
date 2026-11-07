@@ -11,6 +11,11 @@
       Vraag de beheerder om <code>anthropic-api-key=...</code> in <code>config.properties</code> in te vullen
       (sleutel aanmaken op console.anthropic.com) en het programma opnieuw te starten.
     </div>
+  <% } else if (usage.remaining === 0) { %>
+    <div class="alert">
+      <strong>De daglimiet van <%= usage.limit %> imports is bereikt.</strong><br>
+      Morgen kan het weer. De beheerder kan de limiet aanpassen met <code>import-limit-per-day</code> in <code>config.properties</code>.
+    </div>
   <% } else { %>
   <section class="card" id="importCard" data-csrf="<%= csrf %>" data-max="<%= maxImages %>">
     <ol class="steps">
@@ -39,6 +44,13 @@
       <div><strong>Bezig met uitlezen…</strong><br><span class="muted small">Dit duurt meestal 20 tot 60 seconden. Laat deze pagina open.</span></div>
     </div>
   </section>
+  <% } %>
+  <% if (configured) { %>
+  <p class="muted small usage-line">
+    Vandaag <%= usage.today %> van <%= usage.limit === 0 ? 'onbeperkt' : usage.limit %> imports gebruikt.
+    <% if (user.is_admin) { %>Deze maand <%= usage.monthCount %> imports, geschatte kosten ca.
+      $<%= usage.monthUsd.toFixed(2).replace('.', ',') %> (exacte bedragen staan in de Anthropic Console).<% } %>
+  </p>
   <p class="muted small">Privacy: de foto's worden voor het uitlezen naar Anthropic (Claude) gestuurd. Ze worden hier pas als
     werkopdracht opgeslagen nadat je de import bevestigt.</p>
   <% } %>

@@ -35,6 +35,7 @@ process.env.START_ORDER_NUMBER = String(cfg.startOrderNumber);
 process.env.APP_TIMEZONE = cfg.timezone;
 process.env.COOKIE_SECURE = cfg.secureCookies ? 'true' : 'false';
 process.env.TRUST_PROXY = cfg.trustProxy ? 'true' : 'false';
+process.env.IMPORT_LIMIT_PER_DAY = String(cfg.importLimitPerDay);
 if (cfg.anthropicApiKey) process.env.ANTHROPIC_API_KEY = cfg.anthropicApiKey;
 else delete process.env.ANTHROPIC_API_KEY;
 
@@ -181,7 +182,7 @@ function startServer() {
     }
     console.log(`  Instellingen: ${cfg.file}`);
     console.log(`  Database:     ${cfg.dataDir}`);
-    console.log(`  Foto-import:  ${cfg.anthropicApiKey ? 'aan' : 'uit (vul anthropic-api-key in config.properties in)'}`);
+    console.log(`  Foto-import:  ${cfg.anthropicApiKey ? `aan (max. ${cfg.importLimitPerDay || 'onbeperkt'} per dag)` : 'uit (vul anthropic-api-key in config.properties in)'}`);
     if (cfg.created) console.log('  (config.properties is zojuist aangemaakt met standaardwaarden)');
     if (auth.userCount() === 0) {
       console.log('');

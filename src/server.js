@@ -354,7 +354,9 @@ app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
 
 /* ---------- foto-import ---------- */
 app.get('/importeren', (req, res) => {
-  res.render('import', { title: 'Foto importeren', configured: importer.isConfigured(), maxImages: importer.MAX_IMAGES });
+  res.render('import', {
+    title: 'Foto importeren', configured: importer.isConfigured(), maxImages: importer.MAX_IMAGES, usage: importer.usage(),
+  });
 });
 
 app.post('/importeren', express.json({ limit: '30mb' }), wrap(async (req, res) => {
