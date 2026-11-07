@@ -1,0 +1,60 @@
+<%- include('/partials/head') %>
+<main class="page inv-page">
+  <p class="crumbs"><a href="/voorraad?soort=<%= d.soort %>">← Voorraad <%= SOORTEN[d.soort].toLowerCase() %></a></p>
+  <div class="page-head">
+    <div>
+      <h1><%= title %></h1>
+      <% if (item) { %><p class="muted small">Laatst gewijzigd <%= fmtDateTime(item.updated_at) %><%= item.updated_by_name ? ' door ' + item.updated_by_name : '' %></p><% } %>
+    </div>
+  </div>
+  <% if (error) { %><div class="alert"><%= error %></div><% } %>
+  <form method="post" action="<%= item ? '/voorraad/' + item.id : '/voorraad' %>" class="card inv-form" autocomplete="off">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <input type="hidden" name="s[soort]" value="<%= d.soort %>">
+    <% if (item) { %><input type="hidden" name="versie" value="<%= item.updated_at %>"><% } %>
+    <div class="grid-form">
+      <label>Aantal<input name="s[aantal]" value="<%= d.aantal %>" type="number" min="0" inputmode="numeric"></label>
+      <% if (d.soort === 'band') { %>
+        <label>Maat<input name="s[maat]" value="<%= d.maat %>" placeholder="205/55R16"></label>
+        <label>Merk<input name="s[merk]" value="<%= d.merk %>" list="merkList"></label>
+        <label>Type / model<input name="s[type]" value="<%= d.type %>" list="typeList"></label>
+        <label>Profiel<input name="s[profiel]" value="<%= d.profiel %>" placeholder="nieuw of 4,5mm"></label>
+        <label>Last-/snelheidsindex<input name="s[snelheid]" value="<%= d.snelheid %>" placeholder="91V"></label>
+        <label>Seizoen<input name="s[seizoen]" value="<%= d.seizoen %>" list="seasonList"></label>
+      <% } else { %>
+        <label>Soort onderdeel<input name="s[type]" value="<%= d.type %>" list="typeList" placeholder="bijv. BOUGIE"></label>
+        <label>Merk<input name="s[merk]" value="<%= d.merk %>" list="merkList"></label>
+        <label>Artikelnummer<input name="s[nummer]" value="<%= d.nummer %>" class="mono"></label>
+        <label>Origineel (OE) nummer<input name="s[oe_nummer]" value="<%= d.oe_nummer %>" class="mono"></label>
+      <% } %>
+      <label>Locatie<input name="s[locatie]" value="<%= d.locatie %>" list="locList"></label>
+      <label>Prijs<input name="s[prijs]" value="<%= d.prijs %>" inputmode="decimal" placeholder="€"></label>
+      <label>Datum binnen<input name="s[datum]" value="<%= d.datum %>" type="date"></label>
+      <label class="check"><input type="checkbox" name="s[beschikbaar]" value="1" <%= d.beschikbaar ? 'checked' : '' %>> Beschikbaar</label>
+    </div>
+    <input type="hidden" name="s[beschikbaar]" value="0" data-unchecked-fallback>
+    <label class="full"><%= d.soort === 'band' ? 'Opmerking' : 'Omschrijving / opmerking' %><textarea name="s[omschrijving]" rows="3"><%= d.omschrijving %></textarea></label>
+    <% if (Object.keys(extra).length) { %>
+    <details class="extra-data"><summary>Overige gegevens (uit de import)</summary>
+      <dl class="facts"><% for (const [k, v] of Object.entries(extra)) { %><dt><%= k %></dt><dd><%= v %></dd><% } %></dl>
+    </details>
+    <% } %>
+    <datalist id="seasonList"><% for (const s of SEASONS) { %><option value="<%= s %>"><% } %></datalist>
+    <datalist id="typeList"><% for (const t of types) { %><option value="<%= t %>"><% } %></datalist>
+    <datalist id="merkList"><% for (const t of merken) { %><option value="<%= t %>"><% } %></datalist>
+    <datalist id="locList"><% for (const l of locaties) { %><option value="<%= l %>"><% } %></datalist>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit"><%= item ? 'Opslaan' : 'Toevoegen' %></button>
+      <% if (!item) { %><button class="btn" type="submit" name="nog_een" value="1">Toevoegen en nog een</button><% } %>
+      <a class="btn btn-ghost" href="/voorraad?soort=<%= d.soort %>">Annuleren</a>
+    </div>
+  </form>
+  <% if (item && user.is_admin) { %>
+  <form method="post" action="/voorraad/<%= item.id %>/verwijderen" class="danger-zone" data-confirm="Dit item definitief uit de voorraad verwijderen?">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <button class="btn btn-danger btn-small" type="submit">Verwijderen</button>
+  </form>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

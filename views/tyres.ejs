@@ -1,0 +1,71 @@
+<%- include('/partials/head') %>
+<main class="page wide">
+  <div class="page-head">
+    <h1><%= soort === 'opslag' ? 'Overige bandenopslag' : 'Bandenhotel' %></h1>
+    <form class="search" method="get" action="/bandenhotel" role="search" autocomplete="off">
+      <% if (soort !== 'klant') { %><input type="hidden" name="soort" value="<%= soort %>"><% } %>
+      <% if (status !== 'opgeslagen') { %><input type="hidden" name="status" value="<%= status %>"><% } %>
+      <% if (seizoen) { %><input type="hidden" name="seizoen" value="<%= seizoen %>"><% } %>
+      <% if (locatie) { %><input type="hidden" name="locatie" value="<%= locatie %>"><% } %>
+      <input type="search" name="q" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" data-1p-ignore data-lpignore="true" value="<%= q %>" placeholder="Zoek op kenteken, naam, maat (2055516), label, auto…" data-autofocus>
+      <button class="btn" type="submit">Zoeken</button>
+      <% if (q) { %><a class="btn btn-ghost" href="/bandenhotel">Wissen</a><% } %>
+    </form>
+    <a class="btn btn-primary" href="/bandenhotel/nieuw<%= soort === 'opslag' ? '?soort=opslag' : '' %>">+ Banden inslaan</a>
+  </div>
+  <%
+    const qs = (o) => {
+      const p = { soort, q, status, seizoen, locatie, ...o };
+      const parts = [];
+      if (p.soort && p.soort !== 'klant') parts.push('soort=' + p.soort);
+      if (p.q) parts.push('q=' + encodeURIComponent(p.q));
+      if (p.status && p.status !== 'opgeslagen') parts.push('status=' + p.status);
+      if (p.seizoen) parts.push('seizoen=' + encodeURIComponent(p.seizoen));
+      if (p.locatie) parts.push('locatie=' + encodeURIComponent(p.locatie));
+      return '/bandenhotel' + (parts.length ? '?' + parts.join('&') : '');
+    };
+  %>
+  <div id="live-tyres" data-live>
+  <nav class="kind-tabs" aria-label="Soort opslag">
+    <a href="<%= qs({ soort: 'klant', seizoen: '', locatie: '' }) %>" class="<%= soort === 'klant' ? 'active' : '' %>">Klantenbanden <span class="count"><%= counts.perSoort.klant %></span></a>
+    <a href="<%= qs({ soort: 'opslag', seizoen: '', locatie: '' }) %>" class="<%= soort === 'opslag' ? 'active' : '' %>" title="Gemengde opslag: noodbanden, oude klantbanden, losse sets">Overige opslag (noodbanden) <span class="count"><%= counts.perSoort.opslag %></span></a>
+  </nav>
+  <% if (soort === 'opslag') { %><p class="muted small kind-help">Banden die niet (meer) bij één vaste klant horen: noodbanden, oude klantbanden en losse sets. Handig als iemand met spoed een band nodig heeft – zoek op maat.</p><% } %>
+  <div class="filter-bar">
+    <nav class="status-tabs" aria-label="Filter op status">
+      <a href="<%= qs({ status: 'opgeslagen' }) %>" class="<%= status === 'opgeslagen' ? 'active' : '' %>">In opslag<span class="count"><%= counts.opgeslagen %></span></a>
+      <a href="<%= qs({ status: 'uitgegeven' }) %>" class="<%= status === 'uitgegeven' ? 'active' : '' %>">Uitgegeven<span class="count"><%= counts.uitgegeven %></span></a>
+      <a href="<%= qs({ status: 'alle' }) %>" class="<%= status === 'alle' ? 'active' : '' %>">Alle<span class="count"><%= counts.alle %></span></a>
+    </nav>
+    <form method="get" action="/bandenhotel" class="filter-selects">
+      <% if (soort !== 'klant') { %><input type="hidden" name="soort" value="<%= soort %>"><% } %>
+      <% if (q) { %><input type="hidden" name="q" value="<%= q %>"><% } %>
+      <% if (status !== 'opgeslagen') { %><input type="hidden" name="status" value="<%= status %>"><% } %>
+      <select name="seizoen" aria-label="Seizoen" data-autosubmit>
+        <option value="">Alle seizoenen</option>
+        <% for (const s of seizoenen) { %><option value="<%= s %>" <%= s.toLowerCase() === seizoen.toLowerCase() ? 'selected' : '' %>><%= s %></option><% } %>
+      </select>
+      <select name="locatie" aria-label="Locatie" data-autosubmit>
+        <option value="">Alle locaties</option>
+        <% for (const l of locaties) { %><option value="<%= l %>" <%= l.toLowerCase() === locatie.toLowerCase() ? 'selected' : '' %>><%= l %></option><% } %>
+      </select>
+      <noscript><button class="btn btn-small" type="submit">Filter</button></noscript>
+    </form>
+  </div>
+  <% if (tyres.length === 0) { %>
+    <div class="empty">
+      <% if (counts.alle === 0) { %>
+        <p><%= soort === 'opslag' ? 'De overige bandenopslag is nog leeg.' : 'Het bandenhotel is nog leeg.' %></p>
+        <p><a class="btn btn-primary" href="/bandenhotel/nieuw<%= soort === 'opslag' ? '?soort=opslag' : '' %>">+ Eerste set inslaan</a>
+        <% if (user.is_admin) { %> of <a class="btn" href="/importeren/excel">Excel-lijst importeren</a><% } %></p>
+      <% } else { %><p>Niets gevonden<%= q ? ' voor “' + q + '”' : '' %>.</p><% } %>
+    </div>
+  <% } else { %>
+    <p class="muted"><%= tyres.length %> set<%= tyres.length === 1 ? '' : 's' %><%= q || seizoen || locatie ? ' gevonden' : '' %>
+      <span class="tread-legend">· profiel: <span class="tread tread-ok">ok</span> <span class="tread tread-warn">bijna op</span> <span class="tread tread-bad">te weinig</span></span></p>
+    <%- include('/partials/tyrelist', { tyres, showPlate: true, showStatus: status !== 'opgeslagen' }) %>
+  <% } %>
+  </div>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

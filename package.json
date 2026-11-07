@@ -1,6 +1,6 @@
 {
   "name": "werkopdrachten",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "description": "ADONIS Werkopdrachten – werkopdrachten beheren voor de garage",
   "private": true,
   "main": "src/main.js",
@@ -21,7 +21,8 @@
     "bcryptjs": "^3.0.2",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
-    "express-session": "^1.19.0"
+    "express-session": "^1.19.0",
+    "fflate": "^0.8.2"
   },
   "devDependencies": {
     "esbuild": "^0.25.10",

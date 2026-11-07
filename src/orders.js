@@ -236,7 +236,14 @@ function getOrCreateCustomer(kenteken) {
 function refreshCustomer(customerId) {
   const orders = db.prepare('SELECT data FROM orders WHERE customer_id = ? ORDER BY nummer DESC').all(customerId);
   if (orders.length === 0) {
-    db.prepare('DELETE FROM customers WHERE id = ?').run(customerId);
+    // Klant blijft bestaan als er nog banden van hem in het bandenhotel liggen.
+    let hasTyres = false;
+    try {
+      hasTyres = Boolean(db.prepare(
+        "SELECT 1 FROM tyre_storage t JOIN customers c ON c.plate_key = t.plate_key WHERE c.id = ? AND t.soort = 'klant' LIMIT 1"
+      ).get(customerId));
+    } catch { /* tabel bestaat (nog) niet */ }
+    if (!hasTyres) db.prepare('DELETE FROM customers WHERE id = ?').run(customerId);
     return;
   }
   const values = {};
@@ -246,7 +253,8 @@ function refreshCustomer(customerId) {
       if (values[f] === undefined && d[f] && d[f].trim()) values[f] = d[f].trim();
     }
   }
-  const sets = CUSTOMER_FIELDS.map((f) => `${f} = ?`).join(', ');
+  // Velden die op geen enkele werkopdracht staan, blijven zoals ze waren (bijv. naam uit het bandenhotel).
+  const sets = CUSTOMER_FIELDS.map((f) => `${f} = COALESCE(NULLIF(?, ''), ${f})`).join(', ');
   db.prepare(`UPDATE customers SET ${sets}, updated_at = datetime('now') WHERE id = ?`).run(
     ...CUSTOMER_FIELDS.map((f) => values[f] || ''),
     customerId

@@ -39,9 +39,11 @@
   <a class="brand" href="/" title="ADONIS – naar het overzicht"><%- include('/partials/logo') %></a>
   <nav class="mainnav">
     <a href="/" class="<%= path === '/' || path.startsWith('/klant') ? 'active' : '' %>">Klanten</a>
-    <a href="/werkopdrachten" class="<%= path === '/werkopdrachten' && !(locals.url || '').includes('status=klaar') ? 'active' : '' %>">Alle werkopdrachten</a>
+    <a href="/werkopdrachten" class="<%= (path === '/werkopdrachten' && !(locals.url || '').includes('status=klaar')) || path.startsWith('/werkopdracht/') ? 'active' : '' %>">Werkopdrachten</a>
     <% if (user.can_invoice) { %><a href="/werkopdrachten?status=klaar" class="<%= path === '/werkopdrachten' && locals.url && locals.url.includes('status=klaar') ? 'active' : '' %>">Facturatie<span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span></a><% } %>
-    <a href="/importeren" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Foto importeren</a>
+    <a href="/bandenhotel" class="<%= path.startsWith('/bandenhotel') ? 'active' : '' %>">Bandenhotel</a>
+    <a href="/voorraad" class="<%= path.startsWith('/voorraad') ? 'active' : '' %>">Voorraad</a>
+    <a href="/importeren" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Importeren</a>
     <% if (user.is_admin) { %><a href="/gebruikers" class="<%= path === '/gebruikers' ? 'active' : '' %>">Gebruikers</a><% } %>
     <% if (user.is_owner) { %><a href="/systeem" class="<%= path === '/systeem' ? 'active' : '' %>">Systeem</a><% } %>
   </nav>

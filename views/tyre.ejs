@@ -1,0 +1,105 @@
+<%- include('/partials/head') %>
+<main class="page inv-page">
+  <p class="crumbs"><a href="/bandenhotel<%= d.soort === 'opslag' ? '?soort=opslag' : '' %>">← <%= d.soort === 'opslag' ? 'Overige bandenopslag' : 'Bandenhotel' %></a><% if (customer) { %> · <a href="/klant/<%= customer.id %>">Klant <%= d.kenteken %></a><% } %></p>
+  <div class="page-head">
+    <div>
+      <h1><%= tyre ? (d.kenteken || d.klant_naam || 'Bandenset') : 'Banden inslaan' %>
+        <% if (tyre) { %><span class="status-pill <%= tyre.status === 'uitgegeven' ? 'status-busy' : 'status-ok' %>"><%= STATUSES[tyre.status] %></span><% } %></h1>
+      <% if (tyre) { %><p class="muted small">
+        <%= tyre.status === 'uitgegeven' ? 'Uitgegeven op ' + fmtDate(tyre.datum_uit) : 'In opslag' + (tyre.datum_in ? ' sinds ' + fmtDate(tyre.datum_in) : '') %>
+        · laatst gewijzigd <%= fmtDateTime(tyre.updated_at) %><%= tyre.updated_by_name ? ' door ' + tyre.updated_by_name : '' %></p><% } %>
+    </div>
+    <% if (tyre) { %>
+    <div class="actions">
+      <% if (tyre.status === 'opgeslagen') { %>
+        <form method="post" action="/bandenhotel/<%= tyre.id %>/status" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="uitgegeven"><input type="hidden" name="wisselen" value="1">
+          <button class="btn btn-primary" type="submit" title="Deze set meegeven en meteen de andere set inslaan">Wisselen (uitgeven + andere set inslaan)</button>
+        </form>
+        <form method="post" action="/bandenhotel/<%= tyre.id %>/status" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="uitgegeven">
+          <button class="btn" type="submit">Alleen uitgeven</button>
+        </form>
+      <% } else { %>
+        <form method="post" action="/bandenhotel/<%= tyre.id %>/status" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="opgeslagen">
+          <button class="btn" type="submit">Weer inslaan</button>
+        </form>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+  <% if (error) { %><div class="alert"><%= error %></div><% } %>
+
+  <form method="post" action="<%= tyre ? '/bandenhotel/' + tyre.id : '/bandenhotel' %>" class="card inv-form" autocomplete="off" id="tyreForm">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <% if (tyre) { %><input type="hidden" name="versie" value="<%= tyre.updated_at %>"><% } %>
+    <div class="kind-pick" role="radiogroup" aria-label="Soort">
+      <label class="check"><input type="radio" name="t[soort]" value="klant" <%= d.soort !== 'opslag' ? 'checked' : '' %>> <span><b>Klantenbanden</b> <span class="muted small">– bandenhotel, de klant komt ook in Klanten</span></span></label>
+      <label class="check"><input type="radio" name="t[soort]" value="opslag" <%= d.soort === 'opslag' ? 'checked' : '' %>> <span><b>Overige opslag</b> <span class="muted small">– noodbanden, losse sets</span></span></label>
+    </div>
+    <fieldset>
+      <legend>Klant</legend>
+      <div class="grid-form">
+        <label>Kenteken<input name="t[kenteken]" value="<%= d.kenteken %>" id="tyrePlate" class="plate-input" autocapitalize="characters" data-1p-ignore data-lpignore="true"></label>
+        <label>Naam klant<input name="t[klant_naam]" value="<%= d.klant_naam %>" data-1p-ignore data-lpignore="true"></label>
+        <label>Telefoon<input name="t[telefoon]" value="<%= d.telefoon %>" inputmode="tel" data-1p-ignore data-lpignore="true"></label>
+        <label>Auto (merk/type)<input name="t[auto]" value="<%= d.auto %>" data-1p-ignore data-lpignore="true"></label>
+      </div>
+      <p class="muted small" id="plateHint" aria-live="polite"></p>
+    </fieldset>
+    <fieldset>
+      <legend>Banden</legend>
+      <div class="grid-form">
+        <label>Seizoen<input name="t[seizoen]" value="<%= d.seizoen %>" list="seasonList"></label>
+        <label>Maat<input name="t[maat]" value="<%= d.maat %>" placeholder="205/55R16 91V"></label>
+        <label>Merk banden<input name="t[merk]" value="<%= d.merk %>"></label>
+        <label>Aantal<input name="t[aantal]" value="<%= d.aantal %>" type="number" min="0" max="12" inputmode="numeric"></label>
+        <label>Velgen<select name="t[velg]"><% for (const [k, l] of Object.entries(VELGEN)) { %><option value="<%= k %>" <%= d.velg === k ? 'selected' : '' %>><%= l %></option><% } %></select></label>
+        <label>DOT<input name="t[dot]" value="<%= d.dot %>" placeholder="bijv. 2321"></label>
+      </div>
+      <div class="grid-form tread-inputs">
+        <label>Profiel voor (mm)<input name="t[profiel_voor]" value="<%= fmtMm(d.profiel_voor) %>" inputmode="decimal" class="tread-input <%= treadClass(d.profiel_voor, d.seizoen) %>"></label>
+        <label>Profiel achter (mm)<input name="t[profiel_achter]" value="<%= fmtMm(d.profiel_achter) %>" inputmode="decimal" class="tread-input <%= treadClass(d.profiel_achter, d.seizoen) %>"></label>
+        <label class="span-2">Profiel – toelichting<input name="t[profiel_tekst]" value="<%= d.profiel_tekst %>" placeholder="bijv. LV 6,5 / LA 3,5 of 'goed als nieuw'"></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Opslag</legend>
+      <div class="grid-form">
+        <label>Locatie<input name="t[locatie]" value="<%= d.locatie %>" list="locList" placeholder="bijv. Vrachtwagen"></label>
+        <label>Label / nummer<input name="t[label]" value="<%= d.label %>" placeholder="nummer op het label"></label>
+        <label>Ingeslagen op<input name="t[datum_in]" value="<%= d.datum_in %>" type="date"></label>
+      </div>
+      <label class="full">Opmerkingen<textarea name="t[opmerkingen]" rows="3"><%= d.opmerkingen %></textarea></label>
+    </fieldset>
+    <% if (Object.keys(extra).length) { %>
+    <details class="extra-data"><summary>Overige gegevens (uit de import)</summary>
+      <dl class="facts"><% for (const [k, v] of Object.entries(extra)) { %><dt><%= k %></dt><dd><%= v %></dd><% } %></dl>
+    </details>
+    <% } %>
+    <datalist id="seasonList"><% for (const s of SEASONS) { %><option value="<%= s %>"><% } %></datalist>
+    <datalist id="locList"><% for (const l of locaties) { %><option value="<%= l %>"><% } %></datalist>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit"><%= tyre ? 'Opslaan' : 'Inslaan' %></button>
+      <a class="btn btn-ghost" href="<%= customer && !tyre ? '/klant/' + customer.id : '/bandenhotel' + (d.soort === 'opslag' ? '?soort=opslag' : '') %>">Annuleren</a>
+    </div>
+  </form>
+
+  <% if (others.length) { %>
+  <section class="card">
+    <h2>Andere sets van <%= d.kenteken %></h2>
+    <%- include('/partials/tyrelist', { tyres: others, showPlate: false, showStatus: true }) %>
+  </section>
+  <% } %>
+
+  <% if (tyre && user.is_admin) { %>
+  <form method="post" action="/bandenhotel/<%= tyre.id %>/verwijderen" class="danger-zone" data-confirm="Deze bandenset definitief verwijderen? (Meegegeven aan de klant? Gebruik dan liever 'Uitgeven'.)">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <button class="btn btn-danger btn-small" type="submit">Set verwijderen</button>
+  </form>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/inventory.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

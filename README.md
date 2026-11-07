@@ -9,7 +9,7 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Klantenoverzicht op kenteken.** Klanten worden automatisch aangemaakt zodra een werkopdracht met een kenteken wordt opgeslagen.
   Zoeken op kenteken (met of zonder streepjes), naam, merk, plaats, klantnummer of chassisnummer.
 - **Werkopdrachten per klant doorzoeken.** Zoek bijv. op `accu`, `U1F1B` of een onderdeelnummer.
-  Via *Alle werkopdrachten* kun je in alle werkopdrachten tegelijk zoeken.
+  Via *Werkopdrachten* kun je in alle werkopdrachten tegelijk zoeken.
 - **Werkopdracht maken en wijzigen** in een formulier dat eruitziet als het papieren formulier:
   - links: onderdelen (22 regels), vloeistoffen en diversen
   - rechts: kop (monteur, datum, kenteken, km-stand, …), werkzaamheden met code/tijd, factuurnummer en uren
@@ -34,6 +34,19 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   met een link naar rdw.nl. In de klantenlijst een APK-kolom. Op een nieuwe werkopdracht worden Merk/Type en
   A.p.k.-datum na het invullen van het kenteken automatisch ingevuld; de knop **RDW** naast het kenteken toont de
   details. Gegevens worden per klant bewaard en hooguit één keer per dag opnieuw opgehaald (vereist internet).
+- **Bandenhotel:** de banden die je voor klanten opslaat, per set met kenteken, klant, auto, seizoen, maat, profiel
+  voor/achter in mm (groen / oranje bij < 3 mm, winter < 4 mm / rood onder 1,6 mm), locatie en label. Zoeken op kenteken,
+  naam of maat (`205/55R16`, `2055516`), filteren op seizoen en locatie. **Wisselen** geeft de set mee en opent meteen het
+  formulier voor de set die je inslaat (auto en maat staan al ingevuld, seizoen omgedraaid). Een klant uit het
+  bandenhotel komt automatisch op de **Klanten**-pagina (op kenteken; bestaande klantgegevens worden niet overschreven,
+  alleen lege velden aangevuld), en op de klantpagina staan zijn banden.
+  Daarnaast is er **Overige opslag (noodbanden)** voor banden die niet bij één vaste klant horen; zoek je in de voorraad op
+  een maat, dan zie je ook hoeveel sets van die maat daar liggen.
+- **Voorraad:** onderdelen en banden die op de zaak liggen, met aantal (knoppen − en +), merk, artikelnummer,
+  origineel (OE) nummer, soort en locatie. Een nummer vind je ook als het anders is getypt: `1493001` vindt `1 493 001`,
+  `A0031592603` vindt `A003.159.26.03`.
+- **Excel importeren met Claude als meekijker** (alleen beheerders): zet bestaande lijsten (.xlsx of .csv) over naar
+  het bandenhotel, de overige opslag of de voorraad. Zie [Excel-import](#excel-import).
 - **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker / Neon* (dezelfde stijl als het 2049-thema van DiscordLinked, met opstartreeks en animaties; effecten *Volledig* of *Rustig*), handschrift of gewone letters
   in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
   apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.
@@ -175,6 +188,25 @@ Werkt op elke telefoon via het netwerk (http is genoeg; de camera wordt via de g
 De foto's gaan voor het uitlezen naar Anthropic; ze worden hier alleen bewaard zolang de import nog niet is bevestigd
 of geannuleerd (en maximaal 3 dagen). Bij een (onterechte) weigering van het model probeert de API automatisch een ander
 Claude-model (`fallbacks: "default"`).
+
+### Excel-import
+
+*Importeren → Bandenhotel / voorraad (Excel)*. Kies een .xlsx- of .csv-bestand; alle bladen worden bekeken.
+
+1. ADONIS deelt elk blad in op basis van de kolomkoppen. Met een API-sleutel kijkt **Claude** mee: welk blad wat is
+   (bandenhotel, overige opslag, onderdelen, banden of overslaan), welke kolom bij welk veld hoort (ook als de kop
+   onduidelijk is), welke schrijfwijzen samen horen (`Blauwe Container` = `Blauwe container`, `ZOMER` = `Zomer`),
+   hoe vrije profielnotities als `Voor 5,3 achter 48` worden gelezen (5,3 / 4,8 mm) en welke rijen je moet nakijken.
+2. Op de **controlepagina** zie je alles en kun je alles aanpassen: het doel per blad, de kolomindeling, de
+   schrijfwijzen, de profielen en per rij een vinkje. Rijen met een opmerking zijn gemarkeerd (filter
+   *Alleen rijen met een opmerking*). Er is dan nog niets opgeslagen.
+3. **Importeren bevestigen** slaat de aangevinkte rijen op. Bij het bandenhotel worden nieuwe klanten aan Klanten
+   toegevoegd. Rijen die er al precies zo staan worden standaard overgeslagen; een set met een bestaand label wordt
+   bijgewerkt. Kolommen zonder vaste plek (bijv. fotopaden) worden bewaard onder *Overige gegevens* bij het record.
+
+Een beoordeling door Claude telt als één import voor `import-limit-per-day` en kost meestal enkele tientallen centen.
+Is Claude niet bereikbaar, dan gaat de import gewoon door op basis van de kolomkoppen. Zonder vinkje
+*Laat Claude meekijken* gaan er geen gegevens naar Anthropic.
 
 ### Online bereikbaar via Cloudflare (één klik)
 

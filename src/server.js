@@ -20,6 +20,8 @@ const settings = require('./settings');
 const tunnel = require('./tunnel');
 const cloudflare = require('./cloudflare');
 const rdw = require('./rdw');
+const inv = require('./inventory');
+const registerInventory = require('./inventory-routes');
 
 const app = express();
 // Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
@@ -184,6 +186,8 @@ app.locals.fmtDateTime = fmtDateTime;
 app.locals.FLUIDS = orders.FLUIDS;
 app.locals.TIRES = orders.TIRES;
 app.locals.WORK_LINES = orders.WORK_LINES;
+app.locals.fmtMm = inv.fmtMm;
+app.locals.treadClass = inv.treadClass;
 function flash(req, type, text) {
   req.session.flash = { type, text };
 }
@@ -274,7 +278,8 @@ app.get('/', (req, res) => {
   const q = String(req.query.q || '').trim();
   let rows;
   const base = `
-    SELECT c.*, COUNT(o.id) AS aantal, MAX(o.datum_invoer) AS laatste
+    SELECT c.*, COUNT(o.id) AS aantal, MAX(o.datum_invoer) AS laatste,
+      (SELECT COUNT(*) FROM tyre_storage t WHERE t.plate_key = c.plate_key AND t.soort = 'klant' AND t.status = 'opgeslagen') AS banden
     FROM customers c LEFT JOIN orders o ON o.customer_id = c.id`;
   if (q) {
     const term = likeTerm(q);
@@ -302,7 +307,9 @@ app.get('/klant/:id', wrap(async (req, res) => {
       ).all(customer.id, likeTerm(q))
     : db.prepare('SELECT * FROM orders WHERE customer_id = ? ORDER BY datum_invoer DESC, nummer DESC').all(customer.id);
   const rdwData = await rdw.forCustomer(customer);
-  res.render('customer', { title: customer.kenteken, customer, q, orders: rows.map(withSummary), rdwData });
+  res.render('customer', {
+    title: customer.kenteken, customer, q, orders: rows.map(withSummary), rdwData, tyres: inv.tyresForPlate(customer.plate_key),
+  });
 }));
 
 // RDW-gegevens opnieuw ophalen (knop op de klantpagina).
@@ -506,10 +513,14 @@ app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
   res.redirect(stillExists ? `/klant/${customerId}` : '/');
 });
 
+/* ---------- bandenhotel, voorraad en Excel-import ---------- */
+// Vóór de foto-import: anders vangt /importeren/:id ook /importeren/excel af.
+registerInventory(app, { flash, wrap });
+
 /* ---------- foto-import ---------- */
 app.get('/importeren', (req, res) => {
   res.render('import', {
-    title: 'Foto importeren', configured: importer.isConfigured(), maxImages: importer.MAX_IMAGES, usage: importer.usage(),
+    title: 'Werkopdracht importeren', configured: importer.isConfigured(), maxImages: importer.MAX_IMAGES, usage: importer.usage(),
   });
 });
 

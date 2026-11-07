@@ -1,0 +1,40 @@
+<%- include('/partials/head') %>
+<main class="page narrow import-page">
+  <%- include('/partials/import-tabs', { active: 'excel' }) %>
+  <h1>Excel-lijst importeren</h1>
+  <p class="muted">Zet je bestaande lijsten over naar ADONIS: het <strong>bandenhotel</strong> (banden van klanten in opslag) en de
+    <strong>voorraad</strong> (onderdelen en banden op de zaak). Je kunt alles controleren en aanpassen voordat er iets wordt opgeslagen.</p>
+
+  <section class="card" id="excelCard" data-csrf="<%= csrf %>" data-max="<%= maxMb %>">
+    <ol class="steps">
+      <li>Kies het Excel-bestand (.xlsx) of een CSV-bestand. Alle bladen worden bekeken.</li>
+      <li><% if (configured) { %>Claude bekijkt welk blad wat is, welke kolom bij welk veld hoort, trekt schrijfwijzen gelijk en wijst rijen aan die je moet nakijken.<% } else { %>ADONIS deelt de kolommen in op basis van de kolomkoppen.<% } %></li>
+      <li>Jij controleert alles op de volgende pagina en bevestigt de import.</li>
+    </ol>
+    <label class="btn btn-primary btn-big btn-block file-pick">
+      <input type="file" id="excelInput" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden>
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.5V9h5.5zM8 12l2.2 3L8 18h1.8l1.3-1.9 1.3 1.9h1.8l-2.2-3 2.2-3h-1.8l-1.3 1.9L9.8 12z"/></svg>
+      Excel-bestand kiezen
+    </label>
+    <p class="file-name muted" id="excelName" hidden></p>
+    <% if (configured) { %>
+    <label class="check"><input type="checkbox" id="useClaude" checked <%= usage.remaining === 0 ? 'disabled' : '' %>> Laat Claude meekijken (aanbevolen)</label>
+    <% if (usage.remaining === 0) { %><p class="muted small">De daglimiet voor Claude is bereikt; de import gaat dan op basis van de kolomkoppen.</p><% } %>
+    <% } %>
+    <div class="alert" id="excelError" hidden></div>
+    <button class="btn btn-primary btn-block btn-big" id="excelStart" type="button" disabled>Inlezen en controleren</button>
+    <div class="busy" id="excelBusy" hidden>
+      <div class="spinner"></div>
+      <div><strong id="excelBusyText">Bezig met inlezen…</strong><br><span class="muted small" id="excelBusySub">Laat deze pagina open.</span></div>
+    </div>
+  </section>
+  <% if (configured) { %>
+  <p class="muted small usage-line">Een beoordeling door Claude telt als één import (vandaag <%= usage.today %> van <%= usage.limit === 0 ? 'onbeperkt' : usage.limit %>).
+    Kosten meestal enkele tientallen centen per bestand, afhankelijk van de grootte.</p>
+  <p class="muted small">Privacy: met Claude worden de gegevens uit het bestand (bijv. klantnamen en kentekens) voor de beoordeling naar Anthropic gestuurd.
+    Liever niet? Zet het vinkje uit.</p>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/import-excel.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

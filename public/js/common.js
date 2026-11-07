@@ -21,3 +21,9 @@ if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
   const el = document.querySelector('[data-autofocus]');
   if (el) el.focus();
 }
+// Telefoon: het actieve menu-item in beeld schuiven (het menu is daar één rij om door te vegen).
+(function () {
+  const nav = document.querySelector('.mainnav');
+  const active = nav && nav.querySelector('a.active');
+  if (active && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = active.offsetLeft - nav.clientWidth / 2 + active.offsetWidth / 2;
+})();

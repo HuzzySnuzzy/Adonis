@@ -1,0 +1,7 @@
+<%# Profiel voor/achter met kleur (rood < 1,6 mm, oranje < 3 mm of bij winterbanden < 4 mm). %>
+<% const tv = t.profiel_voor, ta = t.profiel_achter; %>
+<% if (tv === null && ta === null) { %><span class="muted"><%= t.profiel_tekst %></span><% } else { %>
+<span class="tread-pair" title="<%= t.profiel_tekst ? t.profiel_tekst : 'Voor / achter' %>">
+  <span class="tread <%= treadClass(tv, t.seizoen) %>"><%= tv === null ? '?' : fmtMm(tv) %></span><% if (ta !== null && ta !== tv) { %><span class="tread-sep">/</span><span class="tread <%= treadClass(ta, t.seizoen) %>"><%= fmtMm(ta) %></span><% } %><span class="tread-unit">mm</span><% if (t.profiel_tekst) { %><span class="tread-note" aria-label="Opmerking bij profiel">*</span><% } %>
+</span>
+<% } %>

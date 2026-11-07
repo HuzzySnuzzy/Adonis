@@ -1,0 +1,4 @@
+<nav class="status-tabs import-tabs" aria-label="Soort import">
+  <a href="/importeren" class="<%= active === 'foto' ? 'active' : '' %>">Werkopdracht (foto)</a>
+  <% if (user.is_admin) { %><a href="/importeren/excel" class="<%= active === 'excel' ? 'active' : '' %>">Bandenhotel / voorraad (Excel)</a><% } %>
+</nav>

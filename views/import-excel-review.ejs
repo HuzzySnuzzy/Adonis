@@ -1,0 +1,161 @@
+<%- include('/partials/head') %>
+<%
+  const plan = draft.plan;
+  const FIELD_LABEL = (doel, f) => (TARGETS[doel] && TARGETS[doel].fields[f]) || SPECIAL[f] || f;
+  const totalOn = previews.reduce((n, p) => n + p.counts.gekozen, 0);
+  const COLS = {
+    bandenhotel: [['label', 'Label'], ['kenteken', 'Kenteken'], ['klant_naam', 'Klant'], ['auto', 'Auto'], ['seizoen', 'Seizoen'], ['maat', 'Maat'], ['profiel', 'Profiel'], ['locatie', 'Locatie'], ['opmerkingen', 'Opmerkingen']],
+    bandenopslag: [['label', 'Label'], ['kenteken', 'Kenteken'], ['klant_naam', 'Klant'], ['auto', 'Auto'], ['seizoen', 'Seizoen'], ['maat', 'Maat'], ['profiel', 'Profiel'], ['locatie', 'Locatie'], ['opmerkingen', 'Opmerkingen']],
+    onderdelen: [['aantal', 'Aantal'], ['type', 'Soort'], ['merk', 'Merk'], ['nummer', 'Nummer'], ['oe_nummer', 'OE-nummer'], ['omschrijving', 'Omschrijving'], ['locatie', 'Locatie'], ['datum', 'Datum']],
+    banden: [['aantal', 'Aantal'], ['maat', 'Maat'], ['merk', 'Merk'], ['type', 'Type'], ['profiel', 'Profiel'], ['snelheid', 'Index'], ['seizoen', 'Seizoen'], ['locatie', 'Locatie']],
+  };
+  const STATUS = { bijwerken: ['Bijwerken', 'st-upd', 'Dit label staat al in het bandenhotel: de set wordt bijgewerkt'], bestaat: ['Staat er al', 'st-dup', 'Precies deze gegevens staan al in ADONIS'], leeg: ['Leeg', 'st-empty', 'Geen gegevens in deze rij'] };
+  const short = (v, n = 40) => { const s = String(v ?? ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+%>
+<main class="page wide excel-review">
+  <p class="crumbs"><a href="/importeren/excel">← Ander bestand kiezen</a></p>
+  <h1>Import controleren</h1>
+  <p class="muted"><strong><%= draft.filename %></strong> · <%= previews.length %> blad<%= previews.length === 1 ? '' : 'en' %>
+    · <%= plan.claude === 'ja' ? 'beoordeeld door Claude' : 'ingedeeld op basis van de kolomkoppen' %>. Er is nog niets opgeslagen.</p>
+  <% if (plan.claude === 'mislukt') { %><div class="alert">Claude kon niet meekijken (<%= plan.claudeFout %>). De kolommen zijn ingedeeld op basis van de kolomkoppen – controleer ze extra goed.</div><% } %>
+  <% if (plan.samenvatting) { %><div class="claude-note"><span class="claude-tag">Claude</span><p><%= plan.samenvatting %></p></div><% } %>
+  <div class="review-help muted small">
+    <p>Controleer per blad: <b>wat</b> het is, <b>welke kolom</b> waar naartoe gaat, hoe <b>schrijfwijzen</b> worden gelijkgetrokken en <b>welke rijen</b> mee gaan.
+      Rijen met een opmerking zijn gemarkeerd. Pas je iets aan bij de kolommen of het doel? Klik dan op <b>Voorbeeld bijwerken</b>.</p>
+  </div>
+
+  <form method="post" action="/importeren/excel/<%= draft.id %>/bevestigen" id="reviewForm" autocomplete="off">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <input type="hidden" name="anker" value="" id="anker">
+    <% for (const p of previews) { const si = p.si, sh = p.sheet, pl = p.plan, b = `blad[${si}]`; %>
+    <section class="card sheet-card" id="blad-<%= si %>" data-sheet="<%= si %>">
+      <div class="sheet-head">
+        <h2>Blad “<%= sh.name %>” <span class="muted small"><%= sh.rows.length %> rijen</span></h2>
+        <label class="doel-pick">Importeren als
+          <select name="<%= b %>[doel]" data-replan>
+            <% for (const [k, l] of Object.entries(DOELEN)) { %><option value="<%= k %>" <%= pl.doel === k ? 'selected' : '' %>><%= l %></option><% } %>
+          </select>
+        </label>
+      </div>
+      <% if (pl.reden || (pl.opmerkingen && pl.opmerkingen.length)) { %>
+      <div class="claude-note"><span class="claude-tag"><%= pl.door === 'claude' ? 'Claude' : 'ADONIS' %></span>
+        <% if (pl.reden) { %><p><%= pl.reden %></p><% } %>
+        <% if (pl.opmerkingen && pl.opmerkingen.length) { %><ul><% for (const o of pl.opmerkingen) { %><li><%= o %></li><% } %></ul><% } %>
+      </div>
+      <% } %>
+
+      <% if (pl.doel !== 'overslaan') { const fields = TARGETS[pl.doel].fields; %>
+      <details class="review-block" <%= pl.door === 'claude' ? '' : 'open' %>>
+        <summary>Kolommen <span class="muted">(<%= sh.columns.length %>)</span></summary>
+        <div class="table-wrap"><table class="list compact">
+          <thead><tr><th>Kolom</th><th>Kop in Excel</th><th>Voorbeeld</th><th>Gaat naar</th></tr></thead>
+          <tbody>
+          <% sh.columns.forEach((c, ci) => { const ex = sh.rows.map((r) => r.cells[ci]).filter((v) => v !== null && v !== '').slice(0, 3); %>
+            <tr class="<%= ['extra', 'overslaan'].includes(pl.kolommen[ci]) ? 'is-out' : '' %>">
+              <td class="mono"><%= c.letter %></td><td><strong><%= c.header %></strong> <span class="muted small"><%= c.filled %>×</span></td>
+              <td class="muted small"><%= ex.map((v) => short(typeof v === 'boolean' ? (v ? 'ja' : 'nee') : v, 28)).join(' · ') %></td>
+              <td><select name="<%= b %>[kolom][<%= ci %>]" data-replan aria-label="Kolom <%= c.letter %> gaat naar">
+                <% for (const [f, l] of Object.entries(fields)) { %><option value="<%= f %>" <%= pl.kolommen[ci] === f ? 'selected' : '' %>><%= l %></option><% } %>
+                <% for (const [f, l] of Object.entries(SPECIAL)) { %><option value="<%= f %>" <%= pl.kolommen[ci] === f ? 'selected' : '' %>><%= l %></option><% } %>
+              </select></td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table></div>
+      </details>
+
+      <% for (const [field, list] of Object.entries(p.distinct || {})) { if (!list.length) continue;
+           const map = pl.waarden[field] || {}; const changed = list.filter(([v]) => Object.hasOwn(map, v) && map[v] !== v).length;
+           const ordered = [...list].sort((a, b) => (Object.hasOwn(map, b[0]) && map[b[0]] !== b[0]) - (Object.hasOwn(map, a[0]) && map[a[0]] !== a[0])); %>
+      <details class="review-block">
+        <summary><%= FIELD_LABEL(pl.doel, field) %>: schrijfwijzen <span class="muted">(<%= list.length %> verschillend<%= changed ? ', ' + changed + ' worden aangepast' : '' %>)</span></summary>
+        <p class="muted small">Pas de rechterkolom aan om waarden samen te voegen of anders te schrijven. Leeg = veld blijft leeg.</p>
+        <div class="table-wrap"><table class="list compact value-map">
+          <thead><tr><th>In Excel</th><th class="num">Aantal</th><th>Wordt</th></tr></thead>
+          <tbody>
+          <% ordered.forEach(([v, n], k) => { const to = Object.hasOwn(map, v) ? map[v] : v; %>
+            <tr class="<%= to !== v ? 'is-changed' : '' %>">
+              <td><%= v %><input type="hidden" name="<%= b %>[w][<%= field %>][<%= k %>][van]" value="<%= v %>"></td>
+              <td class="num"><%= n %></td>
+              <td><input name="<%= b %>[w][<%= field %>][<%= k %>][naar]" value="<%= to %>" aria-label="<%= v %> wordt"></td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table></div>
+      </details>
+      <% } %>
+
+      <% const profs = Object.entries(pl.profielen || {}); if (profs.length) { const unsure = profs.filter(([, x]) => !x.zeker && !x.claude).length; %>
+      <details class="review-block">
+        <summary>Profiel uitgelezen <span class="muted">(<%= profs.length %> verschillende notities<%= unsure ? ', ' + unsure + ' onzeker' : '' %>)</span></summary>
+        <p class="muted small">Voor en achter in mm. De toelichting wordt bij de set bewaard (bijv. als iets niet in getallen te vangen is).</p>
+        <div class="table-wrap"><table class="list compact value-map">
+          <thead><tr><th>In Excel</th><th class="num">×</th><th>Voor</th><th>Achter</th><th>Toelichting</th></tr></thead>
+          <tbody>
+          <% profs.sort((a, b) => (a[1].zeker || a[1].claude ? 1 : 0) - (b[1].zeker || b[1].claude ? 1 : 0)).forEach(([v, x], k) => { %>
+            <tr class="<%= !x.zeker && !x.claude ? 'is-warn' : '' %>">
+              <td><%= v %><input type="hidden" name="<%= b %>[p][<%= k %>][van]" value="<%= v %>"></td>
+              <td class="num"><%= p.profielCounts.get(v) || '' %></td>
+              <td><input name="<%= b %>[p][<%= k %>][voor]" value="<%= x.voor %>" inputmode="decimal" class="mm-input" aria-label="Voor"></td>
+              <td><input name="<%= b %>[p][<%= k %>][achter]" value="<%= x.achter %>" inputmode="decimal" class="mm-input" aria-label="Achter"></td>
+              <td><input name="<%= b %>[p][<%= k %>][tekst]" value="<%= x.tekst %>" aria-label="Toelichting"></td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table></div>
+      </details>
+      <% } %>
+
+      <div class="rows-block" data-rows>
+        <input type="hidden" name="<%= b %>[rijen_getoond]" value="1">
+        <input type="hidden" name="<%= b %>[keuze]" value="" data-keuze disabled>
+        <div class="rows-toolbar">
+          <strong><span data-on-count><%= p.counts.gekozen %></span> van <%= p.counts.totaal %> rijen worden geïmporteerd</strong>
+          <span class="muted small">
+            <%= p.counts.nieuw %> nieuw<% if (p.counts.bijwerken) { %> · <%= p.counts.bijwerken %> bijwerken<% } %><% if (p.counts.bestaat) { %> · <%= p.counts.bestaat %> staan er al<% } %><% if (p.counts.leeg) { %> · <%= p.counts.leeg %> leeg<% } %><% if (p.counts.nieuweKlanten) { %> · <%= p.counts.nieuweKlanten %> nieuwe klanten voor Klanten<% } %>
+          </span>
+          <% if (p.counts.letop) { %><label class="check"><input type="checkbox" data-only-flagged> Alleen rijen met een opmerking (<%= p.counts.letop %>)</label><% } %>
+          <button type="button" class="btn btn-small" data-all="1">Alles aan</button>
+          <button type="button" class="btn btn-small" data-all="0">Alles uit</button>
+        </div>
+        <div class="table-wrap rows-wrap"><table class="list compact rows-table">
+          <thead><tr><th class="chk"><span class="sr-only">Importeren</span></th><th>Rij</th>
+            <% for (const [, l] of COLS[pl.doel]) { %><th><%= l %></th><% } %><th>Let op</th></tr></thead>
+          <tbody>
+          <% for (const r of p.rows) { const rec = r.record; const flagged = r.warnings.length || r.flag; %>
+            <tr class="<%= flagged ? 'is-warn' : '' %><%= r.flag && r.flag.advies === 'overslaan' ? ' is-skip' : '' %><%= r.status === 'bestaat' || r.status === 'leeg' ? ' is-out' : '' %>" <%= flagged ? 'data-flagged' : '' %>>
+              <td class="chk"><input type="checkbox" name="<%= b %>[rij][]" value="<%= r.n %>" <%= r.on ? 'checked' : '' %> aria-label="Rij <%= r.n %> importeren"></td>
+              <td class="mono muted"><%= r.n %><% if (STATUS[r.status]) { %> <span class="row-st <%= STATUS[r.status][1] %>" title="<%= STATUS[r.status][2] %>"><%= STATUS[r.status][0] %></span><% } %></td>
+              <% for (const [f] of COLS[pl.doel]) { %>
+                <% if (f === 'profiel' && (pl.doel === 'bandenhotel' || pl.doel === 'bandenopslag')) { %><td class="nowrap"><%- include('/partials/tread', { t: rec }) %></td>
+                <% } else if (f === 'kenteken') { %><td class="nowrap"><% if (rec.kenteken) { %><%- include('/partials/plate', { kenteken: rec.kenteken }) %><% } %><% if (r.klant === 'nieuw' && r.on) { %> <span class="row-st st-new" title="Wordt toegevoegd aan Klanten">nieuwe klant</span><% } %></td>
+                <% } else if (f === 'datum') { %><td class="nowrap"><%= fmtDate(rec.datum) %></td>
+                <% } else { %><td title="<%= String(rec[f] ?? '').length > 30 ? rec[f] : '' %>"><%= short(rec[f], f === 'opmerkingen' || f === 'omschrijving' ? 46 : 30) %></td><% } %>
+              <% } %>
+              <td class="row-notes">
+                <% if (r.flag) { %><div class="note-claude"><b>Claude<%= r.flag.advies === 'overslaan' ? ' (overslaan)' : '' %>:</b> <%= r.flag.reden %></div><% } %>
+                <% for (const w of r.warnings) { %><div><%= w %></div><% } %>
+              </td>
+            </tr>
+          <% } %>
+          </tbody>
+        </table></div>
+      </div>
+      <% } %>
+    </section>
+    <% } %>
+
+    <div class="review-bar">
+      <button class="btn" type="submit" formaction="/importeren/excel/<%= draft.id %>/voorbeeld" id="replanBtn">Voorbeeld bijwerken</button>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" type="submit" form="cancelForm">Annuleren</button>
+      <button class="btn btn-primary" type="submit" id="confirmBtn" data-confirm-text="Importeren bevestigen">Importeren bevestigen (<span id="totalOn"><%= totalOn %></span> rijen)</button>
+    </div>
+  </form>
+  <form method="post" action="/importeren/excel/<%= draft.id %>/annuleren" id="cancelForm" data-confirm="Import annuleren? Er wordt niets opgeslagen.">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+  </form>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/import-excel.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

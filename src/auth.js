@@ -20,7 +20,7 @@ const PREF_OPTIONS = {
   theme: ['system', 'light', 'dark', 'neon'],
   fx: ['full', 'calm'],
   ink: ['hand', 'plain'],
-  start: ['/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw'],
+  start: ['/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw', '/bandenhotel', '/voorraad'],
 };
 const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full' };
 

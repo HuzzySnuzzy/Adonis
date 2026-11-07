@@ -254,20 +254,30 @@ function parseImages(list) {
   });
 }
 
-function apiError(err) {
+function apiError(err, kind = 'foto') {
+  const excel = kind === 'excel';
   const status = err && err.status;
   if (status === 401 || status === 403) return new ImportError('De API-sleutel voor het uitlezen is ongeldig. Controleer anthropic-api-key in config.properties.');
   if (status === 429) return new ImportError('Te veel verzoeken of tegoed op. Probeer het over een minuut opnieuw.');
-  if (status === 413) return new ImportError('De foto\'s zijn samen te groot. Probeer minder foto\'s tegelijk.');
+  if (status === 413) return new ImportError(excel ? 'Het bestand is te groot om te laten beoordelen. Importeer zonder Claude.' : 'De foto\'s zijn samen te groot. Probeer minder foto\'s tegelijk.');
   if (status === 400) {
-    console.error('Foto-import: API weigerde het verzoek:', err.message);
+    console.error(excel ? 'Excel-import' : 'Foto-import', ': API weigerde het verzoek:', err.message);
     const credit = /credit|balance|billing/i.test(err.message || '');
     return new ImportError(credit
       ? 'Het tegoed voor het uitlezen is op. Vul het tegoed aan in de Anthropic Console.'
-      : 'De foto kon niet worden verwerkt. Probeer het opnieuw; blijft dit gebeuren, meld het dan aan de beheerder (details staan in de console).');
+      : (excel ? 'Het bestand kon niet worden beoordeeld' : 'De foto kon niet worden verwerkt') + '. Probeer het opnieuw; blijft dit gebeuren, meld het dan aan de beheerder (details staan in de console).');
   }
   if (status >= 500) return new ImportError('De uitleesdienst is tijdelijk niet beschikbaar. Probeer het later opnieuw.');
   return new ImportError('Geen verbinding met de uitleesdienst (is er internet?). ' + (err && err.message ? `(${err.message})` : ''));
+}
+
+/** Verbruik van een (gelukte, dus betaalde) aanroep. */
+function usageOf(response) {
+  return {
+    model: response.model || MODEL,
+    input: (response.usage?.input_tokens || 0) + (response.usage?.cache_read_input_tokens || 0) + (response.usage?.cache_creation_input_tokens || 0),
+    output: response.usage?.output_tokens || 0,
+  };
 }
 
 async function readWithClaude(images) {
@@ -306,11 +316,7 @@ async function readWithClaude(images) {
     }
   }
   // Vanaf hier is de aanroep gelukt en dus betaald: verbruik altijd doorgeven, ook bij een fout.
-  const used = {
-    model: response.model || MODEL,
-    input: (response.usage?.input_tokens || 0) + (response.usage?.cache_read_input_tokens || 0) + (response.usage?.cache_creation_input_tokens || 0),
-    output: response.usage?.output_tokens || 0,
-  };
+  const used = usageOf(response);
   const billedError = (msg) => Object.assign(new ImportError(msg), { usage: used });
   if (response.stop_reason === 'refusal') throw billedError('De foto kon niet worden uitgelezen. Probeer een andere foto.');
   if (response.stop_reason === 'max_tokens') throw billedError('Het uitlezen werd afgebroken (te veel tekst). Probeer minder foto\'s tegelijk.');
@@ -350,11 +356,11 @@ async function readWithClaude(images) {
   };
 }
 
-/** Foto's uitlezen en als concept opslaan. Geeft het concept-id terug. */
-async function createDraft(imageUrls, userId) {
-  if (!isConfigured()) throw new ImportError('Foto-import is niet ingesteld: vul anthropic-api-key in config.properties in.');
-  const images = parseImages(imageUrls);
-
+/**
+ * Een betaalde aanroep met daglimiet en verbruikslog. fn() geeft { usage, ... } terug, of gooit een fout
+ * met .usage als de aanroep wel is betaald. Wordt ook door de Excel-import gebruikt.
+ */
+async function metered(userId, fn) {
   // Daglimiet: eerst een plek reserveren (zo kunnen twee gelijktijdige imports de limiet niet omzeilen).
   const limit = dailyLimit();
   const today = orders.todayISO();
@@ -372,10 +378,9 @@ async function createDraft(imageUrls, userId) {
     if (db.isTransaction) db.exec('ROLLBACK');
     throw err;
   }
-
   let result;
   try {
-    result = await readWithClaude(images);
+    result = await fn();
   } catch (err) {
     if (err.usage) {
       // Wel betaald: meetellen.
@@ -389,6 +394,15 @@ async function createDraft(imageUrls, userId) {
   }
   db.prepare("UPDATE import_log SET status = 'ok', model = ?, input_tokens = ?, output_tokens = ? WHERE id = ?")
     .run(result.usage.model, result.usage.input, result.usage.output, logId);
+  return result;
+}
+
+/** Foto's uitlezen en als concept opslaan. Geeft het concept-id terug. */
+async function createDraft(imageUrls, userId) {
+  if (!isConfigured()) throw new ImportError('Foto-import is niet ingesteld: vul anthropic-api-key in config.properties in.');
+  const images = parseImages(imageUrls);
+
+  const result = await metered(userId, () => readWithClaude(images));
   delete result.usage;
   const res = db.prepare('INSERT INTO import_drafts (user_id, result, images) VALUES (?, ?, ?)').run(
     userId, JSON.stringify(result), JSON.stringify(images)
@@ -408,5 +422,6 @@ function deleteDraft(id) {
 }
 
 module.exports = {
+  MODEL, metered, usageOf, apiError, getClient: () => clientFactory(),
   isConfigured, createDraft, usage, dailyLimit, toWorkOrder, getDraft, deleteDraft, setClientFactory, ImportError, RESULT_SCHEMA, MAX_IMAGES,
 };

@@ -25,7 +25,7 @@
     <p class="muted"><%= customers.length %> klant<%= customers.length === 1 ? '' : 'en' %><%= q ? ' gevonden' : '' %></p>
     <div class="table-wrap">
     <table class="list clickable">
-      <thead><tr><th>Kenteken</th><th>Naam</th><th>Merk/Type</th><th>Plaats</th><th>APK</th><th class="num">Opdrachten</th><th>Laatste bezoek</th></tr></thead>
+      <thead><tr><th>Kenteken</th><th>Naam</th><th>Merk/Type</th><th>Plaats</th><th>APK</th><th>Banden</th><th class="num">Opdrachten</th><th>Laatste bezoek</th></tr></thead>
       <tbody>
       <% for (const c of customers) { %>
         <tr data-href="/klant/<%= c.id %>">
@@ -34,6 +34,7 @@
           <td><%= c.merk_type %></td>
           <td><%= c.plaats %></td>
           <td><% const a = apkStatus(c.apk_vervaldatum); if (a) { %><span class="apk-pill apk-<%= a.cls %>" title="<%= a.rel %>"><%= fmtDate(c.apk_vervaldatum) %></span><% } %></td>
+          <td><% if (c.banden) { %><span class="season season-all" title="Banden in het bandenhotel"><%= c.banden === 1 ? '1 set' : c.banden + ' sets' %></span><% } %></td>
           <td class="num"><%= c.aantal %></td>
           <td><%= fmtDate(c.laatste) %></td>
         </tr>

@@ -57,6 +57,20 @@
     <% } %>
   </section>
 
+  <section class="rdw-card tyre-card" aria-label="Bandenhotel" id="live-customer-tyres" data-live>
+    <div class="rdw-head">
+      <h2>Bandenhotel</h2>
+      <div class="rdw-links"><a href="/bandenhotel/nieuw?klant=<%= customer.id %>">+ Banden inslaan</a></div>
+    </div>
+    <% const stored = tyres.filter((t) => t.status === 'opgeslagen'); %>
+    <% if (!tyres.length) { %>
+      <p class="muted">Geen banden van <%= customer.kenteken %> in opslag.</p>
+    <% } else { %>
+      <p class="muted small"><%= stored.length ? stored.length + ' set' + (stored.length === 1 ? '' : 's') + ' in opslag' : 'Niets meer in opslag' %><%= tyres.length > stored.length ? ' · ' + (tyres.length - stored.length) + ' eerder uitgegeven' : '' %></p>
+      <%- include('/partials/tyrelist', { tyres, showPlate: false, showStatus: true }) %>
+    <% } %>
+  </section>
+
   <div class="page-head">
     <h2>Werkopdrachten</h2>
     <form class="search" method="get" role="search" autocomplete="off">

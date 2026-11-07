@@ -68,6 +68,11 @@
   }
 
   function handle(ev) {
+    // Bandenhotel/voorraad gewijzigd door een collega: lijsten op dit scherm bijwerken.
+    if (ev.type === 'data') {
+      if (String(ev.byId) !== String(me)) refreshLists();
+      return;
+    }
     if (ev.type !== 'order') return;
     const byOther = String(ev.byId) !== String(me);
     const label = `Werkopdracht ${ev.nummer}${ev.kenteken ? ` (${ev.kenteken})` : ''}`;
