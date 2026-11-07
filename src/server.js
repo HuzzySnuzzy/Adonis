@@ -19,6 +19,7 @@ const events = require('./events');
 const settings = require('./settings');
 const tunnel = require('./tunnel');
 const cloudflare = require('./cloudflare');
+const rdw = require('./rdw');
 
 const app = express();
 // Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
@@ -159,6 +160,20 @@ function inp(pathStr, value, attrs = '') {
   const cls = /\bclass=/.test(attrs) ? '' : 'class="ink" ';
   return `<input ${cls}name="${name}" value="${esc(value)}" autocomplete="off" ${attrs}>`;
 }
+/** APK-status voor weergave: verlopen (rood), binnen 2 maanden (oranje) of in orde (groen). */
+function apkStatus(iso) {
+  if (!iso) return null;
+  const today = new Date(orders.todayISO() + 'T00:00:00Z');
+  const d = new Date(iso + 'T00:00:00Z');
+  const days = Math.round((d - today) / 86400000);
+  const rel = days < 0 ? (days > -31 ? `${-days} dagen geleden verlopen` : `${Math.round(-days / 30.4)} maanden geleden verlopen`)
+    : days === 0 ? 'verloopt vandaag' : days < 31 ? `over ${days} dagen` : days < 365 ? `over ${Math.round(days / 30.4)} maanden`
+      : `over ${(days / 365).toFixed(1).replace('.', ',')} jaar`;
+  return { cls: days < 0 ? 'expired' : days <= 60 ? 'soon' : 'ok', days, rel };
+}
+app.locals.apkStatus = apkStatus;
+app.locals.rdwUrl = rdw.rdwUrl;
+app.locals.rdwMerkType = rdw.merkType;
 app.locals.esc = esc;
 app.locals.inp = inp;
 app.locals.fmtDate = fmtDate;
@@ -274,7 +289,7 @@ app.get('/', (req, res) => {
 });
 
 /* Eén klant met alle werkopdrachten */
-app.get('/klant/:id', (req, res) => {
+app.get('/klant/:id', wrap(async (req, res) => {
   const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
   if (!customer) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze klant bestaat niet.' });
   const q = String(req.query.q || '').trim();
@@ -283,8 +298,31 @@ app.get('/klant/:id', (req, res) => {
         `SELECT * FROM orders WHERE customer_id = ? AND search_text LIKE ? ESCAPE '\\' ORDER BY datum_invoer DESC, nummer DESC`
       ).all(customer.id, likeTerm(q))
     : db.prepare('SELECT * FROM orders WHERE customer_id = ? ORDER BY datum_invoer DESC, nummer DESC').all(customer.id);
-  res.render('customer', { title: customer.kenteken, customer, q, orders: rows.map(withSummary) });
-});
+  const rdwData = await rdw.forCustomer(customer);
+  res.render('customer', { title: customer.kenteken, customer, q, orders: rows.map(withSummary), rdwData });
+}));
+
+// RDW-gegevens opnieuw ophalen (knop op de klantpagina).
+app.post('/klant/:id/rdw', wrap(async (req, res) => {
+  const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+  if (!customer) return res.redirect('/');
+  const r = await rdw.forCustomer(customer, { force: true });
+  flash(req, r.error ? 'err' : 'ok', r.error ? `RDW niet bereikbaar: ${r.error}` : 'RDW-gegevens bijgewerkt.');
+  res.redirect(`/klant/${customer.id}`);
+}));
+
+// RDW opzoeken vanuit het werkopdrachtformulier (JSON).
+app.get('/rdw/:kenteken', wrap(async (req, res) => {
+  const key = plateKey(req.params.kenteken);
+  try {
+    const customer = db.prepare('SELECT * FROM customers WHERE plate_key = ?').get(key);
+    const info = customer ? (await rdw.forCustomer(customer)).info : await rdw.lookup(key);
+    if (!info) throw new Error('niet bereikbaar');
+    res.json({ ok: true, info, merkType: rdw.merkType(info), url: rdw.rdwUrl(key), apk: apkStatus(info.apk) });
+  } catch (err) {
+    res.status(502).json({ ok: false, error: 'De RDW is op dit moment niet bereikbaar.' });
+  }
+}));
 
 /* Alle werkopdrachten doorzoeken */
 app.get('/werkopdrachten', (req, res) => {
@@ -366,6 +404,7 @@ app.post('/werkopdracht', (req, res) => {
     msg = `Werkopdracht ${nummer} is opgeslagen en naar facturatie gestuurd.`;
   }
   announce(req, 'created', { id, nummer, kenteken: data.kenteken, status: req.body.next_status === 'klaar' ? 'klaar' : 'open' });
+  rdw.refreshInBackground(data.kenteken);
   flash(req, 'ok', msg);
   res.redirect(`/werkopdracht/${id}`);
 });
@@ -508,6 +547,7 @@ app.post('/importeren/:id/bevestigen', (req, res) => {
   }
   const id = orders.saveOrder({ nummer, data, userId: req.user.id, datumInvoer });
   orders.logAction(id, req.user, 'aangemaakt (foto-import)');
+  rdw.refreshInBackground(data.kenteken);
   announce(req, 'created', { id, nummer, kenteken: data.kenteken });
   importer.deleteDraft(draft.id);
   flash(req, 'ok', `Import bevestigd: werkopdracht ${nummer} is opgeslagen.`);

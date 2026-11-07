@@ -221,7 +221,7 @@
         <div class="cell"><span class="lbl">Klantnr.</span><%- inp('klantnr', d.klantnr) %></div>
         <div class="cell"><span class="lbl">Plaats</span><%- inp('plaats', d.plaats) %></div>
 
-        <div class="cell"><span class="lbl">Kenteken</span><%- inp('kenteken', d.kenteken, 'class="ink upper" required autocapitalize="characters" placeholder="verplicht"') %></div>
+        <div class="cell"><span class="lbl">Kenteken</span><%- inp('kenteken', d.kenteken, 'class="ink upper" required autocapitalize="characters" placeholder="verplicht" data-rdw-plate') %><button type="button" class="rdw-btn no-print" id="rdwBtn" title="Voertuiggegevens bij de RDW opzoeken">RDW</button></div>
         <div class="cell"><span class="lbl">Tel. privé</span><%- inp('tel_prive', d.tel_prive, 'type="tel"') %></div>
 
         <div class="cell"><span class="lbl">Merk/Type</span><%- inp('merk_type', d.merk_type) %></div>
@@ -344,4 +344,5 @@
 
 <script src="/static/js/common.js"></script>
 <script src="/static/js/order.js"></script>
+<script src="/static/js/rdw.js"></script>
 <%- include('/partials/foot') %>

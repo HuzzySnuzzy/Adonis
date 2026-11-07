@@ -15,6 +15,48 @@
     <a class="btn btn-primary" href="/werkopdracht/nieuw?klant=<%= customer.id %>">+ Nieuwe werkopdracht voor <%= customer.kenteken %></a>
   </div>
 
+
+  <% const ri = rdwData && rdwData.info; %>
+  <section class="rdw-card" aria-label="RDW-gegevens">
+    <div class="rdw-head">
+      <h2>RDW-gegevens</h2>
+      <div class="rdw-links">
+        <a href="<%= rdwUrl(customer.kenteken) %>" target="_blank" rel="noopener">Alles bekijken op rdw.nl ↗</a>
+        <form method="post" action="/klant/<%= customer.id %>/rdw" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="linkbtn" type="submit" title="Opnieuw ophalen bij de RDW">Vernieuwen</button>
+        </form>
+      </div>
+    </div>
+    <% if (!ri) { %>
+      <p class="muted">De RDW is op dit moment niet bereikbaar<%= rdwData && rdwData.error ? ' (' + rdwData.error + ')' : '' %>. Probeer later opnieuw.</p>
+    <% } else if (!ri.found) { %>
+      <p class="muted">Kenteken <strong><%= customer.kenteken %></strong> is niet gevonden bij de RDW. Klopt het kenteken?</p>
+    <% } else { const apk = apkStatus(ri.apk); %>
+      <div class="rdw-grid">
+        <div class="apk-box apk-<%= apk ? apk.cls : 'none' %>">
+          <span class="apk-label">APK verloopt</span>
+          <% if (apk) { %><strong><%= fmtDate(ri.apk) %></strong><span><%= apk.rel %></span>
+          <% } else { %><strong>onbekend</strong><span>niet APK-plichtig of niet bekend</span><% } %>
+        </div>
+        <dl class="facts rdw-facts">
+          <dt>Merk / type</dt><dd><%= rdwMerkType(ri) %></dd>
+          <% if (ri.brandstof) { %><dt>Brandstof</dt><dd><%= ri.brandstof %><%= ri.vermogenKw ? ` · ${ri.vermogenKw} kW (${ri.vermogenPk} pk)` : '' %></dd><% } %>
+          <% if (ri.eersteToelating) { %><dt>Eerste toelating</dt><dd><%= fmtDate(ri.eersteToelating) %><%= ri.eersteToelatingNL && ri.eersteToelatingNL !== ri.eersteToelating ? ' (in NL sinds ' + fmtDate(ri.eersteToelatingNL) + ')' : '' %></dd><% } %>
+          <% if (ri.kleur) { %><dt>Kleur</dt><dd><%= ri.kleur %></dd><% } %>
+          <% if (ri.cilinderinhoud) { %><dt>Cilinderinhoud</dt><dd><%= ri.cilinderinhoud %> cc</dd><% } %>
+          <% if (ri.emissie) { %><dt>Emissie</dt><dd><%= ri.emissie %></dd><% } %>
+          <% if (ri.tellerstand) { %><dt>Tellerstand</dt><dd><%= ri.tellerstand %></dd><% } %>
+          <% if (ri.verzekerd !== null) { %><dt>WA-verzekerd</dt><dd><%= ri.verzekerd ? 'Ja' : 'Nee' %></dd><% } %>
+        </dl>
+      </div>
+      <% if (ri.terugroepactie) { %><div class="rdw-warn">⚠ Er staat een <strong>openstaande terugroepactie</strong> op dit voertuig. Bekijk de details op rdw.nl.</div><% } %>
+      <% if (ri.export) { %><div class="rdw-warn">Dit voertuig is geëxporteerd.</div><% } %>
+      <% if (ri.wachtOpKeuring) { %><div class="rdw-warn">Wacht op keuring: <%= ri.wachtOpKeuring %></div><% } %>
+      <p class="muted small rdw-src">Bron: RDW Open Data<%= rdwData.at ? ' · opgehaald ' + fmtDateTime(rdwData.at) : '' %></p>
+    <% } %>
+  </section>
+
   <div class="page-head">
     <h2>Werkopdrachten</h2>
     <form class="search" method="get" role="search">

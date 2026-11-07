@@ -27,6 +27,11 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   De monteur klikt **Klaar → naar facturatie**; de werkopdracht verschijnt dan bij **Facturatie** (met teller in het
   menu en een melding). Facturatie vult het factuurnummer in en klikt **Afronden**: de werkopdracht is dan vergrendeld.
   Terughalen, terugsturen en heropenen kan ook; de geschiedenis laat zien wie wat wanneer deed.
+- **RDW-gegevens** (RDW Open Data, gratis): op de klantpagina APK-vervaldatum (groen/oranje/rood), merk/type,
+  brandstof en vermogen, eerste toelating, tellerstandoordeel en een waarschuwing bij een openstaande terugroepactie,
+  met een link naar rdw.nl. In de klantenlijst een APK-kolom. Op een nieuwe werkopdracht worden Merk/Type en
+  A.p.k.-datum na het invullen van het kenteken automatisch ingevuld; de knop **RDW** naast het kenteken toont de
+  details. Gegevens worden per klant bewaard en hooguit één keer per dag opnieuw opgehaald (vereist internet).
 - **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker*, handschrift of gewone letters
   in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
   apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.

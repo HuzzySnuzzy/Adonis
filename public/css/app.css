@@ -482,3 +482,39 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
 .role-help p { margin: .15rem 0; }
 .role-form select { padding: .3rem .5rem; font: inherit; color: var(--text); background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; }
 .grid-form select { display: block; margin-top: .3rem; padding: .55rem .7rem; font: inherit; color: var(--text); background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; width: 100%; }
+
+/* ---------- RDW ---------- */
+.rdw-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-top: 1rem; }
+.rdw-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+.rdw-head h2 { margin: 0 0 .6rem; font-size: 1.05rem; }
+.rdw-links { display: flex; gap: 1rem; font-size: .88rem; }
+.rdw-links .linkbtn { color: var(--link); }
+.rdw-grid { display: grid; grid-template-columns: 200px 1fr; gap: 1.2rem; align-items: start; }
+@media (max-width: 640px) { .rdw-grid { grid-template-columns: 1fr; } }
+.apk-box { display: flex; flex-direction: column; gap: .15rem; padding: .8rem 1rem; border-radius: 8px; border: 1px solid var(--border); }
+.apk-box strong { font-size: 1.3rem; }
+.apk-box span { font-size: .85rem; }
+.apk-label { text-transform: uppercase; letter-spacing: .06em; font-size: .7rem !important; opacity: .8; }
+.apk-ok { background: var(--ok-bg); color: var(--ok-text); border-color: transparent; }
+.apk-soon { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
+.apk-expired { background: var(--err-bg); color: var(--err-text); border-color: transparent; }
+.apk-none { background: var(--surface-2); color: var(--muted); }
+.rdw-facts { grid-template-columns: auto 1fr; }
+.rdw-warn { margin-top: .8rem; padding: .55rem .8rem; border-radius: 6px; background: var(--warn-bg); color: var(--warn-text); border: 1px solid var(--warn-border); font-size: .9rem; }
+.rdw-src { margin: .7rem 0 0; }
+.apk-pill { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .82rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* knop + venster op het werkopdrachtformulier */
+.rdw-btn {
+  flex: 0 0 auto; margin-right: 4px; padding: 0 .45rem; height: 22px; border-radius: 4px; cursor: pointer;
+  font: 700 11px/20px Arial, sans-serif; letter-spacing: .04em; color: #1a1a1a; background: var(--plate); border: 1px solid rgba(0,0,0,.35);
+}
+.rdw-pop {
+  position: absolute; z-index: 30; width: min(360px, calc(100vw - 2rem)); background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); padding: .9rem 1rem; font: 14px/1.45 system-ui, sans-serif;
+}
+.rdw-pop h3 { margin: 0 0 .4rem; font-size: 1rem; }
+.rdw-pop dl { display: grid; grid-template-columns: auto 1fr; gap: .15rem .8rem; margin: .5rem 0; }
+.rdw-pop dt { color: var(--muted); }
+.rdw-pop dd { margin: 0; }
+.rdw-pop .actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; align-items: center; }
+.rdw-pop .close { position: absolute; top: .4rem; right: .5rem; border: 0; background: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
