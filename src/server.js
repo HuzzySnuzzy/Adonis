@@ -313,7 +313,30 @@ app.get('/klant/:id', wrap(async (req, res) => {
   const rdwData = plates.rdwApplicable(customer.kenteken) ? await rdw.forCustomer(customer) : { foreign: true, country: plates.plateInfo(customer.kenteken).country };
   res.render('customer', {
     title: customer.kenteken, customer, q, orders: rows.map(withSummary), rdwData, tyres: inv.tyresForPlate(customer.plate_key), fotos: require('./photos').firstPhotos('tyre'),
+    editing: req.query.bewerken === '1', editError: null, editValues: null,
   });
+}));
+
+// Klantgegevens wijzigen (naam, adres, telefoon, kenteken, ...).
+app.post('/klant/:id/bewerken', wrap(async (req, res) => {
+  const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+  if (!customer) return res.redirect('/');
+  try {
+    const r = orders.updateCustomer(customer.id, req.body.c || {}, plates.formatPlate);
+    events.broadcast({ type: 'data', area: 'klanten', id: customer.id, by: req.user.name, byId: req.user.id });
+    if (r.plateChanged) rdw.refreshInBackground(r.kenteken);
+    flash(req, 'ok', r.plateChanged
+      ? `Klantgegevens opgeslagen. Het kenteken is gewijzigd van ${r.oldKenteken} naar ${r.kenteken}, ook op de werkopdrachten en in het bandenhotel.`
+      : 'Klantgegevens opgeslagen.');
+    res.redirect(`/klant/${customer.id}`);
+  } catch (err) {
+    const rows = db.prepare('SELECT * FROM orders WHERE customer_id = ? ORDER BY datum_invoer DESC, nummer DESC').all(customer.id);
+    const rdwData = plates.rdwApplicable(customer.kenteken) ? await rdw.forCustomer(customer) : { foreign: true, country: plates.plateInfo(customer.kenteken).country };
+    res.status(400).render('customer', {
+      title: customer.kenteken, customer, q: '', orders: rows.map(withSummary), rdwData, tyres: inv.tyresForPlate(customer.plate_key),
+      fotos: require('./photos').firstPhotos('tyre'), editing: true, editError: err.message, editValues: req.body.c || {}, clashId: err.clashId || null,
+    });
+  }
 }));
 
 // RDW-gegevens opnieuw ophalen (knop op de klantpagina).

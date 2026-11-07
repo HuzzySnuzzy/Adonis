@@ -27,3 +27,18 @@ if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
   const active = nav && nav.querySelector('a.active');
   if (active && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = active.offsetLeft - nav.clientWidth / 2 + active.offsetWidth / 2;
 })();
+// Tabellen die breder zijn dan het scherm: een schaduw aan de kant waar nog meer staat (zodat niets "verdwijnt").
+(function () {
+  function mark(w) {
+    const more = w.scrollWidth - w.clientWidth;
+    w.classList.toggle('more-right', more > 2 && w.scrollLeft < more - 2);
+    w.classList.toggle('more-left', more > 2 && w.scrollLeft > 2);
+  }
+  function all() { document.querySelectorAll('.table-wrap').forEach(mark); }
+  document.addEventListener('scroll', (e) => { if (e.target.classList && e.target.classList.contains('table-wrap')) mark(e.target); }, true);
+  addEventListener('resize', all);
+  addEventListener('load', all);
+  // Ook na live bijwerken (de lijst wordt dan vervangen).
+  if (window.MutationObserver) new MutationObserver(() => requestAnimationFrame(all)).observe(document.body, { childList: true, subtree: true });
+  all();
+})();

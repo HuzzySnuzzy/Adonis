@@ -15,8 +15,8 @@
       <td><% if (t.customer_id) { %><a href="/klant/<%= t.customer_id %>"><%= t.klant_naam || 'klant' %></a><% } else { %><%= t.klant_naam %><% } %></td>
       <% } %>
       <td><%= t.auto %></td>
-      <td><% if (t.seizoen) { %><span class="season season-<%= /winter/i.test(t.seizoen) && !/zomer/i.test(t.seizoen) ? 'winter' : /zomer/i.test(t.seizoen) && !/winter/i.test(t.seizoen) ? 'zomer' : /all/i.test(t.seizoen) ? 'all' : 'mix' %>"><%= t.seizoen %></span><% } %></td>
-      <td class="nowrap"><%= t.maat %></td>
+      <td><% if (t.seizoen) { %><span class="season season-<%= /winter/i.test(t.seizoen) && !/zomer/i.test(t.seizoen) ? 'winter' : /zomer/i.test(t.seizoen) && !/winter/i.test(t.seizoen) ? 'zomer' : /all/i.test(t.seizoen) ? 'all' : 'mix' %>"><%- esc(t.seizoen).replace(/\//g, '/<wbr>') %></span><% } %></td>
+      <td class="maat-col"><%= t.maat %></td>
       <td class="nowrap"><%- include('/partials/tread', { t }) %></td>
       <td><%= t.locatie %></td>
       <td><a class="tyre-label" href="/bandenhotel/<%= t.id %>"><%= t.label && t.label.length <= 12 ? t.label : t.label ? t.label.slice(0, 8) + '…' : '#' + t.id %></a><% if (!showPlate && t.soort === 'opslag') { %> <span class="out-pill" title="Staat in de overige bandenopslag">overige opslag</span><% } %></td>

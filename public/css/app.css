@@ -809,3 +809,25 @@ input[hidden], .page input[hidden] { display: none !important; }
     linear-gradient(45deg, transparent 46%, rgba(127,232,255,.7) 48% 52%, transparent 54%) 0 0 / 8px 8px, linear-gradient(160deg, #0b1626, #02040a);
 }
 .theme-name-ice { font-family: "AD Michroma", system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; font-size: .8rem; }
+/* Klantpagina: knoppen en wijzigformulier */
+.head-actions { display: flex; flex-direction: column; gap: .5rem; align-items: stretch; }
+.customer-edit { display: block; }
+.customer-edit .edit-head h1 { margin: 0 0 .3rem; }
+.customer-edit .edit-head p { margin: 0 0 1rem; max-width: 70ch; }
+.customer-edit .grid-form { margin-top: .4rem; }
+@media (max-width: 760px) { .head-actions { flex-direction: row; flex-wrap: wrap; } }
+
+/* Lange waarden mogen een tabel niet zo breed maken dat kolommen uit beeld raken. */
+.tread-text { display: inline-block; max-width: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; color: var(--muted); }
+.maat-col { min-width: 9ch; max-width: 18ch; }
+.stock-list .summary { max-width: 30ch; }
+/* Tabel breder dan het scherm: schaduw aan de kant waar nog meer staat. */
+:root .table-wrap.more-right { box-shadow: inset -18px 0 14px -14px rgba(0,0,0,.45); }
+:root .table-wrap.more-left { box-shadow: inset 18px 0 14px -14px rgba(0,0,0,.45); }
+:root .table-wrap.more-left.more-right { box-shadow: inset -18px 0 14px -14px rgba(0,0,0,.45), inset 18px 0 14px -14px rgba(0,0,0,.45); }
+.season { white-space: normal; text-align: center; }
+table.list.stock-list .summary { max-width: 30ch; }
+.tread-text { max-width: 16ch; }
+.season { overflow-wrap: anywhere; max-width: 12ch; }
+table.list.stock-list td { overflow-wrap: anywhere; }
+.season { overflow-wrap: normal; max-width: none; }

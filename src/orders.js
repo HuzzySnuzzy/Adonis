@@ -232,9 +232,13 @@ function getOrCreateCustomer(kenteken) {
   return row;
 }
 
-/** Customer details = most recent non-empty value of each field across their orders. */
+/**
+ * Klantgegevens = de laatst ingevulde waarde van elk veld over de werkopdrachten.
+ * Zijn de gegevens met de hand gewijzigd (bewerkt_at), dan tellen alleen werkopdrachten die daarna
+ * zijn aangemaakt: een oude werkopdracht (ook als die opnieuw wordt opgeslagen) overschrijft een correctie niet.
+ */
 function refreshCustomer(customerId) {
-  const orders = db.prepare('SELECT data FROM orders WHERE customer_id = ? ORDER BY nummer DESC').all(customerId);
+  const orders = db.prepare('SELECT data, created_at FROM orders WHERE customer_id = ? ORDER BY nummer DESC').all(customerId);
   if (orders.length === 0) {
     // Klant blijft bestaan als er nog banden van hem in het bandenhotel liggen.
     let hasTyres = false;
@@ -247,7 +251,10 @@ function refreshCustomer(customerId) {
     return;
   }
   const values = {};
+  const cust = db.prepare('SELECT bewerkt_at FROM customers WHERE id = ?').get(customerId);
+  const since = cust && cust.bewerkt_at;
   for (const o of orders) {
+    if (since && !(o.created_at > since)) continue;
     const d = parseOrderData(o.data);
     for (const f of CUSTOMER_FIELDS) {
       if (values[f] === undefined && d[f] && d[f].trim()) values[f] = d[f].trim();
@@ -291,6 +298,46 @@ function saveOrder({ id, nummer, data, userId, datumInvoer }) {
   return orderId;
 }
 
+/**
+ * Klantgegevens met de hand wijzigen. Een ander kenteken gaat ook door naar de werkopdrachten van deze klant
+ * (en naar het bandenhotel); bestaat er al een klant met dat kenteken, dan gebeurt er niets (fout).
+ */
+function updateCustomer(customerId, fields, formatPlate = (k) => k.toUpperCase()) {
+  const c = db.prepare('SELECT * FROM customers WHERE id = ?').get(customerId);
+  if (!c) throw new Error('Deze klant bestaat niet.');
+  const kenteken = formatPlate(String(fields.kenteken || '').trim());
+  const key = plateKey(kenteken);
+  if (!key) throw new Error('Vul een kenteken in.');
+  const clash = key !== c.plate_key && db.prepare('SELECT id FROM customers WHERE plate_key = ?').get(key);
+  if (clash) throw Object.assign(new Error(`Er bestaat al een klant met kenteken ${kenteken}.`), { clashId: clash.id });
+  const clean = (v, max = 200) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
+  const vals = {};
+  for (const f of CUSTOMER_FIELDS) vals[f] = f === 'kenteken' ? kenteken : clean(fields[f]);
+  db.exec('BEGIN');
+  try {
+    const sets = CUSTOMER_FIELDS.map((f) => `${f} = ?`).join(', ');
+    db.prepare(`UPDATE customers SET ${sets}, plate_key = ?, bewerkt_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`)
+      .run(...CUSTOMER_FIELDS.map((f) => vals[f]), key, customerId);
+    if (key !== c.plate_key) {
+      // Ander kenteken: RDW-gegevens horen bij het oude kenteken.
+      try { db.prepare('UPDATE customers SET rdw_json = NULL, rdw_at = NULL, apk_vervaldatum = NULL WHERE id = ?').run(customerId); } catch { /* kolommen ontbreken */ }
+      for (const o of db.prepare('SELECT id, nummer, data FROM orders WHERE customer_id = ?').all(customerId)) {
+        const d = parseOrderData(o.data);
+        d.kenteken = kenteken;
+        db.prepare('UPDATE orders SET data = ?, search_text = ? WHERE id = ?').run(JSON.stringify(d), [o.nummer, ...flattenText(d)].join(' \n '), o.id);
+      }
+      try {
+        db.prepare("UPDATE tyre_storage SET plate_key = ?, kenteken = ?, updated_at = datetime('now') WHERE plate_key = ?").run(key, kenteken, c.plate_key);
+      } catch { /* geen bandenhotel */ }
+    }
+    db.exec('COMMIT');
+  } catch (err) {
+    if (db.isTransaction) db.exec('ROLLBACK');
+    throw err;
+  }
+  return { plateChanged: key !== c.plate_key, oldKenteken: c.kenteken, kenteken };
+}
+
 function deleteOrder(id) {
   const row = db.prepare('SELECT customer_id FROM orders WHERE id = ?').get(id);
   if (!row) return null;
@@ -309,6 +356,6 @@ function deleteOrder(id) {
 module.exports = {
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS,
   emptyOrderData, normalizeOrderData, parseOrderData,
-  nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate,
+  nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate, updateCustomer,
   STATUSES, canEdit, allowedTransitions, setStatus, logAction, history, statusCounts,
 };

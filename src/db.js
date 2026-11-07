@@ -61,6 +61,11 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE INDEX IF NOT EXISTS orders_customer ON orders(customer_id);
 `);
 
+// Handmatig gewijzigde klantgegevens: tot wanneer ze voorgaan op de gegevens uit (oudere) werkopdrachten.
+if (!db.prepare('PRAGMA table_info(customers)').all().some((c) => c.name === 'bewerkt_at')) {
+  db.exec('ALTER TABLE customers ADD COLUMN bewerkt_at TEXT');
+}
+
 function plateKey(kenteken) {
   return String(kenteken || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 }

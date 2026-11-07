@@ -1,6 +1,7 @@
 <%- include('/partials/head') %>
 <main class="page">
   <p class="crumbs"><a href="/">← Alle klanten</a></p>
+  <% if (!editing) { %>
   <div class="customer-head" id="live-customer-head" data-live>
     <div>
       <%- include('/partials/plate', { kenteken: customer.kenteken }) %>
@@ -9,11 +10,44 @@
     </div>
     <dl class="facts">
       <% const facts = [['Klantnr.', customer.klantnr], ['Adres', customer.adres], ['Plaats', customer.plaats],
-           ['Tel. privé', customer.tel_prive], ['Tel. zaak', customer.tel_zaak], ['Chassisnummer', customer.chassisnummer]]; %>
+           ['Tel. privé', customer.tel_prive], ['Tel. zaak', customer.tel_zaak], ['Chassisnummer', customer.chassisnummer], ['Alarmcode', customer.alarmcode]]; %>
       <% for (const [k, v] of facts) { if (v) { %><dt><%= k %></dt><dd><%= v %></dd><% } } %>
     </dl>
-    <a class="btn btn-primary" href="/werkopdracht/nieuw?klant=<%= customer.id %>">+ Nieuwe werkopdracht voor <%= customer.kenteken %></a>
+    <div class="head-actions">
+      <a class="btn btn-primary" href="/werkopdracht/nieuw?klant=<%= customer.id %>">+ Nieuwe werkopdracht voor <%= customer.kenteken %></a>
+      <a class="btn" href="/klant/<%= customer.id %>?bewerken=1#gegevens">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.95l-3.75-3.75L3 17.25zm17.7-10.2a1 1 0 0 0 0-1.4l-2.35-2.35a1 1 0 0 0-1.4 0l-1.85 1.85 3.75 3.75 1.85-1.85z"/></svg>
+        Gegevens wijzigen
+      </a>
+    </div>
   </div>
+  <% } else { const v = editValues || customer; %>
+  <form method="post" action="/klant/<%= customer.id %>/bewerken" class="customer-head customer-edit" id="gegevens" autocomplete="off">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="edit-head">
+      <h1>Klantgegevens wijzigen</h1>
+      <p class="muted small">Deze gegevens worden ingevuld op nieuwe werkopdrachten. Bestaande werkopdrachten blijven zoals ze zijn
+        (alleen een gewijzigd kenteken wordt overal doorgevoerd). Een <em>nieuwe</em> werkopdracht met andere gegevens werkt de klant weer bij.</p>
+    </div>
+    <% if (editError) { %><div class="alert"><%= editError %><% if (locals.clashId) { %> <a href="/klant/<%= clashId %>">Naar die klant</a><% } %></div><% } %>
+    <div class="grid-form">
+      <label>Kenteken<input name="c[kenteken]" value="<%= v.kenteken %>" required autocapitalize="characters" data-1p-ignore data-lpignore="true"></label>
+      <label>Naam<input name="c[naam]" value="<%= v.naam %>" data-1p-ignore data-lpignore="true" autofocus></label>
+      <label>Klantnr.<input name="c[klantnr]" value="<%= v.klantnr %>" data-1p-ignore data-lpignore="true"></label>
+      <label>Merk/Type<input name="c[merk_type]" value="<%= v.merk_type %>" data-1p-ignore data-lpignore="true"></label>
+      <label>Adres<input name="c[adres]" value="<%= v.adres %>" data-1p-ignore data-lpignore="true"></label>
+      <label>Plaats<input name="c[plaats]" value="<%= v.plaats %>" data-1p-ignore data-lpignore="true"></label>
+      <label>Tel. privé<input name="c[tel_prive]" value="<%= v.tel_prive %>" inputmode="tel" data-1p-ignore data-lpignore="true"></label>
+      <label>Tel. zaak<input name="c[tel_zaak]" value="<%= v.tel_zaak %>" inputmode="tel" data-1p-ignore data-lpignore="true"></label>
+      <label>Chassisnummer<input name="c[chassisnummer]" value="<%= v.chassisnummer %>" class="mono" data-1p-ignore data-lpignore="true"></label>
+      <label>Alarmcode<input name="c[alarmcode]" value="<%= v.alarmcode %>" data-1p-ignore data-lpignore="true"></label>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Opslaan</button>
+      <a class="btn btn-ghost" href="/klant/<%= customer.id %>">Annuleren</a>
+    </div>
+  </form>
+  <% } %>
 
 
   <% const ri = rdwData && rdwData.info; %>

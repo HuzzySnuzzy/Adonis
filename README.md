@@ -50,6 +50,10 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   staat een miniatuur; klik voor groot (met vorige/volgende). Verwijst een geïmporteerde Excel-lijst naar foto's
   (bijv. `klanten_Images/azx1.Foto.143052.jpg`), dan koppel je de hele map (of een .zip) in één keer via
   *Importeren → Foto's koppelen*; elke foto gaat op bestandsnaam naar het juiste record.
+- **Klantgegevens wijzigen** op de klantpagina (*Gegevens wijzigen*): naam, adres, telefoon, merk/type, chassisnummer,
+  alarmcode en kenteken. Een correctie blijft staan, ook als een oude werkopdracht opnieuw wordt opgeslagen; pas een
+  *nieuwe* werkopdracht met andere gegevens werkt de klant weer bij. Een gewijzigd kenteken gaat mee naar de
+  werkopdrachten en het bandenhotel.
 - **Kentekenplaten** zien eruit als echte platen en zijn altijd even groot: Nederlands (geel, streepjes volgens de
   sidecode, bijv. `SB846S` → `SB-846-S`) en **Duits** (wit, `KLE JB 789` met keurmerken). Bij een Duits kenteken wordt
   de RDW niet geraadpleegd.

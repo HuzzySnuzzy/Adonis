@@ -82,10 +82,10 @@
             </form>
           </td>
           <% if (soort === 'band') { %>
-            <td class="nowrap"><strong><%= i.maat %></strong></td><td><%= i.merk %></td><td><%= i.type %></td><td><%= i.profiel %></td><td><%= i.snelheid %></td>
-            <td><% if (i.seizoen) { %><span class="season season-<%= /^winter$/i.test(i.seizoen) ? 'winter' : /^zomer$/i.test(i.seizoen) ? 'zomer' : /all/i.test(i.seizoen) ? 'all' : 'mix' %>"><%= i.seizoen %></span><% } %></td>
+            <td class="maat-col"><strong><%= i.maat %></strong></td><td><%= i.merk %></td><td><%= i.type %></td><td><%= i.profiel %></td><td><%= i.snelheid %></td>
+            <td><% if (i.seizoen) { %><span class="season season-<%= /^winter$/i.test(i.seizoen) ? 'winter' : /^zomer$/i.test(i.seizoen) ? 'zomer' : /all/i.test(i.seizoen) ? 'all' : 'mix' %>"><%- esc(i.seizoen).replace(/\//g, '/<wbr>') %></span><% } %></td>
           <% } else { %>
-            <td><%= i.type %></td><td><%= i.merk %></td><td class="mono"><%= i.nummer %></td><td class="mono"><%= i.oe_nummer %></td><td class="summary"><%= i.omschrijving %></td>
+            <td><%= i.type %></td><td><%= i.merk %></td><td class="mono"><%= i.nummer %></td><td class="mono"><%= i.oe_nummer %></td><td class="summary" title="<%= i.omschrijving %>"><%= i.omschrijving %></td>
           <% } %>
           <td><%= i.locatie %><% if (!i.beschikbaar) { %> <span class="out-pill">niet beschikbaar</span><% } %></td>
         </tr>
