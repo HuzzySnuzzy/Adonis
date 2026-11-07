@@ -437,12 +437,17 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
 
 .choice-grid.three, .choice-grid.four { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .choice-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.choice-grid.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.choice-grid.five .choice-help { font-size: .8rem; }
 @media (max-width: 760px) {
   .usernav { flex-wrap: wrap; gap: .5rem .8rem; }
   .usernav .btn-primary { flex: 1 1 100%; }
   .usernav .uname { display: none; }
   .usernav .username svg { width: 20px; height: 20px; }
-  .choice-grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .choice-grid.four, .choice-grid.five { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .choice-grid.five .choice-help { display: none; }
+  .choice-grid.five .theme-preview { height: 56px; }
+  .choice-grid.five .choice-body { padding: .5rem; }
   .choice-grid.three .choice-help, .choice-grid.four .choice-help { display: none; }
   .choice-grid.three .theme-preview, .choice-grid.four .theme-preview { height: 56px; }
   .choice-grid.three .choice-body, .choice-grid.four .choice-body { padding: .5rem; }
@@ -575,7 +580,7 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
 /* Het icoon volgt het actieve thema (ook na wisselen zonder herladen). */
 .theme-btn .ti { display: none; }
 :root:not([data-theme]) .theme-btn .ti-system, :root[data-theme="light"] .theme-btn .ti-light,
-:root[data-theme="dark"] .theme-btn .ti-dark, :root[data-theme="neon"] .theme-btn .ti-neon { display: block; }
+:root[data-theme="dark"] .theme-btn .ti-dark, :root[data-theme="neon"] .theme-btn .ti-neon, :root[data-theme="ice"] .theme-btn .ti-ice { display: block; }
 .theme-btn[aria-expanded="true"] { background: var(--topbar-hover); color: #fff; box-shadow: inset 0 0 0 1px var(--accent); }
 .theme-menu {
   position: absolute; right: 0; top: calc(100% + 12px); z-index: 40; width: min(300px, calc(100vw - 32px));
@@ -787,3 +792,20 @@ input[hidden], .page input[hidden] { display: none !important; }
 .rdw-links[hidden] { display: none; }
 /* Kentekenveld: Duits kenteken wit */
 .inv-form input.plate-input.plate-input-de:not([type=checkbox]):not([type=radio]):not(.ink) { background: #fbfbf8; }
+
+/* Black Ice: voorbeeldtegel en kleurstaal in het themamenu */
+.theme-preview-ice {
+  background: radial-gradient(90% 60% at 50% 120%, rgba(255,79,154,.45), rgba(120,60,255,.2) 45%, transparent 70%),
+    linear-gradient(45deg, transparent 48%, rgba(127,232,255,.18) 49% 51%, transparent 52%) 0 0 / 14px 14px,
+    linear-gradient(-45deg, transparent 48%, rgba(127,232,255,.18) 49% 51%, transparent 52%) 0 0 / 14px 14px, #02040a;
+}
+.theme-preview-ice .tp-bar { background: #03060c; border-bottom-color: #7fe8ff; box-shadow: 0 0 8px #7fe8ff; }
+.theme-preview-ice .tp-card { background: rgba(6,10,18,.85); border: 1px solid rgba(127,232,255,.45); box-shadow: inset 0 1px 0 rgba(223,247,255,.2); }
+.theme-preview-ice .tp-card span { background: linear-gradient(90deg, #fff, #7fe8ff); box-shadow: 0 0 6px rgba(127,232,255,.8); }
+.theme-preview-ice .tp-card span:nth-child(2) { background: #a58bff; box-shadow: 0 0 6px #a58bff; }
+.sw-ice {
+  border-radius: 2px;
+  background: radial-gradient(70% 60% at 50% 120%, #ff4f9a, transparent 70%),
+    linear-gradient(45deg, transparent 46%, rgba(127,232,255,.7) 48% 52%, transparent 54%) 0 0 / 8px 8px, linear-gradient(160deg, #0b1626, #02040a);
+}
+.theme-name-ice { font-family: "AD Michroma", system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; font-size: .8rem; }

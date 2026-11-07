@@ -55,7 +55,7 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   de RDW niet geraadpleegd.
 - **Excel importeren met Claude als meekijker** (alleen beheerders): zet bestaande lijsten (.xlsx of .csv) over naar
   het bandenhotel, de overige opslag of de voorraad. Zie [Excel-import](#excel-import).
-- **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker / Neon* (dezelfde stijl als het 2049-thema van DiscordLinked, met opstartreeks en animaties; effecten *Volledig* of *Rustig*), handschrift of gewone letters
+- **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker / Neon / Black Ice* (Neon: dezelfde stijl als het 2049-thema van DiscordLinked; **Black Ice** (ICE·XVIII): zwart, superionisch ijs – een kristalrooster als vloer, ionensporen die erdoorheen schieten, de gloeiende kern onderin, rijp in de hoeken en een glinstering onder de muis; beide met opstartreeks, effecten *Volledig* of *Rustig*), handschrift of gewone letters
   in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
   apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.
 

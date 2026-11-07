@@ -1,0 +1,452 @@
+/* =====================================================================
+   ADONIS – thema "Black Ice" (ICE·XVIII)
+   Geïnspireerd op ijs XVIII: superionisch "zwart ijs". Een koud, pikzwart kristalrooster
+   (zuurstof, kubisch ruimtelijk gecentreerd) waar waterstofionen als lichtsporen doorheen schieten,
+   met diep onderin de hitte van de kern. Bovenop: ijzig glas met facetten en rijp in de hoeken.
+   - Alle regels beginnen met :root[data-theme="ice"].
+   - Grote effecten zitten op een paar vaste lagen die alleen bewegen (transform) of vervagen (opacity).
+   - data-fx="calm" (Effecten: Rustig) en "minder beweging" van het apparaat kalmeren alles.
+   - Lettertypen: Michroma en Exo 2 (SIL Open Font License, zie /static/fonts/OFL-*.txt).
+   ===================================================================== */
+
+@font-face { font-family: "AD Michroma"; src: url(../fonts/michroma-latin-400-v1.woff2) format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "AD Exo"; src: url(../fonts/exo2-latin-wght-v1.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "AD Mono"; src: url(../fonts/share-tech-mono-latin-400-v1.woff2) format("woff2"); font-weight: 400; font-display: swap; }
+@property --ice-r { syntax: "<length>"; inherits: false; initial-value: 0px; }
+
+:root[data-theme="ice"] {
+  color-scheme: dark;
+  --bg: #02040a;
+  --surface: #0a0f19; --surface-2: #0e1522; --hover: rgba(127, 232, 255, .06);
+  --border: #1d2a3e; --border-soft: rgba(127, 232, 255, .1);
+  --text: #e4f2ff; --muted: #8fa6c2;
+  --accent: #7fe8ff; --link: #9eeeff; --brand: #7fe8ff;
+  --uv: #a58bff; --core: #ff4f9a; --frost: #dff7ff;
+  --primary: #7fe8ff; --primary-hover: #b6f4ff; --accent-text: #02111a;
+  --danger: #ff7da3; --danger-border: rgba(255, 125, 163, .5);
+  --ok-bg: rgba(124, 242, 195, .09); --ok-text: #7cf2c3;
+  --err-bg: rgba(255, 125, 163, .1); --err-text: #ff9dbb;
+  --warn-bg: rgba(255, 214, 128, .09); --warn-text: #ffd680; --warn-border: rgba(255, 214, 128, .4);
+  --radius: 3px;
+  --glass: rgba(6, 10, 18, .9); --glass-border: rgba(127, 232, 255, .17); --glass-line: rgba(127, 232, 255, .09);
+  --glass-hi: rgba(223, 247, 255, .09);
+  --input-bg: rgba(1, 4, 9, .65);
+  --shadow: 0 0 0 1px rgba(0, 0, 0, .5), 0 18px 50px rgba(0, 0, 0, .6);
+  --code-bg: rgba(127, 232, 255, .08);
+  --topbar-bg: #03060c; --topbar-text: #9fb6d1; --topbar-hover: rgba(127, 232, 255, .08); --topbar-active: rgba(127, 232, 255, .12);
+  --ordernr: #9eeeff;
+  --plate: #f7c600;
+  --ice-in: cubic-bezier(.16, 1, .3, 1);
+  --f-display: "AD Michroma", "Eurostile", "Segoe UI", system-ui, sans-serif;
+  --f-body: "AD Exo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "AD Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  --ice-text: linear-gradient(100deg, #ffffff 0%, #d4f7ff 30%, #7fe8ff 55%, #b9a6ff 80%, #ffffff 100%);
+  /* werkopdracht als ijsplaat */
+  --paper: rgba(5, 9, 17, .94);
+  --form-grey: rgba(127, 232, 255, .045);
+  --form-grey-dark: rgba(127, 232, 255, .1);
+  --label: #a9bed8;
+  --ink: #a6f0ff;
+  --red: #ff7da3;
+  --ink-hover: rgba(127, 232, 255, .05);
+  --ink-focus: rgba(165, 139, 255, .12);
+  --placeholder: rgba(166, 240, 255, .3);
+  --box-bg: rgba(0, 0, 0, .35);
+  --box-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 2.5 14 13.5M13.5 2 2.5 14' stroke='%23a6f0ff' stroke-width='2.4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+  --tread-bad: rgba(255, 79, 154, .3);
+  --tread-warn: rgba(255, 214, 128, .24);
+  --desk: transparent;
+  --toolbar-bg: #03060c;
+  --wo-title: #eaf9ff;
+  --sheet-shadow: 0 0 0 1px rgba(0, 0, 0, .5), 0 18px 50px rgba(0, 0, 0, .6);
+  caret-color: var(--accent);
+  accent-color: var(--accent);
+  scrollbar-color: #24405a transparent;
+  background: var(--bg);
+}
+:root[data-theme="ice"] ::selection { background: rgba(165, 139, 255, .45); color: #fff; }
+:root[data-theme="ice"] body, :root[data-theme="ice"] body.order-page { background: transparent; }
+
+/* ---------- Typografie ---------- */
+:root[data-theme="ice"] body { font: 14.5px/1.5 var(--f-body); letter-spacing: .01em; font-variant-numeric: tabular-nums; color: var(--text); }
+:root[data-theme="ice"] main h1 {
+  font: 400 18px/1.35 var(--f-display); letter-spacing: .14em; text-transform: uppercase;
+  background: var(--ice-text) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 12px rgba(127, 232, 255, .25));
+  animation: ice-glint 13s ease-in-out infinite; animation-delay: calc(var(--clock, 0) * -1s);
+}
+/* Een glinstering over de titel, af en toe. */
+@keyframes ice-glint { 0%, 70% { background-position: 100% 0; } 85%, 100% { background-position: 0 0; } }
+:root[data-theme="ice"] .customer-head h1 {
+  font: 700 24px/1.25 var(--f-body); letter-spacing: .01em; text-transform: none; animation: none;
+  background: none; color: var(--text); filter: none;
+}
+:root[data-theme="ice"] h2 { font: 700 13.5px/1.4 var(--f-body); letter-spacing: .16em; text-transform: uppercase; color: #cdeeff; }
+:root[data-theme="ice"] :where(code, .ordernr, .tb-title .muted, .app-footer, .mono) { font-family: var(--f-mono); }
+:root[data-theme="ice"] :where(table.list th, .facts dt, .apk-label, .rdw-facts dt) {
+  font-family: var(--f-mono); font-size: 11px; font-weight: 400; letter-spacing: .14em; text-transform: uppercase; color: #7fc4dc;
+}
+:root[data-theme="ice"] label { color: var(--muted); }
+:root[data-theme="ice"] a { color: var(--link); }
+
+/* ---------- Achtergrond ---------- */
+/* 1. Het kristalrooster als vloer die naar de horizon wegloopt en langzaam naar je toe schuift. */
+:root[data-theme="ice"]::before {
+  content: ""; position: fixed; z-index: -2; pointer-events: none;
+  left: -60vw; right: -60vw; bottom: -20vh; height: 115vh;
+  background: url(../img/fx/lattice-ice-v1.svg) 50% 0 / 64px 64px;
+  opacity: .4; transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, .55) 35%, transparent 72%);
+  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, .55) 35%, transparent 72%);
+  transform: perspective(520px) rotateX(64deg) translateY(0);
+  animation: ice-floor 9s linear infinite; animation-delay: calc(var(--clock, 0) * -1s); will-change: transform;
+}
+@keyframes ice-floor {
+  from { transform: perspective(520px) rotateX(64deg) translateY(0); }
+  to { transform: perspective(520px) rotateX(64deg) translateY(128px); }
+}
+/* 2. Het rooster vaag over het hele scherm, en een vignet. */
+:root[data-theme="ice"]::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(130% 95% at 50% 38%, transparent 50%, rgba(0, 0, 0, .82) 100%),
+    url(../img/fx/lattice-ice-faint-v1.svg) 0 0 / 96px 96px;
+}
+/* Rijp in de hoeken (linksboven en rechtsonder), heel zacht. */
+:root[data-theme="ice"] body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    url(../img/fx/frost-ice-v1.svg) 0 0 / min(560px, 55vw) no-repeat,
+    url(../img/fx/frost-ice-br-v1.svg) 100% 100% / min(560px, 55vw) no-repeat;
+  opacity: .2;
+}
+/* 3. Het veld: noorderlichtachtige nevel, de hete kern onderin, ionensporen en de glinstering onder de muis. */
+.ice-field { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.ice-field i { position: absolute; display: block; will-change: transform, opacity; }
+.ice-field .ice-aurora {
+  width: 70vmax; height: 38vmax; border-radius: 50%; filter: blur(60px); opacity: .5;
+  animation: var(--anim) ease-in-out infinite alternate; animation-delay: calc(var(--clock, 0) * -1s - var(--off, 0s));
+}
+.ice-field .ice-aurora:nth-child(1) { left: -20vmax; top: -16vmax; background: radial-gradient(closest-side, rgba(40, 140, 190, .55), transparent); --anim: ice-drift-a 50s; }
+.ice-field .ice-aurora:nth-child(2) { right: -25vmax; top: 4vmax; background: radial-gradient(closest-side, rgba(110, 70, 220, .45), transparent); --anim: ice-drift-b 64s; --off: 17s; }
+.ice-field .ice-aurora:nth-child(3) { left: 10vmax; top: 30vh; background: radial-gradient(closest-side, rgba(20, 60, 120, .5), transparent); --anim: ice-drift-c 58s; --off: 31s; }
+@keyframes ice-drift-a { from { transform: translate(0, 0) rotate(-8deg) scale(1); } to { transform: translate(24vw, 10vh) rotate(10deg) scale(1.2, .85); } }
+@keyframes ice-drift-b { from { transform: translate(0, 0) rotate(6deg) scale(1.1, .9); } to { transform: translate(-28vw, 18vh) rotate(-12deg) scale(.9, 1.15); } }
+@keyframes ice-drift-c { from { transform: translate(0, 0) scale(1); opacity: .25; } to { transform: translate(-12vw, -14vh) scale(1.25); opacity: .55; } }
+/* De kern: superionisch ijs is van binnen gloeiend heet. */
+.ice-field .ice-core {
+  left: 50%; bottom: -34vmax; width: 90vmax; height: 50vmax; margin-left: -45vmax; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 79, 154, .32), rgba(120, 60, 255, .18) 45%, transparent);
+  filter: blur(30px); animation: ice-core 7s ease-in-out infinite alternate; animation-delay: calc(var(--clock, 0) * -1s);
+}
+@keyframes ice-core { from { opacity: .55; transform: scale(1); } to { opacity: 1; transform: scale(1.08, 1.12); } }
+/* Ionensporen: twee naadloze tegels die langs de roosterdiagonalen schuiven (één tegel per ronde). */
+.ice-field::before, .ice-field::after {
+  content: ""; position: absolute; left: -256px; top: -256px; right: -256px; bottom: -256px; pointer-events: none;
+  background: url(../img/fx/ions-ice-v1.svg) 0 0 / 256px 256px; will-change: transform;
+}
+.ice-field::before { opacity: .75; animation: ice-ions-a 3.2s linear infinite; }
+.ice-field::after { opacity: .45; transform: scaleX(-1); background-size: 192px 192px; animation: ice-ions-b 4.6s linear infinite; }
+@keyframes ice-ions-a { from { transform: translate(0, 0); } to { transform: translate(256px, 256px); } }
+@keyframes ice-ions-b { from { transform: scaleX(-1) translate(0, 0); } to { transform: scaleX(-1) translate(192px, 192px); } }
+/* Glinstering die de muis volgt (ice.js verplaatst hem; alleen transform). */
+.ice-field .ice-glint {
+  left: 0; top: 0; width: 520px; height: 520px; margin: -260px 0 0 -260px; border-radius: 50%; opacity: 0;
+  background: radial-gradient(closest-side, rgba(180, 240, 255, .16), rgba(127, 232, 255, .05) 45%, transparent);
+  transition: opacity .6s;
+}
+:root[data-theme="ice"][data-glint] .ice-field .ice-glint { opacity: 1; }
+/* 4. Elke 14 s glijdt een lichtschijn schuin over het ijs. */
+:root[data-theme="ice"] body::after {
+  content: ""; position: fixed; top: -50vh; bottom: -50vh; left: 0; width: 40vw; z-index: 6; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(223, 247, 255, .035) 40%, rgba(255, 255, 255, .07) 50%, rgba(165, 139, 255, .035) 60%, transparent);
+  transform: translateX(-60vw) rotate(18deg); animation: ice-sheen 14s ease-in-out infinite; animation-delay: calc(var(--clock, 0) * -1s); will-change: transform;
+}
+@keyframes ice-sheen { 0%, 62% { transform: translateX(-60vw) rotate(18deg); } 88%, 100% { transform: translateX(140vw) rotate(18deg); } }
+/* Verborgen tabblad: niets beweegt. */
+:root[data-theme="ice"][data-hidden]::before, :root[data-theme="ice"][data-hidden]::after,
+:root[data-theme="ice"][data-hidden] *, :root[data-theme="ice"][data-hidden] *::before, :root[data-theme="ice"][data-hidden] *::after { animation-play-state: paused !important; }
+
+/* ---------- Panelen: zwart ijs met facetten ---------- */
+:root[data-theme="ice"] *, :root[data-theme="ice"] *::before, :root[data-theme="ice"] *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+:root[data-theme="ice"] :where(.card, .table-wrap, .customer-head, .rdw-card, .empty, .auth-card, .sheet) {
+  background-color: var(--glass);
+  background-image:
+    linear-gradient(135deg, rgba(223, 247, 255, .16) 0 9px, transparent 9.5px),
+    linear-gradient(315deg, rgba(165, 139, 255, .22) 0 7px, transparent 7.5px),
+    linear-gradient(160deg, rgba(223, 247, 255, .05), transparent 38%),
+    linear-gradient(200deg, transparent 60%, rgba(127, 232, 255, .035));
+  border: 1px solid var(--glass-border); border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 var(--glass-hi), inset 0 0 0 1px rgba(0, 0, 0, .4), 0 18px 50px rgba(0, 0, 0, .55);
+}
+:root[data-theme="ice"] .empty { border-style: dashed; }
+:root[data-theme="ice"] :where(.apk-box, .choice-body, .thumbs figure, .photo, .review-block, .claude-note) {
+  background-color: rgba(127, 232, 255, .035); border: 1px solid var(--glass-line); border-radius: 2px;
+}
+:root[data-theme="ice"] .apk-box { border-left: 2px solid rgba(127, 232, 255, .6); }
+:root[data-theme="ice"] .apk-expired { border-left-color: var(--danger); }
+:root[data-theme="ice"] .apk-box strong { font-family: var(--f-display); font-weight: 400; letter-spacing: .06em; }
+:root[data-theme="ice"] .choice:hover .choice-body { border-color: rgba(127, 232, 255, .45); }
+:root[data-theme="ice"] .choice input:checked + .choice-body { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 22px rgba(127, 232, 255, .2); }
+:root[data-theme="ice"] .claude-tag { background: var(--uv); color: #0b0618; }
+/* Inlogkaart: de rand bevriest rondom (één ronde) en blijft dan zacht oplichten. */
+:root[data-theme="ice"] .auth-card { position: relative; }
+:root[data-theme="ice"] .auth-card::after {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: conic-gradient(from 210deg, rgba(127, 232, 255, .9), rgba(165, 139, 255, .7), transparent 40%, rgba(223, 247, 255, .8) 75%, rgba(127, 232, 255, .9));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: ice-fade 2.4s var(--ice-in) both;
+}
+:root[data-theme="ice"] .auth-card::before {
+  content: "ICE\00B7XVIII  \2022  SUPERIONISCHE FASE" / ""; display: block; margin: -6px 0 14px; text-align: center;
+  font: 10.5px/1.2 var(--f-mono); letter-spacing: .22em; color: var(--uv);
+}
+:root[data-theme="ice"] .auth-logo .logo-mark { filter: drop-shadow(0 0 16px rgba(127, 232, 255, .55)); }
+:root[data-theme="ice"] .auth-card h1 { text-align: center; }
+
+/* ---------- Menubalk ---------- */
+:root[data-theme="ice"] .topbar {
+  background: linear-gradient(180deg, rgba(12, 20, 34, .97), rgba(3, 6, 12, .95));
+  border-bottom: 1px solid rgba(127, 232, 255, .35);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .6), 0 10px 30px rgba(0, 0, 0, .45), inset 0 -1px 18px rgba(127, 232, 255, .05);
+  overflow-x: clip;
+}
+/* Een ion schiet over de onderrand. */
+:root[data-theme="ice"] .topbar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent calc(100% - 180px), rgba(165, 139, 255, .9) calc(100% - 60px), #fff calc(100% - 4px), transparent);
+  transform: translateX(-100%); animation: ice-run 6s cubic-bezier(.5, 0, .2, 1) infinite; animation-delay: calc(var(--clock, 0) * -1s); will-change: transform;
+}
+@keyframes ice-run { 0% { transform: translateX(-100%); } 45%, 100% { transform: translateX(100%); } }
+:root[data-theme="ice"] .logo-word {
+  font: 400 14px var(--f-display); letter-spacing: .2em;
+  background: var(--ice-text) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: ice-glint 11s ease-in-out infinite; animation-delay: calc(var(--clock, 0) * -1s - 4s);
+}
+:root[data-theme="ice"] .logo-sub { font-family: var(--f-mono); color: var(--uv); opacity: .85; letter-spacing: .24em; }
+:root[data-theme="ice"] .logo-mark { filter: drop-shadow(0 0 8px rgba(127, 232, 255, .45)); }
+:root[data-theme="ice"] .mainnav a { border-radius: 2px; font-size: 12.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--topbar-text); transition: color .2s, background-color .2s, text-shadow .2s; }
+:root[data-theme="ice"] .mainnav a:hover:not(.active) { color: #fff; background: transparent; text-shadow: 0 0 10px rgba(127, 232, 255, .7); }
+:root[data-theme="ice"] .mainnav a.active {
+  color: #fff; background: linear-gradient(180deg, rgba(127, 232, 255, .16), rgba(127, 232, 255, .04));
+  box-shadow: inset 0 -2px 0 var(--accent), 0 6px 18px -8px rgba(127, 232, 255, .8);
+}
+:root[data-theme="ice"] .nav-count { background: var(--uv); color: #0b0618; box-shadow: 0 0 8px rgba(165, 139, 255, .7); }
+:root[data-theme="ice"] .iconbtn { border-radius: 2px; border-color: rgba(127, 232, 255, .3); color: var(--topbar-text); }
+:root[data-theme="ice"] .iconbtn:hover { background: rgba(127, 232, 255, .1); border-color: var(--accent); color: #fff; }
+:root[data-theme="ice"] .usernav .username, :root[data-theme="ice"] .topbar .linkbtn { color: var(--topbar-text); }
+:root[data-theme="ice"] .usernav .username:hover, :root[data-theme="ice"] .topbar .linkbtn:hover { color: #fff; }
+
+/* ---------- Knoppen ---------- */
+:root[data-theme="ice"] .btn {
+  position: relative; overflow: hidden; border-radius: 2px;
+  font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  background-color: rgba(127, 232, 255, .05); color: var(--text); border: 1px solid rgba(127, 232, 255, .38);
+  box-shadow: inset 0 1px 0 rgba(223, 247, 255, .06);
+  transition: border-color .2s, box-shadow .2s, background-color .2s, color .2s;
+}
+:root[data-theme="ice"] .btn:hover:not(:disabled) { background-color: rgba(127, 232, 255, .12); border-color: var(--accent); color: #fff; box-shadow: 0 0 16px rgba(127, 232, 255, .22), inset 0 1px 0 rgba(223, 247, 255, .12); }
+:root[data-theme="ice"] :is(.btn-primary, .btn-ok) {
+  background: linear-gradient(180deg, #e6fcff 0%, #9cefff 45%, #5fcbef 100%); color: var(--accent-text); border-color: #bff4ff;
+  box-shadow: 0 0 18px rgba(127, 232, 255, .35), inset 0 1px 0 #fff, inset 0 -1px 0 rgba(0, 40, 60, .35);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .4);
+}
+:root[data-theme="ice"] .btn-ok { background: linear-gradient(180deg, #e9fff6, #9af5d2 45%, #4fd9a6); border-color: #c6ffe9; box-shadow: 0 0 18px rgba(124, 242, 195, .3), inset 0 1px 0 #fff; }
+:root[data-theme="ice"] :is(.btn-primary, .btn-ok):hover:not(:disabled) {
+  color: var(--accent-text); filter: brightness(1.08);
+  box-shadow: 0 0 0 1px var(--bg), 0 0 0 2px rgba(191, 244, 255, .9), 0 0 28px rgba(127, 232, 255, .55), inset 0 1px 0 #fff;
+}
+:root[data-theme="ice"] .btn:active:not(:disabled) { transform: translateY(1px); }
+:root[data-theme="ice"] .btn-danger { color: var(--danger); border-color: var(--danger-border); background-color: rgba(255, 125, 163, .05); }
+:root[data-theme="ice"] .btn-danger:hover:not(:disabled) { color: #ffd0de; border-color: var(--danger); box-shadow: 0 0 16px rgba(255, 79, 154, .25); }
+:root[data-theme="ice"] .btn-ghost { border-color: transparent; background: transparent; box-shadow: none; }
+:root[data-theme="ice"] .btn-small { font-size: 11.5px; letter-spacing: .08em; }
+/* Eén ijsglans per keer dat je over een knop gaat. */
+:root[data-theme="ice"] .btn::after {
+  content: ""; position: absolute; inset: -2px; pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, .35) 48%, rgba(165, 139, 255, .25) 52%, transparent 65%);
+  transform: translateX(-130%);
+}
+:root[data-theme="ice"] .btn:hover:not(:disabled)::after { animation: ice-btn .7s var(--ice-in) 1; }
+@keyframes ice-btn { to { transform: translateX(130%); } }
+:root[data-theme="ice"] :focus-visible { outline-color: var(--uv) !important; }
+
+/* ---------- Velden ---------- */
+:root[data-theme="ice"] :is(input:not([type=checkbox], [type=radio], [type=file], [type=hidden], .ink, .nr-input, .plate-input), select, textarea:not(.ink)) {
+  background-color: var(--input-bg); border: 1px solid #1f3149; border-bottom-color: #3c7f9b;
+  border-radius: 2px; box-shadow: inset 0 1px 6px rgba(0, 0, 0, .5); color: var(--text); font-family: var(--f-body);
+  transition: border-color .2s, box-shadow .25s;
+}
+:root[data-theme="ice"] :is(input:not([type=checkbox], [type=radio], [type=file], [type=hidden], .ink, .nr-input, .plate-input), select, textarea:not(.ink)):focus {
+  border-color: var(--accent); outline: none;
+  box-shadow: inset 0 1px 6px rgba(0, 0, 0, .5), 0 0 0 3px rgba(127, 232, 255, .14), 0 0 22px rgba(127, 232, 255, .28);
+}
+:root[data-theme="ice"] ::placeholder { color: #61789a; }
+:root[data-theme="ice"] select option { background: var(--surface); color: var(--text); }
+/* Een sneeuwvlokje in elk zoekveld. */
+:root[data-theme="ice"] input[type=search] {
+  padding-left: 32px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-8 -8 16 16'%3E%3Cg stroke='%237fe8ff' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M0-7V7M-6.06-3.5 6.06 3.5M-6.06 3.5 6.06-3.5M0-7-2-5M0-7 2-5M0 7-2 5M0 7 2 5'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 14px 14px; background-position: 10px 50%; background-repeat: no-repeat;
+}
+
+/* ---------- Tabellen, labels, tabs ---------- */
+:root[data-theme="ice"] table.list th { background: rgba(127, 232, 255, .03); border-bottom: 1px solid var(--glass-border); }
+:root[data-theme="ice"] table.list td { border-bottom: 1px solid var(--glass-line); }
+:root[data-theme="ice"] table.list tbody tr:last-child td { border-bottom: none; }
+:root[data-theme="ice"] table.list.clickable tbody tr { transition: background-color .2s; }
+:root[data-theme="ice"] table.list.clickable tbody tr:hover { background: linear-gradient(90deg, rgba(127, 232, 255, .1), rgba(165, 139, 255, .04) 60%, transparent); }
+:root[data-theme="ice"] table.list.clickable tbody tr:hover > td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+:root[data-theme="ice"] .ordernr { color: var(--ordernr); text-shadow: 0 0 10px rgba(127, 232, 255, .45); }
+:root[data-theme="ice"] :is(.status-badge, .apk-pill, .season, .out-pill, .row-st) {
+  border-radius: 2px; font-family: var(--f-mono); font-size: 11.5px; font-weight: 400; letter-spacing: .04em;
+  background: color-mix(in srgb, currentColor 9%, transparent); border: 1px solid color-mix(in srgb, currentColor 38%, transparent);
+}
+:root[data-theme="ice"] .status-open { color: var(--muted); }
+:root[data-theme="ice"] .status-klaar { color: var(--uv); }
+:root[data-theme="ice"] .status-gefactureerd { color: var(--ok-text); }
+:root[data-theme="ice"] .season-winter { color: #9eeeff; }
+:root[data-theme="ice"] .season-zomer { color: #ffd680; }
+:root[data-theme="ice"] .season-all { color: #7cf2c3; }
+:root[data-theme="ice"] :is(.status-tabs a, .kind-tabs a) { letter-spacing: .06em; text-transform: uppercase; font-size: 12px; font-weight: 600; }
+:root[data-theme="ice"] .status-tabs a { border-radius: 2px; background: rgba(2, 5, 10, .5); border-color: var(--glass-border); color: var(--muted); }
+:root[data-theme="ice"] .status-tabs a:hover { color: #fff; border-color: rgba(127, 232, 255, .5); }
+:root[data-theme="ice"] .status-tabs a.active { background: linear-gradient(180deg, #d9fbff, #7fe8ff); color: var(--accent-text); border-color: #bff4ff; box-shadow: 0 0 14px rgba(127, 232, 255, .3); }
+:root[data-theme="ice"] .kind-tabs a.active { border-bottom-color: var(--accent); color: #fff; text-shadow: 0 0 10px rgba(127, 232, 255, .5); }
+:root[data-theme="ice"] .qty-btn { border-radius: 2px; background: rgba(127, 232, 255, .06); border-color: rgba(127, 232, 255, .3); }
+:root[data-theme="ice"] .tread-ok { background: rgba(124, 242, 195, .12); }
+
+/* ---------- Meldingen, balken, voettekst ---------- */
+:root[data-theme="ice"] .flash, :root[data-theme="ice"] .alert {
+  border-radius: 2px; background: #050912; border: 1px solid rgba(127, 232, 255, .3); border-left: 3px solid var(--accent);
+  box-shadow: 0 0 22px rgba(127, 232, 255, .12);
+}
+:root[data-theme="ice"] .flash-ok { color: var(--ok-text); border-left-color: var(--ok-text); }
+:root[data-theme="ice"] :is(.flash-err, .alert) { color: var(--err-text); border-left-color: var(--danger); }
+:root[data-theme="ice"] .live-toast { border-radius: 2px; background: #050912; color: var(--text); border: 1px solid rgba(165, 139, 255, .5); border-left: 3px solid var(--uv); box-shadow: 0 0 20px rgba(165, 139, 255, .25); }
+:root[data-theme="ice"] :is(.flash, .live-banner, .live-toast) { animation: ice-condense .45s var(--ice-in) both; }
+:root[data-theme="ice"] .order-toolbar, :root[data-theme="ice"] .review-bar { background: #040811; border-color: var(--glass-border); }
+:root[data-theme="ice"] .tb-title strong { font-family: var(--f-display); font-weight: 400; letter-spacing: .08em; }
+:root[data-theme="ice"] .app-footer { letter-spacing: .16em; text-transform: uppercase; color: #5d7593; opacity: 1; font-size: 11px; }
+:root[data-theme="ice"] .app-footer .upd-new { color: var(--uv); }
+
+/* ---------- Werkopdracht ---------- */
+:root[data-theme="ice"] .ink { text-shadow: 0 0 8px rgba(127, 232, 255, .35); }
+:root[data-theme="ice"] .red-nr { font-family: var(--f-display); font-weight: 400; letter-spacing: .1em; color: var(--accent); text-shadow: 0 0 14px rgba(127, 232, 255, .5); }
+:root[data-theme="ice"] .wo-title { font: 400 16px var(--f-display); letter-spacing: .16em; color: var(--wo-title); }
+:root[data-theme="ice"] :is(table.grid th, .work-head, .block-head) { font: 400 11px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #7fc4dc; }
+:root[data-theme="ice"] .lbl { font-family: var(--f-body); color: var(--label); }
+:root[data-theme="ice"] td.rownum, :root[data-theme="ice"] td.rowlabel { font-family: var(--f-mono); color: #5d7593; }
+:root[data-theme="ice"] .side-title { font: 400 12px var(--f-mono); letter-spacing: .3em; color: var(--uv); }
+:root[data-theme="ice"] .head-grid .title-cell, :root[data-theme="ice"] .work-row.foot { background: transparent; }
+
+/* ---------- Binnenkomst: rijen kristalliseren (alleen bij navigeren, niet bij live bijwerken) ---------- */
+@keyframes ice-condense { from { opacity: 0; filter: blur(5px); transform: translateY(4px); } to { opacity: 1; filter: none; transform: none; } }
+@keyframes ice-fade { from { opacity: 0; } }
+:root[data-theme="ice"].ice-entering table.list tbody tr { animation: ice-condense .45s var(--ice-in) both; }
+:root[data-theme="ice"].ice-entering table.list tbody tr:nth-child(2) { animation-delay: .03s; }
+:root[data-theme="ice"].ice-entering table.list tbody tr:nth-child(3) { animation-delay: .06s; }
+:root[data-theme="ice"].ice-entering table.list tbody tr:nth-child(4) { animation-delay: .09s; }
+:root[data-theme="ice"].ice-entering table.list tbody tr:nth-child(n+5) { animation-delay: .12s; }
+:root[data-theme="ice"].ice-entering main h1 { animation: ice-reveal .9s var(--ice-in) both, ice-glint 13s ease-in-out .9s infinite; }
+@keyframes ice-reveal { from { background-position: 100% 0; opacity: 0; letter-spacing: .4em; } 40% { opacity: 1; } to { background-position: 0 0; letter-spacing: .14em; } }
+
+/* ---------- Opstarten (eerste pagina van een tabblad, ± 1,3 s, blokkeert nooit): het ijs ontdooit van binnen naar buiten ---------- */
+.ice-boot { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
+:root:not([data-theme="ice"]) .ice-boot, :root[data-theme="ice"]:not([data-boot]) .ice-boot { display: none; }
+.ice-boot::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    url(../img/fx/frost-ice-v1.svg) 0 0 / 50vmax no-repeat,
+    url(../img/fx/frost-ice-br-v1.svg) 100% 100% / 50vmax no-repeat,
+    radial-gradient(circle at 50% 50%, #0b1626, #02040a 70%);
+  -webkit-mask: radial-gradient(circle at 50% 50%, transparent var(--ice-r), #000 calc(var(--ice-r) + 60px));
+  mask: radial-gradient(circle at 50% 50%, transparent var(--ice-r), #000 calc(var(--ice-r) + 60px));
+  animation: ice-thaw .75s cubic-bezier(.6, 0, .2, 1) .5s both;
+}
+@keyframes ice-thaw { from { --ice-r: 0px; } to { --ice-r: 110vmax; } }
+.ice-boot-ring {
+  position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+  border: 1px solid rgba(127, 232, 255, .9); box-shadow: 0 0 30px rgba(127, 232, 255, .8), inset 0 0 30px rgba(165, 139, 255, .6);
+  animation: ice-ring 1.05s cubic-bezier(.6, 0, .2, 1) both;
+}
+@keyframes ice-ring { 0% { transform: scale(.2); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 55% { transform: scale(1); opacity: 1; } 100% { transform: scale(14); opacity: 0; } }
+.ice-boot-log {
+  position: absolute; left: 50%; top: calc(50% + 80px); transform: translateX(-50%); margin: 0; text-align: center;
+  font: 11.5px/1.8 "AD Mono", ui-monospace, monospace; color: #9eeeff; letter-spacing: .2em; text-transform: uppercase;
+  animation: ice-fade-out .25s linear .6s both;
+}
+.ice-boot-log p { margin: 0; opacity: 0; animation: ice-fade .2s linear calc(.05s + var(--i, 0) * .09s) both; }
+.ice-boot-log p:last-child { color: #c9b6ff; }
+@keyframes ice-fade-out { to { opacity: 0; } }
+:root[data-theme="ice"][data-boot="1"] :is(main, .order-toolbar, .sheet-scroll, .flash, .app-footer) { opacity: 0; }
+:root[data-theme="ice"][data-boot="2"] :is(main, .order-toolbar, .sheet-scroll) { animation: ice-condense .5s var(--ice-in) both; }
+:root[data-theme="ice"][data-boot] .topbar { animation: ice-condense .5s var(--ice-in) .35s both; }
+
+/* ---------- Thema-menu ---------- */
+:root[data-theme="ice"] .theme-menu {
+  border-radius: 3px; border-color: rgba(127, 232, 255, .4); background: #060b14;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .6), 0 20px 50px rgba(0, 0, 0, .7), 0 0 30px rgba(127, 232, 255, .12);
+  animation: ice-condense .25s var(--ice-in) both;
+}
+:root[data-theme="ice"] .theme-menu [aria-checked="true"] { background: rgba(127, 232, 255, .1); box-shadow: inset 2px 0 0 var(--accent); }
+:root[data-theme="ice"] .theme-menu .theme-item[aria-checked="true"]::after { color: var(--accent); }
+:root[data-theme="ice"] .theme-fx-item { border-color: var(--glass-border); }
+:root[data-theme="ice"] .theme-fx-item[aria-checked="true"] { border-color: var(--accent); }
+:root[data-theme="ice"] .theme-fx-label { font-family: var(--f-mono); font-weight: 400; letter-spacing: .14em; color: var(--uv); }
+:root[data-theme="ice"] .theme-sep { background: var(--glass-border); }
+:root[data-theme="ice"] .theme-btn[aria-expanded="true"] { background: rgba(127, 232, 255, .12); border-color: var(--accent); color: #fff; }
+
+/* ---------- Telefoons ---------- */
+@media (max-width: 720px) {
+  :root[data-theme="ice"] main h1 { font-size: 15px; letter-spacing: .1em; }
+  :root[data-theme="ice"] .mainnav a { letter-spacing: .06em; }
+  .ice-field::after { display: none; }
+  .ice-field .ice-glint { display: none; }
+  :root[data-theme="ice"]::after { background-size: auto, 72px 72px; }
+  :root[data-theme="ice"] body::before { opacity: .14; }
+}
+
+/* ---------- Effecten: Rustig ---------- */
+:root[data-theme="ice"][data-fx="calm"] .ice-field::before, :root[data-theme="ice"][data-fx="calm"] .ice-field::after,
+:root[data-theme="ice"][data-fx="calm"] body::after, :root[data-theme="ice"][data-fx="calm"] .topbar::after,
+:root[data-theme="ice"][data-fx="calm"] .btn::after, :root[data-theme="ice"][data-fx="calm"] .ice-boot,
+:root[data-theme="ice"][data-fx="calm"] .ice-glint { display: none; }
+:root[data-theme="ice"][data-fx="calm"]::before { animation-duration: 40s; }
+:root[data-theme="ice"][data-fx="calm"] .ice-aurora { animation-duration: 160s; }
+:root[data-theme="ice"][data-fx="calm"] :is(main h1, .logo-word) { animation: none; background-position: 30% 0; }
+
+/* ---------- Minder beweging: niets beweegt, de stijl blijft ---------- */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="ice"] *, :root[data-theme="ice"] *::before, :root[data-theme="ice"] *::after,
+  :root[data-theme="ice"]::before, :root[data-theme="ice"]::after { animation: none !important; transition-duration: 0s !important; }
+  .ice-field::before, .ice-field::after, :root[data-theme="ice"] body::after, :root[data-theme="ice"] .topbar::after,
+  :root[data-theme="ice"] .btn::after, .ice-boot, .ice-glint { display: none !important; }
+  :root[data-theme="ice"] :is(main h1, .logo-word) { background-position: 30% 0; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-theme="ice"] { --glass: #070c16; }
+  :root[data-theme="ice"] body::after, .ice-field::after { display: none; }
+}
+@media (forced-colors: active) {
+  :root[data-theme="ice"]::before, :root[data-theme="ice"]::after, :root[data-theme="ice"] body::before, :root[data-theme="ice"] body::after,
+  :root[data-theme="ice"] .topbar::after, .ice-field, .ice-boot, :root[data-theme="ice"] .auth-card::after { display: none; }
+  :root[data-theme="ice"] :is(main h1, .logo-word) { background: none; color: CanvasText; }
+}
+
+/* ---------- Afdrukken: gewoon wit papier ---------- */
+@media print {
+  :root[data-theme="ice"], :root[data-theme="ice"] body { background: #fff !important; font-family: Arial, Helvetica, sans-serif; }
+  :root[data-theme="ice"]::before, :root[data-theme="ice"]::after, :root[data-theme="ice"] body::before, :root[data-theme="ice"] body::after,
+  .ice-field, .ice-boot { display: none !important; }
+  :root[data-theme="ice"] .sheet { background: #fff !important; border: 0; box-shadow: none; animation: none !important; }
+  :root[data-theme="ice"] :is(.ink, .red-nr, .wo-title) { text-shadow: none !important; }
+  :root[data-theme="ice"] :is(.wo-title, table.grid th, .work-head, .block-head, .lbl, td.rownum, td.rowlabel, .red-nr) { font-family: Arial, Helvetica, sans-serif; letter-spacing: normal; text-transform: none; }
+  :root[data-theme="ice"] :is(table.grid th, .work-head, .block-head, .wo-title) { color: #2f2f2f; font-weight: 700; font-size: 13.5px; }
+  :root[data-theme="ice"] .lbl { color: #2f2f2f; }
+  :root[data-theme="ice"] .red-nr { color: #c8302c; font-family: "Courier New", monospace; font-weight: 400; }
+}
+
+/* Effecten mogen nooit buiten het scherm uitsteken (anders een horizontale schuifbalk). */
+:root[data-theme="ice"], :root[data-theme="ice"] body { overflow-x: clip; }

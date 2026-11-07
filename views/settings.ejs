@@ -6,6 +6,7 @@
     { value: 'light', label: 'Licht', help: 'Altijd licht' },
     { value: 'dark', label: 'Donker', help: 'Altijd donker, prettig in een donkere werkplaats' },
     { value: 'neon', label: 'Neon', help: 'Futuristisch: neon, hologrammen en animaties' },
+    { value: 'ice', label: 'Black Ice', help: 'ICE·XVIII: zwart kristalrooster, ionensporen en rijp' },
   ];
   const STARTS = [
     { value: '/', label: 'Klanten' },
@@ -50,7 +51,7 @@
 
     <section class="card">
       <h2>Thema</h2>
-      <div class="choice-grid four" role="radiogroup" aria-label="Thema">
+      <div class="choice-grid five" role="radiogroup" aria-label="Thema">
         <% for (const t of THEMES) { %>
         <label class="choice">
           <input type="radio" name="theme" value="<%= t.value %>" <%= p.theme === t.value ? 'checked' : '' %>>
@@ -68,8 +69,8 @@
     </section>
 
     <section class="card">
-      <h2>Effecten (thema Neon)</h2>
-      <p class="muted small">Hoeveel beweging het thema Neon laat zien. Staat je apparaat op “minder beweging”, dan staat alles altijd stil.</p>
+      <h2>Effecten (thema's Neon en Black Ice)</h2>
+      <p class="muted small">Hoeveel beweging de thema's Neon en Black Ice laten zien. Staat je apparaat op “minder beweging”, dan staat alles altijd stil.</p>
       <div class="choice-grid two" role="radiogroup" aria-label="Effecten">
         <label class="choice">
           <input type="radio" name="fx" value="full" <%= (p.fx || 'full') === 'full' ? 'checked' : '' %>>

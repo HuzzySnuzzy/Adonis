@@ -1,7 +1,7 @@
 'use strict';
 /* Themamenu in de menubalk (zoals in DiscordLinked): Systeem, Licht, Donker, Neon + Effecten.
  * De keuze wordt per gebruiker op de server bewaard. Systeem/Licht/Donker wisselen meteen;
- * van of naar Neon herlaadt de pagina even (Neon heeft eigen achtergrondlagen). */
+ * van of naar Neon of Black Ice herlaadt de pagina even (eigen achtergrondlagen). */
 (function () {
   const btn = document.getElementById('themeBtn');
   const menu = document.getElementById('themeMenu');
@@ -54,7 +54,8 @@
     if (theme === before) return close(true);
     check('.theme-item', 'themeValue', theme);
     try { await save({ theme }); } catch { check('.theme-item', 'themeValue', before); return; }
-    if (theme === 'neon' || before === 'neon') {
+    // Neon en Black Ice hebben eigen achtergrondlagen: dan de pagina even herladen.
+    if (['neon', 'ice'].includes(theme) || ['neon', 'ice'].includes(before)) {
       window.adonisLeaving = true; // geen "niet opgeslagen"-waarschuwing; ingevulde gegevens blijven staan in het formulier
       location.reload();
       return;
@@ -63,7 +64,7 @@
     else root.setAttribute('data-theme', theme);
     const meta = document.querySelector('meta[name="color-scheme"]');
     if (meta) meta.content = theme === 'system' ? 'light dark' : theme;
-    const label = { system: 'Systeem', light: 'Licht', dark: 'Donker', neon: 'Neon' }[theme];
+    const label = { system: 'Systeem', light: 'Licht', dark: 'Donker', neon: 'Neon', ice: 'Black Ice' }[theme];
     btn.title = 'Thema: ' + label;
     btn.setAttribute('aria-label', 'Thema kiezen (nu ' + label + ')');
     close(true);
