@@ -1,2 +1,25 @@
+<% if (locals.user && locals.appInfo) {
+  const a = appInfo;
+  const u = a.update || {};
+  const nlDate = (iso) => iso ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z')) : '';
+  const checked = u.checkedAt ? new Intl.DateTimeFormat('nl-NL', { timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(u.checkedAt) : '';
+%>
+<footer class="app-footer no-print">
+  <span>ADONIS v<%= a.version %></span>
+  <% if (a.date) { %><span class="sep">·</span><span title="Releasedatum">uitgebracht <%= nlDate(a.date) %></span><% } %>
+  <span class="sep">·</span>
+  <% if (u.state === 'update') { %>
+    <span class="upd-new" title="Nieuwste versie: v<%= u.latest %><%= u.latestDate ? ', uitgebracht ' + nlDate(u.latestDate) : '' %>">Update v<%= u.latest %> beschikbaar<%= a.autoUpdate ? ' – wordt geïnstalleerd bij de volgende herstart' : '' %></span>
+  <% } else if (u.state === 'actueel') { %>
+    <span title="Laatst gecontroleerd: <%= checked %>">Up-to-date</span>
+  <% } else if (u.state === 'offline') { %>
+    <span title="Laatst geprobeerd: <%= checked %>">Kon niet controleren op updates</span>
+  <% } else if (u.state === 'ontwikkel') { %>
+    <span>Ontwikkelversie</span>
+  <% } else { %>
+    <span>Controleren op updates…</span>
+  <% } %>
+</footer>
+<% } %>
 </body>
 </html>

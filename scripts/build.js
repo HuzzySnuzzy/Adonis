@@ -89,7 +89,10 @@ async function bundle() {
     format: 'cjs',
     outfile,
     legalComments: 'none',
-    define: { 'process.env.WERKOPDRACHTEN_BUILD_VERSION': JSON.stringify(BUILD_VERSION) },
+    define: {
+      'process.env.WERKOPDRACHTEN_BUILD_VERSION': JSON.stringify(BUILD_VERSION),
+      'process.env.WERKOPDRACHTEN_BUILD_DATE': JSON.stringify(new Date().toISOString().slice(0, 10)),
+    },
     logLevel: 'warning',
     plugins: [{
       name: 'embedded-assets',

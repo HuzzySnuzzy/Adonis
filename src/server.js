@@ -13,6 +13,8 @@ const auth = require('./auth');
 const orders = require('./orders');
 const assets = require('./assets');
 const importer = require('./import');
+const buildinfo = require('./buildinfo');
+const updater = require('./update');
 
 const app = express();
 // HTTPS (achter een reverse proxy): alleen dan beveiligde cookies en HSTS.
@@ -116,6 +118,11 @@ app.use(auth.loadUser);
 app.use((req, res, next) => {
   res.locals.path = req.path;
   res.locals.url = req.originalUrl;
+  res.locals.appInfo = {
+    ...buildinfo,
+    update: updater.getStatus(),
+    autoUpdate: process.env.AUTO_UPDATE_ENABLED === 'true',
+  };
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;
   next();

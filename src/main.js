@@ -36,6 +36,7 @@ process.env.APP_TIMEZONE = cfg.timezone;
 process.env.COOKIE_SECURE = cfg.secureCookies ? 'true' : 'false';
 process.env.TRUST_PROXY = cfg.trustProxy ? 'true' : 'false';
 process.env.IMPORT_LIMIT_PER_DAY = String(cfg.importLimitPerDay);
+process.env.AUTO_UPDATE_ENABLED = cfg.autoUpdate ? 'true' : 'false';
 if (cfg.anthropicApiKey) process.env.ANTHROPIC_API_KEY = cfg.anthropicApiKey;
 else delete process.env.ANTHROPIC_API_KEY;
 
@@ -172,6 +173,7 @@ function startServer() {
   });
 
   server.on('listening', () => {
+    require('./update').startStatusChecks(cfg.updateRepo);
     const local = `http://localhost:${cfg.port}`;
     console.log('');
     console.log(`  ADONIS Werkopdrachten v${VERSION}`);

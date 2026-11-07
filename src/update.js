@@ -111,4 +111,36 @@ async function checkAndInstall({ repo = DEFAULT_REPO, log = () => {} } = {}) {
   return { updated: true, version: latest, message: `Bijgewerkt naar v${latest}.` };
 }
 
-module.exports = { checkAndInstall, compareVersions, assetName, DEFAULT_REPO };
+/* ---------- Updatestatus voor de voettekst ---------- */
+const status = { state: 'onbekend', latest: null, latestDate: null, checkedAt: null };
+
+/** Alleen kijken of er een nieuwere versie is (niets downloaden). */
+async function checkStatus(repo = DEFAULT_REPO) {
+  try {
+    const release = await latestRelease(repo);
+    const latest = String(release.tag_name || '').replace(/^v/, '');
+    status.latest = latest || null;
+    status.latestDate = release.published_at ? String(release.published_at).slice(0, 10) : null;
+    status.state = latest && compareVersions(latest, VERSION) > 0 ? 'update' : 'actueel';
+  } catch {
+    status.state = 'offline';
+  }
+  status.checkedAt = new Date();
+  return status;
+}
+
+/** Bij het starten en daarna elke 6 uur controleren. */
+function startStatusChecks(repo) {
+  if (!isSea()) {
+    status.state = 'ontwikkel';
+    return;
+  }
+  checkStatus(repo);
+  setInterval(() => checkStatus(repo), 6 * 60 * 60 * 1000).unref();
+}
+
+function getStatus() {
+  return status;
+}
+
+module.exports = { checkAndInstall, compareVersions, assetName, DEFAULT_REPO, checkStatus, startStatusChecks, getStatus };
