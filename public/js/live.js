@@ -40,8 +40,14 @@
 
   // Lijsten op deze pagina opnieuw ophalen en alleen de "live" delen vervangen.
   let refreshTimer = null;
+  let refreshPending = false;
+  // Tabbladen op de achtergrond werken pas bij als je er weer naartoe gaat.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && refreshPending) { refreshPending = false; refreshLists(); }
+  });
   function refreshLists() {
     if (!document.querySelector('[data-live]')) return;
+    if (document.visibilityState === 'hidden') { refreshPending = true; return; }
     clearTimeout(refreshTimer);
     refreshTimer = setTimeout(async () => {
       try {
@@ -80,12 +86,58 @@
     refreshLists();
   }
 
-  const es = new EventSource('/events');
-  es.onmessage = (m) => {
-    try { handle(JSON.parse(m.data)); } catch { /* onbekend bericht */ }
-  };
-  // Na een onderbreking (herstart/update) alles één keer bijwerken.
-  let wasDown = false;
-  es.onerror = () => { wasDown = true; };
-  es.onopen = () => { if (wasDown) { wasDown = false; refreshLists(); } };
+  /*
+   * Eén live-verbinding per browser in plaats van per tabblad. Een browser opent over http maximaal
+   * 6 verbindingen per server; met een open verbinding per tabblad liep dat vol en bleef klikken hangen.
+   * Eén tabblad ("leider") houdt de verbinding en geeft berichten door aan de andere tabbladen.
+   * Sluit dat tabblad, dan neemt een ander het automatisch over.
+   */
+  const channel = 'BroadcastChannel' in window ? new BroadcastChannel('adonis-live') : null;
+  if (channel) {
+    channel.onmessage = (m) => {
+      if (m.data && m.data.type === 'reconnected') refreshLists();
+      else handle(m.data);
+    };
+  }
+
+  function openStream(onClose) {
+    const es = new EventSource('/events');
+    let wasDown = false;
+    es.onmessage = (m) => {
+      let data;
+      try { data = JSON.parse(m.data); } catch { return; }
+      handle(data);
+      if (channel) channel.postMessage(data);
+    };
+    es.onerror = () => { wasDown = true; };
+    es.onopen = () => {
+      // Na een onderbreking (herstart/update) alles één keer bijwerken.
+      if (wasDown) {
+        wasDown = false;
+        refreshLists();
+        if (channel) channel.postMessage({ type: 'reconnected' });
+      }
+    };
+    const close = () => { es.close(); if (onClose) onClose(); };
+    window.addEventListener('pagehide', close, { once: true });
+    return close;
+  }
+
+  if (channel && navigator.locks && navigator.locks.request) {
+    // De lock wordt vrijgegeven als dit tabblad sluit of wegnavigeert; dan neemt een ander tabblad het over.
+    navigator.locks.request('adonis-live', () => new Promise((release) => { openStream(release); }));
+  } else {
+    // Oudere browsers: alleen verbinden zolang het tabblad zichtbaar is.
+    let close = null;
+    const sync = () => {
+      if (document.visibilityState === 'visible' && !close) {
+        close = openStream(() => { close = null; });
+        refreshLists();
+      } else if (document.visibilityState !== 'visible' && close) {
+        close();
+      }
+    };
+    document.addEventListener('visibilitychange', sync);
+    if (document.visibilityState === 'visible') close = openStream(() => { close = null; });
+  }
 })();
