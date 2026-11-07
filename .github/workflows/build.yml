@@ -35,6 +35,24 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build -- ${{ matrix.targets }}
+        env:
+          # Versienummer in het programma = release-tag (nodig voor automatisch bijwerken)
+          RELEASE_VERSION: ${{ inputs.release_tag || (startsWith(github.ref, 'refs/tags/v') && github.ref_name) || '' }}
+
+      - name: Test automatisch bijwerken
+        shell: bash
+        env:
+          RELEASE_VERSION: v0.0.1
+        run: |
+          # Maak een "oude" versie en laat die bijwerken naar de zojuist gebouwde versie.
+          EXE=${{ matrix.exe }}
+          NEW_VERSION=$(./dist/$EXE --version)
+          mkdir -p "$RUNNER_TEMP/new" "$RUNNER_TEMP/old"
+          cp "dist/$EXE" "$RUNNER_TEMP/new/$EXE"
+          npm run build -- ${{ runner.os == 'Windows' && 'win-x64' || 'linux-x64' }}
+          cp "dist/$EXE" "$RUNNER_TEMP/old/$EXE"
+          cp "$RUNNER_TEMP/new/$EXE" "dist/$EXE"
+          node scripts/test-update.js "$RUNNER_TEMP/old/$EXE" "$RUNNER_TEMP/new/$EXE" "$NEW_VERSION"
 
       - name: Smoke test (Linux)
         if: runner.os == 'Linux'

@@ -72,7 +72,7 @@ een systemd-service gebruiken die dit bestand start.
    Is de repository privé, of lukt de download niet? Upload het bestand dan zelf via de bestandsbeheerder.
 3. Start de server; de poort komt automatisch van de toegewezen allocatie (`SERVER_PORT`).
    Ontbreekt het programma (bijv. omdat de download bij de installatie mislukte), dan wordt het bij het starten alsnog gedownload.
-   Bijwerken naar een nieuwe versie: *Settings → Reinstall Server* (`data/` en `config.properties` blijven bewaard).
+   Nieuwe versies worden automatisch geïnstalleerd bij het (her)starten, zie [Automatisch bijwerken](#automatisch-bijwerken).
 4. Maak het eerste account aan via `/setup`, of typ in de console:
    `create-user collin "Collin" <wachtwoord> --admin`
 
@@ -87,6 +87,7 @@ In het venster / de Pterodactyl-console kun je typen:
 | `create-user <gebruiker> "<naam>" <wachtwoord> [--admin]` | gebruiker aanmaken |
 | `reset-password <gebruiker> <nieuw wachtwoord>` | wachtwoord vergeten? zo stel je een nieuw in |
 | `make-admin <gebruiker>` | gebruiker beheerder maken |
+| `update` | nu naar een nieuwe versie zoeken (daarna herstarten) |
 | `stop` | netjes afsluiten |
 
 Dezelfde opdrachten werken ook los, bijv. `werkopdrachten.exe reset-password collin` (vraagt dan om het wachtwoord).
@@ -105,11 +106,25 @@ Dezelfde opdrachten werken ook los, bijv. `werkopdrachten.exe reset-password col
 | `secure-cookies` | `false` | `true` als de site via HTTPS bereikbaar is |
 | `trust-proxy` | `false` | `true` achter een reverse proxy (nginx, Caddy, Cloudflare) |
 | `timezone` | `Europe/Amsterdam` | Tijdzone voor “Datum invoer” |
+| `auto-update` | `true` | Bij het starten automatisch bijwerken naar de nieuwste release |
+| `update-repo` | `huzzysnuzzy/adonis` | GitHub-repository waar updates vandaan komen |
 | `anthropic-api-key` | leeg | API-sleutel voor foto-import; leeg = uit |
 
 Nieuwe instellingen na een update worden automatisch onderaan `config.properties` toegevoegd.
 Alles kan ook als opdrachtregeloptie (`--port 8080`) of omgevingsvariabele (`SERVER_PORT`/`PORT`, `DATA_DIR`,
-`START_ORDER_NUMBER`, `APP_TIMEZONE`, `COOKIE_SECURE`, `TRUST_PROXY`, `ANTHROPIC_API_KEY`). Volgorde: opdrachtregel > omgeving > config.properties.
+`START_ORDER_NUMBER`, `APP_TIMEZONE`, `COOKIE_SECURE`, `TRUST_PROXY`, `ANTHROPIC_API_KEY`, `AUTO_UPDATE`). Volgorde: opdrachtregel > omgeving > config.properties.
+
+### Automatisch bijwerken
+
+Bij elke start kijkt het programma op GitHub of er een nieuwere release is. Zo ja, dan wordt die gedownload,
+gecontroleerd (juiste grootte en versie) en geïnstalleerd, en start meteen de nieuwe versie. `data/` en
+`config.properties` blijven gewoon staan. Zonder internet of bij een fout start gewoon de huidige versie.
+
+- Uitzetten: `auto-update=false` in `config.properties` (Pterodactyl: variabele *Automatisch bijwerken*).
+- Handmatig zoeken terwijl het draait: typ `update` in de console en herstart daarna.
+- Een nieuwe versie uitbrengen: op GitHub *Actions → Build executables → Run workflow* met een nieuwe tag
+  (bijv. `v1.2.0`). Het versienummer in het programma komt uit die tag.
+- Windows: het oude bestand blijft even staan als `werkopdrachten.exe.old` en wordt bij de volgende start opgeruimd.
 
 ### Foto-import
 

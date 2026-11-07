@@ -30,6 +30,8 @@ const DEFAULTS = [
   ['secure-cookies', 'false', 'Zet op true als de site via HTTPS wordt bereikt (bijv. achter een reverse proxy).'],
   ['trust-proxy', 'false', 'Zet op true als de site achter een reverse proxy draait (nginx, Caddy, Cloudflare...).'],
   ['timezone', 'Europe/Amsterdam', 'Tijdzone voor "Datum invoer".'],
+  ['auto-update', 'true', 'Bij het starten automatisch de nieuwste versie van GitHub installeren (true/false). Gegevens blijven bewaard.'],
+  ['update-repo', 'huzzysnuzzy/adonis', 'GitHub-repository waar updates vandaan komen.'],
   ['anthropic-api-key', '', 'API-sleutel voor foto-import (handschrift uitlezen met Claude). Aanmaken op https://console.anthropic.com – leeg = foto-import uit. Vereist internet.'],
 ];
 
@@ -42,6 +44,7 @@ const ENV_NAMES = {
   'secure-cookies': ['COOKIE_SECURE'],
   'trust-proxy': ['TRUST_PROXY'],
   'anthropic-api-key': ['ANTHROPIC_API_KEY'],
+  'auto-update': ['AUTO_UPDATE'],
   timezone: ['APP_TIMEZONE'], // bewust niet TZ: Pterodactyl/Docker zetten die vaak op UTC
 };
 
@@ -126,6 +129,8 @@ function load(argv = []) {
     trustProxy: bool(cfg['trust-proxy']),
     timezone: cfg.timezone,
     anthropicApiKey: cfg['anthropic-api-key'],
+    autoUpdate: bool(cfg['auto-update']),
+    updateRepo: cfg['update-repo'],
   };
 }
 

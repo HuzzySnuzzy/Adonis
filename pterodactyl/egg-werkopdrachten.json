@@ -39,6 +39,16 @@
             "field_type": "text"
         },
         {
+            "name": "Automatisch bijwerken",
+            "description": "Bij elke start de nieuwste versie van GitHub installeren (true/false). Gegevens blijven bewaard.",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "true",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
             "name": "Eerste werkopdrachtnummer",
             "description": "Nummer van de eerste werkopdracht, bijv. 4449 om verder te tellen na de papieren boekjes.",
             "env_variable": "START_ORDER_NUMBER",

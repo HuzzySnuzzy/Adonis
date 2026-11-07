@@ -29,6 +29,8 @@ const WORK = path.join(DIST, '.build');
 const CACHE = path.join(ROOT, '.cache', 'node');
 const VERSION = process.version; // bijv. v22.23.4
 const FUSE = 'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2';
+// Versie in het programma: uit de release-tag (RELEASE_VERSION=v1.2.0) of anders package.json.
+const BUILD_VERSION = (process.env.RELEASE_VERSION || '').replace(/^v/, '') || require('../package.json').version;
 
 const TARGETS = {
   'win-x64': { out: 'werkopdrachten.exe', remote: 'win-x64/node.exe' },
@@ -87,6 +89,7 @@ async function bundle() {
     format: 'cjs',
     outfile,
     legalComments: 'none',
+    define: { 'process.env.WERKOPDRACHTEN_BUILD_VERSION': JSON.stringify(BUILD_VERSION) },
     logLevel: 'warning',
     plugins: [{
       name: 'embedded-assets',
@@ -164,7 +167,7 @@ async function buildTarget(target, blob) {
 }
 
 (async () => {
-  console.log(`Werkopdrachten bouwen met Node ${VERSION} voor: ${targets.join(', ')}`);
+  console.log(`Werkopdrachten v${BUILD_VERSION} bouwen met Node ${VERSION} voor: ${targets.join(', ')}`);
   fs.rmSync(WORK, { recursive: true, force: true });
   fs.mkdirSync(WORK, { recursive: true });
   const main = await bundle();

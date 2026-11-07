@@ -23,7 +23,7 @@ const os = require('node:os');
 const readline = require('node:readline');
 const { spawn } = require('node:child_process');
 const config = require('./config');
-const pkg = require('../package.json');
+const VERSION = require('./version');
 
 const argv = process.argv.slice(2);
 const command = argv[0] && !argv[0].startsWith('--') ? argv[0] : null;
@@ -117,6 +117,7 @@ const HELP = `
                                               gebruiker aanmaken
     reset-password <gebruiker> [ww]           wachtwoord opnieuw instellen
     make-admin <gebruiker>                    gebruiker beheerder maken
+    update                                    nu naar een nieuwe versie zoeken
     stop                                      server netjes stoppen
 `;
 
@@ -172,7 +173,7 @@ function startServer() {
   server.on('listening', () => {
     const local = `http://localhost:${cfg.port}`;
     console.log('');
-    console.log(`  Werkopdrachten v${pkg.version}`);
+    console.log(`  Werkopdrachten v${VERSION}`);
     console.log('  ------------------------------------------------------------');
     console.log(`  Werkopdrachten draait op ${local}`);
     if (cfg.host === '0.0.0.0' || cfg.host === '::') {
@@ -219,6 +220,11 @@ function startServer() {
     try {
       if (cmd === 'stop' || cmd === 'exit' || cmd === 'quit') return stop();
       if (cmd === 'help' || cmd === '?') return console.log(HELP);
+      if (cmd === 'update') {
+        const r = await require('./update').checkAndInstall({ repo: cfg.updateRepo, log: console.log });
+        console.log('  ' + r.message + (r.updated ? ' Herstart om de nieuwe versie te gebruiken (typ "stop" en start opnieuw).' : ''));
+        return;
+      }
       if (!(await runAdminCommand(cmd, args, { askPassword: false }))) {
         console.log(`  Onbekende opdracht "${cmd}". Typ "help".`);
       }
@@ -233,11 +239,21 @@ function startServer() {
 /* ------------------------------------------------------------------ */
 (async () => {
   if (command === 'help' || argv.includes('--help') || argv.includes('-h')) {
-    console.log(`\n  Werkopdrachten v${pkg.version}\n\n  Start zonder opdracht om de server te starten.\n  Opties: --port <poort>  --host <adres>  --data-dir <map>\n${HELP}`);
+    console.log(`\n  Werkopdrachten v${VERSION}\n\n  Start zonder opdracht om de server te starten.\n  Opties: --port <poort>  --host <adres>  --data-dir <map>\n${HELP}`);
     return;
   }
   if (argv.includes('--version') || argv.includes('-v')) {
-    console.log(pkg.version);
+    console.log(VERSION);
+    return;
+  }
+  if (command === 'update') {
+    try {
+      const r = await require('./update').checkAndInstall({ repo: cfg.updateRepo, log: console.log });
+      console.log('  ' + r.message);
+    } catch (err) {
+      console.error('  Bijwerken mislukt: ' + err.message);
+      process.exitCode = 1;
+    }
     return;
   }
   if (command) {
@@ -252,5 +268,29 @@ function startServer() {
     }
     return;
   }
+  if (cfg.autoUpdate && config.isSea() && !process.env.WERKOPDRACHTEN_JUST_UPDATED) {
+    try {
+      console.log(`  Werkopdrachten v${VERSION} – zoeken naar updates...`);
+      const r = await require('./update').checkAndInstall({ repo: cfg.updateRepo, log: console.log });
+      console.log('  ' + r.message);
+      if (r.updated) return relaunch();
+    } catch (err) {
+      console.log(`  Bijwerken overgeslagen: ${err.message}. De huidige versie wordt gestart.`);
+    }
+  }
   startServer();
 })();
+
+/** Na een update: de nieuwe versie starten in hetzelfde venster/dezelfde console. */
+function relaunch() {
+  console.log('  Nieuwe versie wordt gestart...');
+  const child = spawn(process.execPath, process.argv.slice(2), {
+    stdio: 'inherit',
+    env: { ...process.env, WERKOPDRACHTEN_JUST_UPDATED: '1' },
+  });
+  for (const sig of ['SIGINT', 'SIGTERM']) {
+    process.on(sig, () => { try { child.kill(sig); } catch { /* al gestopt */ } });
+  }
+  child.on('exit', (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
+  child.on('error', (err) => fatal('Kon de nieuwe versie niet starten: ' + err.message));
+}
