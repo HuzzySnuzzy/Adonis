@@ -184,7 +184,7 @@
           <input class="red-nr nr-input" name="nummer" value="<%= nummer %>" inputmode="numeric" required aria-label="Werkopdrachtnummer" autocomplete="off">
         </div>
 
-        <div class="cell"><span class="lbl">Datum invoer</span><% if (draft) { %><input class="ink" type="date" name="datum_invoer" value="<%= datumInvoer %>" title="Datum van de papieren werkopdracht"><% } else { %><span class="ink static" title="Wordt automatisch ingevuld bij aanmaken"><%= fmtDate(datumInvoer) %></span><% } %></div>
+        <div class="cell"><span class="lbl">Datum invoer</span><% if (draft) { %><input class="ink<%= datumInvoer ? '' : ' needs-check' %>" type="date" name="datum_invoer" value="<%= datumInvoer %>" required title="Datum van de papieren werkopdracht"><% } else if (order) { %><input class="ink" type="date" name="datum_invoer" value="<%= datumInvoer %>" required title="Datum van de werkopdracht (aan te passen)"><% } else { %><span class="ink static" title="Wordt automatisch ingevuld bij aanmaken"><%= fmtDate(datumInvoer) %></span><% } %></div>
         <div class="cell"><span class="lbl">Naam</span><%- inp('naam', d.naam) %></div>
 
         <div class="cell"><span class="lbl">Datum gereed</span><%- inp('datum_gereed', d.datum_gereed, 'type="date"') %></div>

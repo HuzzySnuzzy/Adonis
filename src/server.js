@@ -279,7 +279,7 @@ function renderOrder(res, { order, data, nummer, error, status, draft, datumInvo
   res.status(status || 200).render('order', {
     title: draft ? 'Import controleren' : order ? `Werkopdracht ${order.nummer}` : 'Nieuwe werkopdracht',
     order, data, nummer, error, draft: draft || null,
-    datumInvoer: datumInvoer || (order ? order.datum_invoer : orders.todayISO()),
+    datumInvoer: draft ? (datumInvoer || '') : datumInvoer || (order ? order.datum_invoer : orders.todayISO()),
   });
 }
 
@@ -342,7 +342,8 @@ app.post('/werkopdracht/:id', (req, res) => {
       'jouw wijzigingen staan hieronder nog ingevuld, maar zijn NIET opgeslagen.';
   }
   if (error) return renderOrder(res, { order, data, nummer: req.body.nummer, error, status: 400 });
-  orders.saveOrder({ id: order.id, nummer, data, userId: req.user.id });
+  // Datum invoer is bij een bestaande werkopdracht aan te passen (bijv. een verkeerd geïmporteerde datum).
+  orders.saveOrder({ id: order.id, nummer, data, userId: req.user.id, datumInvoer: orders.parseDate(req.body.datum_invoer) || null });
   flash(req, 'ok', `Werkopdracht ${nummer} is opgeslagen.`);
   res.redirect(`/werkopdracht/${order.id}`);
 });
@@ -391,7 +392,7 @@ app.get('/importeren/:id', (req, res) => {
   const onzeker = clash ? [`Werkopdrachtnummer ${nr} bestaat al – kies een ander nummer.`, ...r.onzeker] : r.onzeker;
   renderOrder(res, {
     order: null, data: r.data, nummer: nr || orders.nextOrderNumber(),
-    draft: { ...draft, onzeker }, datumInvoer: r.datum_invoer || orders.todayISO(),
+    draft: { ...draft, onzeker }, datumInvoer: orders.parseDate(r.datum_invoer), // leeg = niet gelezen: gebruiker moet invullen
   });
 });
 
@@ -407,8 +408,9 @@ app.post('/importeren/:id/bevestigen', (req, res) => {
   if (!draft) return;
   const data = orders.normalizeOrderData(req.body.d);
   const nummer = parseNummer(req.body.nummer);
-  const datumInvoer = /^\d{4}-\d{2}-\d{2}$/.test(req.body.datum_invoer || '') ? req.body.datum_invoer : orders.todayISO();
-  const error = validateOrder(data, nummer, null);
+  const datumInvoer = orders.parseDate(req.body.datum_invoer);
+  const error = datumInvoer ? validateOrder(data, nummer, null)
+    : 'Vul de Datum invoer in: de datum die op de papieren werkopdracht staat.';
   if (error) {
     return renderOrder(res, { order: null, data, nummer: req.body.nummer, error, status: 400, draft, datumInvoer });
   }

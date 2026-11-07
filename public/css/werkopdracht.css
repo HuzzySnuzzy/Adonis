@@ -222,3 +222,7 @@ td.tread-warn { background: var(--tread-warn); }
   .ink::placeholder { color: transparent; }
   textarea.lined { overflow: hidden; }
 }
+
+/* Import: veld dat nog ingevuld/gecontroleerd moet worden */
+.ink.needs-check { box-shadow: inset 0 0 0 2px var(--accent, #e2b44b); background: color-mix(in srgb, var(--accent, #e2b44b) 18%, transparent); }
+@media print { .ink.needs-check { box-shadow: none; background: transparent; } }

@@ -178,7 +178,9 @@ const PROMPT = `Je krijgt een of meer foto's van een handgeschreven papieren wer
 (voorkant en eventueel achterkant). Lees alle handgeschreven tekst en geef die terug als JSON.
 
 Opbouw van het formulier en waar elk vak hoort:
-- "nummer": het rode gedrukte getal rechtsboven (alleen cijfers). "datum_invoer": het vak Datum invoer.
+- "nummer": het rode gedrukte getal rechtsboven (alleen cijfers).
+- "datum_invoer": de datum in het vak "Datum invoer" (rechterhelft, linkerkolom, tweede regel onder Monteur).
+  Dit is de datum van de werkopdracht zelf – NIET de datum van vandaag. Altijd invullen als er iets staat.
 - "kop" (rechterhelft, bovenaan): Monteur, Datum gereed, Klantnr., Kenteken, Merk/Type,
   Km-stand (werkelijk) (in) -> km_in, Km-stand (teller) (uit) -> km_uit, Datum deel I -> datum_deel1,
   A.p.k.-datum -> apk_datum; Naam, Adres, Plaats, Tel. privé, Tel. zaak,
@@ -320,12 +322,19 @@ async function readWithClaude(images) {
     throw billedError('Het resultaat kon niet worden gelezen. Probeer het opnieuw.');
   }
   const nummer = String(parsed.nummer || '').replace(/\D/g, '');
-  const datum = /^\d{4}-\d{2}-\d{2}$/.test(parsed.datum_invoer || '') ? parsed.datum_invoer : '';
+  const rawDatum = String(parsed.datum_invoer || '').trim();
+  const datum = orders.parseDate(rawDatum);
+  const onzeker = Array.isArray(parsed.onzeker) ? parsed.onzeker.map(String).slice(0, 30) : [];
+  if (!datum) {
+    onzeker.unshift(rawDatum
+      ? `Datum invoer gelezen als "${rawDatum}", maar dat is geen geldige datum – vul de datum van de papieren werkopdracht in.`
+      : 'Datum invoer kon niet worden gelezen – vul de datum van de papieren werkopdracht in.');
+  }
   return {
     usage: used,
     nummer,
     datum_invoer: datum,
-    onzeker: Array.isArray(parsed.onzeker) ? parsed.onzeker.map(String).slice(0, 30) : [],
+    onzeker,
     data: toWorkOrder(parsed),
   };
 }

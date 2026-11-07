@@ -96,6 +96,7 @@ function normalizeOrderData(input) {
   const data = shape(emptyOrderData(), input);
   data.kenteken = data.kenteken.toUpperCase().trim();
   if (!['ja', 'nee'].includes(data.alle_reparaties)) data.alle_reparaties = '';
+  for (const f of ['datum_gereed', 'datum_deel1', 'apk_datum']) data[f] = parseDate(data[f]);
   return data;
 }
 
@@ -118,6 +119,30 @@ function flattenText(value, out = []) {
 function todayISO() {
   // Datum in Nederlandse tijd, als YYYY-MM-DD
   return new Intl.DateTimeFormat('sv-SE', { timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam' }).format(new Date());
+}
+
+/**
+ * Datum zoals op papier of door de foto-import gelezen -> "YYYY-MM-DD", of "" als het geen geldige datum is.
+ * Begrijpt o.a. 28-9-26, 28/09/2026, 28.9.26, 28 9 26 en 2026-09-28. Tweecijferig jaar: 26 -> 2026.
+ */
+function parseDate(value) {
+  const s = String(value || '').trim();
+  let y; let m; let d;
+  let r = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(s);
+  if (r) {
+    [, y, m, d] = r.map(Number);
+  } else {
+    r = /^(\d{1,2})\s*[-/. ]\s*(\d{1,2})\s*[-/. ]\s*(\d{2}|\d{4})$/.exec(s);
+    if (!r) return '';
+    [, d, m, y] = r.map(Number);
+    if (r[3].length === 2) {
+      const thisYear = Number(todayISO().slice(2, 4));
+      y += y <= thisYear + 1 ? 2000 : 1900; // 26 -> 2026, 98 -> 1998
+    }
+  }
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  if (y < 1950 || y > 2100 || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return '';
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
 function nextOrderNumber() {
@@ -168,8 +193,8 @@ function saveOrder({ id, nummer, data, userId, datumInvoer }) {
       oldCustomerId = db.prepare('SELECT customer_id FROM orders WHERE id = ?').get(id).customer_id;
       db.prepare(
         `UPDATE orders SET nummer = ?, customer_id = ?, data = ?, search_text = ?, updated_by = ?,
-         updated_at = datetime('now') WHERE id = ?`
-      ).run(nummer, customer.id, JSON.stringify(data), searchText, userId, id);
+         datum_invoer = COALESCE(?, datum_invoer), updated_at = datetime('now') WHERE id = ?`
+      ).run(nummer, customer.id, JSON.stringify(data), searchText, userId, datumInvoer || null, id);
     } else {
       const res = db.prepare(
         `INSERT INTO orders (nummer, customer_id, datum_invoer, data, search_text, created_by, updated_by)
@@ -205,5 +230,5 @@ function deleteOrder(id) {
 module.exports = {
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS,
   emptyOrderData, normalizeOrderData, parseOrderData,
-  nextOrderNumber, saveOrder, deleteOrder, todayISO,
+  nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate,
 };
