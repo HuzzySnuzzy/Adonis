@@ -336,11 +336,15 @@ if (!app.requestSingleInstanceLock()) {
     buildMenu();
     updater.cleanup();
     createWindow();
-    // Even na het starten, daarna elke 6 uur (de server kan intussen zijn bijgewerkt).
-    setTimeout(() => checkUpdate(), Number(process.env.ADONIS_APP_UPDATE_DELAY || 20000));
+    // Een update die al klaarstaat (gedownload, nog niet geplaatst): meteen weer vragen.
+    if (updater.pendingVersion()) setTimeout(() => showToast({ state: 'klaar', version: updater.pendingVersion() }), 2500);
+    // Kort na het starten, daarna elke 6 uur (de server kan intussen zijn bijgewerkt).
+    setTimeout(() => checkUpdate(), Number(process.env.ADONIS_APP_UPDATE_DELAY || 6000));
     setInterval(() => checkUpdate(), 6 * 3600 * 1000);
   });
   app.on('window-all-closed', () => app.quit());
+  // Bij het afsluiten: een klaargezette update op zijn plek zetten (pas dan is de .exe vrij).
+  app.on('will-quit', () => { try { updater.applyOnExit(false); } catch (err) { console.log('  Bijwerken bij afsluiten: ' + err.message); } });
 }
 
 module.exports = { normalizeUrl }; // voor tests

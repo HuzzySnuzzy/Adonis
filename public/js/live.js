@@ -54,7 +54,7 @@
         const res = await fetch(location.href, { headers: { 'X-Live-Refresh': '1' }, credentials: 'same-origin' });
         if (!res.ok || res.redirected) return;
         const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
-        document.querySelectorAll('[data-live]').forEach((el) => {
+        document.querySelectorAll('[data-live]:not([data-live-remote])').forEach((el) => {
           const fresh = doc.getElementById(el.id);
           if (fresh && fresh.innerHTML !== el.innerHTML) {
             el.innerHTML = fresh.innerHTML;

@@ -169,7 +169,9 @@ inlog, venstergrootte en -positie). Links naar andere websites openen in de gewo
   geen voorbeeld en staat standaard op staand.
 - **Werkt zichzelf bij** (vanaf 1.24.4): de app vraagt de server welke versie daar draait (`/app-versie`) en downloadt
   precies die `ADONIS-app.exe`, alleen van de GitHub-releases van ADONIS. Rechtsonder in het venster staat de voortgang;
-  daarna vraagt de app **Nu opnieuw starten** of **Later** (dan bij de volgende start). Niet-opgeslagen werk wordt eerst
+  daarna vraagt de app **Nu opnieuw starten** of **Later** (dan bij de volgende start). Windows houdt de draaiende
+  .exe vast, dus de nieuwe versie wordt eerst ernaast gezet (`ADONIS-app.exe.nieuw`) en pas na het afsluiten op zijn
+  plek gezet. Niet-opgeslagen werk wordt eerst
   gevraagd. Controle 20 s na het starten en elke 6 uur; met de hand via menu (Alt) →
   *Controleren op updates*. De map van de .exe moet beschrijfbaar zijn (dus niet in `C:\Program Files`).
 - Broncode in `desktop/` (Electron); gebouwd door GitHub Actions.

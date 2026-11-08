@@ -7,7 +7,7 @@
 const { db } = require('./db');
 const orders = require('./orders');
 
-const MODEL = 'claude-opus-5-5';
+const MODEL = require('./ai').MODEL;
 const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // limiet per afbeelding van de API
 
@@ -35,6 +35,15 @@ CREATE TABLE IF NOT EXISTS import_log (
 );
 CREATE INDEX IF NOT EXISTS import_log_day ON import_log(day);
 `);
+// Soort aanroep (foto, excel, aandachtspunten) en gekozen inspanning.
+{
+  const cols = db.prepare('PRAGMA table_info(import_log)').all().map((c) => c.name);
+  if (!cols.includes('kind')) db.exec("ALTER TABLE import_log ADD COLUMN kind TEXT NOT NULL DEFAULT ''");
+  if (!cols.includes('effort')) db.exec("ALTER TABLE import_log ADD COLUMN effort TEXT NOT NULL DEFAULT ''");
+}
+const ai = require('./ai');
+// Alleen foto- en Excel-imports tellen mee voor de daglimiet (aandachtspunten worden vooraf met kosten bevestigd).
+const LIMITED = "kind IN ('', 'foto', 'excel')";
 
 function cleanupDrafts() {
   db.prepare("DELETE FROM import_drafts WHERE created_at < datetime('now', '-3 days')").run();
@@ -48,20 +57,15 @@ function dailyLimit() {
   return Number.isFinite(n) && n >= 0 ? n : 30;
 }
 
-// Prijzen per miljoen tokens (USD) – alleen voor de schatting in het overzicht.
-const PRICES = { 'claude-opus-5-5': [4, 20] };
-const DEFAULT_PRICE = [5, 25]; // voor een eventueel fallback-model: liever iets te hoog geschat
-
 function estimateUsd(row) {
-  const [inP, outP] = PRICES[row.model] || DEFAULT_PRICE;
-  return (row.input_tokens * inP + row.output_tokens * outP) / 1e6;
+  return ai.usdOf(row.model, row.input_tokens, row.output_tokens);
 }
 
 /** Verbruik vandaag en deze maand. */
 function usage() {
   const today = orders.todayISO();
   const month = today.slice(0, 7);
-  const todayCount = db.prepare("SELECT COUNT(*) AS n FROM import_log WHERE day = ?").get(today).n;
+  const todayCount = db.prepare(`SELECT COUNT(*) AS n FROM import_log WHERE day = ? AND ${LIMITED}`).get(today).n;
   const rows = db.prepare("SELECT model, input_tokens, output_tokens FROM import_log WHERE day LIKE ?").all(month + '%');
   const monthUsd = rows.reduce((sum, r) => sum + estimateUsd(r), 0);
   const limit = dailyLimit();
@@ -280,7 +284,8 @@ function usageOf(response) {
   };
 }
 
-async function readWithClaude(images) {
+async function readWithClaude(images, effortKey = 'hoog') {
+  const effort = ai.LEVELS[ai.level(effortKey, 'hoog')].effort;
   const client = clientFactory();
   const request = (structured) => client.beta.messages.create({
     model: MODEL,
@@ -289,8 +294,8 @@ async function readWithClaude(images) {
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
     output_config: structured
-      ? { effort: 'high', format: { type: 'json_schema', schema: RESULT_SCHEMA } }
-      : { effort: 'high' }, // handschrift lezen: liever grondig dan snel
+      ? { effort, format: { type: 'json_schema', schema: RESULT_SCHEMA } }
+      : { effort }, // gekozen inspanning (handschrift lezen: standaard grondig)
     messages: [{
       role: 'user',
       content: [
@@ -360,19 +365,19 @@ async function readWithClaude(images) {
  * Een betaalde aanroep met daglimiet en verbruikslog. fn() geeft { usage, ... } terug, of gooit een fout
  * met .usage als de aanroep wel is betaald. Wordt ook door de Excel-import gebruikt.
  */
-async function metered(userId, fn) {
+async function metered(userId, fn, { kind = 'foto', effort = '', limited = true } = {}) {
   // Daglimiet: eerst een plek reserveren (zo kunnen twee gelijktijdige imports de limiet niet omzeilen).
-  const limit = dailyLimit();
+  const limit = limited ? dailyLimit() : 0;
   const today = orders.todayISO();
   let logId;
   db.exec('BEGIN IMMEDIATE');
   try {
-    const n = db.prepare("SELECT COUNT(*) AS n FROM import_log WHERE day = ?").get(today).n;
+    const n = db.prepare(`SELECT COUNT(*) AS n FROM import_log WHERE day = ? AND ${LIMITED}`).get(today).n;
     if (limit > 0 && n >= limit) {
       db.exec('ROLLBACK');
       throw new ImportError(`De daglimiet van ${limit} imports is bereikt. Morgen kan het weer, of vraag de beheerder de limiet (import-limit-per-day) te verhogen.`);
     }
-    logId = Number(db.prepare("INSERT INTO import_log (user_id, day, status) VALUES (?, ?, 'bezig')").run(userId, today).lastInsertRowid);
+    logId = Number(db.prepare("INSERT INTO import_log (user_id, day, status, kind, effort) VALUES (?, ?, 'bezig', ?, ?)").run(userId, today, kind, effort).lastInsertRowid);
     db.exec('COMMIT');
   } catch (err) {
     if (db.isTransaction) db.exec('ROLLBACK');
@@ -394,15 +399,16 @@ async function metered(userId, fn) {
   }
   db.prepare("UPDATE import_log SET status = 'ok', model = ?, input_tokens = ?, output_tokens = ? WHERE id = ?")
     .run(result.usage.model, result.usage.input, result.usage.output, logId);
+  result.usage.eur = ai.eur(ai.usdOf(result.usage.model, result.usage.input, result.usage.output));
   return result;
 }
 
 /** Foto's uitlezen en als concept opslaan. Geeft het concept-id terug. */
-async function createDraft(imageUrls, userId) {
+async function createDraft(imageUrls, userId, effortKey = 'hoog') {
   if (!isConfigured()) throw new ImportError('Foto-import is niet ingesteld: vul anthropic-api-key in config.properties in.');
   const images = parseImages(imageUrls);
-
-  const result = await metered(userId, () => readWithClaude(images));
+  const effort = ai.level(effortKey, 'hoog');
+  const result = await metered(userId, () => readWithClaude(images, effort), { kind: 'foto', effort });
   delete result.usage;
   const res = db.prepare('INSERT INTO import_drafts (user_id, result, images) VALUES (?, ?, ?)').run(
     userId, JSON.stringify(result), JSON.stringify(images)

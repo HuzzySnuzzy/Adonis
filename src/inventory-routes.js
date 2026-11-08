@@ -341,7 +341,7 @@ module.exports = function register(app, { flash, wrap }) {
   app.post('/importeren/excel', auth.requireAdmin, express.raw({ type: () => true, limit: sheets.MAX_FILE + 1024 }), wrap(async (req, res) => {
     try {
       const filename = decodeURIComponent(String(req.get('x-filename') || 'bestand.xlsx')).replace(/[\\/]/g, '_');
-      const id = await sheets.createDraft({ buffer: req.body, filename, userId: req.user.id, useClaude: req.query.claude !== '0' });
+      const id = await sheets.createDraft({ buffer: req.body, filename, userId: req.user.id, useClaude: req.query.claude !== '0', effort: req.query.effort });
       res.json({ redirect: `/importeren/excel/${id}` });
     } catch (err) {
       const known = err instanceof sheets.SheetImportError || err instanceof importer.ImportError;

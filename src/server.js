@@ -710,7 +710,7 @@ app.get('/importeren', (req, res) => {
 
 app.post('/importeren', express.json({ limit: '30mb' }), wrap(async (req, res) => {
   try {
-    const id = await importer.createDraft(req.body && req.body.images, req.user.id);
+    const id = await importer.createDraft(req.body && req.body.images, req.user.id, req.body && req.body.effort);
     res.json({ redirect: `/importeren/${id}` });
   } catch (err) {
     if (!(err instanceof importer.ImportError)) console.error(err);

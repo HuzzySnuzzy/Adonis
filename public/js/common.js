@@ -117,7 +117,14 @@ if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
       last = q;
       const params = new URLSearchParams(new FormData(form));
       if (!q) params.delete('q');
-      const url = form.getAttribute('action') + (params.toString() ? '?' + params : '');
+      // Zonder action-attribuut (bijv. de klantpagina) zoekt het formulier op de huidige pagina.
+      const target = new URL(form.action || location.href, location.href);
+      const remote = target.pathname !== location.pathname; // bijv. startscherm: resultaten van de klantenlijst
+      const url = target.pathname + (params.toString() ? '?' + params : '');
+      if (remote && !q) {
+        document.querySelectorAll('[data-live-remote]').forEach((el) => { el.innerHTML = ''; });
+        return;
+      }
       if (ctrl) ctrl.abort();
       ctrl = new AbortController();
       form.classList.add('is-searching');
@@ -135,7 +142,7 @@ if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
         const freshWipe = freshForm && freshForm.querySelector('a.btn-ghost');
         if (wipe && !freshWipe) wipe.remove();
         else if (!wipe && freshWipe) form.append(freshWipe);
-        history.replaceState(history.state, '', url);
+        if (!remote) history.replaceState(history.state, '', url);
         window.dispatchEvent(new Event('resize')); // schaduw bij brede tabellen opnieuw bepalen
         document.dispatchEvent(new Event('adonis:swapped'));
       } catch { /* afgebroken of geen verbinding: Enter werkt nog steeds */ }

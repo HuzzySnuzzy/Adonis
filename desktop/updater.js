@@ -6,13 +6,16 @@
  *   app en server passen dan altijd bij elkaar. Alleen omhoog, nooit terug.
  * - Downloadt ADONIS-app.exe van die versie, ALLEEN van de vaste GitHub-releases van ADONIS (de server geeft alleen
  *   het versienummer door, nooit een downloadadres).
- * - De draaiende .exe kan niet worden overschreven, maar wel hernoemd: oud -> "ADONIS-app.oud.exe", nieuw -> op
- *   zijn plek. De volgende keer dat ADONIS start is het de nieuwe versie; de oude wordt dan opgeruimd.
+ * - Windows houdt de draaiende .exe vast (niet te overschrijven of te hernoemen). Daarom komt de nieuwe versie eerst
+ *   ernaast te staan ("ADONIS-app.exe.nieuw"); zodra de app sluit, zet een klein hulpje hem op zijn plek
+ *   (en start hem meteen bij "Nu opnieuw starten").
  * - Werkt alleen met de "portable" .exe (niet tijdens ontwikkelen), en alleen als de map beschrijfbaar is.
  */
 const { app, net } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
+const { spawn } = require('node:child_process');
 
 const REPO = 'huzzysnuzzy/adonis';
 // Alleen voor tests: een ander downloadadres (wie de omgevingsvariabelen kan zetten, kan toch al alles op deze pc).
@@ -25,22 +28,72 @@ const num = (v) => {
 };
 
 let busy = false;
-let installed = null; // versie die klaarstaat voor de volgende start
+let installed = null; // versie die klaarstaat (naast de .exe) en bij het sluiten wordt geplaatst
+let applied = false;
 
 function exePath() {
   return process.env.PORTABLE_EXECUTABLE_FILE || null;
 }
-function oldPath(exe) {
-  return path.join(path.dirname(exe), path.basename(exe).replace(/\.exe$/i, '') + '.oud.exe');
-}
+const stagedPath = (exe) => exe + '.nieuw';
+const stateFile = () => path.join(app.getPath('userData'), 'update-klaar.json');
 
-/** Bij het starten: de vorige versie (van een eerdere update) opruimen. */
+/** Bij het starten: oude resten opruimen; een eerder gedownloade versie die nog wacht, weer klaarzetten. */
 function cleanup() {
   const exe = exePath();
   if (!exe) return;
-  for (const f of [oldPath(exe), exe + '.download']) {
+  for (const f of [path.join(path.dirname(exe), path.basename(exe).replace(/\.exe$/i, '') + '.oud.exe'), exe + '.download']) {
     try { fs.rmSync(f, { force: true }); } catch { /* nog in gebruik: volgende keer */ }
   }
+  try {
+    const st = JSON.parse(fs.readFileSync(stateFile(), 'utf8'));
+    if (fs.existsSync(stagedPath(exe)) && num(st.version) > num(app.getVersion())) installed = st.version;
+    else { fs.rmSync(stagedPath(exe), { force: true }); fs.rmSync(stateFile(), { force: true }); }
+  } catch { /* niets klaar */ }
+}
+function pendingVersion() { return installed; }
+
+/**
+ * De klaargezette versie op zijn plek zetten zodra deze app is afgesloten (en de .exe dus vrij is).
+ * relaunch: daarna de nieuwe versie starten.
+ */
+function applyOnExit(relaunch) {
+  const exe = exePath();
+  if (!exe || !installed || applied) return false;
+  applied = true;
+  const src = stagedPath(exe);
+  try { fs.rmSync(stateFile(), { force: true }); } catch { /* niets */ }
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'adonis-update-'));
+  if (process.platform === 'win32') {
+    const bat = path.join(dir, 'bijwerken.cmd');
+    fs.writeFileSync(bat, [
+      '@echo off',
+      `set "SRC=${src}"`,
+      `set "DST=${exe}"`,
+      'set /a N=0',
+      ':retry',
+      'move /y "%SRC%" "%DST%" >nul 2>&1',
+      'if not errorlevel 1 goto done',
+      'set /a N+=1',
+      'if %N% geq 180 goto end',
+      'ping -n 2 127.0.0.1 >nul',
+      'goto retry',
+      ':done',
+      relaunch ? 'start "" "%DST%"' : 'rem niet opnieuw starten',
+      ':end',
+      '(goto) 2>nul & del "%~f0"',
+    ].join('\r\n'));
+    spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/c', bat], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+  } else {
+    const sh = path.join(dir, 'bijwerken.sh');
+    const q = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
+    fs.writeFileSync(sh, [
+      `n=0; until mv -f ${q(src)} ${q(exe)} 2>/dev/null; do n=$((n+1)); [ $n -ge 180 ] && exit 1; sleep 1; done`,
+      relaunch && !process.env.ADONIS_APP_TEST_NORELAUNCH ? `chmod +x ${q(exe)}; ${q(exe)} >/dev/null 2>&1 &` : ':',
+      `rm -rf ${q(dir)}`,
+    ].join('\n'));
+    spawn('/bin/sh', [sh], { detached: true, stdio: 'ignore' }).unref();
+  }
+  return true;
 }
 
 /**
@@ -90,15 +143,9 @@ async function check(serverUrl, log = () => {}, hooks = {}) {
       return { state: 'fout', error: 'de download is onvolledig of geen geldig programma' };
     }
 
-    const old = oldPath(exe);
-    fs.rmSync(old, { force: true });
-    fs.renameSync(exe, old); // mag, ook al draait hij
-    try {
-      fs.renameSync(tmp, exe);
-    } catch (err) {
-      fs.renameSync(old, exe); // terugzetten: alles blijft zoals het was
-      throw err;
-    }
+    fs.rmSync(stagedPath(exe), { force: true });
+    fs.renameSync(tmp, stagedPath(exe));
+    fs.writeFileSync(stateFile(), JSON.stringify({ version, at: new Date().toISOString() }));
     installed = version;
     log(`ADONIS-app: versie ${version} staat klaar voor de volgende start.`);
     return { state: 'bijgewerkt', version };
@@ -110,13 +157,13 @@ async function check(serverUrl, log = () => {}, hooks = {}) {
   }
 }
 
-/** Opnieuw starten met de nieuwe versie. */
+/** Opnieuw starten met de nieuwe versie: na het sluiten zet het hulpje hem op zijn plek en start hem. */
 function restartIntoNew() {
   const exe = exePath();
   if (!exe) return;
-  if (process.env.ADONIS_APP_TEST_NORELAUNCH) { console.log('  (test) opnieuw starten met ' + exe); app.quit(); return; }
-  app.relaunch({ execPath: exe, args: [] });
+  if (process.env.ADONIS_APP_TEST_NORELAUNCH) console.log('  (test) opnieuw starten met ' + exe);
+  applyOnExit(true);
   app.quit();
 }
 
-module.exports = { check, cleanup, restartIntoNew, num };
+module.exports = { check, cleanup, restartIntoNew, applyOnExit, pendingVersion, num };

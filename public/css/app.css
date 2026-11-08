@@ -1354,3 +1354,8 @@ form[role="search"].is-searching input[name="q"] {
   .topbar .logo-sub { display: none; }
   .topbar { gap: .5rem; }
 }
+
+/* Startscherm: klanten die passen, terwijl u typt */
+.start-results:empty { display: none; }
+.start-results { margin: -1rem 0 1.6rem; }
+.start-results > .muted { margin: 0 0 .4rem; }

@@ -12,6 +12,7 @@
 const { db } = require('./db');
 const inv = require('./inventory');
 const importer = require('./import');
+const ai = require('./ai');
 const { readXlsx, readCsv } = require('./xlsx');
 
 const MAX_ROWS = 10000;
@@ -480,7 +481,8 @@ function extractJson(text) {
   }
 }
 
-async function askClaude(sheets, filename) {
+async function askClaude(sheets, filename, effortKey = 'hoog') {
+  const effort = ai.LEVELS[ai.level(effortKey, 'hoog')].effort;
   const client = importer.getClient();
   const prompt = buildPrompt(sheets, filename);
   const request = (structured) => client.beta.messages.create({
@@ -489,8 +491,8 @@ async function askClaude(sheets, filename) {
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
     output_config: structured
-      ? { effort: 'high', format: { type: 'json_schema', schema: ANALYSIS_SCHEMA } }
-      : { effort: 'high' },
+      ? { effort, format: { type: 'json_schema', schema: ANALYSIS_SCHEMA } }
+      : { effort },
     messages: [{
       role: 'user',
       content: structured ? prompt
@@ -556,7 +558,7 @@ function applyAnalysis(sheets, plans, analysis) {
 }
 
 /* ---------- concept maken ---------- */
-async function createDraft({ buffer, filename, userId, useClaude }) {
+async function createDraft({ buffer, filename, userId, useClaude, effort = 'hoog' }) {
   const sheets = readFile(buffer, filename);
   let plans = sheets.map((s) => heuristicSheetPlan(s));
   let samenvatting = '';
@@ -564,7 +566,8 @@ async function createDraft({ buffer, filename, userId, useClaude }) {
   let claudeFout = '';
   if (useClaude && importer.isConfigured()) {
     try {
-      const r = await importer.metered(userId, () => askClaude(sheets, filename));
+      const lvl = ai.level(effort, 'hoog');
+      const r = await importer.metered(userId, () => askClaude(sheets, filename, lvl), { kind: 'excel', effort: lvl });
       ({ samenvatting, plans } = applyAnalysis(sheets, plans, r.result));
       claude = 'ja';
     } catch (err) {
