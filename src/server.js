@@ -699,6 +699,7 @@ app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
 /* ---------- bandenhotel, voorraad en Excel-import ---------- */
 // Vóór de foto-import: anders vangt /importeren/:id ook /importeren/excel af.
 registerInventory(app, { flash, wrap });
+require('./portal-routes')(app, { flash, wrap });
 
 /* ---------- foto-import ---------- */
 app.get('/importeren', (req, res) => {

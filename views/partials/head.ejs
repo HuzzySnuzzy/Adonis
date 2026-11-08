@@ -55,6 +55,7 @@
     <% if (user.can_invoice) { %><a href="/werkopdrachten?status=klaar" class="<%= path === '/werkopdrachten' && locals.url && locals.url.includes('status=klaar') ? 'active' : '' %>">Facturatie<span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span></a><% } %>
     <a href="/bandenhotel" class="<%= path.startsWith('/bandenhotel') ? 'active' : '' %>">Bandenhotel</a>
     <a href="/voorraad" class="<%= path.startsWith('/voorraad') ? 'active' : '' %>">Voorraad</a>
+    <a href="/portaal" class="<%= path.startsWith('/portaal') ? 'active' : '' %>">Portaal</a>
     <% if (!simple) { %>
     <a href="/importeren" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Importeren</a>
     <% if (user.is_admin) { %><a href="/gebruikers" class="<%= path === '/gebruikers' ? 'active' : '' %>">Gebruikers</a><% } %>

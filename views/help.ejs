@@ -12,6 +12,7 @@
     <% if (user.can_invoice) { %><a href="#facturatie">Factureren</a><% } %>
     <a href="#banden">Banden wisselen</a>
     <a href="#apk">APK-lijst</a>
+    <a href="#portaal">Portaal (websites)</a>
     <a href="#fout">Iets fout gedaan?</a>
     <% if (user.is_owner) { %><a href="#backup">Backups</a><% } %>
     <a href="#groter">Alles groter maken</a>
@@ -79,6 +80,18 @@
       <li>Komt de klant? Klik op <%- B('+ Werkopdracht') %>: naam en auto staan dan al ingevuld.</li>
     </ol>
     <p class="help-tip">De APK-datums komen van de RDW en worden vanzelf bijgewerkt.</p>
+  </section>
+
+  <section class="card help-sec" id="portaal">
+    <h2>Portaal: al uw websites op één plek</h2>
+    <ol class="help-steps">
+      <li>Klik op <%- B('Portaal') %>. Klik op een pictogram om die website te openen.</li>
+      <li>Iets toevoegen? Klik op <%- B('✎ Bewerken') %>. Maak een map met <%- B('+ Map') %>, typ bij een map het internetadres
+        (bijv. <i>rdw.nl</i>) en klik op <%- B('+ Website') %>. Het pictogram en de naam komen er vanzelf bij.</li>
+      <li>Staan de websites nu als pictogrammen op het bureaublad? Sleep ze op een map, of kies <%- B('Importeren…') %>.</li>
+      <li>Klaar met bewerken? Klik op <%- B('✓ Klaar') %>.</li>
+    </ol>
+    <p class="help-tip">Typ in het zoekvak een deel van de naam en druk op Enter: de eerste website die past gaat open.</p>
   </section>
 
   <section class="card help-sec" id="fout">

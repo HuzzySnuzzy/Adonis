@@ -1,0 +1,93 @@
+<%- include('/partials/head') %>
+<% const editing = locals.url && /[?&]bewerken=1/.test(url); %>
+<main class="page wide portal-page<%= editing ? ' is-editing' : '' %>" data-csrf="<%= csrf %>">
+  <div class="page-head">
+    <h1>Portaal</h1>
+    <div class="portal-search"><input type="search" placeholder="Zoek een website…" aria-label="Zoek een website" data-portal-filter autocomplete="off" spellcheck="false"></div>
+    <div class="head-buttons">
+      <button class="btn" type="button" data-portal-edit aria-pressed="<%= editing %>"><span class="when-view">✎ Bewerken</span><span class="when-edit">✓ Klaar</span></button>
+    </div>
+  </div>
+
+  <div class="portal-tools when-edit">
+    <form method="post" action="/portaal/map" class="inline-form portal-newfolder">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <input name="name" placeholder="Naam van een nieuwe map, bijv. Leveranciers" required maxlength="60" aria-label="Naam van de nieuwe map">
+      <button class="btn btn-primary" type="submit">+ Map</button>
+    </form>
+    <label class="btn portal-import" title="Snelkoppelingen van het bureaublad (.url) of een bladwijzerbestand (.html) uit Chrome/Edge/Firefox">
+      <input type="file" multiple accept=".url,.webloc,.html,.htm,text/html" data-portal-import hidden> Importeren…</label>
+    <p class="muted small">Tip: sleep snelkoppelingen van het bureaublad (of een adres uit de browser) op een map. Tegels kunt u verslepen.</p>
+  </div>
+
+  <div id="live-portal" data-live>
+  <% if (!folders.length) { %>
+    <div class="empty portal-empty">
+      <p><b>Het portaal is nog leeg.</b> Maak een map (bijv. <i>Leveranciers</i>) en zet daar websites in. ADONIS haalt het pictogram en de naam zelf op.</p>
+      <p class="muted">Staan de websites nu als pictogrammen op het bureaublad? Klik op <b>✎ Bewerken</b> en daarna op <b>Importeren…</b>, of sleep ze hierheen.</p>
+    </div>
+  <% } %>
+  <div class="portal-folders">
+  <% for (const [fi, f] of folders.entries()) { %>
+    <section class="card portal-folder" id="map-<%= f.id %>" data-folder-id="<%= f.id %>">
+      <div class="portal-folder-head">
+        <h2><%= f.name %> <span class="muted small"><%= f.links.length %></span></h2>
+        <div class="portal-folder-tools when-edit">
+          <form method="post" action="/portaal/map/<%= f.id %>/naam" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <input name="name" value="<%= f.name %>" maxlength="60" aria-label="Naam van de map" required>
+            <button class="btn btn-small" type="submit">Naam opslaan</button>
+          </form>
+          <form method="post" action="/portaal/map/<%= f.id %>/omhoog" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-small" type="submit" title="Map naar voren" <%= fi === 0 ? 'disabled' : '' %>>↑</button></form>
+          <form method="post" action="/portaal/map/<%= f.id %>/omlaag" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-small" type="submit" title="Map naar achteren" <%= fi === folders.length - 1 ? 'disabled' : '' %>>↓</button></form>
+          <form method="post" action="/portaal/map/<%= f.id %>/verwijderen" class="inline" data-confirm="Map &quot;<%= f.name %>&quot; verwijderen, met de <%= f.links.length %> website<%= f.links.length === 1 ? '' : 's' %> erin?">
+            <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-small btn-danger" type="submit">Verwijderen</button></form>
+        </div>
+      </div>
+      <div class="portal-grid" data-folder-grid="<%= f.id %>">
+        <% for (const l of f.links) { const name = l.title || hostTitle(l.url); %>
+        <a class="portal-tile" id="link-<%= l.id %>" href="<%= l.url %>" target="_blank" rel="noopener noreferrer" title="<%= name %>&#10;<%= l.url %>"
+           data-id="<%= l.id %>" data-title="<%= l.title %>" data-url="<%= l.url %>" data-folder="<%= f.id %>">
+          <span class="pt-icon">
+            <% if (l.icon_status === 'ok') { %><img src="/portaal/icoon/<%= l.id %>?v=<%= encodeURIComponent(l.updated_at) %>" alt="" data-portal-icon><% } %>
+            <span class="pt-letter pl-c<%= colorIndex(l.url) %>"<%- l.icon_status === 'ok' ? ' hidden' : '' %>><%= name.trim().charAt(0).toUpperCase() || '?' %></span>
+            <% if (!l.icon_status) { %><span class="pt-loading" title="Pictogram wordt opgehaald"></span><% } %>
+          </span>
+          <span class="pt-title"><%= name %></span>
+          <span class="pt-edit when-edit"><button type="button" class="pt-btn" data-portal-editlink title="Wijzigen" aria-label="<%= name %> wijzigen">✎</button></span>
+        </a>
+        <% } %>
+        <form method="post" action="/portaal/map/<%= f.id %>/link" class="portal-add when-edit">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <input name="url" placeholder="Internetadres, bijv. rdw.nl" required aria-label="Internetadres" autocomplete="off" spellcheck="false" inputmode="url">
+          <button class="btn btn-small btn-primary" type="submit">+ Website</button>
+        </form>
+      </div>
+      <% if (!f.links.length) { %><p class="muted small portal-folder-empty when-view">Nog leeg. Klik op ✎ Bewerken om websites toe te voegen.</p><% } %>
+    </section>
+  <% } %>
+  </div>
+  </div>
+
+  <p class="portal-nomatch muted" hidden>Geen website gevonden.</p>
+
+  <dialog class="swap-dialog portal-dialog" id="portalLinkDialog">
+    <form method="post" class="swap-form" data-portal-linkform>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <h1>Website wijzigen</h1>
+      <label>Naam<input name="title" maxlength="80" placeholder="Laat leeg: de naam van de website"></label>
+      <label>Internetadres<input name="url" required spellcheck="false" inputmode="url"></label>
+      <label>Map<select name="folder"><% for (const f of folders) { %><option value="<%= f.id %>"><%= f.name %></option><% } %></select></label>
+      <label class="check"><input type="checkbox" name="icoon" value="1"> Pictogram opnieuw ophalen</label>
+      <div class="swap-actions">
+        <button class="btn btn-danger" type="button" data-portal-delete>Verwijderen</button>
+        <span class="spacer"></span>
+        <button class="btn" type="button" data-portal-close>Annuleren</button>
+        <button class="btn btn-primary" type="submit">Opslaan</button>
+      </div>
+    </form>
+  </dialog>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/portal.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

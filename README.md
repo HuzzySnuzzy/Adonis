@@ -102,6 +102,13 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
   apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.
 
+- **Portaal** (menu *Portaal*, ook op het startscherm): mappen met websites, zoals pictogrammen op een bureaublad, voor
+  de hele garage. Bij het toevoegen haalt ADONIS zelf de naam en het pictogram van de website op (het grootste dat de
+  site aanbiedt; anders `favicon.ico` of DuckDuckGo; anders een gekleurde letter) en bewaart dat in `portaal-iconen`.
+  **Importeren:** sleep snelkoppelingen (`.url`) van het bureaublad op een map, of kies een bladwijzerbestand (`.html`)
+  uit Chrome/Edge/Firefox: de mappen komen mee. *Bewerken*: mappen maken, hernoemen, verplaatsen en verwijderen,
+  tegels verslepen (ook naar een andere map), naam/adres wijzigen. Zoekvak + Enter opent de eerste website die past.
+  In de ADONIS-app openen websites in de gewone browser.
 - **Snel zoeken:** de lijsten (Klanten, Werkopdrachten, Bandenhotel, Voorraad) worden al bijgewerkt terwijl je typt.
   Een volledig kenteken + Enter opent meteen die klant. De toets `/` springt naar het zoekvak. Lange lijsten tonen eerst
   100 regels, met *Meer tonen* / *Alles tonen*. Op een laptop past de menubalk op één rij (naam en uitloggen als pictogram;
