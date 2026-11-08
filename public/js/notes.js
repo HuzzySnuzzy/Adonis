@@ -160,7 +160,8 @@
     if (!item) {
       item = { el: build(note), note };
       notes.set(note.id, item);
-      (note.order_id ? document.body : dock.parentNode).append(item.el);
+      // Op het bureaublad (bureaubladmodus) komen notities op het bureaublad zelf: onder de vensters.
+      (note.order_id ? document.body : document.querySelector('[data-desktop]') || dock.parentNode).append(item.el);
     }
     item.note = note;
     fill(item.el, note, !focus);

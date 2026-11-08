@@ -1916,3 +1916,43 @@ html.dt-busy, html.dt-busy * { user-select: none; }
 html.in-window .backup-warn, html.in-window .note-dock { display: none !important; }
 .desktop-shell .backup-warn { position: fixed; left: 10px; bottom: 54px; z-index: 8500; width: min(420px, calc(100vw - 20px)); margin: 0; flex-wrap: wrap; font-size: .85rem; box-shadow: 0 10px 30px rgba(0, 0, 0, .3); }
 :root:is([data-theme="w98"], [data-theme="vcds"]) .plate-sites-label { color: #fff; }
+
+/* Bureaubladmodus: in een venster géén bureaublad-achtergrond van het thema (geen "venster in een venster"),
+   maar een gewone, rustige vensterkleur. */
+html.in-window::before, html.in-window::after, html.in-window body::before, html.in-window body::after { display: none !important; }
+html.in-window, html.in-window body { background: var(--win-bg, var(--bg)) !important; background-image: none !important; }
+html.in-window { --desk: var(--win-bg, var(--bg)); }
+html.in-window[data-theme="w98"], html.in-window[data-theme="vcds"] { --win-bg: var(--face); }
+html.in-window[data-theme="aero"] { --win-bg: #eef4fb; }
+html.in-window[data-theme="adonis"] { --win-bg: #f5efe2; }
+html.in-window[data-theme="neon"] { --win-bg: #0d0906; }
+html.in-window[data-theme="ice"] { --win-bg: #050a12; }
+/* Plaknotities op het bureaublad: tussen de pictogrammen en de vensters in. */
+.dt .sticky-note { position: fixed; }
+.dt-windows { z-index: 100000; }
+/* Bureaublad: pictogrammen vrij te verslepen (vastklikken op een raster) */
+.dt-icons.is-free { display: block; position: absolute; inset: 0; padding: 0; }
+.dt-icons.is-free > li { position: absolute; }
+.dt-icons > li.is-dragging { z-index: 5; opacity: .85; }
+.dt-icons > li.is-dragging .dt-icon { cursor: grabbing; }
+.dt[data-icon-size="s"] .dt-icon { width: 72px; height: 76px; font-size: 11.5px; }
+.dt[data-icon-size="s"] .dt-icon-img { width: 34px; height: 34px; border-radius: 9px; }
+.dt[data-icon-size="s"] .dt-icon-img svg { width: 22px; height: 22px; }
+.dt[data-icon-size="l"] .dt-icon { width: 108px; height: 114px; font-size: 13.5px; }
+.dt[data-icon-size="l"] .dt-icon-img { width: 60px; height: 60px; border-radius: 16px; }
+.dt[data-icon-size="l"] .dt-icon-img svg { width: 38px; height: 38px; }
+/* Eigen achtergrond: de namen wit met schaduw, zodat ze overal leesbaar zijn */
+.dt.has-bg .dt-icon-name { color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .9), 0 0 6px rgba(0, 0, 0, .6); }
+.dt.has-bg { z-index: 0; }
+.dt-ctx { position: fixed; left: 0; top: 0; bottom: auto; width: 270px; z-index: 9002; }
+.dt-menu-item.is-on { font-weight: 700; }
+.dt-menu-item.is-on::before { content: "•"; margin-right: -4px; }
+.dt-bgs { display: flex; flex-wrap: wrap; gap: 8px; }
+.dt-bg { width: 64px; height: 44px; padding: 0; border: 2px solid var(--border); border-radius: 6px; cursor: pointer; display: grid; place-items: center; font-size: 11px; color: var(--text); background: var(--surface-2); }
+.dt-bg.is-on { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+.dt-bg-theme { background: linear-gradient(135deg, var(--bg) 50%, var(--surface) 50%); font-weight: 700; }
+.dt-bg-img { width: auto; padding: 0 12px; }
+.dt-personal .swap-step .swap-choice { display: inline-flex; margin-right: .4rem; }
+
+/* Een verborgen melding blijft verborgen, ook als een thema .alert een eigen weergave geeft. */
+.alert[hidden], .flash[hidden] { display: none !important; }

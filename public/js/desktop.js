@@ -194,7 +194,7 @@
     open(url);
   }
   desk.querySelectorAll('.dt-icon').forEach((b) => {
-    b.addEventListener('dblclick', (e) => launch(b.dataset.open, e.ctrlKey || e.shiftKey));
+    b.addEventListener('dblclick', (e) => { if (!b.dataset.justMoved) launch(b.dataset.open, e.ctrlKey || e.shiftKey); });
     b.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); launch(b.dataset.open, e.ctrlKey || e.shiftKey); } });
     b.addEventListener('click', () => { desk.querySelectorAll('.dt-icon.is-sel').forEach((x) => x.classList.remove('is-sel')); b.classList.add('is-sel'); });
   });
@@ -230,6 +230,209 @@
   // Het bovenste venster actief maken
   const top = [...wins.values()].filter((w) => !w.st.min).sort((a, b) => b.st.z - a.st.z)[0];
   if (top) focus(top);
+
+  /* ---------- pictogrammen verslepen (vastklikken op een raster), sorteren ---------- */
+  const iconList = desk.querySelector('.dt-icons');
+  const ICON_KEY = KEY + '-icons';
+  const LOOK_KEY = KEY + '-look';
+  const IMG_KEY = KEY + '-img';
+  const icons = [...desk.querySelectorAll('.dt-icon')];
+  const defaultOrder = icons.map((b) => b.dataset.open);
+  let look = { bg: 'theme', fit: 'cover', size: 'm' };
+  try { look = Object.assign(look, JSON.parse(localStorage.getItem(LOOK_KEY)) || {}); } catch { /* standaard */ }
+  const cell = () => ({ w: look.size === 'l' ? 112 : look.size === 's' ? 76 : 92, h: look.size === 'l' ? 118 : look.size === 's' ? 80 : 96 });
+  let pos = {};
+  try { pos = JSON.parse(localStorage.getItem(ICON_KEY)) || {}; } catch { /* standaard */ }
+  const rowsFit = () => Math.max(1, Math.floor((area().height - 20) / cell().h));
+  function layoutIcons(order) {
+    const rows = rowsFit(); const taken = new Set();
+    // Eerst de pictogrammen met een vaste plek, daarna de rest in de eerste vrije plekken.
+    const list = order || icons.map((b) => b.dataset.open);
+    for (const href of list) { const p = pos[href]; if (p && !order) taken.add(p.c + ',' + p.r); }
+    let i = 0;
+    for (const href of list) {
+      let p = !order && pos[href];
+      if (!p || p.r >= rows) { while (taken.has(Math.floor(i / rows) + ',' + (i % rows))) i++; p = { c: Math.floor(i / rows), r: i % rows }; i++; }
+      pos[href] = p; taken.add(p.c + ',' + p.r);
+    }
+    applyIcons();
+  }
+  function applyIcons() {
+    const c = cell();
+    iconList.classList.add('is-free');
+    desk.dataset.iconSize = look.size;
+    for (const b of icons) { const p = pos[b.dataset.open]; const li = b.parentElement; li.style.left = (10 + p.c * (c.w + 6)) + 'px'; li.style.top = (14 + p.r * c.h) + 'px'; }
+  }
+  const saveIcons = () => { try { localStorage.setItem(ICON_KEY, JSON.stringify(pos)); } catch { /* geen opslag */ } };
+  layoutIcons();
+  addEventListener('resize', () => layoutIcons());
+  for (const b of icons) {
+    b.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      const li = b.parentElement; const sx = e.clientX; const sy = e.clientY; const ox = li.offsetLeft; const oy = li.offsetTop;
+      let moved = false;
+      const move = (ev) => {
+        if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
+        if (!moved) { moved = true; li.classList.add('is-dragging'); document.documentElement.classList.add('dt-busy'); }
+        li.style.left = (ox + ev.clientX - sx) + 'px'; li.style.top = (oy + ev.clientY - sy) + 'px';
+      };
+      const up = () => {
+        removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+        if (!moved) return;
+        li.classList.remove('is-dragging'); document.documentElement.classList.remove('dt-busy');
+        const c = cell();
+        const col = Math.max(0, Math.round((li.offsetLeft - 10) / (c.w + 6)));
+        const row = Math.max(0, Math.min(rowsFit() - 1, Math.round((li.offsetTop - 14) / c.h)));
+        // Bezet? Dan ruilen.
+        const other = Object.keys(pos).find((h) => h !== b.dataset.open && pos[h].c === col && pos[h].r === row);
+        if (other) pos[other] = pos[b.dataset.open];
+        pos[b.dataset.open] = { c: col, r: row };
+        applyIcons(); saveIcons();
+        b.dataset.justMoved = '1'; setTimeout(() => { delete b.dataset.justMoved; }, 400);
+      };
+      addEventListener('pointermove', move); addEventListener('pointerup', up);
+    });
+  }
+  function sortIcons(how) {
+    let order = defaultOrder.slice();
+    const name = (h) => icons.find((b) => b.dataset.open === h).querySelector('.dt-icon-name').textContent;
+    if (how === 'naam') order = [defaultOrder[0], ...defaultOrder.slice(1).sort((a, b) => name(a).localeCompare(name(b), 'nl'))];
+    pos = {}; layoutIcons(order); saveIcons();
+  }
+
+  /* ---------- rechtermuisknop op het bureaublad ---------- */
+  const ctx = document.createElement('div');
+  ctx.className = 'dt-menu dt-ctx no-print'; ctx.setAttribute('role', 'menu'); ctx.hidden = true;
+  ctx.innerHTML = `<button type="button" class="dt-menu-item" data-c="new">Nieuwe werkopdracht</button><div class="dt-menu-sep"></div>
+    <button type="button" class="dt-menu-item" data-c="naam">Pictogrammen sorteren op naam</button>
+    <button type="button" class="dt-menu-item" data-c="standaard">Pictogrammen in de standaardvolgorde</button>
+    <button type="button" class="dt-menu-item" data-c="schikken">Vensters schikken</button><div class="dt-menu-sep"></div>
+    <button type="button" class="dt-menu-item" data-c="size-s">Kleine pictogrammen</button>
+    <button type="button" class="dt-menu-item" data-c="size-m">Normale pictogrammen</button>
+    <button type="button" class="dt-menu-item" data-c="size-l">Grote pictogrammen</button><div class="dt-menu-sep"></div>
+    <button type="button" class="dt-menu-item" data-c="personal"><b>Personaliseren…</b></button>`;
+  document.body.append(ctx);
+  desk.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('.dw, .sticky-note')) return;
+    e.preventDefault();
+    ctx.querySelectorAll('[data-c^="size-"]').forEach((b) => b.classList.toggle('is-on', b.dataset.c === 'size-' + look.size));
+    ctx.hidden = false;
+    const w = ctx.offsetWidth; const h = ctx.offsetHeight;
+    ctx.style.left = Math.min(e.clientX, innerWidth - w - 6) + 'px'; ctx.style.top = Math.min(e.clientY, innerHeight - h - 50) + 'px';
+    ctx.querySelector('button').focus();
+  });
+  document.addEventListener('pointerdown', (e) => { if (!ctx.hidden && !ctx.contains(e.target)) ctx.hidden = true; });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') ctx.hidden = true; });
+  ctx.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-c]'); if (!b) return;
+    ctx.hidden = true;
+    const c = b.dataset.c;
+    if (c === 'new') launch('/werkopdracht/nieuw', true);
+    else if (c === 'naam' || c === 'standaard') sortIcons(c);
+    else if (c === 'schikken') menu.querySelector('[data-arrange]').click();
+    else if (c.startsWith('size-')) { look.size = c.slice(5); saveLook(); layoutIcons(); }
+    else if (c === 'personal') personalize();
+  });
+
+  /* ---------- personaliseren: achtergrond en pictogrammen ---------- */
+  const COLORS = ['#008080', '#1d3557', '#2f4f4f', '#5b2a86', '#7a1f2b', '#3a5a40', '#202124', '#c9c5bd'];
+  const GRADS = {
+    zonsondergang: 'linear-gradient(160deg, #2b1055 0%, #7597de 45%, #ff9a8b 100%)',
+    oceaan: 'linear-gradient(160deg, #0f2027 0%, #203a43 45%, #2c5364 100%)',
+    zomer: 'linear-gradient(160deg, #56ab2f 0%, #a8e063 100%)',
+    werkplaats: 'repeating-linear-gradient(135deg, #2b2f36 0 22px, #30353d 22px 44px)',
+    noorderlicht: 'radial-gradient(120% 80% at 20% 0%, #1fd1a1 0%, transparent 55%), radial-gradient(100% 70% at 90% 10%, #7f5af0 0%, transparent 60%), #0b1020',
+  };
+  let img = null;
+  try { img = localStorage.getItem(IMG_KEY); } catch { /* geen opslag */ }
+  function saveLook() { try { localStorage.setItem(LOOK_KEY, JSON.stringify(look)); } catch { /* geen opslag */ } applyLook(); }
+  function applyLook() {
+    const st = desk.style;
+    st.background = ''; desk.classList.toggle('has-bg', look.bg !== 'theme');
+    if (look.bg.startsWith('#')) st.background = look.bg;
+    else if (look.bg.startsWith('grad:')) st.background = GRADS[look.bg.slice(5)] || '';
+    else if (look.bg === 'image' && img) {
+      st.background = `#000 url("${img}") center / ${look.fit === 'tile' ? 'auto' : look.fit === 'center' ? 'auto' : look.fit} ${look.fit === 'tile' ? 'repeat' : 'no-repeat'}`;
+    }
+    desk.dataset.iconSize = look.size;
+  }
+  applyLook();
+  let dlg = null;
+  function personalize() {
+    if (!dlg) {
+      dlg = document.createElement('dialog');
+      dlg.className = 'swap-dialog dt-personal';
+      dlg.innerHTML = `<form method="dialog" class="swap-form">
+        <h1>Personaliseren</h1>
+        <p class="muted small">Alleen voor u, op deze computer. Het thema (kleuren van de vensters) kiest u bij Instellingen.</p>
+        <fieldset class="swap-step"><legend>Achtergrond</legend>
+          <div class="dt-bgs">
+            <button type="button" class="dt-bg dt-bg-theme" data-bg="theme" title="Van het thema">Thema</button>
+            ${COLORS.map((c) => `<button type="button" class="dt-bg" data-bg="${c}" title="${c}"></button>`).join('')}
+            ${Object.keys(GRADS).map((k) => `<button type="button" class="dt-bg" data-bg="grad:${k}" title="${k}"></button>`).join('')}
+            <label class="dt-bg dt-bg-img" title="Eigen foto"><input type="file" accept="image/*" hidden data-img>Eigen foto…</label>
+          </div>
+        </fieldset>
+        <fieldset class="swap-step" data-fitbox><legend>Foto</legend>
+          <label class="swap-choice"><input type="radio" name="fit" value="cover"> <span>Vullen</span></label>
+          <label class="swap-choice"><input type="radio" name="fit" value="contain"> <span>Passend</span></label>
+          <label class="swap-choice"><input type="radio" name="fit" value="tile"> <span>Naast elkaar</span></label>
+          <label class="swap-choice"><input type="radio" name="fit" value="center"> <span>In het midden</span></label>
+        </fieldset>
+        <fieldset class="swap-step"><legend>Pictogrammen</legend>
+          <label class="swap-choice"><input type="radio" name="size" value="s"> <span>Klein</span></label>
+          <label class="swap-choice"><input type="radio" name="size" value="m"> <span>Normaal</span></label>
+          <label class="swap-choice"><input type="radio" name="size" value="l"> <span>Groot</span></label>
+        </fieldset>
+        <p class="alert" data-err hidden></p>
+        <div class="swap-actions"><button class="btn btn-primary" value="ok" type="submit">Klaar</button></div>
+      </form>`;
+      document.body.append(dlg);
+      // Kleuren via CSSOM (de beveiliging staat geen style-attributen toe).
+      dlg.querySelectorAll('.dt-bg[data-bg]').forEach((b) => { const v = b.dataset.bg; if (v.startsWith('#')) b.style.background = v; else if (v.startsWith('grad:')) b.style.background = GRADS[v.slice(5)]; });
+      dlg.addEventListener('click', (e) => {
+        if (e.target === dlg) dlg.close();
+        const b = e.target.closest('[data-bg]'); if (!b) return;
+        look.bg = b.dataset.bg; saveLook(); mark();
+      });
+      dlg.addEventListener('change', (e) => {
+        if (e.target.name === 'fit') { look.fit = e.target.value; saveLook(); }
+        if (e.target.name === 'size') { look.size = e.target.value; saveLook(); layoutIcons(); }
+      });
+      dlg.querySelector('[data-img]').addEventListener('change', async (e) => {
+        const f = e.target.files[0]; if (!f) return;
+        const err = dlg.querySelector('[data-err]'); err.hidden = true;
+        try {
+          // Verkleinen tot schermformaat (scheelt opslag), als JPEG.
+          const bmp = await createImageBitmap(f);
+          const scale = Math.min(1, 2560 / bmp.width, 1600 / bmp.height);
+          const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * scale); cv.height = Math.round(bmp.height * scale);
+          cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+          const data = cv.toDataURL('image/jpeg', 0.82);
+          localStorage.setItem(IMG_KEY, data); img = data;
+          look.bg = 'image'; saveLook(); mark();
+        } catch { err.textContent = 'Deze foto kon niet worden gebruikt (te groot of geen afbeelding).'; err.hidden = false; }
+        e.target.value = '';
+      });
+    }
+    mark();
+    dlg.showModal();
+  }
+  function mark() {
+    dlg.querySelectorAll('[data-bg]').forEach((b) => b.classList.toggle('is-on', b.dataset.bg === look.bg));
+    dlg.querySelector('.dt-bg-img').classList.toggle('is-on', look.bg === 'image');
+    dlg.querySelector('[data-fitbox]').hidden = look.bg !== 'image';
+    dlg.querySelectorAll('input[name=fit]').forEach((r) => { r.checked = r.value === look.fit; });
+    dlg.querySelectorAll('input[name=size]').forEach((r) => { r.checked = r.value === look.size; });
+  }
+  menu.querySelector('[data-arrange]').insertAdjacentHTML('beforebegin', '<button type="button" role="menuitem" class="dt-menu-item" data-personal>Personaliseren…</button>');
+  menu.querySelector('[data-personal]').addEventListener('click', () => { toggleMenu(false); personalize(); });
+  /* Linker Ctrl los indrukken en loslaten = startmenu (ook als de cursor in een venster staat, zie common.js). */
+  let ctrlAlone = false; let ctrlAt = 0;
+  addEventListener('keydown', (e) => { if (e.code === 'ControlLeft' && !e.repeat) { ctrlAlone = true; ctrlAt = Date.now(); } else ctrlAlone = false; }, true);
+  addEventListener('pointerdown', () => { ctrlAlone = false; }, true);
+  addEventListener('keyup', (e) => { if (e.code === 'ControlLeft' && ctrlAlone && Date.now() - ctrlAt < 800) { ctrlAlone = false; toggleMenu(menu.hidden); } }, true);
+  addEventListener('message', (e) => { if (e.origin === location.origin && e.data && e.data.adonisStart) toggleMenu(menu.hidden); });
   window.adonisDesktop = { open: launch };
   // Links op het bureaublad zelf (bijv. "Bekijken" bij de backupwaarschuwing) openen in een venster.
   document.addEventListener('click', (e) => {

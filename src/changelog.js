@@ -5,6 +5,17 @@
  */
 module.exports = [
   {
+    version: '1.38.1', date: '2026-11-08', title: 'Bureaublad: verslepen, personaliseren en de Ctrl-toets',
+    items: [
+      'Vensters hebben nu een gewone vensterkleur als achtergrond in plaats van nog eens de achtergrond van het bureaublad.',
+      'Pictogrammen op het bureaublad kunt u verslepen (ze klikken vast op een raster en blijven waar u ze zet). Met de rechtermuisknop op het bureaublad: sorteren op naam of in de standaardvolgorde, vensters schikken, kleine/normale/grote pictogrammen en Personaliseren.',
+      'Personaliseren: kies een achtergrond (van het thema, een kleur, een kleurverloop of een eigen foto, vullend/passend/naast elkaar/in het midden) en de grootte van de pictogrammen. Alleen voor u, op deze computer.',
+      'Plaknotities liggen nu op het bureaublad zelf: vensters gaan eroverheen.',
+      'Linker Ctrl los indrukken en loslaten opent het startmenu, ook terwijl u in een venster werkt (Ctrl+C, Ctrl+klik enz. werken gewoon).',
+      'Escape op het bureaublad stuurt u niet meer weg van het bureaublad.',
+    ],
+  },
+  {
     version: '1.38.0', date: '2026-11-08', title: 'Bureaubladmodus: pagina\'s als vensters',
     items: [
       'Nieuw bij Instellingen: Bureaubladmodus. ADONIS opent dan als een bureaublad met pictogrammen; elke pagina opent in een venster dat u kunt verslepen, groter/kleiner maken, minimaliseren en maximaliseren (dubbelklik op de titelbalk, of sleep naar de bovenrand). Zo staan bijv. een werkopdracht, de klant en de APK-lijst naast elkaar.',

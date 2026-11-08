@@ -140,6 +140,7 @@ document.addEventListener('error', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape' || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
   if (document.documentElement.classList.contains('in-window')) return; // in een venster: niet naar Start
+  if (document.body.classList.contains('desktop-shell')) return; // op het bureaublad zelf ook niet
   // Nu al vastleggen (een venster dat Esc sluit, is na deze toetsaanslag al dicht).
   const busy = e.defaultPrevented || document.querySelector('dialog[open], .theme-menu:not([hidden]), .ai-busy:not([hidden]), .lightbox:not([hidden])');
   const el = document.activeElement;
@@ -583,4 +584,13 @@ document.addEventListener('click', async (e) => {
   if (!document.documentElement.classList.contains('in-window') || location.pathname !== '/instellingen' || !document.querySelector('.flash-ok')) return;
   try { if (sessionStorage.getItem('adonis-dt-reloaded') === location.href + document.querySelector('.flash-ok').textContent) return; sessionStorage.setItem('adonis-dt-reloaded', location.href + document.querySelector('.flash-ok').textContent); } catch { /* geen opslag */ }
   window.top.location.reload();
+})();
+
+// Bureaubladmodus: linker Ctrl los indrukken en loslaten opent het startmenu, ook als de cursor in een venster staat.
+(function () {
+  if (!document.documentElement.classList.contains('in-window')) return;
+  let alone = false; let at = 0;
+  addEventListener('keydown', (e) => { if (e.code === 'ControlLeft' && !e.repeat) { alone = true; at = Date.now(); } else alone = false; }, true);
+  addEventListener('pointerdown', () => { alone = false; }, true);
+  addEventListener('keyup', (e) => { if (e.code === 'ControlLeft' && alone && Date.now() - at < 800) { alone = false; window.top.postMessage({ adonisStart: true }, location.origin); } }, true);
 })();
