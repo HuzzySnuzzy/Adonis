@@ -9,7 +9,7 @@
   <% if (a.date) { %><span class="sep">·</span><span title="Releasedatum">uitgebracht <%= nlDate(a.date) %></span><% } %>
   <span class="sep">·</span>
   <% if (u.state === 'update') { %>
-    <span class="upd-new" title="Nieuwste versie: v<%= u.latest %><%= u.latestDate ? ', uitgebracht ' + nlDate(u.latestDate) : '' %>">Update v<%= u.latest %> beschikbaar<%= a.autoUpdate ? ' – wordt geïnstalleerd bij de volgende herstart' : '' %></span>
+    <span class="upd-new" title="Nieuwste versie: v<%= u.latest %><%= u.latestDate ? ', uitgebracht ' + nlDate(u.latestDate) : '' %>">Update v<%= u.latest %> beschikbaar<%= a.liveUpdate ? ' – wordt nu geïnstalleerd' : a.autoUpdate ? ' – wordt geïnstalleerd bij de volgende herstart' : '' %></span>
   <% } else if (u.state === 'actueel') { %>
     <span title="Laatst gecontroleerd: <%= checked %>">Up-to-date</span>
   <% } else if (u.state === 'offline') { %>

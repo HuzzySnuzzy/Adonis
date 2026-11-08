@@ -40,12 +40,22 @@
         },
         {
             "name": "Automatisch bijwerken",
-            "description": "Bij elke start de nieuwste versie van GitHub installeren (true/false). Gegevens blijven bewaard.",
+            "description": "Nieuwe versies van GitHub automatisch installeren (true/false), bij het starten én terwijl de server draait. Gegevens blijven bewaard.",
             "env_variable": "AUTO_UPDATE",
             "default_value": "true",
             "user_viewable": true,
             "user_editable": true,
             "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Controleren op updates (seconden)",
+            "description": "Hoe vaak de draaiende server kijkt of er een nieuwe versie is. Die wordt eerst gedownload terwijl alles gewoon doorwerkt; daarna herstart ADONIS meteen (een paar seconden weg). 0 = alleen bij het starten.",
+            "env_variable": "UPDATE_CHECK_SECONDS",
+            "default_value": "15",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:0|max:86400",
             "field_type": "text"
         },
         {

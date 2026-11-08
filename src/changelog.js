@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.33.0', date: '2026-11-08', title: 'Server werkt zichzelf live bij',
+    items: [
+      'De server (bijv. op Pterodactyl) kijkt nu elke 15 seconden of er een nieuwe versie is, ook terwijl hij draait. Instelbaar met update-check-seconds (Pterodactyl: "Controleren op updates"); 0 = alleen bij het starten.',
+      'Een nieuwe versie wordt eerst gedownload en gecontroleerd terwijl ADONIS gewoon doorwerkt. Pas daarna herstart hij, en is hij ongeveer een halve seconde onbereikbaar.',
+      'Loopt er net een backup of een Claude-taak voor alle klanten, dan wacht de herstart daarop. Open schermen krijgen een melding en laden daarna vanzelf opnieuw, behalve als iemand nog iets aan het invullen is.',
+      'Herstarten na een update of het terugzetten van een backup stapelt geen processen meer op; Stop in het paneel stopt alles netjes.',
+    ],
+  },
+  {
     version: '1.32.1', date: '2026-11-08', title: 'Kostenschatting bij grote lijsten',
     items: [
       'De kostenschatting voor Claude gaf een foutmelding ("maximumFractionDigits") als het bedrag € 10 of meer was, bijvoorbeeld bij APK-aandachtspunten voor alle APK-datums. Opgelost: grote bedragen staan nu in hele euro\'s.',

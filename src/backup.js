@@ -291,7 +291,9 @@ async function backupPath(folder, name) {
   try { await withTimeout(fsp.access(p), 8000, 'De map'); return p; } catch { return null; }
 }
 
+function isRunning() { return !!running; }
+
 module.exports = {
-  BackupError, DEFAULT_DIR, config, saveConfig, checkFolder, createZip, runBackup, listBackups, startSchedule, health,
+  isRunning, BackupError, DEFAULT_DIR, config, saveConfig, checkFolder, createZip, runBackup, listBackups, startSchedule, health,
   readBackup, stageRestore, backupPath, isDue,
 };

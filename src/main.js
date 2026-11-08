@@ -37,6 +37,7 @@ process.env.COOKIE_SECURE = cfg.secureCookies ? 'true' : 'false';
 process.env.TRUST_PROXY = cfg.trustProxy ? 'true' : 'false';
 process.env.IMPORT_LIMIT_PER_DAY = String(cfg.importLimitPerDay);
 process.env.AUTO_UPDATE_ENABLED = cfg.autoUpdate ? 'true' : 'false';
+process.env.AUTO_UPDATE_LIVE = cfg.autoUpdate && cfg.updateCheckSeconds > 0 ? 'true' : 'false';
 process.env.APP_PORT = String(cfg.port);
 process.env.UPDATE_REPO = cfg.updateRepo;
 if (cfg.anthropicApiKey) process.env.ANTHROPIC_API_KEY = cfg.anthropicApiKey;
@@ -189,7 +190,12 @@ function startServer() {
   });
 
   server.on('listening', () => {
-    require('./update').startStatusChecks(cfg.updateRepo);
+    if (cfg.autoUpdate && cfg.updateCheckSeconds > 0 && config.isSea()) {
+      // Live bijwerken: de nieuwe versie wordt gedownload terwijl deze gewoon draait; daarna kort herstarten.
+      require('./update').startLiveUpdates({ repo: cfg.updateRepo, seconds: cfg.updateCheckSeconds, log: console.log, onReady: restartForUpdate });
+    } else {
+      require('./update').startStatusChecks(cfg.updateRepo);
+    }
     require('./backup').startSchedule();
     require('./rdw').startBackgroundFill();
     // Cloudflare-tunnel weer starten als die is ingesteld.
@@ -226,20 +232,42 @@ function startServer() {
     }
   });
 
-  // Herstarten (na het terugzetten van een backup): server en database netjes sluiten, dan opnieuw starten.
-  global.adonisRestart = () => {
+  // Herstarten (na het terugzetten van een backup of een update): server en database netjes sluiten, dan opnieuw starten.
+  let restarting = false;
+  global.adonisRestart = (extraEnv = {}) => {
+    if (restarting) return;
+    restarting = true;
     console.log('  ADONIS wordt opnieuw gestart...');
+    // Vanaf nu regelt de bewaker Ctrl+C/stop (doorgeven aan de nieuwe start).
+    process.removeListener('SIGINT', stop);
+    process.removeListener('SIGTERM', stop);
     try { rl.close(); } catch { /* geen console */ } // de nieuwe start leest de console
     try { require('./tunnel').stop(); } catch { /* geen tunnel */ }
     server.close(() => {
       try { require('./db').db.close(); } catch { /* al dicht */ }
-      const args = config.isSea() ? process.argv.slice(2) : process.argv.slice(1);
-      const child = spawn(process.execPath, args, { stdio: 'inherit', env: process.env });
-      for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { child.kill(sig); } catch { /* al gestopt */ } });
-      child.on('exit', (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
+      respawn(extraEnv);
     });
     server.closeAllConnections?.();
   };
+
+  // Update staat klaar: even wachten als er een backup of een Claude-taak voor alle klanten loopt (max. 15 min).
+  async function restartForUpdate(version) {
+    const busyWith = () => {
+      try { if (require('./backup').isRunning()) return 'een backup'; } catch { /* geen backup */ }
+      try { const j = require('./bulletins').jobStatus(); if (j && j.running) return 'Claude (aandachtspunten)'; } catch { /* geen */ }
+      try { const j = require('./model-bulletins').jobStatus(); if (j && j.running) return 'Claude (APK-punten)'; } catch { /* geen */ }
+      return null;
+    };
+    const until = Date.now() + 15 * 60 * 1000;
+    let said = false;
+    for (let b = busyWith(); b && Date.now() < until; b = busyWith()) {
+      if (!said) { console.log(`  Even wachten met herstarten: ${b} is bezig.`); said = true; }
+      await new Promise((r) => setTimeout(r, 5000));
+    }
+    // Open schermen een seintje geven; ze verbinden daarna vanzelf opnieuw.
+    try { require('./events').broadcast({ type: 'server-update', version }); } catch { /* geen schermen */ }
+    setTimeout(() => global.adonisRestart({ WERKOPDRACHTEN_JUST_UPDATED: '1' }), 400);
+  }
 
   let stopping = false;
   function stop() {
@@ -327,16 +355,46 @@ function startServer() {
   startServer();
 })();
 
-/** Na een update: de nieuwe versie starten in hetzelfde venster/dezelfde console. */
+/** Na een update bij het starten: de nieuwe versie starten in hetzelfde venster/dezelfde console. */
 function relaunch() {
   console.log('  Nieuwe versie wordt gestart...');
-  const child = spawn(process.execPath, process.argv.slice(2), {
-    stdio: 'inherit',
-    env: { ...process.env, WERKOPDRACHTEN_JUST_UPDATED: '1' },
-  });
-  for (const sig of ['SIGINT', 'SIGTERM']) {
-    process.on(sig, () => { try { child.kill(sig); } catch { /* al gestopt */ } });
-  }
-  child.on('exit', (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
-  child.on('error', (err) => fatal('Kon de nieuwe versie niet starten: ' + err.message));
+  respawn({ WERKOPDRACHTEN_JUST_UPDATED: '1' });
 }
+
+/*
+ * Opnieuw starten zonder dat er bij elke update een proces bij komt:
+ * - Draait dit proces onder een "bewaker" (een eerdere ADONIS), dan vraagt het die om een nieuwe start en stopt.
+ * - Anders wordt dit proces zelf de bewaker: het start ADONIS als kindproces, geeft Ctrl+C/stop door en
+ *   start bij een volgende update of herstart gewoon een nieuw kind.
+ * De bewaker blijft hetzelfde proces, dus Pterodactyl/Docker/het venster merken er niets van.
+ */
+function respawn(extraEnv = {}) {
+  if (process.env.ADONIS_SUPERVISED && typeof process.send === 'function') {
+    process.send({ adonis: 'respawn', env: extraEnv }, () => process.exit(0));
+    setTimeout(() => process.exit(0), 2000).unref();
+    return;
+  }
+  supervise(extraEnv);
+}
+let child = null;
+function supervise(extraEnv) {
+  if (!supervise.signals) {
+    supervise.signals = true;
+    for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { if (child) child.kill(sig); else process.exit(0); } catch { /* al gestopt */ } });
+  }
+  const args = config.isSea() ? process.argv.slice(2) : process.argv.slice(1);
+  let again = null;
+  child = spawn(process.execPath, args, {
+    stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+    env: { ...process.env, ...extraEnv, ADONIS_SUPERVISED: '1' },
+  });
+  child.on('message', (m) => { if (m && m.adonis === 'respawn') again = m.env || {}; });
+  child.on('error', (err) => fatal('Kon ADONIS niet (opnieuw) starten: ' + err.message));
+  child.on('exit', (code, signal) => {
+    child = null;
+    if (again) return supervise(again);
+    process.exit(code ?? (signal ? 1 : 0));
+  });
+}
+// Een kind houdt zich niet in leven door alleen het IPC-kanaal.
+if (process.env.ADONIS_SUPERVISED && process.channel) process.channel.unref();

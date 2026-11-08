@@ -341,6 +341,7 @@ document.addEventListener('click', (e) => {
     f.addEventListener('change', () => { dirty = true; });
   });
   document.addEventListener('submit', (e) => { if (!e.defaultPrevented) leaving = true; });
+  window.adonisFormDirty = () => dirty && !leaving; // voor live.js (na een update niet zomaar herladen)
   window.addEventListener('beforeunload', (e) => {
     if (dirty && !leaving && !window.adonisLeaving) { e.preventDefault(); e.returnValue = ''; }
   });

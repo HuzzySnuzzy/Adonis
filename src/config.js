@@ -31,6 +31,7 @@ const DEFAULTS = [
   ['trust-proxy', 'false', 'Zet op true als de site achter een reverse proxy draait (nginx, Caddy, Cloudflare...).'],
   ['timezone', 'Europe/Amsterdam', 'Tijdzone voor "Datum invoer".'],
   ['auto-update', 'true', 'Bij het starten automatisch de nieuwste versie van GitHub installeren (true/false). Gegevens blijven bewaard.'],
+  ['update-check-seconds', '15', 'Hoe vaak (in seconden) de draaiende server kijkt of er een nieuwe versie is. Die wordt eerst gedownload en daarna herstart ADONIS meteen (een paar seconden weg). 0 = alleen bij het starten.'],
   ['update-repo', 'huzzysnuzzy/adonis', 'GitHub-repository waar updates vandaan komen.'],
   ['import-limit-per-day', '30', 'Maximaal aantal foto-imports per dag (kosten beperken; ca. $0,10–0,25 per import). 0 = geen limiet.'],
   ['anthropic-api-key', '', 'API-sleutel voor foto-import (handschrift uitlezen met Claude). Aanmaken op https://console.anthropic.com – leeg = foto-import uit. Vereist internet.'],
@@ -46,6 +47,7 @@ const ENV_NAMES = {
   'trust-proxy': ['TRUST_PROXY'],
   'anthropic-api-key': ['ANTHROPIC_API_KEY'],
   'auto-update': ['AUTO_UPDATE'],
+  'update-check-seconds': ['UPDATE_CHECK_SECONDS'],
   'import-limit-per-day': ['IMPORT_LIMIT_PER_DAY'],
   timezone: ['APP_TIMEZONE'], // bewust niet TZ: Pterodactyl/Docker zetten die vaak op UTC
 };
@@ -134,6 +136,7 @@ function load(argv = []) {
     autoUpdate: bool(cfg['auto-update']),
     importLimitPerDay: Math.max(0, parseInt(cfg['import-limit-per-day'], 10) || 0),
     updateRepo: cfg['update-repo'],
+    updateCheckSeconds: Math.max(0, parseInt(cfg['update-check-seconds'], 10) || 0),
   };
 }
 

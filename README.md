@@ -241,7 +241,7 @@ een systemd-service gebruiken die dit bestand start.
    Is de repository privé, of lukt de download niet? Upload het bestand dan zelf via de bestandsbeheerder.
 3. Start de server; de poort komt automatisch van de toegewezen allocatie (`SERVER_PORT`).
    Ontbreekt het programma (bijv. omdat de download bij de installatie mislukte), dan wordt het bij het starten alsnog gedownload.
-   Nieuwe versies worden automatisch geïnstalleerd bij het (her)starten, zie [Automatisch bijwerken](#automatisch-bijwerken).
+   Nieuwe versies worden automatisch geïnstalleerd, bij het starten en terwijl de server draait (elke 15 s kijken), zie [Automatisch bijwerken](#automatisch-bijwerken).
 4. Maak het eerste account aan via `/setup`, of typ in de console:
    `create-user collin "Collin" <wachtwoord> --admin`
 
@@ -289,6 +289,17 @@ Alles kan ook als opdrachtregeloptie (`--port 8080`) of omgevingsvariabele (`SER
 Bij elke start kijkt het programma op GitHub of er een nieuwere release is. Zo ja, dan wordt die gedownload,
 gecontroleerd (juiste grootte en versie) en geïnstalleerd, en start meteen de nieuwe versie. `data/` en
 `config.properties` blijven gewoon staan. Zonder internet of bij een fout start gewoon de huidige versie.
+
+**Terwijl de server draait** kijkt hij elke 15 seconden (`update-check-seconds`, Pterodactyl: *Controleren op updates*)
+of er een nieuwe versie is. Die wordt eerst **op de achtergrond gedownload en gecontroleerd terwijl ADONIS gewoon
+doorwerkt**; pas als het nieuwe programma klaarstaat, herstart ADONIS (ongeveer een halve seconde onbereikbaar).
+Loopt er net een backup of een Claude-taak voor alle klanten, dan wacht hij daar eerst op (max. 15 minuten).
+Open schermen krijgen een melding en laden daarna vanzelf opnieuw, behalve als iemand iets aan het invullen is.
+- GitHub telt "niets veranderd"-antwoorden (ETag/304) niet mee voor de limiet van 60 vragen per uur, dus vaak kijken kan.
+  Wordt de limiet toch bereikt, dan wacht hij tot GitHub weer antwoordt.
+- Het oorspronkelijke proces blijft als "bewaker" draaien en start elke nieuwe versie; er komen dus geen processen bij,
+  en Pterodactyl/Docker merken de herstart niet. *Stop* in het paneel stopt de server gewoon netjes.
+- `update-check-seconds=0`: alleen bij het starten kijken (zoals vroeger).
 
 - Uitzetten: `auto-update=false` in `config.properties` (Pterodactyl: variabele *Automatisch bijwerken*).
 - Handmatig zoeken terwijl het draait: typ `update` in de console en herstart daarna.

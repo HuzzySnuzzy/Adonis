@@ -153,6 +153,7 @@ app.use((req, res, next) => {
     ...buildinfo,
     update: updater.getStatus(),
     autoUpdate: process.env.AUTO_UPDATE_ENABLED === 'true',
+    liveUpdate: process.env.AUTO_UPDATE_LIVE === 'true',
   };
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;

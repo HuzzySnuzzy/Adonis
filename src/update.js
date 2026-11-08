@@ -55,14 +55,24 @@ function cleanupOld() {
   }
 }
 
+class RateLimited extends Error {}
+/* GitHub staat zonder account 60 vragen per uur toe. Met de ETag van het vorige antwoord krijgen we
+ * "304: niets veranderd" terug, en dat telt níet mee. Zo kan er elke paar seconden gekeken worden. */
+const cache = { url: null, etag: null, body: null };
 async function latestRelease(repo) {
   const url = process.env.WERKOPDRACHTEN_UPDATE_API || `https://api.github.com/repos/${repo}/releases/latest`;
-  const res = await fetch(url, {
-    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'werkopdrachten-updater' },
-    signal: AbortSignal.timeout(8000),
-  });
+  const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'werkopdrachten-updater' };
+  if (cache.url === url && cache.etag) headers['If-None-Match'] = cache.etag;
+  const res = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+  if (res.status === 304 && cache.body) return cache.body;
+  if ((res.status === 403 || res.status === 429) && res.headers.get('x-ratelimit-remaining') === '0') {
+    const reset = parseInt(res.headers.get('x-ratelimit-reset'), 10);
+    throw Object.assign(new RateLimited('GitHub-limiet bereikt'), { until: reset ? reset * 1000 : Date.now() + 15 * 60 * 1000 });
+  }
   if (!res.ok) throw new Error(`GitHub antwoordde met ${res.status}`);
-  return res.json();
+  const body = await res.json();
+  Object.assign(cache, { url, etag: res.headers.get('etag'), body });
+  return body;
 }
 
 /**
@@ -76,12 +86,19 @@ async function checkAndInstall({ repo = DEFAULT_REPO, log = () => {} } = {}) {
   cleanupOld();
 
   const release = await latestRelease(repo);
+  return installRelease(release, { log });
+}
+
+/** De nieuwe versie downloaden en controleren terwijl de huidige gewoon blijft draaien; pas daarna het bestand vervangen. */
+async function installRelease(release, { log = () => {} } = {}) {
+  const name = assetName();
   const latest = String(release.tag_name || '').replace(/^v/, '');
   if (!latest || compareVersions(latest, VERSION) <= 0) {
     return { updated: false, message: `Up-to-date (v${VERSION}).` };
   }
-  const asset = (release.assets || []).find((a) => a.name === name);
-  if (!asset) return { updated: false, message: `Release v${latest} heeft geen ${name}.` };
+  // Net uitgebracht: de bestanden worden soms nog geüpload. Dan de volgende keer opnieuw.
+  const asset = (release.assets || []).find((a) => a.name === name && (!a.state || a.state === 'uploaded'));
+  if (!asset) return { updated: false, waiting: true, message: `Release v${latest} heeft (nog) geen ${name}.` };
 
   log(`  Nieuwe versie gevonden: v${latest} (nu v${VERSION}). Downloaden...`);
   const exe = process.execPath;
@@ -142,7 +159,7 @@ async function checkStatus(repo = DEFAULT_REPO) {
   return status;
 }
 
-/** Bij het starten en daarna elke 6 uur controleren. */
+/** Bij het starten en daarna elke 6 uur controleren (als er niet automatisch wordt bijgewerkt). */
 function startStatusChecks(repo) {
   if (!isSea()) {
     status.state = 'ontwikkel';
@@ -152,8 +169,58 @@ function startStatusChecks(repo) {
   setInterval(() => checkStatus(repo), 6 * 60 * 60 * 1000).unref();
 }
 
+/**
+ * Terwijl de server draait elke paar seconden kijken of er een nieuwe versie is. Zo ja: eerst downloaden
+ * en controleren (de server blijft gewoon werken), daarna onReady(versie) – dan pas herstarten.
+ * Zo is ADONIS maar een paar seconden weg in plaats van de hele download lang.
+ */
+function startLiveUpdates({ repo = DEFAULT_REPO, seconds = 15, log = console.log, onReady }) {
+  if (!isSea() || !assetName()) { status.state = isSea() ? status.state : 'ontwikkel'; return null; }
+  const every = Math.max(5, seconds) * 1000;
+  let lastError = ''; let failedVersion = null; let failedAt = 0; let busy = false; let stopped = false; let timer = null;
+  const next = (ms) => { if (!stopped) timer = setTimeout(tick, ms); timer.unref?.(); };
+  async function tick() {
+    if (busy) return next(every);
+    busy = true;
+    let wait = every;
+    try {
+      const release = await latestRelease(repo);
+      const latest = String(release.tag_name || '').replace(/^v/, '');
+      status.latest = latest || null;
+      status.latestDate = release.published_at ? String(release.published_at).slice(0, 10) : null;
+      status.state = latest && compareVersions(latest, VERSION) > 0 ? 'update' : 'actueel';
+      status.checkedAt = new Date();
+      lastError = '';
+      if (status.state === 'update' && !(failedVersion === latest && Date.now() - failedAt < 10 * 60 * 1000)) {
+        try {
+          const r = await installRelease(release, { log });
+          if (r.updated) { stopped = true; busy = false; log(`  v${r.version} staat klaar. ADONIS herstart nu (een paar seconden)...`); return onReady(r.version); }
+        } catch (err) {
+          failedVersion = latest; failedAt = Date.now();
+          log(`  Bijwerken naar v${latest} mislukt: ${err.message}. Over 10 minuten nog een keer; de huidige versie blijft draaien.`);
+        }
+      }
+    } catch (err) {
+      if (err instanceof RateLimited) {
+        wait = Math.max(every, err.until - Date.now() + 1000);
+        if (lastError !== 'limit') log(`  Updates: GitHub-limiet bereikt, weer kijken om ${new Date(err.until).toLocaleTimeString('nl-NL')}.`);
+        lastError = 'limit';
+      } else {
+        status.state = 'offline'; status.checkedAt = new Date();
+        if (lastError !== err.message) log(`  Updates: kon niet kijken (${err.message}). Blijft het proberen.`);
+        lastError = err.message;
+        wait = Math.max(every, 60 * 1000);
+      }
+    }
+    busy = false;
+    next(wait);
+  }
+  next(1000);
+  return { stop() { stopped = true; clearTimeout(timer); } };
+}
+
 function getStatus() {
   return status;
 }
 
-module.exports = { checkAndInstall, compareVersions, assetName, DEFAULT_REPO, checkStatus, startStatusChecks, getStatus };
+module.exports = { checkAndInstall, installRelease, compareVersions, assetName, DEFAULT_REPO, checkStatus, startStatusChecks, startLiveUpdates, getStatus };

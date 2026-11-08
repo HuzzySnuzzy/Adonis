@@ -68,7 +68,28 @@
     }, 300);
   }
 
+  /* De server wordt bijgewerkt (nieuwe versie al gedownload, nu een paar seconden herstarten). */
+  let updatingTo = null;
+  // Iemand is iets aan het typen dat nog niet is opgeslagen (alleen de cursor in het zoekveld telt niet).
+  function typing() {
+    const el = document.activeElement;
+    if (!el || !el.matches) return false;
+    if (el.matches('[contenteditable="true"]')) return true;
+    if (el.matches('textarea, input:not([type=checkbox], [type=radio], [type=button], [type=submit])')) return el.value !== el.defaultValue;
+    return false;
+  }
+  function afterReconnect() {
+    refreshLists();
+    if (!updatingTo) return;
+    const v = updatingTo; updatingTo = null;
+    const busy = (window.adonisOrderDirty && window.adonisOrderDirty()) || (window.adonisFormDirty && window.adonisFormDirty())
+      || document.querySelector('dialog[open], .ai-busy:not([hidden])')
+      || typing();
+    if (!busy) { window.adonisLeaving = true; location.reload(); return; }
+    toast(`ADONIS is bijgewerkt naar v${v}. Vernieuw de pagina (F5) als u klaar bent.`);
+  }
   function handle(ev) {
+    if (ev.type === 'server-update') { updatingTo = ev.version; toast(`ADONIS wordt bijgewerkt naar v${ev.version} – een paar seconden geduld…`); return; }
     if (ev.type === 'notes') { if (String(ev.byId) !== String(me)) document.dispatchEvent(new CustomEvent('adonis:notes', { detail: ev })); return; }
     // Bandenhotel/voorraad gewijzigd door een collega: lijsten op dit scherm bijwerken.
     if (ev.type === 'data') {
@@ -105,7 +126,7 @@
   const channel = 'BroadcastChannel' in window ? new BroadcastChannel('adonis-live') : null;
   if (channel) {
     channel.onmessage = (m) => {
-      if (m.data && m.data.type === 'reconnected') refreshLists();
+      if (m.data && m.data.type === 'reconnected') afterReconnect();
       else handle(m.data);
     };
   }
@@ -124,7 +145,7 @@
       // Na een onderbreking (herstart/update) alles één keer bijwerken.
       if (wasDown) {
         wasDown = false;
-        refreshLists();
+        afterReconnect();
         if (channel) channel.postMessage({ type: 'reconnected' });
       }
     };
