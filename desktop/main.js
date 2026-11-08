@@ -114,6 +114,11 @@ function createWindow() {
     config.window = { ...win.getNormalBounds(), maximized: win.isMaximized() };
     saveConfig(config);
   });
+  // Muisknoppen terug/vooruit (Windows).
+  win.on('app-command', (e, cmd) => {
+    if (cmd === 'browser-backward') goHistory(-1);
+    else if (cmd === 'browser-forward') goHistory(1);
+  });
   // Het update-hoekje schuift mee met het venster.
   for (const ev of ['move', 'resize', 'maximize', 'unmaximize', 'restore']) win.on(ev, () => placeToast());
   win.on('page-title-updated', (e, title) => {
@@ -158,6 +163,22 @@ function createWindow() {
   openAdonis();
 }
 
+/* ---------------- terug / vooruit (de app heeft geen adresbalk met knoppen) ---------------- */
+function goHistory(dir) {
+  const w = BrowserWindow.getFocusedWindow() || win;
+  if (!w) return;
+  const wc = w.webContents;
+  if (dir < 0) {
+    // De pagina weet zelf wat de vorige ADONIS-pagina was (ook na opslaan); anders de gewone geschiedenis.
+    wc.executeJavaScript('window.adonisBack ? (window.adonisBack(), true) : false', true).then((done) => {
+      if (!done) { const h = wc.navigationHistory || wc; if (h.canGoBack()) h.goBack(); }
+    }).catch(() => {});
+  } else {
+    const h = wc.navigationHistory || wc;
+    if (h.canGoForward()) h.goForward();
+  }
+}
+
 /* ---------------- menu (verborgen; Alt toont het) ---------------- */
 function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate([
@@ -165,6 +186,8 @@ function buildMenu() {
       label: 'ADONIS',
       submenu: [
         { label: 'Startpagina', accelerator: 'Alt+Home', click: () => openAdonis() },
+        { label: 'Terug', accelerator: 'Alt+Left', click: () => goHistory(-1) },
+        { label: 'Vooruit', accelerator: 'Alt+Right', click: () => goHistory(1) },
         { label: 'Adres van de server wijzigen…', accelerator: 'CmdOrCtrl+,', click: () => showSetup('wijzigen') },
         { label: 'Controleren op updates', click: () => checkUpdate(true) },
         { type: 'separator' },

@@ -47,6 +47,7 @@
 <% if (locals.user) { %>
 <header class="topbar no-print">
   <% const simple = prefs.simple === 'on'; %>
+  <% if (locals.inApp) { %><button class="iconbtn app-back" type="button" data-history-back title="Terug naar de vorige pagina (Alt + ←)" aria-label="Terug"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><% } %>
   <a class="brand" href="<%= simple ? '/start' : '/' %>" title="ADONIS – naar het begin"><%- include('/partials/logo') %></a>
   <nav class="mainnav">
     <% if (simple) { %><a href="/start" class="<%= path === '/start' ? 'active' : '' %>">Start</a><% } %>

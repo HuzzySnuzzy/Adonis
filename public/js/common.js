@@ -81,6 +81,76 @@ document.querySelectorAll('form[action="/login"]').forEach((f) => f.addEventList
 document.addEventListener('error', (e) => {
   if (e.target instanceof HTMLImageElement && e.target.matches('.plate-site img[data-portal-icon]')) e.target.remove();
 }, true);
+// ---------- Terug naar de vorige pagina ----------
+// ADONIS houdt per tabblad/venster bij welke pagina's u bekeek ("spoor"). De terug-links ("← …") en de terugknop in de app
+// gaan daardoor naar de pagina waar u echt vandaan kwam, niet naar een vaste plek.
+(function () {
+  const KEY = 'adonis-trail';
+  const here = () => location.pathname + location.search;
+  const read = () => { try { return JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch { return []; } };
+  const write = (t) => { try { sessionStorage.setItem(KEY, JSON.stringify(t.slice(-40))); } catch { /* geen opslag */ } };
+  let trail = read();
+  let navType = 'navigate';
+  try { navType = (performance.getEntriesByType('navigation')[0] || {}).type || 'navigate'; } catch { /* oud */ }
+  let wentBack = false;
+  try { wentBack = sessionStorage.getItem(KEY + '-back') === '1'; sessionStorage.removeItem(KEY + '-back'); } catch { /* geen opslag */ }
+  const url = here();
+  if (wentBack || (navType === 'back_forward' && trail[trail.length - 2] === url)) {
+    while (trail.length && trail[trail.length - 1] !== url) trail.pop(); // terug: alles na deze pagina vergeten
+    if (!trail.length) trail.push(url);
+  } else if (navType !== 'reload' && trail[trail.length - 1] !== url) {
+    trail.push(url);
+  }
+  write(trail);
+  // Live zoeken verandert het adres zonder nieuwe pagina: dan alleen de laatste stap bijwerken.
+  window.adonisTrailReplace = (u) => { trail = read(); trail[trail.length - 1] = u; write(trail); };
+  function previous() {
+    const t = read();
+    // Andere versies van dezelfde pagina (bijv. het bewerkformulier van deze klant) overslaan.
+    for (let i = t.length - 2; i >= 0; i--) if (t[i].split('?')[0] !== location.pathname && !/^\/login/.test(t[i])) return t[i];
+    return null;
+  }
+  function goBack(fallback) {
+    const prev = previous();
+    if (!prev) { if (fallback) location.href = fallback; else if (history.length > 1) history.back(); return; }
+    try { sessionStorage.setItem(KEY + '-back', '1'); } catch { /* geen opslag */ }
+    const t = read(); while (t.length && t[t.length - 1] !== prev) t.pop(); write(t.concat([]));
+    location.href = prev;
+  }
+  window.adonisBack = goBack;
+  // "← …"-links (kruimelpad, "← Terug", "← Klant"): naar waar u vandaan kwam.
+  const backLinks = document.querySelectorAll('.crumbs a:first-child, a[data-back-link]');
+  const prev = previous();
+  backLinks.forEach((a) => {
+    if (!prev || !/^←/.test(a.textContent.trim())) return;
+    const target = new URL(a.href, location.href);
+    if (target.pathname + target.search === prev) return; // gaat al naar de vorige pagina
+    a.textContent = '← Terug';
+    a.title = 'Terug naar de vorige pagina';
+  });
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('.crumbs a:first-child, a[data-back-link], [data-history-back]');
+    if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+    if (a.matches('a') && !/^←/.test(a.textContent.trim())) return;
+    e.preventDefault();
+    goBack(a.getAttribute('href'));
+  });
+})();
+// Escape: naar het startscherm. Eerst sluit Esc een open venster of menu, en in een invoerveld verlaat Esc eerst het veld.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  // Nu al vastleggen (een venster dat Esc sluit, is na deze toetsaanslag al dicht).
+  const busy = e.defaultPrevented || document.querySelector('dialog[open], .theme-menu:not([hidden]), .ai-busy:not([hidden]), .lightbox:not([hidden])');
+  const el = document.activeElement;
+  const inField = el && el.matches && el.matches('input, textarea, select, [contenteditable="true"]');
+  // Pas daarna kijken of een ander deel van de pagina de toets al heeft gebruikt (bijv. een pop-up sluiten).
+  setTimeout(() => {
+    if (busy || e.defaultPrevented) return;
+    if (inField) { el.blur(); return; }
+    if (location.pathname === '/start' || location.pathname === '/login') return;
+    location.href = '/start';
+  }, 0);
+});
 // Klikbare tabelrijen
 document.addEventListener('click', (e) => {
   const row = e.target.closest('tr[data-href]');
@@ -146,7 +216,7 @@ if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
         const freshWipe = freshForm && freshForm.querySelector('a.btn-ghost');
         if (wipe && !freshWipe) wipe.remove();
         else if (!wipe && freshWipe) form.append(freshWipe);
-        if (!remote) history.replaceState(history.state, '', url);
+        if (!remote) { history.replaceState(history.state, '', url); if (window.adonisTrailReplace) window.adonisTrailReplace(url); }
         window.dispatchEvent(new Event('resize')); // schaduw bij brede tabellen opnieuw bepalen
         document.dispatchEvent(new Event('adonis:swapped'));
       } catch { /* afgebroken of geen verbinding: Enter werkt nog steeds */ }

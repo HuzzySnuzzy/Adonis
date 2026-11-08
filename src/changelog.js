@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.29.1', date: '2026-11-08', title: 'Escape naar Start, Terug naar waar u vandaan kwam',
+    items: [
+      'De Escape-toets brengt u altijd naar het startscherm. Een open venster of menu sluit eerst, en in een invoerveld verlaat de eerste Escape alleen het veld.',
+      'De terug-links ("← …") gaan nu naar de pagina waar u echt vandaan kwam (bijv. van een klant terug naar de APK-lijst), ook na opslaan.',
+      'De ADONIS-app heeft een terugknop links in de menubalk; Alt + ← en de terugknop van de muis werken ook (Alt + → is vooruit).',
+    ],
+  },
+  {
     version: '1.29.0', date: '2026-11-08', title: 'Nieuw startscherm',
     items: [
       'Het startscherm is opnieuw ontworpen: een rustige kop met de datum, één grote zoekbalk en "Nieuwe werkopdracht" als duidelijke hoofdknop.',

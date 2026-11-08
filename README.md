@@ -152,6 +152,10 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   *Instellingen → Effecten* waarom (Rustig, of Windows vraagt om minder beweging) en kun je hem
   daar opnieuw bekijken.
 
+**Navigeren:** `Esc` gaat altijd naar het startscherm (een open venster/menu sluit eerst; in een invoerveld verlaat de
+eerste `Esc` het veld). De terug-links gaan naar de vorige bekeken pagina (spoor per tabblad); in de ADONIS-app ook een
+terugknop in de menubalk, `Alt + ←`/`Alt + →` en de muisknoppen.
+
 Sneltoetsen in het formulier: `Ctrl+S` slaat op, `Enter` springt naar het volgende vak.
 
 ## Installeren – één bestand

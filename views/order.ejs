@@ -50,9 +50,9 @@
 <div class="order-toolbar no-print">
   <div class="tb-left">
     <% if (order) { %>
-      <a class="btn btn-ghost" href="/klant/<%= order.customer_id %>">← Klant</a>
+      <a class="btn btn-ghost" href="/klant/<%= order.customer_id %>" data-back-link>← Klant</a>
     <% } else { %>
-      <a class="btn btn-ghost" href="/">← Terug</a>
+      <a class="btn btn-ghost" href="/" data-back-link>← Terug</a>
     <% } %>
     <div class="tb-title">
       <strong><%= order ? 'Werkopdracht ' + order.nummer : 'Nieuwe werkopdracht' %>

@@ -1544,3 +1544,5 @@ details.bl-item[open] > summary::after { content: "▴"; }
   .start-stat-label { font-size: .8rem; }
 }
 @media (prefers-reduced-motion: reduce) { .start-new, .start-stat, .start-page .start-tile { transition: none; } }
+/* ADONIS-app: terugknop in de menubalk (de app heeft geen adresbalk) */
+.app-back { margin-right: -.3rem; }

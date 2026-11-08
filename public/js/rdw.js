@@ -73,7 +73,7 @@
   document.addEventListener('click', (e) => {
     if (pop && !pop.contains(e.target) && e.target !== btn) closePop();
   });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && pop) { e.preventDefault(); closePop(); } });
 
   // Nieuw kenteken ingevuld en Merk/Type of APK-datum nog leeg: automatisch aanvullen.
   plate.addEventListener('change', async () => {
