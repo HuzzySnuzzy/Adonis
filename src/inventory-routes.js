@@ -63,6 +63,7 @@ module.exports = function register(app, { flash, wrap }) {
         d.soort = prev.soort;
       }
     }
+    if (req.query.locatie) d.locatie = String(req.query.locatie).slice(0, 80);
     renderTyre(res, { tyre: null, data: d });
   });
 
@@ -121,20 +122,42 @@ module.exports = function register(app, { flash, wrap }) {
   });
 
   // Wisselen: deze set gaat op de auto; de set die eraf komt gaat de opslag in (op dezelfde plek).
-  app.post('/bandenhotel/:id/wissel', (req, res) => {
+  // Wisselen: kiezen welke set erop gaat en welke eraf komt (als venster boven de pagina, of als losse pagina).
+  app.get('/bandenhotel/:id/wissel', (req, res) => {
     const tyre = inv.getTyre(req.params.id);
     if (!tyre) return notFound(res, 'Deze bandenset');
-    const r = inv.swapOnto(tyre.id, req.user.id);
+    const sets = tyre.plate_key ? inv.tyresForPlate(tyre.plate_key).filter((t) => t.soort === 'klant') : [tyre];
+    const onCar = inv.onCarFor(tyre.plate_key);
+    res.render('swap', {
+      title: `Wisselen – ${tyre.kenteken || tyre.klant_naam || 'set ' + tyre.id}`, tyre, onCar,
+      stored: sets.filter((t) => t.status === 'opgeslagen'),
+      locaties: inv.distinct('tyre_storage', 'locatie'),
+      back: (() => { try { const u = new URL(req.get('referer') || '', `${req.protocol}://${req.get('host')}`); return u.host === req.get('host') ? u.pathname + u.search : `/bandenhotel/${tyre.id}`; } catch { return `/bandenhotel/${tyre.id}`; } })(),
+    });
+  });
+  app.post('/bandenhotel/:id/wissel', (req, res) => {
+    let tyre = inv.getTyre(req.params.id);
+    if (!tyre) return notFound(res, 'Deze bandenset');
+    // In het venster kan een andere set van dezelfde auto zijn gekozen om erop te zetten.
+    if (req.body.op && /^\d+$/.test(req.body.op) && Number(req.body.op) !== tyre.id) {
+      const other = inv.getTyre(req.body.op);
+      if (other && other.plate_key && other.plate_key === tyre.plate_key) tyre = other;
+    }
+    const r = inv.swapOnto(tyre.id, req.user.id, { eraf: req.body.eraf, locatie: req.body.locatie });
     if (r.error) { flash(req, 'err', r.error); return res.redirect(`/bandenhotel/${tyre.id}`); }
     announce(req, 'bandenhotel', { id: tyre.id });
     const on = (tyre.seizoen || 'de').toLowerCase();
+    if (r.eraf === 'geen') {
+      flash(req, 'ok', `De ${/^(zomer|winter)$/.test(on) ? on + 'set' : 'set'} staat nu op de auto. Er gaat niets de opslag in.`);
+      return res.redirect(tyre.customer_id ? `/klant/${tyre.customer_id}` : `/bandenhotel/${tyre.id}`);
+    }
     if (r.off) {
       const offSz = (r.off.seizoen || '').toLowerCase();
       flash(req, 'ok', `Gewisseld: ${on === 'de' ? 'de set' : on + 'banden'} op de auto, de ${/^(zomer|winter)$/.test(offSz) ? offSz + 'set' : 'andere set'} ligt nu in ${r.off.locatie || 'de opslag'}. Werk het profiel bij als dat nodig is.`);
       return res.redirect(`/bandenhotel/${r.off.id}`);
     }
     flash(req, 'ok', `De ${/^(zomer|winter)$/.test(on) ? on + 'set' : 'set'} staat nu op de auto. Vul hieronder de banden in die eraf kwamen (die gaan de opslag in).`);
-    res.redirect(`/bandenhotel/nieuw?van=${tyre.id}`);
+    res.redirect(`/bandenhotel/nieuw?van=${tyre.id}${r.locatie ? '&locatie=' + encodeURIComponent(r.locatie) : ''}`);
   });
   // Gebeld/uitgenodigd om te komen wisselen (aan/uit).
   app.post('/bandenhotel/:id/gebeld', (req, res) => {

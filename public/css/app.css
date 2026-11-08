@@ -1269,3 +1269,29 @@ form[role="search"].is-searching input[name="q"] {
 .fx-why[hidden] { display: none; }
 .fx-replay { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; margin: .6rem 0 0; }
 .server-url kbd { font: inherit; font-size: .8em; padding: 0 .3em; border: 1px solid var(--border); border-radius: 3px; }
+
+/* ---------- Wisselen: kiezen welke banden erop gaan en welke eraf komen ---------- */
+.swap-dialog { width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 32px); padding: 0; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--text); box-shadow: 0 30px 80px rgba(0, 0, 0, .45); }
+.swap-dialog::backdrop { background: rgba(10, 12, 16, .55); }
+.swap-dialog .swap-form { padding: 1.1rem 1.2rem 1rem; }
+.swap-form h1 { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; font-size: 1.35rem; margin: 0 0 .1rem; }
+.swap-plate .plate { font-size: 22px; }
+.swap-form > p.muted { margin: 0 0 .6rem; }
+.swap-step { border: 0; margin: .8rem 0 0; padding: 0; min-width: 0; }
+.swap-step[hidden] { display: none; }
+.swap-step legend { font-weight: 600; margin-bottom: .4rem; padding: 0; }
+.swap-n { display: inline-grid; place-items: center; width: 1.45em; height: 1.45em; margin-right: .35rem; border-radius: 50%; background: var(--primary); color: #fff; font-size: .8em; }
+.swap-choice { display: flex; gap: .65rem; align-items: flex-start; padding: .55rem .7rem; margin-top: .35rem; border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-size: .95rem; cursor: pointer; background: var(--surface); }
+.swap-choice[hidden] { display: none; }
+.swap-choice:hover { border-color: var(--muted); }
+.swap-choice:has(input:checked) { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); background: color-mix(in srgb, var(--primary) 7%, var(--surface)); }
+.swap-choice input { margin-top: .25rem; flex: 0 0 auto; accent-color: var(--primary); }
+.swap-choice .cap { display: inline-block; }
+.swap-choice .cap::first-letter { text-transform: uppercase; }
+.swap-step input[name="locatie"] { display: block; width: 100%; box-sizing: border-box; padding: .5rem .65rem; font: inherit; color: var(--text);
+  background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; }
+.swap-step > p.muted { margin: .3rem 0 0; }
+.swap-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1.1rem; }
+@media (max-width: 760px) { .swap-dialog .swap-form { padding: .9rem .9rem .8rem; } .swap-actions .btn { flex: 1 1 auto; } }

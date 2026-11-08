@@ -69,10 +69,7 @@
               <input type="hidden" name="_csrf" value="<%= csrf %>">
               <button class="btn btn-small <%= i.match.uitgenodigd_at ? 'btn-ok' : '' %>" type="submit" title="<%= i.match.uitgenodigd_at ? 'Gebeld op ' + fmtDate(i.match.uitgenodigd_at) + ' (klik om te wissen)' : 'Markeer als gebeld / uitgenodigd' %>"><%= i.match.uitgenodigd_at ? '✓ ' + fmtDate(i.match.uitgenodigd_at) : 'Gebeld' %></button>
             </form>
-            <form method="post" action="/bandenhotel/<%= i.match.id %>/wissel" class="inline" data-confirm="Wisselen bij <%= i.naam || i.kenteken %>?&#10;&#10;De <%= (i.match.seizoen || '').toLowerCase() %>banden gaan op de auto, de banden die er nu op staan gaan de opslag in.">
-              <input type="hidden" name="_csrf" value="<%= csrf %>">
-              <button class="btn btn-small btn-primary" type="submit" title="Klant is er: deze set op de auto, de andere de opslag in">Wisselen</button>
-            </form>
+            <a class="btn btn-small btn-primary" href="/bandenhotel/<%= i.match.id %>/wissel" data-swap title="Klant is er: kiezen welke banden erop gaan en welke eraf komen">Wisselen</a>
           </td>
           <% } else { %><td class="why"><%= i.reden %></td><% } %>
         </tr>

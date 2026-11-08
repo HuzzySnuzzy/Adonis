@@ -1,0 +1,65 @@
+<%- include('/partials/head') %>
+<%
+  const mm = (v) => (v === null || v === undefined || v === '') ? '' : String(v).replace('.', ',');
+  const naam = (t) => t.seizoen ? t.seizoen.toLowerCase() + 'banden' : 'banden';
+  const desc = (t) => [t.maat, t.merk, (t.profiel_voor !== null && t.profiel_voor !== undefined) || (t.profiel_achter !== null && t.profiel_achter !== undefined) ? 'profiel ' + [mm(t.profiel_voor), mm(t.profiel_achter)].filter(Boolean).join(' / ') + ' mm' : '', t.locatie ? 'ligt in ' + t.locatie : '', t.label && t.label.length <= 14 ? 'label ' + t.label : ''].filter(Boolean).join(' · ');
+  // Niets vastgelegd op de auto, maar er ligt precies één set van het andere seizoen: die zat er vrijwel zeker op.
+  const opposite = (t) => seasonClass(t.seizoen) && seasonClass(tyre.seizoen) && ['winter', 'zomer'].includes(seasonClass(t.seizoen)) && seasonClass(t.seizoen) !== seasonClass(tyre.seizoen);
+  const guess = !onCar ? stored.filter((t) => t.id !== tyre.id && opposite(t)) : [];
+  const preset = onCar ? String(onCar.id) : guess.length === 1 ? String(guess[0].id) : 'nieuw';
+%>
+<main class="page narrow swap-page">
+  <form method="post" action="/bandenhotel/<%= tyre.id %>/wissel"  class="swap-form">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <h1>Wisselen<% if (tyre.kenteken) { %> <span class="swap-plate"><%- include('/partials/plate', { kenteken: tyre.kenteken }) %></span><% } %></h1>
+    <p class="muted small"><%= tyre.klant_naam || '' %><%= tyre.klant_naam && tyre.auto ? ' · ' : '' %><%= tyre.auto || '' %></p>
+
+    <fieldset class="swap-step">
+      <legend><span class="swap-n">1</span> Welke banden gaan <b>óp</b> de auto?</legend>
+      <% for (const t of stored) { %>
+      <label class="swap-choice">
+        <input type="radio" name="op" value="<%= t.id %>" <%= t.id === tyre.id ? 'checked' : '' %>>
+        <span><b class="cap"><%= naam(t) %></b><% if (t.seizoen) { %> <span class="season season-<%= seasonClass(t.seizoen) %>"><%= t.seizoen %></span><% } %><br><span class="muted small"><%= desc(t) || 'geen details' %></span></span>
+      </label>
+      <% } %>
+    </fieldset>
+
+    <fieldset class="swap-step">
+      <legend><span class="swap-n">2</span> Welke banden komen <b>eraf</b>?</legend>
+      <% if (onCar) { %>
+      <label class="swap-choice">
+        <input type="radio" name="eraf" value="<%= onCar.id %>" <%= preset === String(onCar.id) ? 'checked' : '' %>>
+        <span><b class="cap">De <%= naam(onCar) %> die nu op de auto staan</b><br><span class="muted small"><%= desc(onCar) || 'zoals vastgelegd' %></span></span>
+      </label>
+      <% } %>
+      <% for (const t of stored) { %>
+      <label class="swap-choice" data-eraf-for="<%= t.id %>"<%- t.id === tyre.id ? ' hidden' : '' %>>
+        <input type="radio" name="eraf" value="<%= t.id %>" <%= t.id === tyre.id ? 'disabled' : '' %> <%= preset === String(t.id) ? 'checked' : '' %>>
+        <span><b class="cap">De <%= naam(t) %> die als "in opslag" staan</b><br><span class="muted small">Die zaten dus eigenlijk op de auto<%= desc(t) ? ' · ' + desc(t) : '' %></span></span>
+      </label>
+      <% } %>
+      <label class="swap-choice">
+        <input type="radio" name="eraf" value="nieuw" <%= preset === 'nieuw' ? 'checked' : '' %>>
+        <span><b>Andere banden</b><br><span class="muted small">Nog niet in ADONIS: na het wisselen vult u ze in (seizoen, maat, profiel)</span></span>
+      </label>
+      <label class="swap-choice">
+        <input type="radio" name="eraf" value="geen">
+        <span><b>Niets de opslag in</b><br><span class="muted small">De klant neemt de oude banden mee, of ze gaan weg</span></span>
+      </label>
+    </fieldset>
+
+    <fieldset class="swap-step" data-swap-locatie>
+      <legend><span class="swap-n">3</span> Waar gaan de banden die eraf komen liggen?</legend>
+      <input name="locatie" list="swapLocaties" value="<%= tyre.locatie || '' %>" placeholder="bijv. Bunker" autocomplete="off">
+      <datalist id="swapLocaties"><% for (const l of locaties) { %><option value="<%= l %>"><% } %></datalist>
+      <p class="muted small">Standaard de plek die net vrijkomt<%= tyre.locatie ? ' (' + tyre.locatie + ')' : '' %>.</p>
+    </fieldset>
+
+    <div class="swap-actions">
+      <a class="btn" href="<%= back %>" data-swap-cancel>Annuleren</a>
+      <button class="btn btn-primary" type="submit">Wisselen</button>
+    </div>
+  </form>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

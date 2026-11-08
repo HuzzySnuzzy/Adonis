@@ -40,8 +40,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   formulier voor de set die je inslaat (auto en maat staan al ingevuld, seizoen omgedraaid). Een klant uit het
   bandenhotel komt automatisch op de **Klanten**-pagina (op kenteken; bestaande klantgegevens worden niet overschreven,
   alleen lege velden aangevuld), en op de klantpagina staan zijn banden.
-  Per klant zie je ook welke banden **op de auto** staan (vastleggen op de klantpagina). **Wisselen** zet de set uit
-  de opslag op de auto en legt de set die eraf komt op dezelfde plek in de opslag. De **Wissellijst** toont wie moet
+  Per klant zie je ook welke banden **op de auto** staan (vastleggen op de klantpagina). **Wisselen** opent een venster:
+  welke set gaat erop, welke komt eraf (de vastgelegde set, een set die als "in opslag" stond maar eigenlijk op de auto
+  zat, nog onbekende banden, of niets) en waar die gaat liggen (standaard de plek die vrijkomt). De **Wissellijst** toont wie moet
   komen wisselen: klanten met banden van het komende seizoen in opslag die daar nog niet op rijden (van half september
   t/m januari naar winter, anders naar zomer; ook handmatig te kiezen). Nog niet gebelde klanten en het slechtste profiel
   op de auto staan bovenaan; met **Gebeld** houd je bij wie al is uitgenodigd. Afdrukken kan ook.

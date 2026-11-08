@@ -147,10 +147,7 @@
     <% if (needsSwap) { %>
     <div class="swap-hint">
       <span>Komende wissel: <b><%= match.seizoen.toLowerCase() %>banden</b> liggen klaar in <%= match.locatie || 'de opslag' %><%= match.label && match.label.length <= 12 ? ' (label ' + match.label + ')' : '' %>.<%= match.uitgenodigd_at ? ' Gebeld op ' + fmtDate(match.uitgenodigd_at) + '.' : '' %></span>
-      <form method="post" action="/bandenhotel/<%= match.id %>/wissel" class="inline" data-confirm="Wisselen?&#10;&#10;De <%= match.seizoen.toLowerCase() %>banden gaan op de auto. De banden die er nu op staan gaan de opslag in (<%= match.locatie || 'op dezelfde plek' %>).">
-        <input type="hidden" name="_csrf" value="<%= csrf %>">
-        <button class="btn btn-small btn-primary" type="submit">Wisselen</button>
-      </form>
+      <a class="btn btn-small btn-primary" href="/bandenhotel/<%= match.id %>/wissel" data-swap>Wisselen</a>
     </div>
     <% } %>
     <div id="live-customer-tyres" data-live>

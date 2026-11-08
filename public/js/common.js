@@ -21,6 +21,62 @@ document.querySelectorAll('[data-server-url]').forEach((el) => { el.textContent 
 document.querySelectorAll('form[action="/login"]').forEach((f) => f.addEventListener('submit', () => {
   try { sessionStorage.setItem('adonis-boot-after-login', '1'); } catch { /* geen opslag */ }
 }));
+// Wisselen: venster om te kiezen welke banden erop gaan en welke eraf komen.
+// Zonder JavaScript opent dezelfde keuze als gewone pagina.
+(function () {
+  function sync(form) {
+    const op = form.querySelector('input[name="op"]:checked');
+    const opId = op ? op.value : '';
+    form.querySelectorAll('[data-eraf-for]').forEach((lab) => {
+      const same = lab.dataset.erafFor === opId;
+      const input = lab.querySelector('input');
+      lab.hidden = same;
+      input.disabled = same;
+      if (same && input.checked) {
+        input.checked = false;
+        const fallback = form.querySelector('input[name="eraf"]:not([disabled])');
+        if (fallback) fallback.checked = true;
+      }
+    });
+    const eraf = form.querySelector('input[name="eraf"]:checked');
+    const loc = form.querySelector('[data-swap-locatie]');
+    if (loc) loc.hidden = !!eraf && eraf.value === 'geen';
+  }
+  document.addEventListener('change', (e) => {
+    const form = e.target.closest('form.swap-form');
+    if (form) sync(form);
+  });
+  document.querySelectorAll('form.swap-form').forEach(sync);
+
+  let dlg = null;
+  document.addEventListener('click', async (e) => {
+    const link = e.target.closest('a[data-swap]');
+    if (!link || e.ctrlKey || e.metaKey || e.shiftKey || !window.HTMLDialogElement) return;
+    e.preventDefault();
+    try {
+      const res = await fetch(link.href, { credentials: 'same-origin' });
+      if (!res.ok || res.redirected) throw new Error();
+      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      const form = doc.querySelector('form.swap-form');
+      if (!form) throw new Error();
+      if (!dlg) {
+        dlg = document.createElement('dialog');
+        dlg.className = 'swap-dialog';
+        dlg.addEventListener('click', (ev) => { if (ev.target === dlg) dlg.close(); }); // klik naast het venster
+        document.body.append(dlg);
+      }
+      dlg.replaceChildren(document.importNode(form, true));
+      const f = dlg.querySelector('form');
+      sync(f);
+      f.querySelector('[data-swap-cancel]').addEventListener('click', (ev) => { ev.preventDefault(); dlg.close(); });
+      dlg.showModal();
+      const first = f.querySelector('input[name="eraf"]:checked') || f.querySelector('button[type=submit]');
+      if (first) first.focus();
+    } catch {
+      window.location.href = link.href; // dan maar als gewone pagina
+    }
+  });
+})();
 // Klikbare tabelrijen
 document.addEventListener('click', (e) => {
   const row = e.target.closest('tr[data-href]');

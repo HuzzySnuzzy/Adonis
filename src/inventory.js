@@ -306,29 +306,41 @@ function onCarFor(pk, exceptId) {
   return db.prepare("SELECT * FROM tyre_storage WHERE plate_key = ? AND soort = 'klant' AND status = 'op_auto' AND id <> ? ORDER BY datum_uit DESC, id DESC").get(pk, exceptId || 0);
 }
 /**
- * Wisselen: deze opgeslagen set gaat op de auto. De set die er nu op staat (als ADONIS die kent) gaat de opslag in,
- * op de plek die net vrijkwam. Geeft { off } terug: de set die eraf kwam (of null als die nog niet bekend was).
+ * Wisselen: deze opgeslagen set gaat op de auto. Wat eraf komt (opties.eraf):
+ *   (niet opgegeven) de set die volgens ADONIS op de auto staat, als die bekend is;
+ *   <id>    een bepaalde set van deze klant (bijv. een set die als "in opslag" stond maar eigenlijk op de auto zat);
+ *   'nieuw' banden die ADONIS nog niet kent (daarna invullen);
+ *   'geen'  niets de opslag in (de klant neemt ze mee / ze gaan weg).
+ * De set die eraf komt gaat naar opties.locatie, anders naar de plek die net vrijkwam.
+ * Wat verder nog als "op de auto" stond, klopt niet meer en wordt uitgegeven.
  */
-function swapOnto(id, userId) {
+function swapOnto(id, userId, opts = {}) {
   const t = db.prepare('SELECT * FROM tyre_storage WHERE id = ?').get(id);
   if (!t || t.status !== 'opgeslagen') return { error: 'Deze set staat niet in de opslag.' };
-  const off = onCarFor(t.plate_key, t.id);
+  const eraf = opts.eraf === undefined || opts.eraf === null || opts.eraf === '' ? 'auto' : String(opts.eraf);
+  let off = null;
+  if (eraf === 'auto') off = onCarFor(t.plate_key, t.id);
+  else if (/^\d+$/.test(eraf)) {
+    off = db.prepare('SELECT * FROM tyre_storage WHERE id = ?').get(Number(eraf));
+    if (!off || off.id === t.id || off.plate_key !== t.plate_key || !t.plate_key) return { error: 'Die set hoort niet bij deze auto.' };
+  } else if (!['nieuw', 'geen'].includes(eraf)) return { error: 'Kies welke banden eraf komen.' };
+  const locatie = String(opts.locatie || '').trim().slice(0, 80) || t.locatie || (off && off.locatie) || '';
   db.exec('BEGIN');
   try {
     setTyreStatus(t.id, 'op_auto', userId);
     if (off) {
       setTyreStatus(off.id, 'opgeslagen', userId);
-      if (t.locatie) db.prepare('UPDATE tyre_storage SET locatie = ? WHERE id = ?').run(t.locatie, off.id);
-      // Overige banden die nog als "op de auto" stonden, kloppen niet meer.
-      db.prepare("UPDATE tyre_storage SET status = 'uitgegeven', datum_uit = ? WHERE plate_key = ? AND soort = 'klant' AND status = 'op_auto' AND id NOT IN (?, ?)")
-        .run(orders.todayISO(), t.plate_key, t.id, off.id);
+      db.prepare('UPDATE tyre_storage SET locatie = ? WHERE id = ?').run(locatie, off.id);
     }
+    // Wat verder nog als "op de auto" stond, klopt niet meer (bij "nieuw"/"geen" ook de oude registratie).
+    db.prepare("UPDATE tyre_storage SET status = 'uitgegeven', datum_uit = ? WHERE plate_key = ? AND soort = 'klant' AND status = 'op_auto' AND id NOT IN (?, ?)")
+      .run(orders.todayISO(), t.plate_key, t.id, off ? off.id : 0);
     db.exec('COMMIT');
   } catch (err) {
     if (db.isTransaction) db.exec('ROLLBACK');
     throw err;
   }
-  return { tyre: t, off: off ? { ...off, locatie: t.locatie || off.locatie } : null };
+  return { tyre: t, eraf: off ? 'set' : eraf === 'auto' ? 'nieuw' : eraf, locatie, off: off ? { ...off, locatie } : null };
 }
 /** Vastleggen wat er nu op de auto staat (snel, vanaf de klantpagina). Werkt de bekende set bij of maakt er een. */
 function setOnCar(customer, fields, userId) {

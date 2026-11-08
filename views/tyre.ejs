@@ -13,7 +13,7 @@
     <% if (tyre) { const post = (action, label, cls, hidden = {}, title = '', confirm = '') => `<form method="post" action="/bandenhotel/${tyre.id}/${action}" class="inline"${confirm ? ` data-confirm="${esc(confirm)}"` : ''}><input type="hidden" name="_csrf" value="${csrf}">${Object.entries(hidden).map(([k, v]) => `<input type="hidden" name="${k}" value="${v}">`).join('')}<button class="btn ${cls}" type="submit"${title ? ` title="${esc(title)}"` : ''}>${label}</button></form>`; %>
     <div class="actions">
       <% if (tyre.status === 'opgeslagen' && tyre.soort === 'klant') { %>
-        <%- post('wissel', 'Wisselen: op de auto zetten', 'btn-primary', {}, 'Deze set gaat op de auto; de set die eraf komt gaat de opslag in, op deze plek', `Wisselen?\n\nDeze ${tyre.seizoen ? tyre.seizoen.toLowerCase() + 'banden gaan' : 'banden gaan'} op de auto. De banden die er nu op staan gaan de opslag in (${tyre.locatie || 'op deze plek'}).`) %>
+        <a class="btn btn-primary" href="/bandenhotel/<%= tyre.id %>/wissel" data-swap title="Kiezen welke banden erop gaan en welke eraf komen">Wisselen: op de auto zetten</a>
         <%- post('gebeld', tyre.uitgenodigd_at ? '✓ Gebeld' : 'Gebeld', tyre.uitgenodigd_at ? 'btn-ok' : '', {}, 'Klant gebeld / uitgenodigd om te komen wisselen') %>
         <%- post('status', 'Uitgeven (weg)', 'btn-ghost', { status: 'uitgegeven' }, 'De klant neemt de banden mee en ze komen niet terug', 'Deze banden als uitgegeven markeren?\n\nGebruik dit alleen als de klant de banden meeneemt en ze niet terugkomen. Gaan ze op de auto? Kies dan "Wisselen".') %>
       <% } else if (tyre.status === 'opgeslagen') { %>
