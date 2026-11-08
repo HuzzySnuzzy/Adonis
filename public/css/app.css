@@ -1546,3 +1546,98 @@ details.bl-item[open] > summary::after { content: "▴"; }
 @media (prefers-reduced-motion: reduce) { .start-new, .start-stat, .start-page .start-tile { transition: none; } }
 /* ADONIS-app: terugknop in de menubalk (de app heeft geen adresbalk) */
 .app-back { margin-right: -.3rem; }
+
+/* ===== AI-icoon ===== */
+.ai-ico { vertical-align: -.22em; flex: none; }
+h1 .ai-ico { width: 1.05em; height: 1.05em; color: var(--hue, #e2557a); }
+
+/* ===== AI-analyse ===== */
+.va-pick { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .7rem 1rem; }
+.va-pick .field { flex: 1 1 240px; margin: 0; }
+.va-or { padding-bottom: .65rem; }
+.va-car-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: .8rem; }
+.va-car-head h2 { margin: 0 0 .2rem; }
+.va-car-head p { margin: .1rem 0; }
+.va-status { margin-top: .6rem; }
+.va-specs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .6rem; margin-top: 1rem; }
+.va-specs > div { display: flex; flex-direction: column; gap: .1rem; padding: .55rem .7rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+.va-summary { font-size: 1.05rem; line-height: 1.55; margin: 1rem 0 0; }
+.va-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; margin: 1rem 0; }
+.va-grid h3 { font-size: .95rem; margin: .8rem 0 .2rem; }
+.va-grid p { margin: 0; line-height: 1.5; }
+.va-dl { display: grid; grid-template-columns: minmax(110px, max-content) 1fr; gap: .4rem .9rem; margin: 0; }
+.va-dl dt { font-weight: 700; }
+.va-dl dd { margin: 0; }
+.va-h { margin: 1.4rem 0 .6rem; }
+.va-point { display: block; }
+.va-point p { margin: 0; }
+.va-point .va-text { margin: .25rem 0 0 1.15rem; line-height: 1.5; }
+.va-zone.va-flash { animation: va-flash 1.2s ease-out; }
+@keyframes va-flash { 0% { box-shadow: 0 0 0 4px rgba(56, 220, 255, .7); } 100% { box-shadow: 0 0 0 4px rgba(56, 220, 255, 0); } }
+.va-sources ul, .va-recent-list { margin: .3rem 0 .6rem; padding-left: 1.1rem; line-height: 1.7; }
+.va-empty { text-align: center; }
+.va-page .card + .card, .va-page .bl-boxes + .card { margin-top: 1rem; }
+
+/* Het röntgenbeeld is altijd donker (zoals een echte röntgenfoto), ook in een licht thema. */
+.holo { --h-line: #5fe3ff; --h-dim: rgba(95, 227, 255, .35); --h-glow: rgba(56, 220, 255, .55);
+  position: relative; margin: 0; padding: .6rem .6rem .8rem; border-radius: 16px; overflow: hidden; color: #d8f7ff;
+  background: radial-gradient(ellipse at 50% 45%, #0f3346 0%, #08192a 55%, #050e18 100%);
+  box-shadow: inset 0 0 0 1px rgba(95, 227, 255, .25), inset 0 0 60px rgba(56, 220, 255, .12); }
+.holo svg { display: block; width: 100%; height: auto; }
+.holo .h-grid { fill: none; stroke: rgba(95, 227, 255, .07); stroke-width: 1; }
+.holo .h-car { filter: drop-shadow(0 0 6px var(--h-glow)); }
+.holo .h-body { fill: rgba(95, 227, 255, .06); stroke: var(--h-line); stroke-width: 2.5; }
+.holo .h-glass { fill: rgba(95, 227, 255, .14); stroke: var(--h-dim); stroke-width: 1.5; }
+.holo .h-roof { fill: none; stroke: var(--h-dim); stroke-width: 1.5; stroke-dasharray: 6 6; }
+.holo .h-axle { stroke: var(--h-dim); stroke-width: 4; }
+.holo .h-axle.driven { stroke: #ffd36e; stroke-width: 6; filter: drop-shadow(0 0 5px rgba(255, 200, 80, .8)); }
+.holo .h-shaft { stroke: #ffd36e; stroke-width: 5; stroke-dasharray: 10 6; }
+.holo .h-diff { fill: #2a2410; stroke: #ffd36e; stroke-width: 3; }
+.holo .h-wheel { fill: rgba(5, 14, 24, .85); stroke: var(--h-line); stroke-width: 2.5; }
+.holo .h-disc { fill: none; stroke: var(--h-dim); stroke-width: 2; }
+.holo .driven-wheels .h-wheel { stroke: #ffd36e; }
+.holo .h-seat { fill: rgba(95, 227, 255, .1); stroke: var(--h-dim); stroke-width: 1.5; }
+.holo .h-dash { fill: rgba(95, 227, 255, .2); stroke: none; }
+.holo .h-engine rect { fill: rgba(255, 120, 90, .14); stroke: #ff8a6b; stroke-width: 2.5; }
+.holo .h-engine circle { fill: none; stroke: #ff8a6b; stroke-width: 2; }
+.holo .h-light { fill: #fff6c8; filter: drop-shadow(0 0 6px #fff1a0); }
+.holo .h-light.rear { fill: #ff4d5e; filter: drop-shadow(0 0 6px #ff4d5e); }
+.holo .h-pointer { cursor: pointer; outline: none; }
+.holo .h-hit { fill: transparent; }
+.holo .h-pointer:focus-visible .h-hit { stroke: var(--p, var(--h-line)); stroke-width: 2; }
+.holo .h-lead { fill: none; stroke: var(--p, var(--h-line)); stroke-width: 1.6; opacity: .85; }
+.holo .h-dot { fill: var(--p, var(--h-line)); stroke: #050e18; stroke-width: 2; }
+.holo .h-label { fill: var(--p, var(--h-line)); font: 700 19px system-ui, sans-serif; letter-spacing: .02em; paint-order: stroke; stroke: #050e18; stroke-width: 5px; }
+.holo .h-pointer.sev-let-op { --p: #ffc94d; }
+.holo .h-pointer.sev-hoog { --p: #ff5c6c; }
+.holo .h-pointer.is-empty { opacity: .45; }
+.holo .h-pointer:hover, .holo .h-pointer:focus-visible, .holo .h-pointer.is-hot { opacity: 1; }
+.holo .h-pointer:hover .h-dot, .holo .h-pointer:focus-visible .h-dot, .holo .h-pointer.is-hot .h-dot { r: 11; }
+.holo .h-pointer:hover .h-lead, .holo .h-pointer:focus-visible .h-lead, .holo .h-pointer.is-hot .h-lead { stroke-width: 3; opacity: 1; }
+.holo .h-pointer.sev-hoog .h-dot { animation: h-ping 1.6s ease-in-out infinite; }
+@keyframes h-ping { 50% { r: 10; } }
+.holo-tags { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; margin-top: .3rem; }
+.holo-tags span { padding: .15rem .6rem; border: 1px solid rgba(95, 227, 255, .4); border-radius: 999px; font-size: .85rem; background: rgba(95, 227, 255, .08); display: inline-block; }
+.holo-tags span::first-letter { text-transform: uppercase; }
+.holo-tags .holo-scanmsg { border-style: dashed; color: #9fdcec; }
+/* Verschijnen + scannen */
+.holo .h-car { animation: h-appear 1.1s ease-out both; }
+.holo .h-pointer { animation: h-appear .5s ease-out both; animation-delay: .9s; }
+@keyframes h-appear { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.holo.is-scanning .h-car { opacity: .75; animation: h-flicker 2.4s ease-in-out infinite; }
+@keyframes h-flicker { 50% { opacity: .45; } }
+.holo.is-scanning::after { content: ''; position: absolute; top: 0; bottom: 0; left: -20%; width: 18%; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(95, 227, 255, .28), transparent); border-right: 2px solid rgba(95, 227, 255, .8);
+  animation: h-scan 2.6s linear infinite; }
+@keyframes h-scan { to { left: 105%; } }
+.holo:not(.is-scanning) .driven-wheels .h-wheel { animation: h-drive 2s ease-in-out infinite; }
+@keyframes h-drive { 50% { stroke-width: 4; } }
+@media (prefers-reduced-motion: reduce) {
+  .holo *, .holo::after, .va-zone.va-flash { animation: none !important; }
+  .holo.is-scanning .h-car { opacity: .7; }
+}
+@media (max-width: 640px) { .holo .h-label { font-size: 24px; } .va-dl { grid-template-columns: 1fr; } .va-dl dd { margin-bottom: .4rem; } }
+@media print { .holo { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .va-pick, [data-va-start] { display: none; } }
+
+.va-link { margin: .6rem 0; }
+:root[data-fx="calm"] .holo *, :root[data-fx="calm"] .holo::after { animation: none !important; }

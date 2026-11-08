@@ -101,15 +101,20 @@
   <section class="card help-sec" id="aandachtspunten">
     <h2>Aandachtspunten van Claude</h2>
     <ol class="help-steps">
-      <li>Open een klant en klik bij <b>Aandachtspunten</b> op <%- B('✨ Analyseren met Claude') %>.</li>
+      <li>Open een klant en klik bij <b>Aandachtspunten</b> op <%- B(include('/partials/ai-icon') + ' Analyseren met Claude') %>.</li>
       <li>Kies hoeveel moeite Claude mag doen. U ziet vooraf ongeveer wat het kost. <b>Normaal</b> is meestal goed.</li>
       <li>Claude leest alle werkopdrachten van die auto en zet hier alleen wat belangrijk is voor een volgend bezoek
         (bijv. een gebruikte accu, iets wat de klant nog niet wilde laten doen, gewijzigde codering).</li>
       <li>Gecontroleerd of opgelost? Klik op <%- B('✓ Afgehandeld') %>. De punten staan ook bovenaan de werkopdrachten van die auto.</li>
     </ol>
     <p class="help-tip"><b>APK-aandachtspunten voor het model:</b> klap het vak <i>APK-aandachtspunten</i> open en klik op
-      <%- B('✨ Opzoeken met Claude') %>. Claude zoekt op internet waar dit model bekend om staat (roest, gordels, ophanging…), met bronnen.
+      <%- B(include('/partials/ai-icon') + ' Opzoeken met Claude') %>. Claude zoekt op internet waar dit model bekend om staat (roest, gordels, ophanging…), met bronnen.
       Dat gebeurt één keer per model en bouwjaar; andere klanten met dezelfde auto zien het ook.</p>
+    <p class="help-tip"><b>AI-analyse (röntgenbeeld):</b> klik op het startscherm op <i>AI-analyse</i> (of bij een klant op
+      <%- B(include('/partials/ai-icon') + ' AI-analyse van deze auto') %>). Kies een kenteken of beschrijf de auto, klik op
+      <%- B('Onderzoeken met Claude') %> en kies de inspanning. Claude zoekt alles op: motor, aandrijving, rijgedrag en comfort,
+      originele banden, onderhoud, bekende problemen en APK-punten. Daarna ziet u een röntgenbeeld van de auto met de motor en
+      aangedreven wielen op de juiste plek; klik op een wijzer (bijv. <i>Remmen</i>) om de details te zien.</p>
     <p class="help-tip">Zoeken in werkopdrachten vindt ook woorden die hetzelfde betekenen: <i>lampen</i> vindt ook <i>dagrijverlichting</i>.
       Bij <a href="/zoekwoorden">Zoekwoorden</a> kunt u zelf woorden toevoegen.</p>
   </section>

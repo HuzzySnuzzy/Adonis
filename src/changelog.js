@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.30.0', date: '2026-11-08', title: 'AI-analyse: een röntgenfoto van een auto',
+    items: [
+      'Nieuw op het startscherm: AI-analyse. Kies een kenteken of klant (of beschrijf de auto) en Claude zoekt alles over die auto op: motor, aandrijving, rijgedrag en comfort, verbruik, originele banden, onderhoud, bekende problemen en APK-punten, met bronnen.',
+      'Daarna verschijnt een röntgenbeeld van de auto met de juiste indeling (motor voor, midden of achter; voor-, achter- of vierwielaandrijving) en wijzers naar banden, remmen, onderstel, interieur, verlichting, motor en meer. Klik op een wijzer voor de details.',
+      'Bij elke klant staat een knop "AI-analyse van deze auto".',
+      'Claude-knoppen hebben een eigen AI-icoon in plaats van de sterretjes.',
+    ],
+  },
+  {
     version: '1.29.2', date: '2026-11-08', title: 'Nieuwe gebruikers beginnen eenvoudig',
     items: [
       'Nieuwe gebruikers krijgen standaard de eenvoudige weergave (startscherm met grote knoppen). Bij Gebruikers kunt u het vinkje "Eenvoudige weergave" uitzetten bij het aanmaken; later wijzigen kan ook.',

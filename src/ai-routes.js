@@ -2,7 +2,7 @@
 /**
  * Claude-functies met kostenschatting vooraf (aandachtspunten per klant) en de zoekwoorden.
  */
-const { db } = require('./db');
+const { db, plateKey } = require('./db');
 const auth = require('./auth');
 const ai = require('./ai');
 const events = require('./events');
@@ -10,6 +10,8 @@ const importer = require('./import');
 const bulletins = require('./bulletins');
 const synonyms = require('./synonyms');
 const modelBulletins = require('./model-bulletins');
+const vehicle = require('./vehicle-analysis');
+const rdw = require('./rdw');
 
 module.exports = function register(app, { flash, wrap }) {
   const wantsJson = (req) => (req.get('accept') || '').includes('application/json');
@@ -53,6 +55,11 @@ module.exports = function register(app, { flash, wrap }) {
       const n = modelBulletins.customersWith(m.key);
       detail = `Bekende zwakke plekken en APK-afkeurpunten van de ${m.label} opzoeken op internet, met bronnen.`
         + (n > 1 ? ` Het resultaat geldt voor alle ${n} klanten met deze auto.` : ' Het resultaat geldt ook voor latere klanten met dezelfde auto.');
+    } else if (taak === 'voertuig') {
+      const k = vehicle.keyFor({ kenteken: req.query.kenteken, omschrijving: req.query.omschrijving });
+      if (!k) return res.status(400).json({ error: 'Vul een kenteken of een omschrijving van de auto in.' });
+      levels = vehicle.estimate();
+      detail = 'Claude zoekt op internet alles over deze auto op: motor en aandrijving, rijgedrag en comfort, originele banden, onderhoud, bekende problemen en APK-punten, met bronnen.';
     } else if (taak === 'apk-modellen') {
       const todo = modelBulletins.missingModels(apkCustomers(req));
       if (!todo.length) return res.status(400).json({ error: 'Alle automodellen in deze lijst zijn al opgezocht.' });
@@ -161,6 +168,68 @@ module.exports = function register(app, { flash, wrap }) {
   app.get('/aandachtspunten/taak', (req, res) => {
     const job = bulletins.jobStatus();
     res.json({ job: job && { ...job, eurText: ai.formatEur(job.eur) } });
+  });
+
+  /* ================= AI-analyse van een voertuig ================= */
+  const INRICHTING = [[/hatch/i, 'hatchback'], [/sedan|saloon/i, 'sedan'], [/station|combi|estate/i, 'stationwagen'], [/mpv/i, 'mpv'],
+    [/terrein|suv/i, 'suv'], [/gesloten opbouw|bestel|kast/i, 'bestelwagen'], [/cabrio/i, 'cabrio'], [/coup/i, 'coupe']];
+  async function vehicleFacts(q) {
+    const kenteken = String(q.kenteken || '').trim().toUpperCase().slice(0, 20);
+    const omschrijving = String(q.omschrijving || '').trim().slice(0, 160);
+    const key = vehicle.keyFor({ kenteken, omschrijving });
+    const pk = plateKey(kenteken);
+    const customer = pk ? db.prepare('SELECT * FROM customers WHERE plate_key = ?').get(pk) : null;
+    let info = null;
+    try { info = customer && customer.rdw_json ? JSON.parse(customer.rdw_json) : null; } catch { /* geen */ }
+    if (!info && pk && require('./plates').rdwApplicable(kenteken)) { try { info = await rdw.lookup(kenteken); } catch { /* RDW onbereikbaar */ } }
+    const found = info && info.found !== false;
+    const facts = { kenteken: kenteken || undefined, omschrijving: omschrijving || undefined };
+    if (found) Object.assign(facts, { merk: info.merk, model: info.handelsbenaming, carrosserie: info.inrichting, eerste_toelating: info.eersteToelating,
+      brandstof: info.brandstof, vermogen_kw: info.vermogenKw, cilinderinhoud_cc: info.cilinderinhoud, massa_leeg_kg: info.massaLeeg, zitplaatsen: info.zitplaatsen, emissie: info.emissie });
+    if (customer && customer.merk_type) facts.merk_type_garage = customer.merk_type;
+    const label = found ? `${info.merk} ${info.handelsbenaming}`.trim() + (info.eersteToelating ? ` (${info.eersteToelating.slice(0, 4)})` : '') : (customer && customer.merk_type) || omschrijving || kenteken;
+    const guess = { carrosserie: (INRICHTING.find(([re]) => re.test((info && info.inrichting) || '')) || [null, 'hatchback'])[1], motor_plaats: 'voor', motor_ligging: 'dwars', aandrijving: 'voor' };
+    return { key, kenteken, omschrijving, customer, info: found ? info : null, facts, label, guess };
+  }
+  const running = new Map(); // key -> { error }
+  app.get('/ai-analyse', wrap(async (req, res) => {
+    const v = (req.query.kenteken || req.query.omschrijving) ? await vehicleFacts(req.query) : null;
+    res.render('ai-analysis', {
+      title: 'AI-analyse', v, result: v ? vehicle.get(v.key) : null, busy: v ? running.has(v.key) : false,
+      recent: vehicle.recent(), ZONES: vehicle.ZONES, aiConfigured: importer.isConfigured(),
+      customers: db.prepare('SELECT kenteken, merk_type FROM customers ORDER BY updated_at DESC LIMIT 400').all(),
+    });
+  }));
+  app.post('/ai-analyse', wrap(async (req, res) => {
+    const v = await vehicleFacts(req.body);
+    if (!v.key) return res.status(400).json({ error: 'Vul een kenteken of een omschrijving van de auto in.' });
+    if (!running.has(v.key)) {
+      running.set(v.key, { error: null });
+      const userId = req.user.id; const by = req.user.name;
+      vehicle.analyze(v, { effort: req.body.effort, userId })
+        .then((r) => {
+          running.delete(v.key);
+          // Bericht voor wie het startte (bij de volgende pagina).
+          lastDone.set(v.key, `Analyse van ${r.label} klaar${r.web ? '' : ' (zonder internetbronnen: web search staat niet aan)'} – kosten ${ai.formatEur(r.eur)}.`);
+          events.broadcast({ type: 'data', area: 'ai-analyse', by, byId: userId });
+        })
+        .catch((err) => {
+          if (!(err instanceof vehicle.VehicleError || err instanceof importer.ImportError)) console.error('AI-analyse:', err);
+          running.set(v.key, { error: err.message || 'Er ging iets mis.' });
+          setTimeout(() => running.delete(v.key), 10 * 60 * 1000).unref();
+        });
+    }
+    res.json({ ok: true, key: v.key });
+  }));
+  const lastDone = new Map();
+  app.get('/ai-analyse/status', (req, res) => {
+    const key = String(req.query.key || '');
+    const r = running.get(key);
+    if (r && r.error) { running.delete(key); return res.json({ done: true, error: r.error }); }
+    if (r) return res.json({ done: false });
+    const msg = lastDone.get(key); lastDone.delete(key);
+    if (msg) flash(req, 'ok', msg);
+    res.json({ done: true });
   });
 
   /* ================= zoekwoorden ================= */

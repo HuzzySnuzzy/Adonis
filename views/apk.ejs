@@ -13,7 +13,7 @@
     <div class="head-buttons">
       <% if (user.is_admin && aiConfigured) { %>
       <button class="btn" type="button" data-ai-task="apk-modellen" data-ai-params="toon=<%= show %>" data-ai-action="/apk/modelpunten" data-ai-bulk
-        data-ai-title="APK-aandachtspunten voor de automodellen in deze lijst">✨ APK-aandachtspunten opzoeken (Claude)</button>
+        data-ai-title="APK-aandachtspunten voor de automodellen in deze lijst"><%- include('/partials/ai-icon') %> APK-aandachtspunten opzoeken (Claude)</button>
       <% } %>
       <button class="btn" type="button" data-print>Afdrukken</button>
     </div>

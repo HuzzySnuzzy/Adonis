@@ -61,6 +61,7 @@
   <% } %>
 
   <%- include('/partials/plate-sites', { plateLinks, kenteken: customer.kenteken }) %>
+  <p class="va-link no-print"><a class="btn btn-small" href="/ai-analyse?kenteken=<%= encodeURIComponent(customer.kenteken) %>"><%- include('/partials/ai-icon') %> AI-analyse van deze auto (röntgenbeeld)</a></p>
   <div id="live-bulletins" class="bl-boxes" data-live>
     <%- include('/partials/bulletins', { bl: bulletinData, aiOn: aiConfigured, customer }) %>
     <%- include('/partials/model-apk', { modelApk, aiOn: aiConfigured, customer }) %>

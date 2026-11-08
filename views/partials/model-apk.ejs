@@ -24,7 +24,7 @@
       <% if (aiOn && !compactView) { %>
       <button class="btn btn-small<%= D ? '' : ' btn-primary' %>" type="button" data-ai-task="model" data-ai-id="<%= customer.id %>"
         data-ai-action="/klant/<%= customer.id %>/apk-model" data-ai-anchor="apk-model" data-ai-busy="Claude zoekt bekende zwakke plekken van de <%= M.label %> op…"
-        data-ai-title="APK-aandachtspunten voor de <%= M.label %>">✨ <%= D ? 'Opnieuw opzoeken' : 'Opzoeken met Claude' %></button>
+        data-ai-title="APK-aandachtspunten voor de <%= M.label %>"><%- include('/partials/ai-icon') %> <%= D ? 'Opnieuw opzoeken' : 'Opzoeken met Claude' %></button>
       <% } else if (compactView) { %><a class="small" href="/klant/<%= customer.id %>#apk-model">Bij de klant bekijken</a><% } %>
     </div>
     <% if (items.length) { %>

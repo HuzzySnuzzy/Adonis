@@ -130,6 +130,13 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   Aandachtspunten en APK-punten staan in **inklapbare vakken** (open/dicht wordt onthouden).
   Op de **APK-lijst** zoekt een knop (beheerders) de punten op voor alle modellen in het getoonde tabblad die nog niet
   zijn opgezocht; per klant staat dan "n APK-punten voor dit model".
+- **AI-analyse (röntgenbeeld van een auto)** (`/ai-analyse`, tegel op het startscherm, knop op de klantpagina): kies een
+  kenteken/klant of beschrijf de auto; Claude zoekt met web search alles op (generatie, motor, plaats/ligging van de motor,
+  FWD/RWD/AWD, rijgedrag en comfort, verbruik, originele banden, olie, bekende problemen en APK-punten, met bronnen).
+  Het resultaat is een hologram/röntgenbeeld van bovenaf (SVG) met de juiste indeling – motor voor/midden/achter, dwars of
+  langs, aangedreven assen – en wijzers naar motor, aandrijving, banden, remmen, onderstel, carrosserie, interieur,
+  verlichting en elektronica (kleur = ernst); klikken opent het vak met details. Opgeslagen per kenteken (of omschrijving),
+  opnieuw onderzoeken kan altijd. Telt niet mee voor de daglimiet van de foto-import.
 - **Inspanning kiezen met kostenschatting:** voor elke Claude-taak (foto-import, Excel-import, aandachtspunten) kiest de
   gebruiker eerst *Snel / Normaal / Grondig* (API-effort low/medium/high) en ziet vooraf een schatting in euro's en de
   duur. De werkelijke kosten staan daarna in de melding en bij Systeem. Aandachtspunten tellen niet mee voor de daglimiet

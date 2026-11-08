@@ -1,0 +1,97 @@
+<%#
+  Röntgen-/hologrambeeld van een auto, van bovenaf, neus naar rechts.
+  Verwacht: v = { carrosserie, motor_plaats, motor_ligging, aandrijving }, zones = { motor: [punten], ... } (optioneel),
+  ZONES = namen per zone, scanning = true terwijl er nog niets bekend is.
+%>
+<%
+  const V = Object.assign({ carrosserie: 'hatchback', motor_plaats: 'voor', motor_ligging: 'dwars', aandrijving: 'voor' }, locals.v || {});
+  const Z = locals.zones || null;
+  const dims = { hatchback: [190, 810, 300], sedan: [140, 860, 300], stationwagen: [140, 860, 300], mpv: [160, 840, 320],
+    suv: [150, 850, 330], bestelwagen: [110, 890, 320], coupe: [150, 850, 285], cabrio: [150, 850, 285] }[V.carrosserie] || [190, 810, 300];
+  const [rear, front, width] = dims; const len = front - rear; const cy = 240; const top = cy - width / 2; const bot = cy + width / 2;
+  const fAx = front - len * 0.19; const rAx = rear + len * 0.18;
+  const boxy = ['bestelwagen', 'stationwagen', 'mpv', 'suv'].includes(V.carrosserie);
+  // Carrosserie: neus rechts iets smaller, achterkant (bij boxy auto's) recht.
+  const nose = 46; const tail = boxy ? 18 : 40;
+  const body = `M ${rear + tail} ${top} L ${front - nose - 40} ${top} Q ${front - 8} ${top + 6} ${front} ${cy - 60} L ${front} ${cy + 60} Q ${front - 8} ${bot - 6} ${front - nose - 40} ${bot} L ${rear + tail} ${bot} Q ${rear} ${bot - 4} ${rear} ${bot - tail - 20} L ${rear} ${top + tail + 20} Q ${rear} ${top + 4} ${rear + tail} ${top} Z`;
+  // Ruiten/cabine
+  const wsX = fAx - (V.carrosserie === 'bestelwagen' ? 40 : 95); const cabRear = V.carrosserie === 'bestelwagen' ? wsX - 150 : boxy ? rear + 70 : rAx + 40;
+  // Motor
+  const eW = V.motor_ligging === 'langs' ? 160 : 100; const eH = V.motor_ligging === 'langs' ? 100 : 175;
+  const eX = V.motor_plaats === 'achter' ? Math.max(rAx - 40, rear + eW / 2 + 16) : V.motor_plaats === 'midden' ? rAx + 125 : fAx + (V.motor_ligging === 'langs' ? -20 : 25);
+  const drivenF = V.aandrijving === 'voor' || V.aandrijving === '4wd'; const drivenR = V.aandrijving === 'achter' || V.aandrijving === '4wd';
+  const shafts = [];
+  if (drivenR && eX > rAx + 60) shafts.push([eX - eW / 2, rAx]);
+  if (drivenF && eX < fAx - 60) shafts.push([eX + eW / 2, fAx]);
+  const wheel = (x, y) => `<rect class="h-wheel" x="${x - 46}" y="${y - 17}" width="92" height="34" rx="10"/><circle class="h-disc" cx="${x}" cy="${y}" r="11"/>`;
+  const seat = (x, y, w = 62, h = 70) => `<rect class="h-seat" x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="12"/>`;
+  // Ankerpunten van de zones (waar de wijzer naartoe gaat)
+  const anchors = {
+    motor: [eX, cy], aandrijving: [drivenR && !drivenF ? rAx : eX + (eX > (rear + front) / 2 ? -eW / 2 - 18 : eW / 2 + 18), drivenR && !drivenF ? cy : cy + eH / 2 - 10],
+    banden: [fAx, top - 2], remmen: [rAx, bot + 2], onderstel: [fAx, bot - 34],
+    carrosserie: [rear + 40, top + 30], interieur: [wsX - 85, cy - 45], verlichting: [front - 14, top + 52], elektronica: [wsX - 22, cy + 40],
+  };
+  // Labels boven en onder, niet over elkaar heen.
+  const zoneKeys = Object.keys(anchors);
+  const labelText = (k) => { const n = Z && Z[k] ? Z[k].length : 0; return ZONES[k].split(' ')[0] + (n ? ` · ${n}` : ''); };
+  const place = (keys, y) => {
+    const items = keys.map((k) => ({ k, ax: anchors[k][0], ay: anchors[k][1], w: labelText(k).length * 10.8 + 14 })).sort((a, b) => a.ax - b.ax);
+    let edge = 6; // vooruit: niet overlappen
+    for (const it of items) { it.lx = Math.max(it.ax, edge + it.w / 2); edge = it.lx + it.w / 2; }
+    edge = 994; // terug: binnen het beeld blijven
+    for (let i = items.length - 1; i >= 0; i--) { const it = items[i]; it.lx = Math.min(it.lx, edge - it.w / 2); edge = it.lx - it.w / 2; }
+    items.forEach((it) => { it.ly = y; });
+    return items;
+  };
+  const labels = [...place(zoneKeys.filter((k) => anchors[k][1] < cy), 'top'), ...place(zoneKeys.filter((k) => anchors[k][1] >= cy), 'bot')];
+  const elbowY = (l) => (l.ly === 'top' ? 46 : 444); const textY = (l) => (l.ly === 'top' ? 34 : 472);
+  const sev = (list) => (list || []).some((p) => p.ernst === 'hoog') ? 'hoog' : (list || []).some((p) => p.ernst === 'let-op') ? 'let-op' : 'info';
+%>
+<figure class="holo<%= locals.scanning ? ' is-scanning' : '' %>" aria-label="Röntgenbeeld van de auto">
+  <svg viewBox="0 0 1000 490" role="img" aria-hidden="<%= Z ? 'false' : 'true' %>">
+    <defs>
+      <pattern id="holoGrid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" class="h-grid"/></pattern>
+    </defs>
+    <rect x="0" y="0" width="1000" height="490" fill="url(#holoGrid)"/>
+    <g class="h-car">
+      <path class="h-body" d="<%= body %>"/>
+      <% /* ruiten */ %>
+      <path class="h-glass" d="M <%= wsX %> <%= top + 34 %> L <%= wsX + 40 %> <%= top + 46 %> L <%= wsX + 40 %> <%= bot - 46 %> L <%= wsX %> <%= bot - 34 %> Z"/>
+      <% if (V.carrosserie !== 'cabrio') { %><rect class="h-roof" x="<%= cabRear %>" y="<%= top + 36 %>" width="<%= wsX - cabRear %>" height="<%= width - 72 %>" rx="18"/><% } %>
+      <% /* assen en wielen */ %>
+      <line class="h-axle<%= drivenF ? ' driven' : '' %>" x1="<%= fAx %>" y1="<%= top - 4 %>" x2="<%= fAx %>" y2="<%= bot + 4 %>"/>
+      <line class="h-axle<%= drivenR ? ' driven' : '' %>" x1="<%= rAx %>" y1="<%= top - 4 %>" x2="<%= rAx %>" y2="<%= bot + 4 %>"/>
+      <% for (const s of shafts) { %><line class="h-shaft" x1="<%= s[0] %>" y1="<%= cy %>" x2="<%= s[1] %>" y2="<%= cy %>"/><circle class="h-diff" cx="<%= s[1] %>" cy="<%= cy %>" r="13"/><% } %>
+      <g class="<%= drivenF ? 'driven-wheels' : '' %>"><%- wheel(fAx, top - 4) %><%- wheel(fAx, bot + 4) %></g>
+      <g class="<%= drivenR ? 'driven-wheels' : '' %>"><%- wheel(rAx, top - 4) %><%- wheel(rAx, bot + 4) %></g>
+      <% /* stoelen */ %>
+      <%- seat(wsX - 85, cy - 55) %><%- seat(wsX - 85, cy + 55) %>
+      <% if (V.motor_plaats !== 'midden' && V.carrosserie !== 'bestelwagen' && !['coupe', 'cabrio'].includes(V.carrosserie)) { %><rect class="h-seat" x="<%= wsX - 215 %>" y="<%= cy - 95 %>" width="70" height="190" rx="14"/><% } %>
+      <rect class="h-dash" x="<%= wsX - 30 %>" y="<%= cy - 110 %>" width="16" height="220" rx="6"/>
+      <% /* motor */ %>
+      <g class="h-engine">
+        <rect x="<%= eX - eW / 2 %>" y="<%= cy - eH / 2 %>" width="<%= eW %>" height="<%= eH %>" rx="12"/>
+        <% const cylN = 4; for (let i = 0; i < cylN; i++) { const along = V.motor_ligging === 'langs'; %>
+        <circle cx="<%= along ? eX - eW / 2 + 26 + i * ((eW - 52) / (cylN - 1)) : eX %>" cy="<%= along ? cy : cy - eH / 2 + 30 + i * ((eH - 60) / (cylN - 1)) %>" r="10"/>
+        <% } %>
+      </g>
+      <% /* verlichting */ %>
+      <rect class="h-light" x="<%= front - 30 %>" y="<%= top + 30 %>" width="16" height="48" rx="6"/><rect class="h-light" x="<%= front - 30 %>" y="<%= bot - 78 %>" width="16" height="48" rx="6"/>
+      <rect class="h-light rear" x="<%= rear + 6 %>" y="<%= top + 24 %>" width="12" height="44" rx="5"/><rect class="h-light rear" x="<%= rear + 6 %>" y="<%= bot - 68 %>" width="12" height="44" rx="5"/>
+    </g>
+    <% if (Z) { for (const l of labels) { const pts = Z[l.k] || []; %>
+    <g class="h-pointer sev-<%= sev(pts) %><%= pts.length ? '' : ' is-empty' %>" data-zone="<%= l.k %>" tabindex="0" role="button" aria-label="<%= ZONES[l.k] %>: <%= pts.length %> punten">
+      <polyline class="h-lead" points="<%= l.ax %>,<%= l.ay %> <%= l.ax %>,<%= elbowY(l) %> <%= l.lx %>,<%= elbowY(l) %>"/>
+      <circle class="h-dot" cx="<%= l.ax %>" cy="<%= l.ay %>" r="7"/>
+      <rect class="h-hit" x="<%= l.lx - l.w / 2 %>" y="<%= textY(l) - 20 %>" width="<%= l.w %>" height="28" rx="6"/>
+      <text class="h-label" x="<%= l.lx %>" y="<%= textY(l) %>" text-anchor="middle"><%= labelText(l.k) %></text>
+    </g>
+    <% } } %>
+  </svg>
+  <figcaption class="holo-tags">
+    <span><%= { voor: 'Motor voor', midden: 'Middenmotor', achter: 'Motor achter' }[V.motor_plaats] %>, <%= V.motor_ligging %></span>
+    <span><%= { voor: 'Voorwielaandrijving (FWD)', achter: 'Achterwielaandrijving (RWD)', '4wd': 'Vierwielaandrijving (AWD)' }[V.aandrijving] %></span>
+    <span><%= V.carrosserie %></span>
+    <% if (locals.scanning) { %><span class="holo-scanmsg">Nog niet onderzocht – indeling geschat</span><% } %>
+  </figcaption>
+</figure>

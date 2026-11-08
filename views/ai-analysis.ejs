@@ -1,0 +1,145 @@
+<%- include('/partials/head') %>
+<%
+  const R = locals.result; const D = R && R.data;
+  const L = { laag: 'Snel', normaal: 'Normaal', hoog: 'Grondig' };
+  const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
+  const SEV = { hoog: 'Belangrijk', 'let-op': 'Let op', info: 'Goed om te weten' };
+  const zoneSev = (list) => (list || []).some((p) => p.ernst === 'hoog') ? 'hoog' : (list || []).some((p) => p.ernst === 'let-op') ? 'let-op' : 'info';
+%>
+<main class="page wide va-page">
+  <div class="page-head">
+    <div>
+      <h1><%- include('/partials/ai-icon') %> AI-analyse</h1>
+      <p class="muted small">Een röntgenfoto van een auto: Claude zoekt op internet alles over het voertuig op – hoe hij rijdt, comfort,
+        originele banden, onderhoud, bekende problemen en APK-punten – en zet het op de juiste plek in de auto.</p>
+    </div>
+  </div>
+
+  <form class="card va-pick" method="get" action="/ai-analyse" data-va-form>
+    <label class="field">
+      <span>Kenteken of klant</span>
+      <input name="kenteken" list="va-customers" value="<%= v ? v.kenteken : '' %>" placeholder="bijv. 12-ABC-3" autocomplete="off" autocapitalize="characters" data-va-plate>
+      <datalist id="va-customers">
+        <% for (const c of customers) { %><option value="<%= c.kenteken %>"><%= c.merk_type %></option><% } %>
+      </datalist>
+    </label>
+    <span class="va-or muted">of</span>
+    <label class="field">
+      <span>Omschrijving (zonder kenteken)</span>
+      <input name="omschrijving" value="<%= v ? v.omschrijving : '' %>" placeholder="bijv. Volkswagen Golf 7 1.4 TSI 2015">
+    </label>
+    <button class="btn btn-primary" type="submit">Kiezen</button>
+  </form>
+
+  <% if (v) { %>
+  <section class="card va-car" id="va-car" data-va-key="<%= v.key %>" data-va-busy="<%= busy ? '1' : '' %>">
+    <div class="va-car-head">
+      <div>
+        <h2><%= D && D.voertuig.naam ? D.voertuig.naam : v.label %></h2>
+        <p class="muted small">
+          <% if (v.kenteken) { %><b><%= v.kenteken %></b><% } %>
+          <% if (v.customer) { %> · klant: <a href="/klant/<%= v.customer.id %>"><%= v.customer.naam || v.customer.kenteken %></a><% } %>
+          <% if (D) { %><% if (D.voertuig.generatie) { %> · <%= D.voertuig.generatie %><% } %><% if (D.voertuig.bouwjaren) { %> (<%= D.voertuig.bouwjaren %>)<% } %><% } %>
+        </p>
+        <% if (R) { %><p class="muted small">Onderzocht door Claude op <%= fmtDateTime(R.created_at) %> (<%= L[R.effort] || R.effort %><%= R.by_name ? ', ' + R.by_name : '' %>)<%= R.web ? ', met bronnen van internet' : ' – zonder internetbronnen' %>.</p><% } %>
+      </div>
+      <% if (aiConfigured) { %>
+      <button class="btn<%= R ? '' : ' btn-primary' %>" type="button" data-va-start
+        data-kenteken="<%= v.kenteken %>" data-omschrijving="<%= v.omschrijving %>"><%- include('/partials/ai-icon') %> <%= R ? 'Opnieuw onderzoeken' : 'Onderzoeken met Claude' %></button>
+      <% } else { %><p class="muted small">Claude is niet ingesteld (anthropic-api-key in config.properties).</p><% } %>
+    </div>
+
+    <%- include('/partials/hologram', { v: D ? D.voertuig : v.guess, zones: D ? D.zones : null, ZONES, scanning: !D || busy }) %>
+    <p class="va-status muted small" data-va-status <%= busy ? '' : 'hidden' %>>Claude onderzoekt deze auto… dit duurt meestal één tot drie minuten. U kunt de pagina open laten.</p>
+
+    <% if (D) { %>
+    <div class="va-specs">
+      <% const specs = [['Motor', D.voertuig.motor], ['Versnellingsbak', D.voertuig.versnellingsbak], ['Verbruik', D.rijden.verbruik]]; %>
+      <% if (v.info) { specs.push(['Vermogen', v.info.vermogenKw ? `${v.info.vermogenKw} kW${v.info.vermogenPk ? ` (${v.info.vermogenPk} pk)` : ''}` : ''], ['Leeggewicht', v.info.massaLeeg ? v.info.massaLeeg + ' kg' : ''], ['APK tot', v.info.apk || '']); } %>
+      <% for (const [k, val] of specs) { if (!val) continue; %><div><span class="muted small"><%= k %></span><b><%= val %></b></div><% } %>
+    </div>
+    <% if (D.samenvatting) { %><p class="va-summary"><%= D.samenvatting %></p><% } %>
+    <% } %>
+  </section>
+
+  <% if (D) { %>
+  <div class="va-grid">
+    <section class="card va-drive">
+      <h2>Rijden en comfort</h2>
+      <% if (D.rijden.rijgedrag) { %><h3>Rijgedrag</h3><p><%= D.rijden.rijgedrag %></p><% } %>
+      <% if (D.rijden.comfort) { %><h3>Comfort</h3><p><%= D.rijden.comfort %></p><% } %>
+      <% if (!D.rijden.rijgedrag && !D.rijden.comfort) { %><p class="muted">Niets bijzonders gevonden.</p><% } %>
+    </section>
+    <section class="card va-maint">
+      <h2>Onderhoud en specificaties</h2>
+      <% if (D.onderhoud.length) { %><dl class="va-dl"><% for (const o of D.onderhoud) { %><dt><%= o.kop %></dt><dd><%= o.tekst %></dd><% } %></dl>
+      <% } else { %><p class="muted">Niets gevonden.</p><% } %>
+    </section>
+  </div>
+
+  <h2 class="va-h">Per onderdeel <span class="muted small">– klik op een wijzer in het röntgenbeeld</span></h2>
+  <div class="bl-boxes va-zones">
+    <% for (const [z, name] of Object.entries(ZONES)) { const pts = D.zones[z] || []; const s = zoneSev(pts); %>
+    <details class="card bl-box va-zone sev-<%= s %>" id="zone-<%= z %>" data-remember="va-<%= z %>">
+      <summary class="bl-summary">
+        <span class="bl-sum-title"><%= name %></span>
+        <% if (pts.length) { %><span class="nav-count<%= s === 'hoog' ? ' is-high' : '' %>"><%= pts.length %></span><% } %>
+        <span class="bl-sum-preview muted small"><%= pts.length ? pts.slice(0, 2).map((p) => p.kop).join(', ') + (pts.length > 2 ? '…' : '') : 'niets bijzonders' %></span>
+      </summary>
+      <div class="bl-body">
+        <% if (pts.length) { %><div class="bl-list"><% for (const p of pts) { %>
+        <div class="bl-item bl-<%= p.ernst %> va-point">
+          <p><span class="bl-dot" aria-hidden="true"></span><b><%= p.kop %></b> <span class="bl-cat"><%= SEV[p.ernst] %></span></p>
+          <% if (p.tekst) { %><p class="va-text"><%= p.tekst %></p><% } %>
+        </div>
+        <% } %></div><% } else { %><p class="muted small">Claude vond hier niets bijzonders voor deze auto.</p><% } %>
+      </div>
+    </details>
+    <% } %>
+    <details class="card bl-box va-zone sev-<%= zoneSev(D.apk) %>" id="zone-apk" data-remember="va-apk" open>
+      <summary class="bl-summary">
+        <span class="bl-sum-title">APK-punten</span>
+        <% if (D.apk.length) { %><span class="nav-count<%= zoneSev(D.apk) === 'hoog' ? ' is-high' : '' %>"><%= D.apk.length %></span><% } %>
+        <span class="bl-sum-preview muted small">bekende afkeurpunten bij dit model</span>
+      </summary>
+      <div class="bl-body">
+        <% if (D.apk.length) { %><div class="bl-list"><% for (const p of D.apk) { %>
+        <div class="bl-item bl-<%= p.ernst %> va-point">
+          <p><span class="bl-dot" aria-hidden="true"></span><b><%= p.kop %></b> <span class="bl-cat"><%= SEV[p.ernst] %></span></p>
+          <% if (p.tekst) { %><p class="va-text"><%= p.tekst %></p><% } %>
+        </div>
+        <% } %></div><% } else { %><p class="muted small">Geen bekende APK-afkeurpunten gevonden.</p><% } %>
+      </div>
+    </details>
+  </div>
+
+  <% if (R.sources && R.sources.length) { %>
+  <section class="card va-sources">
+    <h2>Bronnen</h2>
+    <ul><% for (const s of R.sources) { %><li><a href="<%= s.url %>" target="_blank" rel="noopener noreferrer"><%= s.title || host(s.url) %></a> <span class="muted small"><%= host(s.url) %></span></li><% } %></ul>
+    <p class="muted small">Claude kan zich vergissen. Controleer belangrijke gegevens (bandenmaat, olie, aanhaalmomenten) altijd in de fabrieksdocumentatie.</p>
+  </section>
+  <% } %>
+  <% } %>
+  <% } else { %>
+  <section class="card va-empty">
+    <%- include('/partials/hologram', { v: { carrosserie: 'sedan' }, zones: null, ZONES, scanning: true }) %>
+    <p class="muted">Kies hierboven een kenteken of klant (of beschrijf de auto) om te beginnen.</p>
+  </section>
+  <% } %>
+
+  <% if (recent.length) { %>
+  <section class="card va-recent">
+    <h2>Eerder onderzocht</h2>
+    <ul class="va-recent-list">
+      <% for (const r of recent) { const q = r.key.startsWith('o:') ? 'omschrijving=' + encodeURIComponent(r.key.slice(2)) : 'kenteken=' + encodeURIComponent(r.kenteken || r.key); %>
+      <li><a href="/ai-analyse?<%= q %>"><% if (r.kenteken) { %><b><%= r.kenteken %></b> · <% } %><%= r.label %></a> <span class="muted small"><%= fmtDateTime(r.created_at) %></span></li>
+      <% } %>
+    </ul>
+  </section>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/ai.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/ai-analysis.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

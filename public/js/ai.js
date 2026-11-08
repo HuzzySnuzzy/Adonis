@@ -163,8 +163,8 @@
         jobBox.replaceChildren();
         const t = document.createElement('div');
         t.textContent = j.running
-          ? `✨ Claude is bezig: ${j.done} van ${j.total} ${what} (${j.points} aandachtspunten, tot nu toe ${j.eurText}).`
-          : `✨ Klaar: ${j.done} ${what} gedaan, ${j.points} aandachtspunten gevonden (kosten ${j.eurText})${j.failed ? `, ${j.failed} mislukt` : ''}${j.stop && j.done < j.total ? ' – gestopt' : ''}${j.web === false ? ' – zonder internetbronnen (web search staat niet aan)' : ''}.`;
+          ? `Claude is bezig: ${j.done} van ${j.total} ${what} (${j.points} aandachtspunten, tot nu toe ${j.eurText}).`
+          : `Klaar: ${j.done} ${what} gedaan, ${j.points} aandachtspunten gevonden (kosten ${j.eurText})${j.failed ? `, ${j.failed} mislukt` : ''}${j.stop && j.done < j.total ? ' – gestopt' : ''}${j.web === false ? ' – zonder internetbronnen (web search staat niet aan)' : ''}.`;
         const bar = document.createElement('div'); bar.className = 'ai-job-bar';
         const fill = document.createElement('i'); fill.style.width = pct + '%'; bar.append(fill);
         jobBox.append(t, bar);
