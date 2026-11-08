@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.38.2', date: '2026-11-08', title: 'De app onthoudt volledig scherm',
+    items: [
+      'De ADONIS-app onthoudt nu of hij op volledig scherm (F11) stond, net als de grootte, plek en gemaximaliseerd. Bij de volgende start staat hij weer zo.',
+    ],
+  },
+  {
     version: '1.38.1', date: '2026-11-08', title: 'Bureaublad: verslepen, personaliseren en de Ctrl-toets',
     items: [
       'Vensters hebben nu een gewone vensterkleur als achtergrond in plaats van nog eens de achtergrond van het bureaublad.',

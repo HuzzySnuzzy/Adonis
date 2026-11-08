@@ -109,11 +109,17 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   if (b.maximized) win.maximize();
-  win.on('closed', () => { if (pendingRestart) updater.restartIntoNew(); });
-  win.on('close', () => {
-    config.window = { ...win.getNormalBounds(), maximized: win.isMaximized() };
+  // Volledig scherm (F11) onthouden, net als gemaximaliseerd.
+  if (b.fullscreen) win.setFullScreen(true);
+  const rememberWindow = () => {
+    if (!win || win.isDestroyed()) return;
+    config.window = { ...win.getNormalBounds(), maximized: win.isMaximized(), fullscreen: win.isFullScreen() };
     saveConfig(config);
-  });
+  };
+  win.on('closed', () => { if (pendingRestart) updater.restartIntoNew(); });
+  win.on('close', rememberWindow);
+  // Ook meteen bij het wisselen (dan klopt het ook als de app niet netjes afsluit, bijv. bij een update of stroomstoring).
+  for (const ev of ['enter-full-screen', 'leave-full-screen', 'maximize', 'unmaximize']) win.on(ev, rememberWindow);
   // Muisknoppen terug/vooruit (Windows).
   win.on('app-command', (e, cmd) => {
     if (cmd === 'browser-backward') goHistory(-1);
