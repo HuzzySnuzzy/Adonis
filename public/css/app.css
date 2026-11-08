@@ -1641,3 +1641,69 @@ h1 .ai-ico { width: 1.05em; height: 1.05em; color: var(--hue, #e2557a); }
 
 .va-link { margin: .6rem 0; }
 :root[data-fx="calm"] .holo *, :root[data-fx="calm"] .holo::after { animation: none !important; }
+
+/* ===== Plaknotities ===== */
+.note-dock { position: fixed; left: 0; top: 50%; transform: translateY(-50%); z-index: 55; display: flex; flex-direction: column; gap: .35rem; }
+.note-dock-btn { position: relative; display: grid; place-items: center; width: 42px; height: 46px; padding: 0; border: 1px solid var(--border); border-left: 0;
+  border-radius: 0 12px 12px 0; background: var(--surface); color: var(--text); cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
+  transition: width .15s ease, background .15s ease; }
+.note-dock-btn[hidden] { display: none; }
+.note-dock-btn:hover, .note-dock-btn:focus-visible { width: 50px; }
+.note-dock-btn[data-note-new] { background: #ffe66d; color: #4a3d00; border-color: #e0c640; }
+.note-dock-btn[data-note-new] b { position: absolute; right: 5px; top: 2px; font-size: 15px; line-height: 1; }
+.note-dock-btn.is-off { opacity: .7; }
+.note-count { position: absolute; right: 3px; bottom: 3px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px; background: var(--primary); color: #fff;
+  font-size: 10px; line-height: 15px; font-weight: 700; }
+
+.sticky-note { --sn: #fff38a; --sn-head: #f5e266; position: fixed; z-index: 60; width: 230px; display: flex; flex-direction: column;
+  background: var(--sn); color: #2b2a22; border-radius: 2px 2px 14px 2px; transform: rotate(-1deg);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .12), 0 10px 24px rgba(0, 0, 0, .28); animation: sn-in .25s ease-out; }
+.sticky-note.tilt-l { transform: rotate(.8deg); }
+.sticky-note.on-order { position: absolute; }
+.sticky-note.is-dragging { transform: rotate(0) scale(1.03); box-shadow: 0 18px 40px rgba(0, 0, 0, .35); opacity: .95; }
+@keyframes sn-in { from { opacity: 0; transform: translateY(-8px) rotate(-3deg); } }
+.notes-hidden .sticky-note { display: none; }
+.sticky-note.c-roze { --sn: #ffc4dc; --sn-head: #f9aacb; }
+.sticky-note.c-blauw { --sn: #bfe4ff; --sn-head: #a3d5fb; }
+.sticky-note.c-groen { --sn: #ccf2b4; --sn-head: #b3e696; }
+.sticky-note.c-oranje { --sn: #ffd59a; --sn-head: #fbc276; }
+.sticky-note.c-paars { --sn: #ddcdff; --sn-head: #cbb5fb; }
+.sn-head { display: flex; align-items: center; gap: .2rem; padding: .2rem .25rem .2rem .55rem; background: var(--sn-head); cursor: grab; touch-action: none; user-select: none; }
+.is-dragging .sn-head { cursor: grabbing; }
+.sn-who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .75rem; font-weight: 700; opacity: .7; }
+.sn-btn { width: 26px; height: 24px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; line-height: 1; }
+.sn-btn:hover, .sn-btn:focus-visible { background: rgba(0, 0, 0, .1); }
+.sn-text { display: block; width: 100%; min-height: 150px; box-sizing: border-box; margin: 0; padding: .45rem .65rem .7rem; border: 0; resize: vertical;
+  background: transparent; color: inherit; font: 21px/1.25 "Patrick Hand", cursive; outline: none; }
+.sticky-note .sn-text:focus, .sticky-note .sn-text:focus-visible { outline: none; box-shadow: none; border: 0; }
+.sticky-note:focus-within { box-shadow: 0 1px 1px rgba(0, 0, 0, .12), 0 14px 32px rgba(0, 0, 0, .36); }
+.sn-text::placeholder { color: rgba(43, 42, 34, .45); }
+.sticky-note.is-min .sn-text { display: none; }
+.sticky-note.is-min { width: 170px; }
+.sticky-note.is-saving .sn-who::after { content: ' · opslaan…'; font-weight: 400; }
+.sticky-note.is-error .sn-who::after { content: ' · niet opgeslagen!'; color: #a00; }
+.sn-menu { position: absolute; top: 30px; right: 4px; z-index: 2; display: flex; flex-direction: column; min-width: 200px; padding: .4rem; border-radius: 10px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: 0 12px 30px rgba(0, 0, 0, .3); }
+.sn-menu[hidden] { display: none; }
+.sn-menu-item { padding: .45rem .6rem; border: 0; border-radius: 6px; background: none; color: inherit; font: inherit; font-size: .9rem; text-align: left; cursor: pointer; }
+.sn-menu-item:hover, .sn-menu-item:focus-visible { background: var(--surface-2); }
+.sn-menu-item.is-danger { color: var(--danger); }
+.note-swatches { display: flex; flex-wrap: wrap; gap: .45rem; }
+.note-swatches.small { gap: .3rem; padding: .1rem .2rem .4rem; }
+.note-swatch { --sn: #fff38a; position: relative; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 6px; background: var(--sn);
+  border: 2px solid rgba(0, 0, 0, .12); cursor: pointer; padding: 0; }
+.note-swatches.small .note-swatch { width: 26px; height: 26px; }
+.note-swatch.c-roze { --sn: #ffc4dc; } .note-swatch.c-blauw { --sn: #bfe4ff; } .note-swatch.c-groen { --sn: #ccf2b4; }
+.note-swatch.c-oranje { --sn: #ffd59a; } .note-swatch.c-paars { --sn: #ddcdff; }
+.note-swatch input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.note-swatch span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.note-swatch:has(input:checked), .note-swatch.is-on { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+.note-swatch:has(input:focus-visible) { outline: 2px solid var(--primary); outline-offset: 2px; }
+.note-dialog textarea { display: block; width: 100%; box-sizing: border-box; margin-top: .6rem; padding: .55rem .7rem; border: 1px solid var(--border); border-radius: 8px;
+  background: #fff7a8; color: #2b2a22; font: 20px/1.25 "Patrick Hand", cursive; resize: vertical; }
+.note-flag { display: inline-block; width: 13px; height: 13px; margin-left: .25rem; vertical-align: -1px; background: #ffe66d; border: 1px solid #d8bd2c;
+  border-radius: 1px 1px 5px 1px; transform: rotate(-6deg); }
+@media (max-width: 760px) { .sticky-note { width: 190px; } .sn-text { min-height: 110px; font-size: 19px; } .note-dock-btn { width: 34px; height: 40px; } }
+@media (prefers-reduced-motion: reduce) { .sticky-note { animation: none; } .note-dock-btn { transition: none; } }
+:root[data-fx="calm"] .sticky-note { animation: none; }
+@media print { .note-dock, .sticky-note { display: none !important; } }

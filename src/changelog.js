@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.31.0', date: '2026-11-08', title: 'Plaknotities',
+    items: [
+      'Nieuw: plaknotities, zoals gele memoblaadjes. Klik op het gele knopje links op het scherm.',
+      'Bij het maken kiest u de kleur (standaard geel), of alleen u hem ziet of iedereen op deze ADONIS, en waar hij komt: op het scherm (op elke pagina) of op de werkopdracht die open staat.',
+      'Notities op een werkopdracht ziet u alleen bij die werkopdracht; in de lijsten staat dan een geel briefje-teken bij het nummer.',
+      'Verslepen aan de bovenrand, inklappen met –, en via ⋯ de kleur wijzigen, delen, verplaatsen of weggooien. Met het oog-knopje verbergt of toont u alle notities. Gedeelde notities worden direct bijgewerkt bij collega\'s.',
+    ],
+  },
+  {
     version: '1.30.0', date: '2026-11-08', title: 'AI-analyse: een röntgenfoto van een auto',
     items: [
       'Nieuw op het startscherm: AI-analyse. Kies een kenteken of klant (of beschrijf de auto) en Claude zoekt alles over die auto op: motor, aandrijving, rijgedrag en comfort, verbruik, originele banden, onderhoud, bekende problemen en APK-punten, met bronnen.',

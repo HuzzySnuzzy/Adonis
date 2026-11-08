@@ -69,6 +69,7 @@
   }
 
   function handle(ev) {
+    if (ev.type === 'notes') { if (String(ev.byId) !== String(me)) document.dispatchEvent(new CustomEvent('adonis:notes', { detail: ev })); return; }
     // Bandenhotel/voorraad gewijzigd door een collega: lijsten op dit scherm bijwerken.
     if (ev.type === 'data') {
       if (String(ev.byId) !== String(me)) refreshLists();

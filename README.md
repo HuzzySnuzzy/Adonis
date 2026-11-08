@@ -130,6 +130,10 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   Aandachtspunten en APK-punten staan in **inklapbare vakken** (open/dicht wordt onthouden).
   Op de **APK-lijst** zoekt een knop (beheerders) de punten op voor alle modellen in het getoonde tabblad die nog niet
   zijn opgezocht; per klant staat dan "n APK-punten voor dit model".
+- **Plaknotities:** knop links op elk scherm. Kleur (standaard geel), zichtbaar voor alleen de maker of voor iedereen, en
+  op het scherm (elke pagina, `position: fixed`) of op een werkopdracht (scrolt mee, alleen daar zichtbaar; briefje-teken in
+  de lijsten). Verslepen, inklappen, verbergen; plek per browser onthouden. Gedeelde notities live via SSE; alleen de maker
+  (of een beheerder) gooit weg of wijzigt wie hem ziet.
 - **AI-analyse (röntgenbeeld van een auto)** (`/ai-analyse`, tegel op het startscherm, knop op de klantpagina): kies een
   kenteken/klant of beschrijf de auto; Claude zoekt met web search alles op (generatie, motor, plaats/ligging van de motor,
   FWD/RWD/AWD, rijgedrag en comfort, verbruik, originele banden, olie, bekende problemen en APK-punten, met bronnen).

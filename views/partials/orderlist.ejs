@@ -7,7 +7,8 @@
   <tbody>
   <% for (const o of orders) { %>
     <tr data-href="/werkopdracht/<%= o.id %>">
-      <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= o.nummer %></a></td>
+      <% const nNotes = locals.user ? notesOnOrder(user, o.id) : 0; %>
+      <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= o.nummer %></a><% if (nNotes) { %> <span class="note-flag" title="<%= nNotes %> plaknotitie<%= nNotes === 1 ? '' : 's' %> op deze werkopdracht" aria-label="<%= nNotes %> plaknotities"></span><% } %></td>
       <td><span class="status-badge status-<%= o.status %> in-list"><%= { open: 'Open', klaar: 'Facturatie', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>
       <td><%= fmtDate(o.datum_invoer) %></td>
       <% if (showPlate) { %><td><%- include('/partials/plate', { kenteken: o.d.kenteken || o.c_kenteken }) %></td><td><%= o.d.naam %></td><% } %>

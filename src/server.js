@@ -724,6 +724,7 @@ app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
 // Vóór de foto-import: anders vangt /importeren/:id ook /importeren/excel af.
 registerInventory(app, { flash, wrap });
 require('./portal-routes')(app, { flash, wrap });
+require('./notes')(app);
 require('./ai-routes')(app, { flash, wrap });
 
 /* ---------- foto-import ---------- */
