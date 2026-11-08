@@ -82,8 +82,8 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   opgezocht, nooit het kenteken of de klant. De foto wordt één keer opgehaald en daarna lokaal bewaard (map `autofotos`). Er wordt alleen een foto getoond als het
   Wikipedia-artikel echt over dat model gaat (typecodes zoals W639 helpen de juiste generatie te kiezen); klopt een foto
   toch niet, dan verbergt *Verkeerde auto? Verbergen* hem voor dat model.
-- **APK-lijst** (*Klanten → APK-lijst*, ook op het startscherm): wie de komende 2 maanden naar de APK moet of net te
-  laat is, met telefoonnummer, **Gebeld** (per APK-datum; iedereen ziet het meteen) en **+ Werkopdracht** met de klant
+- **APK-lijst** (*Klanten → APK-lijst*, ook op het startscherm): wie de komende 2 maanden naar de APK moet of hooguit een
+  week te laat is (langer verlopen staat onder *Al verlopen*), met telefoonnummer, **Gebeld** (per APK-datum; iedereen ziet het meteen) en **+ Werkopdracht** met de klant
   al ingevuld. Nog niet gebelde klanten en de vroegste datums staan bovenaan; afdrukken kan ook. De APK-datums komen
   van de RDW; voor klanten zonder RDW-gegevens (bijv. uit het bandenhotel) worden ze rustig op de achtergrond
   opgehaald (één kenteken per 3 seconden, elke 30 dagen ververst).

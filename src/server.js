@@ -326,7 +326,7 @@ app.get('/start', (req, res) => {
   let swaps = 0;
   try { swaps = inv.swapList(inv.swapTarget()).wisselen.filter((i) => !i.match.uitgenodigd_at).length; } catch { /* geen bandenhotel */ }
   const hour = Number(new Intl.DateTimeFormat('nl-NL', { hour: 'numeric', hour12: false, timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam' }).format(new Date()));
-  const apkSoon = apkRows().filter((r) => r.days <= 60 && r.days >= -90 && !r.called).length;
+  const apkSoon = apkRows().filter((r) => r.days <= 60 && r.days >= -7 && !r.called).length;
   res.render('start', {
     title: 'Start', counts, recent, swaps, swapTarget: inv.swapTarget(), apkSoon,
     greeting: hour < 6 ? 'Goedenacht' : hour < 12 ? 'Goedemorgen' : hour < 18 ? 'Goedemiddag' : 'Goedenavond',
@@ -351,12 +351,12 @@ function apkRows() {
 app.get('/apk', (req, res) => {
   const show = ['verlopen', 'binnenkort', 'alles'].includes(req.query.toon) ? req.query.toon : 'binnenkort';
   const all = apkRows();
-  const pick = { verlopen: (r) => r.days < 0, binnenkort: (r) => r.days <= 60 && r.days >= -90, alles: () => true }[show];
+  const pick = { verlopen: (r) => r.days < 0, binnenkort: (r) => r.days <= 60 && r.days >= -7, alles: () => true }[show];
   const list = all.filter(pick).sort((a, b) => (a.called ? 1 : 0) - (b.called ? 1 : 0) || a.days - b.days);
   const waiting = db.prepare('SELECT kenteken FROM customers WHERE rdw_at IS NULL').all().filter((c) => plates.rdwApplicable(c.kenteken)).length;
   res.render('apk', {
     title: 'APK-lijst', show, list, waiting,
-    counts: { verlopen: all.filter((r) => r.days < 0).length, binnenkort: all.filter((r) => r.days <= 60 && r.days >= -90).length, alles: all.length },
+    counts: { verlopen: all.filter((r) => r.days < 0).length, binnenkort: all.filter((r) => r.days <= 60 && r.days >= -7).length, alles: all.length },
   });
 });
 app.post('/apk/:id/gebeld', (req, res) => {
