@@ -100,11 +100,13 @@ function createWindow() {
     width: b.width || 1400, height: b.height || 900, x: b.x, y: b.y,
     minWidth: 900, minHeight: 600,
     title: 'ADONIS', icon: ICON, backgroundColor: '#14171c',
-    autoHideMenuBar: true, show: false,
+    autoHideMenuBar: true,
+    // Meteen tonen (met de donkere achtergrond) in plaats van te wachten tot de pagina geladen is:
+    // anders is de opstartanimatie op een trage pc al voorbij voordat het venster verschijnt.
+    show: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   if (b.maximized) win.maximize();
-  win.once('ready-to-show', () => win.show());
   win.on('close', () => {
     config.window = { ...win.getNormalBounds(), maximized: win.isMaximized() };
     saveConfig(config);

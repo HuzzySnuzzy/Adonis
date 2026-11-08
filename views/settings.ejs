@@ -29,6 +29,8 @@
     <h2>ADONIS-app voor Windows</h2>
     <% if (inApp) { %>
     <p class="app-in-use">✔ Je gebruikt de ADONIS-app<%= inAppVersion ? ' (versie ' + inAppVersion + ')' : '' %>. Met <b>Ctrl + ,</b> wijzig je het adres van de server.</p>
+    <% if (appOutdated) { %><p class="fx-why">Er is een nieuwere ADONIS-app (versie <%= appInfo.version %>). <a href="<%= appDownload %>">Download ADONIS-app.exe</a>,
+      sluit de app en vervang het oude bestand door het nieuwe. Het serveradres en je instellingen blijven bewaard.</p><% } %>
     <p class="muted small">Op een andere pc installeren? <a href="<%= appDownload %>">Download ADONIS-app.exe</a> · <a href="/instellingen/adonis-app.json">adonis-app.json</a></p>
   </section>
     <% } else { %>

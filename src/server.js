@@ -140,6 +140,10 @@ app.use((req, res, next) => {
     res.locals.appCanChangeServer = v.length === 3 && (v[0] * 1e6 + v[1] * 1e3 + v[2]) >= 1024001;
   }
   res.locals.url = req.originalUrl;
+  // Eerste pagina van deze sessie (app gestart / browser geopend)? Zie de startpagina hieronder.
+  // Het koekje verdwijnt als de app of browser sluit, dus F5 of "Klanten" stuurt je daarna niet terug.
+  req.firstPage = !!req.user && req.method === 'GET' && !/(?:^|;\s*)wo_in=1/.test(req.headers.cookie || '') && !req.get('X-Live-Refresh');
+  if (req.firstPage) res.cookie('wo_in', '1', { httpOnly: true, sameSite: 'lax', secure: req.secure });
   res.locals.serverUrl = `${req.protocol}://${req.get('host') || ''}`;
   // Lange lijsten: eerst PAGE regels, met "Meer tonen" (?n=...).
   res.locals.shownLimit = Math.min(Math.max(parseInt(req.query.n, 10) || PAGE, PAGE), 10000);
@@ -310,6 +314,8 @@ function announce(req, action, order) {
 /* Klantenoverzicht op kenteken */
 app.get('/', (req, res) => {
   const q = String(req.query.q || '').trim();
+  // ADONIS (de app of de browser) wordt geopend: naar de gekozen startpagina.
+  if (req.firstPage && !q && req.user.prefs.start && req.user.prefs.start !== '/') return res.redirect(req.user.prefs.start);
   let rows;
   const base = `
     SELECT c.*, COUNT(o.id) AS aantal, MAX(o.datum_invoer) AS laatste,
@@ -777,6 +783,12 @@ function renderSettings(res, { error = null, status = 200 } = {}) {
     inApp: /ADONIS-app\//.test(res.req.get('user-agent') || ''),
     inAppVersion: ((res.req.get('user-agent') || '').match(/ADONIS-app\/([\d.]+)/) || [])[1] || '',
     appDownload: `https://github.com/${repo}/releases/latest/download/ADONIS-app.exe`,
+    // Oudere app dan de server? Dan mist de app verbeteringen (de app werkt zichzelf niet bij).
+    appOutdated: (() => {
+      const num = (v) => { const m = /^(\d+)\.(\d+)\.(\d+)/.exec(v || ''); return m ? +m[1] * 1e6 + +m[2] * 1e3 + +m[3] : 0; };
+      const app = num(((res.req.get('user-agent') || '').match(/ADONIS-app\/([\d.]+)/) || [])[1]);
+      return app > 0 && app < num(res.locals.appInfo && res.locals.appInfo.version);
+    })(),
   });
 }
 // Instellingenbestand voor de ADONIS-app: naast ADONIS-app.exe zetten, dan vraagt de app niets.
