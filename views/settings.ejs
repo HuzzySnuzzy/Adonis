@@ -196,6 +196,23 @@
       <button class="btn" type="submit">Wachtwoord wijzigen</button>
     </form>
   </section>
+
+  <section class="card changelog" id="nieuw">
+    <h2>Wat is er nieuw</h2>
+    <p class="muted small">U gebruikt ADONIS <b>v<%= appInfo.version %></b>. Hieronder alle versies, de nieuwste eerst.</p>
+    <% const nlDay = (iso) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z')); %>
+    <% changelog.forEach((v, i) => { const current = v.version === appInfo.version; %>
+    <details class="cl-version<%= current ? ' is-current' : '' %>"<%= i < 3 ? ' open' : '' %>>
+      <summary>
+        <span class="cl-ver">v<%= v.version %></span>
+        <span class="cl-title"><%= v.title %></span>
+        <% if (current) { %><span class="cl-badge">deze versie</span><% } %>
+        <span class="cl-date muted small"><%= nlDay(v.date) %></span>
+      </summary>
+      <ul><% for (const item of v.items) { %><li><%= item %></li><% } %></ul>
+    </details>
+    <% }) %>
+  </section>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

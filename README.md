@@ -128,6 +128,8 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Zoekwoorden** (*Werkopdrachten → Zoekwoorden*): woorden die hetzelfde betekenen (garagetermen, Nederlands en Engels):
   zoeken op *light* of *lampen* vindt ook *dagrijverlichting*. Elk woord moet voorkomen; per woord tellen ook de woorden uit
   dezelfde groep. Aanvullen en eigen groepen maken kan op die pagina; "aanhalingstekens" zoekt precies één woord.
+- **Wat is er nieuw** (*Instellingen*, onderaan; of klik op het versienummer onderaan een pagina): alle versies met
+  wat er per versie is veranderd, in gewone taal. Bijhouden in `src/changelog.js` (bij elke release bovenaan een regel).
 - **Snel zoeken:** de lijsten (Klanten, Werkopdrachten, Bandenhotel, Voorraad) worden al bijgewerkt terwijl je typt.
   Een volledig kenteken + Enter opent meteen die klant. De toets `/` springt naar het zoekvak. Lange lijsten tonen eerst
   100 regels, met *Meer tonen* / *Alles tonen*. Op een laptop past de menubalk op één rij (naam en uitloggen als pictogram;

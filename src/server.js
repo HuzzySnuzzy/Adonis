@@ -805,7 +805,7 @@ function serverOrigin(req) {
 function renderSettings(res, { error = null, status = 200 } = {}) {
   const repo = process.env.UPDATE_REPO || updater.DEFAULT_REPO;
   res.status(status).render('settings', {
-    title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS, SECRET_THEMES: auth.SECRET_THEMES,
+    title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS, SECRET_THEMES: auth.SECRET_THEMES, changelog: require('./changelog'),
     serverUrl: serverOrigin(res.req),
     // De ADONIS-app zet "ADONIS-app/<versie>" in de user-agent.
     inApp: /ADONIS-app\//.test(res.req.get('user-agent') || ''),

@@ -5,7 +5,7 @@
   const checked = u.checkedAt ? new Intl.DateTimeFormat('nl-NL', { timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(u.checkedAt) : '';
 %>
 <footer class="app-footer no-print">
-  <span>ADONIS v<%= a.version %></span>
+  <a href="/instellingen#nieuw" class="footer-ver" title="Wat is er nieuw in deze versie">ADONIS v<%= a.version %></a>
   <% if (a.date) { %><span class="sep">·</span><span title="Releasedatum">uitgebracht <%= nlDate(a.date) %></span><% } %>
   <span class="sep">·</span>
   <% if (u.state === 'update') { %>

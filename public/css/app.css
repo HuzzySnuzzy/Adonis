@@ -1421,3 +1421,16 @@ form[role="search"].is-searching input[name="q"] {
 .order-plate-sites .plate-sites { margin: 0; }
 .pt-plate { font-size: .65rem; text-transform: uppercase; letter-spacing: .04em; padding: 0 .35rem; border-radius: 4px; background: var(--plate, #f7c600); color: #111; }
 .portal-zoek-help { display: block; margin-top: .3rem; }
+
+/* ---------- Wat is er nieuw (Instellingen) ---------- */
+.changelog details { border-top: 1px solid var(--border-soft); }
+.changelog details:first-of-type { border-top: 0; }
+.changelog summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; padding: .6rem 0; cursor: pointer; list-style-position: outside; }
+.cl-ver { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-weight: 700; min-width: 4.5em; }
+.cl-title { font-weight: 600; flex: 1 1 240px; }
+.cl-date { white-space: nowrap; }
+.cl-badge { font-size: .7rem; padding: .05rem .4rem; border-radius: 4px; background: var(--ok-bg); color: var(--ok-text); font-weight: 600; }
+.changelog ul { margin: 0 0 .8rem; padding-left: 1.3rem; }
+.changelog li { margin: .2rem 0; }
+.app-footer .footer-ver { color: inherit; text-decoration: none; }
+.app-footer .footer-ver:hover { text-decoration: underline; }
