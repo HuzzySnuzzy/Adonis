@@ -609,7 +609,7 @@ a.live-toast-text:hover { text-decoration: underline; }
 .theme-btn .ti { display: none; }
 :root:not([data-theme]) .theme-btn .ti-system, :root[data-theme="light"] .theme-btn .ti-light,
 :root[data-theme="dark"] .theme-btn .ti-dark, :root[data-theme="neon"] .theme-btn .ti-neon, :root[data-theme="ice"] .theme-btn .ti-ice,
-:root[data-theme="vcds"] .theme-btn .ti-vcds, :root[data-theme="adonis"] .theme-btn .ti-adonis, :root[data-theme="aero"] .theme-btn .ti-aero { display: block; }
+:root[data-theme="vcds"] .theme-btn .ti-vcds, :root[data-theme="adonis"] .theme-btn .ti-adonis, :root[data-theme="aero"] .theme-btn .ti-aero, :root[data-theme="w98"] .theme-btn .ti-w98 { display: block; }
 .theme-btn[aria-expanded="true"] { background: var(--topbar-hover); color: #fff; box-shadow: inset 0 0 0 1px var(--accent); }
 .theme-menu {
   position: absolute; right: 0; top: calc(100% + 12px); z-index: 40; width: min(300px, calc(100vw - 32px));
@@ -984,10 +984,10 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 @keyframes app-boot-shine { to { transform: translateX(120%); } }
 @keyframes app-boot-out { to { opacity: 0; transform: scale(1.06); visibility: hidden; } }
 /* De pagina komt omhoog zodra het logo wegvaagt (ook zonder boot.js: de animatie eindigt zichtbaar). */
-:root[data-boot]:not([data-theme="neon"]):not([data-theme="ice"]):not([data-theme="vcds"]):not([data-theme="adonis"]):not([data-theme="aero"]) :is(main, .order-toolbar, .sheet-scroll, .flash, .app-footer) {
+:root[data-boot]:not([data-theme="neon"]):not([data-theme="ice"]):not([data-theme="vcds"]):not([data-theme="adonis"]):not([data-theme="aero"]):not([data-theme="w98"]) :is(main, .order-toolbar, .sheet-scroll, .flash, .app-footer) {
   animation: app-boot-rise .6s cubic-bezier(.2,.8,.2,1) .85s both;
 }
-:root[data-boot]:not([data-theme="neon"]):not([data-theme="ice"]):not([data-theme="vcds"]):not([data-theme="adonis"]):not([data-theme="aero"]) .topbar { animation: app-boot-drop .5s cubic-bezier(.2,.8,.2,1) .75s both; }
+:root[data-boot]:not([data-theme="neon"]):not([data-theme="ice"]):not([data-theme="vcds"]):not([data-theme="adonis"]):not([data-theme="aero"]):not([data-theme="w98"]) .topbar { animation: app-boot-drop .5s cubic-bezier(.2,.8,.2,1) .75s both; }
 @keyframes app-boot-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 @keyframes app-boot-drop { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: none; } }
 /* OLED: het logo zweeft op uit het zwart, met een gloed eronder; de pagina "landt" daarna. */
@@ -1260,6 +1260,12 @@ table.list.stock-list td { overflow-wrap: anywhere; }
   background: linear-gradient(100deg, #8d6414, #d4a640 40%, #f3d77c 50%, #b8892b 70%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .sw-aero { background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.1) 50%, transparent 51%) 0 0 / 100% 8px no-repeat, linear-gradient(rgba(150,190,235,.9) 0 8px, #fff 8px) 4px 0 / calc(100% - 8px) 100% no-repeat, linear-gradient(160deg, #1c6fc4, #9fd8f7); }
 .theme-name-aero { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 400; color: #1f6fc5; text-shadow: 0 0 6px rgba(120, 190, 255, .6); }
+.sw-w98 { border-radius: 0; background: linear-gradient(90deg, #000080, #1084d0) 3px 3px / calc(100% - 6px) 6px no-repeat, linear-gradient(#c0c0c0, #c0c0c0) 3px 3px / calc(100% - 6px) calc(100% - 9px) no-repeat, linear-gradient(#c0c0c0, #c0c0c0) 0 100% / 100% 4px no-repeat, #008080; }
+.theme-preview-w98 { background: #008080; }
+.theme-preview-w98 .tp-bar { height: 12px; background: linear-gradient(90deg, #000080, #1084d0); border-bottom: 0; margin: 6px 8px 0; }
+.theme-preview-w98 .tp-card { background: #c0c0c0; border-radius: 0; top: 18px; left: 8px; right: 8px; bottom: 14px; box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff; }
+.theme-preview-w98 .tp-card span { height: 8px; border-radius: 0; background: #c0c0c0; box-shadow: inset -1px -1px 0 #404040, inset 1px 1px 0 #fff; }
+.theme-preview-w98::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 9px; background: #c0c0c0; box-shadow: inset 0 1px 0 #fff; }
 .theme-name-vcds { font-family: Tahoma, "MS Sans Serif", Verdana, sans-serif; font-weight: 700; }
 /* Inloggen: het vinkje niet uitrekken over de hele breedte */
 .auth-card input[type=checkbox] { display: inline-block; width: auto; margin: 0; flex: 0 0 auto; }

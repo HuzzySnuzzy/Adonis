@@ -17,7 +17,7 @@ if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'prefer
 }
 
 const PREF_OPTIONS = {
-  theme: ['system', 'light', 'dark', 'oled', 'vcds', 'neon', 'ice', 'adonis', 'aero'],
+  theme: ['system', 'light', 'dark', 'oled', 'vcds', 'neon', 'ice', 'adonis', 'aero', 'w98'],
   fx: ['full', 'calm'],
   ink: ['hand', 'plain'],
   start: ['/start', '/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw', '/bandenhotel', '/voorraad', '/portaal'],
@@ -42,7 +42,7 @@ const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', se
   n_werkopdrachten: 'on', n_banden: 'on', n_voorraad: 'on', n_klanten: 'on', n_notities: 'on', n_herinneringen: 'on' };
 /** Thema's die alleen zichtbaar zijn met de voorkeur "Geheime thema's". */
 // Alleen Systeem, Licht en Donker staan altijd in de lijst; de rest is te zien met "Geheime thema's".
-const SECRET_THEMES = ['adonis', 'aero', 'oled', 'vcds', 'neon', 'ice'];
+const SECRET_THEMES = ['adonis', 'aero', 'w98', 'oled', 'vcds', 'neon', 'ice'];
 /** Thema's die iemand met deze voorkeuren kan kiezen (in volgorde van het menu). */
 function visibleThemes(prefs) {
   return PREF_OPTIONS.theme.filter((t) => prefs.secret === 'on' || !SECRET_THEMES.includes(t));
@@ -178,7 +178,7 @@ function loadUser(req, res, next) {
   if (!req.session.csrf) req.session.csrf = crypto.randomBytes(24).toString('hex');
   res.locals.user = req.user;
   // Thema: van de gebruiker, of (op de inlogpagina) van de laatst gekozen instelling op dit apparaat.
-  const cookieTheme = /(?:^|;\s*)wo_theme=(light|dark|system|oled|vcds|neon|ice|adonis|aero)/.exec(req.headers.cookie || '');
+  const cookieTheme = /(?:^|;\s*)wo_theme=(light|dark|system|oled|vcds|neon|ice|adonis|aero|w98)/.exec(req.headers.cookie || '');
   res.locals.prefs = req.user ? req.user.prefs : { ...PREF_DEFAULTS, theme: cookieTheme ? cookieTheme[1] : 'system' };
   res.locals.csrf = req.session.csrf;
   next();

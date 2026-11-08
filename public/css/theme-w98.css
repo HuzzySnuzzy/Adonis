@@ -1,0 +1,337 @@
+/* =====================================================================
+   Geheim thema "Windows 98": het klassieke bureaublad. Gebaseerd op het VCDS-thema (zelfde 3D-knoppen en
+   verzonken velden), maar met het groenblauwe bureaublad, grijze vensters van #c0c0c0, titelbalken van
+   donkerblauw naar lichtblauw en een taakbalk onderaan met een startknop en een klok.
+   Eigen ontwerp: geen logo's of afbeeldingen van Microsoft; alleen systeemlettertypes.
+   ===================================================================== */
+:root[data-theme="w98"] {
+  color-scheme: light;
+  --face: #d4d0c8;          /* knop/venster */
+  --face-light: #e9e7e3;
+  --hi: #ffffff;            /* lichtrand */
+  --shade: #808080;         /* schaduwrand */
+  --dark: #404040;          /* buitenste schaduw */
+  --title-a: #0a246a; --title-b: #a6caf0;   /* titelbalk */
+  --sel: #0a246a;           /* selectie */
+  --desktop: #3a6ea5;
+  --raised: inset -1px -1px 0 var(--dark), inset 1px 1px 0 var(--hi), inset -2px -2px 0 var(--shade), inset 2px 2px 0 var(--face-light);
+  --sunken: inset 1px 1px 0 var(--shade), inset -1px -1px 0 var(--hi), inset 2px 2px 0 var(--dark), inset -2px -2px 0 var(--face-light);
+  --pressed: inset 1px 1px 0 var(--dark), inset -1px -1px 0 var(--hi), inset 2px 2px 0 var(--shade), inset -2px -2px 0 var(--face-light);
+  --f-ui: Tahoma, "MS Sans Serif", Verdana, "Segoe UI", Geneva, Arial, sans-serif;
+  --f-mono: "Lucida Console", "Courier New", ui-monospace, monospace;
+
+  --bg: var(--desktop);
+  --surface: var(--face); --surface-2: var(--face); --hover: #dfe6f3;
+  --text: #000; --muted: #4a4a4a;
+  --border: var(--shade); --border-soft: #bdb9b1;
+  --input-bg: #fff;
+  --brand: var(--title-a); --accent: var(--title-a); --primary: var(--title-a); --primary-hover: #1c3f94; --link: #0000c8;
+  --danger: #b00000; --danger-border: #b00000;
+  --ok-bg: #fff; --ok-text: #006400;
+  --err-bg: #fff; --err-text: #b00000;
+  --warn-bg: #ffffe1; --warn-text: #5a4200; --warn-border: #000;
+  --code-bg: #fff;
+  --shadow: 2px 2px 0 rgba(0, 0, 0, .35);
+  --topbar-bg: var(--title-a); --topbar-text: #fff; --topbar-hover: var(--face); --topbar-active: var(--face);
+  --ordernr: #b00000;
+  --radius: 0;
+  /* werkopdracht: wit formulier op het bureaublad */
+  --paper: #fff; --form-grey: #d4d0c8; --form-grey-dark: #c4c0b8;
+  --label: #000; --ink: #0a246a; --red: #c00000;
+  --desk: var(--desktop); --toolbar-bg: var(--face); --wo-title: #000;
+  --sheet-shadow: 3px 3px 0 rgba(0, 0, 0, .45);
+  --float: var(--raised); --float-hover: var(--raised);
+  accent-color: var(--sel);
+  font-family: var(--f-ui);
+  background: var(--desktop);
+}
+:root[data-theme="w98"] body { font: 14px/1.45 var(--f-ui); background: var(--desktop); color: var(--text); }
+:root[data-theme="w98"] ::selection { background: var(--sel); color: #fff; }
+:root[data-theme="w98"] :is(h1, h2, h3) { font-family: var(--f-ui); color: #000; }
+:root[data-theme="w98"] main h1 { font-size: 20px; font-weight: 700; letter-spacing: 0; }
+:root[data-theme="w98"] h2 { font-size: 15px; font-weight: 700; }
+:root[data-theme="w98"] :where(code, .mono, .ordernr) { font-family: var(--f-mono); }
+:root[data-theme="w98"] code { box-shadow: var(--sunken); padding: 1px 4px; border-radius: 0; }
+:root[data-theme="w98"] label { color: #000; }
+:root[data-theme="w98"] a { color: var(--link); }
+:root[data-theme="w98"] :focus-visible { outline: 1px dotted #000 !important; outline-offset: -4px !important; }
+:root[data-theme="w98"] :is(input, select, textarea):focus-visible { outline: 1px solid var(--sel) !important; outline-offset: 0 !important; }
+
+/* ---------- titelbalk (menubalk) ---------- */
+:root[data-theme="w98"] .topbar {
+  background: linear-gradient(90deg, var(--title-a), var(--title-b)); border-bottom: 0; padding: .35rem .6rem; gap: .6rem;
+  box-shadow: 0 2px 0 var(--face), 0 3px 0 var(--dark);
+}
+:root[data-theme="w98"] .brand { color: #fff; }
+:root[data-theme="w98"] .logo-word { font-family: var(--f-ui); font-weight: 700; letter-spacing: .08em; font-size: 15px; }
+:root[data-theme="w98"] .logo-sub { font-family: var(--f-ui); letter-spacing: .1em; opacity: .85; }
+:root[data-theme="w98"] .logo-mark { width: 26px; height: 26px; }
+:root[data-theme="w98"] .mainnav { gap: 3px; }
+:root[data-theme="w98"] .mainnav a {
+  padding: .3rem .7rem; border-radius: 0; color: #000; background: var(--face); box-shadow: var(--raised); font-size: 13px;
+}
+:root[data-theme="w98"] .mainnav a:hover { background: var(--face); color: #000; text-decoration: underline; }
+:root[data-theme="w98"] .mainnav a.active { background: var(--face-light); color: #000; box-shadow: var(--pressed); font-weight: 700; padding: calc(.3rem + 1px) .7rem calc(.3rem - 1px) calc(.7rem + 1px); }
+:root[data-theme="w98"] .nav-count { background: #b00000; color: #fff; border-radius: 0; }
+:root[data-theme="w98"] .iconbtn { width: 26px; height: 24px; border: 0; border-radius: 0; background: var(--face); color: #000; box-shadow: var(--raised); }
+:root[data-theme="w98"] .iconbtn:hover { background: var(--face); color: #000; }
+:root[data-theme="w98"] .iconbtn:active, :root[data-theme="w98"] .theme-btn[aria-expanded="true"] { background: var(--face-light); color: #000; box-shadow: var(--pressed); }
+:root[data-theme="w98"] .usernav { gap: .5rem; }
+:root[data-theme="w98"] .usernav .username, :root[data-theme="w98"] .topbar .linkbtn { color: #fff; }
+:root[data-theme="w98"] .usernav .username:hover, :root[data-theme="w98"] .topbar .linkbtn:hover { color: #fff; }
+
+/* ---------- venster ---------- */
+:root[data-theme="w98"] main.page {
+  margin: 14px auto 0; background: var(--face); box-shadow: var(--raised), 3px 3px 0 rgba(0, 0, 0, .3); padding: 1rem 1.1rem 1.6rem;
+  width: calc(100% - 28px); box-sizing: border-box;
+}
+:root[data-theme="w98"] .page-head { margin: .2rem 0 .9rem; }
+
+/* Groepsvak: ingegraveerde rand met de kop erin, zoals in een dialoogvenster. */
+:root[data-theme="w98"] :where(.card, .rdw-card, .customer-head) {
+  position: relative; background: transparent; border: 1px solid var(--shade); border-radius: 0;
+  box-shadow: inset 1px 1px 0 var(--hi), 1px 1px 0 var(--hi); padding: 1.1rem 1rem .9rem; margin-top: 1.4rem;
+}
+:root[data-theme="w98"] .card > h2:first-child, :root[data-theme="w98"] .rdw-card > h2:first-child {
+  position: absolute; top: -.75em; left: .6rem; margin: 0; padding: 0 .35rem; background: var(--face);
+  font-size: 13.5px; line-height: 1.4; max-width: calc(100% - 1.6rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+:root[data-theme="w98"] .card > h2:first-child + * { margin-top: .3rem; }
+:root[data-theme="w98"] .empty { background: #fff; border: 0; border-radius: 0; box-shadow: var(--sunken); }
+
+/* ---------- knoppen ---------- */
+:root[data-theme="w98"] .btn {
+  border: 0; border-radius: 0; background: var(--face); color: #000; box-shadow: var(--raised); font-family: var(--f-ui); font-weight: 400;
+  padding: .45rem 1rem; min-height: 2rem;
+}
+:root[data-theme="w98"] .btn:hover { background: var(--face); }
+:root[data-theme="w98"] .btn:active:not(:disabled) { box-shadow: var(--pressed); padding: calc(.45rem + 1px) calc(1rem - 1px) calc(.45rem - 1px) calc(1rem + 1px); }
+/* Standaardknop: extra zwarte rand en vet, zoals de knop die op Enter reageert. */
+:root[data-theme="w98"] :is(.btn-primary, .btn-ok) { background: var(--face); color: #000; font-weight: 700; box-shadow: 0 0 0 1px #000, var(--raised); }
+:root[data-theme="w98"] :is(.btn-primary, .btn-ok):hover { background: var(--face); }
+:root[data-theme="w98"] :is(.btn-primary, .btn-ok):active:not(:disabled) { box-shadow: 0 0 0 1px #000, inset 0 0 0 1px var(--shade); }
+:root[data-theme="w98"] .btn-ok { color: #006400; }
+:root[data-theme="w98"] .btn-danger { color: #b00000; }
+:root[data-theme="w98"] .btn-danger:hover { background: var(--face); }
+:root[data-theme="w98"] .btn-ghost { background: transparent; box-shadow: none; text-decoration: underline; color: var(--link); }
+:root[data-theme="w98"] .btn:disabled, :root[data-theme="w98"] .btn[aria-disabled="true"] { color: var(--shade); text-shadow: 1px 1px 0 var(--hi); cursor: default; }
+:root[data-theme="w98"] .btn-small { padding: .25rem .6rem; min-height: 1.6rem; font-size: 12.5px; }
+:root[data-theme="w98"] .btn-small:active:not(:disabled) { padding: calc(.25rem + 1px) calc(.6rem - 1px) calc(.25rem - 1px) calc(.6rem + 1px); }
+:root[data-theme="w98"] .qty-btn { border: 0; border-radius: 0; background: var(--face); box-shadow: var(--raised); color: #000; }
+:root[data-theme="w98"] .qty-btn:active { box-shadow: var(--pressed); }
+
+/* ---------- invoervelden: wit en verzonken ---------- */
+:root[data-theme="w98"] :is(input:not([type=checkbox], [type=radio], [type=file], [type=hidden], [type=range], .ink, .nr-input, .plate-input), select, textarea:not(.ink)) {
+  border: 0 !important; border-radius: 0 !important; background-color: #fff; color: #000; box-shadow: var(--sunken); font-family: var(--f-ui);
+  padding-left: .5rem;
+}
+:root[data-theme="w98"] :is(input, select, textarea):disabled { background-color: var(--face); color: var(--shade); }
+:root[data-theme="w98"] ::placeholder { color: #8a8a8a; }
+:root[data-theme="w98"] .plate-input { border-radius: 0 !important; }
+
+/* ---------- lijsten: wit, verzonken, met knopkoppen ---------- */
+:root[data-theme="w98"] .table-wrap { background: #fff; border: 0; border-radius: 0; box-shadow: var(--sunken); padding: 2px; }
+:root[data-theme="w98"] table.list th {
+  background: var(--face); color: #000; font-size: 12.5px; font-weight: 400; text-transform: none; letter-spacing: 0;
+  box-shadow: var(--raised); border-bottom: 0; padding: .35rem .7rem;
+}
+:root[data-theme="w98"] table.list td { border-bottom: 1px solid #ecebe8; }
+:root[data-theme="w98"] table.list.clickable tbody tr:hover { background: #dfe6f3; }
+:root[data-theme="w98"] table.list.clickable tbody tr:hover > td:first-child { box-shadow: inset 2px 0 0 var(--sel); }
+:root[data-theme="w98"] .table-wrap.more-right { box-shadow: var(--sunken), inset -18px 0 14px -14px rgba(0, 0, 0, .35); }
+:root[data-theme="w98"] .table-wrap.more-left { box-shadow: var(--sunken), inset 18px 0 14px -14px rgba(0, 0, 0, .35); }
+:root[data-theme="w98"] :is(.status-badge, .apk-pill, .season, .out-pill, .row-st, .car-pill, .called-pill, .status-pill, .secret-tag) { border-radius: 0; }
+
+/* Filterknoppen: aan = ingedrukt */
+:root[data-theme="w98"] .status-tabs a { border: 0; border-radius: 0; background: var(--face); color: #000; box-shadow: var(--raised); }
+:root[data-theme="w98"] .status-tabs a.active { background: var(--face-light); color: #000; box-shadow: var(--pressed); font-weight: 700; }
+/* Tabbladen */
+:root[data-theme="w98"] .kind-tabs { border-bottom: 1px solid var(--hi); gap: 2px; padding-left: 2px; }
+:root[data-theme="w98"] .kind-tabs a {
+  color: #000; background: var(--face); border: 1px solid var(--hi); border-right-color: var(--dark); border-bottom: 0; border-radius: 3px 3px 0 0;
+  box-shadow: inset -1px 0 0 var(--shade); margin-bottom: 0; padding: .35rem .8rem; position: relative; top: 2px; font-weight: 400;
+}
+:root[data-theme="w98"] .kind-tabs a.active { top: 1px; padding-bottom: .5rem; margin-bottom: -1px; font-weight: 700; z-index: 1; }
+
+/* ---------- meldingen: berichtvenster ---------- */
+:root[data-theme="w98"] :is(.flash, .alert, .backup-warn, .swap-hint) {
+  border: 0; border-radius: 0; background: var(--face); color: #000; box-shadow: var(--raised), 2px 2px 0 rgba(0, 0, 0, .3);
+}
+:root[data-theme="w98"] :is(.flash, .alert) { display: flex; align-items: flex-start; gap: .6rem; }
+:root[data-theme="w98"] :is(.flash, .alert)::before {
+  content: "i"; flex: 0 0 auto; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; color: #0000c8; border: 2px solid #0000c8; font: 700 14px/1 Georgia, "Times New Roman", serif;
+}
+:root[data-theme="w98"] .flash-ok::before { content: "\2713"; color: #006400; border-color: #006400; font-family: var(--f-ui); }
+:root[data-theme="w98"] :is(.flash-err, .alert)::before { content: "\00d7"; background: #c00000; color: #fff; border-color: #800000; font-family: var(--f-ui); font-size: 17px; }
+:root[data-theme="w98"] .flash-ok { color: #000; }
+:root[data-theme="w98"] :is(.flash-err, .alert) { color: #000; }
+:root[data-theme="w98"] .backup-warn { background: #ffffe1; box-shadow: 0 0 0 1px #000, 2px 2px 0 rgba(0, 0, 0, .3); }
+:root[data-theme="w98"] .backup-warn svg { color: #c00000; }
+:root[data-theme="w98"] .live-toast { border: 1px solid #000; border-left: 1px solid #000; border-radius: 0; background: #ffffe1; color: #000; box-shadow: 2px 2px 0 rgba(0, 0, 0, .35); }
+
+/* ---------- keuzevakken (Instellingen) ---------- */
+:root[data-theme="w98"] .choice-body { border: 0; border-radius: 0; background: var(--face); box-shadow: var(--raised); }
+:root[data-theme="w98"] .choice:hover .choice-body { border-color: transparent; }
+:root[data-theme="w98"] .choice input:checked + .choice-body { background: var(--face-light); box-shadow: 0 0 0 1px #000, var(--pressed); }
+:root[data-theme="w98"] :is(.theme-preview, .ink-preview) { border-radius: 0; }
+:root[data-theme="w98"] :is(.apk-box, .photo, .review-block, .claude-note) { border-radius: 0; }
+
+/* ---------- startscherm: grote knoppen zoals een hoofdmenu ---------- */
+:root[data-theme="w98"] .start-tile { border: 0; border-radius: 0; background: var(--face); color: #000; box-shadow: var(--raised); }
+:root[data-theme="w98"] .start-tile:hover { background: var(--face); transform: none; box-shadow: var(--raised); }
+:root[data-theme="w98"] .start-tile:active { box-shadow: var(--pressed); }
+:root[data-theme="w98"] .start-tile-primary { box-shadow: 0 0 0 1px #000, var(--raised); }
+:root[data-theme="w98"] .start-tile svg { color: var(--title-a); }
+
+/* ---------- inloggen: dialoogvenster met titelbalk ---------- */
+:root[data-theme="w98"] .auth-card {
+  position: relative; border: 0; border-radius: 0; background: var(--face); padding: 2.6rem 1.4rem 1.4rem;
+  box-shadow: var(--raised), 3px 3px 0 rgba(0, 0, 0, .35);
+}
+:root[data-theme="w98"] .auth-card::before {
+  content: "ADONIS \2013  Aanmelden"; position: absolute; left: 3px; right: 3px; top: 3px; height: 22px; padding: 0 6px;
+  display: flex; align-items: center; color: #fff; font: 700 13px var(--f-ui);
+  background: linear-gradient(90deg, var(--title-a), var(--title-b));
+}
+:root[data-theme="w98"] .auth-card::after {
+  content: "\00d7"; position: absolute; right: 6px; top: 6px; width: 18px; height: 16px; display: grid; place-items: center;
+  background: var(--face); box-shadow: var(--raised); font: 700 13px/1 var(--f-ui); color: #000;
+}
+
+/* ---------- werkopdracht ---------- */
+:root[data-theme="w98"] :is(.order-toolbar, .review-bar) { background: var(--face); border-bottom: 0; box-shadow: var(--raised); }
+:root[data-theme="w98"] .sheet { border-radius: 0; }
+
+/* ---------- statusbalk onderaan ---------- */
+:root[data-theme="w98"] .app-footer {
+  max-width: 1180px; width: calc(100% - 28px); box-sizing: border-box; margin: 0 auto 14px; padding: 3px; gap: 3px;
+  background: var(--face); color: #000; opacity: 1; font-size: 12px; justify-content: flex-start; box-shadow: var(--raised), 3px 3px 0 rgba(0, 0, 0, .3);
+}
+:root[data-theme="w98"] .app-footer > * { box-shadow: inset 1px 1px 0 var(--shade), inset -1px -1px 0 var(--hi); padding: 1px 8px; }
+:root[data-theme="w98"] .app-footer .sep { display: none; }
+:root[data-theme="w98"] .app-footer .upd-new { color: var(--link); }
+:root[data-theme="w98"] main.page + .app-footer, :root[data-theme="w98"] main.page ~ .app-footer { margin-top: 0; }
+:root[data-theme="w98"] .page.wide ~ .app-footer { max-width: 1400px; }
+
+/* ---------- themamenu: klassiek pop-upmenu ---------- */
+:root[data-theme="w98"] .theme-menu { border: 0; border-radius: 0; background: var(--face); padding: 3px; box-shadow: var(--raised), 2px 2px 0 rgba(0, 0, 0, .35); }
+:root[data-theme="w98"] :is(.theme-item, .theme-fx-item) { border-radius: 0; }
+:root[data-theme="w98"] :is(.theme-item, .theme-fx-item):hover:not([aria-disabled="true"]) { background: var(--sel); color: #fff; }
+:root[data-theme="w98"] :is(.theme-item, .theme-fx-item):hover .theme-sub { color: #dfe6f3; }
+:root[data-theme="w98"] .theme-menu [aria-checked="true"] { background: transparent; }
+:root[data-theme="w98"] .theme-menu .theme-item[aria-checked="true"]::after { color: inherit; content: "\25CF"; font-size: 10px; }
+:root[data-theme="w98"] .theme-fx-item { border: 0; box-shadow: var(--raised); }
+:root[data-theme="w98"] .theme-fx-item[aria-checked="true"] { box-shadow: var(--pressed); background: var(--face-light); color: #000; }
+:root[data-theme="w98"] .theme-sep { height: 0; border-top: 1px solid var(--shade); border-bottom: 1px solid var(--hi); background: none; }
+:root[data-theme="w98"] .theme-swatch { border-radius: 0; }
+
+/* Klassieke schuifbalken (Chrome/Edge, de ADONIS-app) */
+:root[data-theme="w98"] { scrollbar-color: auto; }
+:root[data-theme="w98"] ::-webkit-scrollbar { width: 16px; height: 16px; }
+:root[data-theme="w98"] ::-webkit-scrollbar-track { background: #ecebe8 repeating-conic-gradient(var(--face) 0 25%, #fff 0 50%) 0 0 / 2px 2px; }
+:root[data-theme="w98"] ::-webkit-scrollbar-thumb { background: var(--face); box-shadow: var(--raised); }
+:root[data-theme="w98"] ::-webkit-scrollbar-corner { background: var(--face); }
+
+/* ---------- opstarten: "verbinding maken"-venster met blokjesbalk ---------- */
+.w98-boot { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; background: var(--desktop); pointer-events: none; }
+.w98-boot-win { width: min(380px, calc(100vw - 32px)); background: var(--face); box-shadow: var(--raised), 3px 3px 0 rgba(0, 0, 0, .35); padding: 3px; font: 13px/1.5 var(--f-ui); color: #000; }
+.w98-boot-title { display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 6px; color: #fff; font-weight: 700; background: linear-gradient(90deg, var(--title-a), var(--title-b)); }
+.w98-boot-title .logo-mark { width: 16px; height: 16px; }
+.w98-boot-body { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; padding: 14px 12px 12px; }
+.w98-boot-body .logo-mark { width: 40px; height: 40px; grid-row: 1 / 4; }
+.w98-boot-body p { margin: 0; opacity: 0; animation: w98-line 0s linear both; animation-delay: calc(var(--i, 0) * .32s + .1s); }
+.w98-boot-body p b { color: #006400; }
+.w98-boot-bar { grid-column: 1 / -1; height: 20px; margin-top: 8px; box-shadow: var(--sunken); padding: 3px; background: #fff; }
+.w98-boot-bar i {
+  display: block; height: 100%; width: 0;
+  background: repeating-linear-gradient(90deg, var(--sel) 0 9px, transparent 9px 11px);
+  animation: w98-fill 1.1s steps(18, end) .1s both;
+}
+@keyframes w98-line { to { opacity: 1; } }
+@keyframes w98-fill { to { width: 100%; } }
+/* De pagina verschijnt in één keer, zoals een venster vroeger (ook zonder boot.js: na 1,4 s altijd zichtbaar). */
+:root[data-theme="w98"][data-boot] :is(main, .order-toolbar, .sheet-scroll, .flash, .app-footer, .topbar) { animation: w98-show 0s linear 1.35s both; }
+@keyframes w98-show { from { visibility: hidden; } to { visibility: visible; } }
+
+/* ---------- telefoon ---------- */
+@media (max-width: 760px) {
+  :root[data-theme="w98"] main.page { width: calc(100% - 12px); margin-top: 8px; padding: .8rem .7rem 1.2rem; }
+  :root[data-theme="w98"] .app-footer { width: calc(100% - 12px); margin-bottom: 8px; }
+  :root[data-theme="w98"] .mainnav a { padding: .3rem .55rem; }
+  :root[data-theme="w98"] .topbar { padding: .3rem .4rem; }
+  :root[data-theme="w98"] .flash { margin-left: 6px; margin-right: 6px; }
+  /* Kaartweergave: elke rij een eigen vakje in de witte lijst */
+  :root[data-theme="w98"] table.cards tbody tr { border-bottom: 1px solid var(--border-soft); }
+}
+
+/* ---------- Effecten: Rustig / minder beweging ---------- */
+:root[data-theme="w98"][data-fx="calm"] .w98-boot { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .w98-boot { display: none !important; }
+  :root[data-theme="w98"][data-boot] :is(main, .order-toolbar, .sheet-scroll, .flash, .app-footer, .topbar) { animation: none !important; }
+}
+@media (forced-colors: active) {
+  :root[data-theme="w98"] :is(.btn, .mainnav a, .iconbtn, .status-tabs a, .choice-body, .start-tile) { border: 1px solid ButtonText; }
+}
+
+/* ---------- afdrukken: gewoon wit papier ---------- */
+@media print {
+  :root[data-theme="w98"], :root[data-theme="w98"] body { background: #fff !important; }
+  :root[data-theme="w98"] main.page { box-shadow: none; background: #fff; margin: 0; width: auto; padding: 0; }
+  :root[data-theme="w98"] :is(.card, .rdw-card, .customer-head, .table-wrap) { box-shadow: none; background: #fff; }
+  :root[data-theme="w98"] .card > h2:first-child { position: static; background: none; padding: 0; }
+  :root[data-theme="w98"] table.list th { box-shadow: none; background: #fff; border-bottom: 1px solid #000; }
+  :root[data-theme="w98"] .sheet { box-shadow: none; }
+  .w98-boot { display: none !important; }
+}
+
+/* Hulp-knop in de titelbalk, net als de andere knopjes */
+:root[data-theme="w98"] .help-link { color: #000; background: var(--face); box-shadow: var(--raised); padding: 3px 4px; min-height: 18px; }
+:root[data-theme="w98"] .help-link:hover { color: #000; }
+:root[data-theme="w98"] .help-link.active { box-shadow: var(--pressed); background: var(--face-light); color: #000; }
+/* Statusbalk even breed als het venster erboven */
+:root[data-theme="w98"] .page.narrow ~ .app-footer { max-width: 560px; }
+:root[data-theme="w98"] :is(.settings-page, .help-page) ~ .app-footer { max-width: 820px; }
+:root[data-theme="w98"] .start-page ~ .app-footer { max-width: 1000px; }
+:root[data-theme="w98"] .start-tile-primary .start-tile-text { color: var(--muted); }
+:root[data-theme="w98"] .start-tile-primary svg { color: var(--title-a); }
+/* Startscherm (vernieuwd) in VCDS-stijl */
+:root[data-theme="w98"] :is(.start-stat, .start-new) { border: 0; border-radius: 0; background: var(--face); color: #000; box-shadow: var(--raised); transform: none !important; }
+:root[data-theme="w98"] .start-stat::after { display: none; }
+:root[data-theme="w98"] .start-new { box-shadow: 0 0 0 1px #000, var(--raised); }
+:root[data-theme="w98"] .start-new-icon { background: var(--title-a); color: #fff; border-radius: 0; }
+:root[data-theme="w98"] :is(.start-stat-icon, .start-tile-icon) { border-radius: 0; }
+:root[data-theme="w98"] .start-search-row input[type=search] { border-radius: 0 !important; box-shadow: var(--sunken) !important; border: 0 !important; background: #fff !important; }
+:root[data-theme="w98"] .start-search-row .btn-big { border-radius: 0; }
+:root[data-theme="w98"] .start-page ~ .app-footer { max-width: 1080px; }
+
+
+/* =====================================================================
+   Eigen accenten van Windows 98
+   ===================================================================== */
+:root[data-theme="w98"] {
+  --face: #c0c0c0; --face-light: #dfdfdf; --shade: #808080; --dark: #000000;
+  --title-a: #000080; --title-b: #1084d0; --sel: #000080;
+  --desktop: #008080;
+  --hover: #d6d6d6; --primary-hover: #00009c; --link: #0000ee;
+  --f-ui: "MS Sans Serif", "Microsoft Sans Serif", Tahoma, Verdana, Geneva, Arial, sans-serif;
+}
+:root[data-theme="w98"] body { font-size: 13.5px; padding-bottom: 34px; }
+/* Taakbalk onderaan: de voettekst wordt een grijze balk met een startknop en een klok. */
+:root[data-theme="w98"] .app-footer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; height: 30px; margin: 0 !important; padding: 0 4px 0 66px !important; max-width: none !important; width: auto !important;
+  display: flex; align-items: center; justify-content: flex-start; gap: .4rem; font-size: 12px; color: #000;
+  background: var(--face); box-shadow: inset 0 1px 0 var(--face-light), inset 0 2px 0 #fff;
+}
+:root[data-theme="w98"] .app-footer::before {
+  content: "Start"; position: absolute; left: 3px; top: 4px; height: 22px; padding: 0 8px 0 24px; display: flex; align-items: center;
+  font-weight: 700; color: #000; background: var(--face) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='1' width='14' height='14' fill='%23000080'/%3E%3Cpath d='M8 3 12.5 13h-2.2L8 7.6 5.7 13H3.5z' fill='%23fff'/%3E%3Crect x='5.2' y='9.6' width='5.6' height='1.5' fill='%23ffd200'/%3E%3C/svg%3E") 5px 50% / 15px 15px no-repeat;
+  box-shadow: var(--raised);
+}
+:root[data-theme="w98"] .app-footer > * { padding: 0 .5rem; }
+:root[data-theme="w98"] .app-footer .sep { display: none; }
+:root[data-theme="w98"] .w98-clock { margin-left: auto; height: 22px; display: flex; align-items: center; padding: 0 10px !important; box-shadow: inset 1px 1px 0 var(--shade), inset -1px -1px 0 #fff; }
+:root[data-theme="w98"] .live-toasts { bottom: 40px; }
+:root[data-theme="w98"] .note-dock { top: auto; bottom: 44px; transform: none; }
+@media print { :root[data-theme="w98"] body { padding-bottom: 0; } :root[data-theme="w98"] .app-footer { display: none; } }

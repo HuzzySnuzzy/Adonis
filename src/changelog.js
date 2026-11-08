@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.37.0', date: '2026-11-08', title: 'Geheim thema Windows 98',
+    items: [
+      'Nieuw geheim thema: Windows 98. Het groenblauwe bureaublad, grijze 3D-vensters en knoppen, titelbalken van donker- naar lichtblauw en onderaan een taakbalk met een startknop en een klok. Met een eigen opstartvenster "ADONIS 98".',
+    ],
+  },
+  {
     version: '1.36.1', date: '2026-11-08', title: 'Beter leesbaar, en de server crasht niet meer na een update',
     items: [
       'Knoppen en labels die in sommige thema\'s slecht leesbaar waren, zijn opgelost: o.a. "Nieuwe werkopdracht" op het startscherm in Neon en Black Ice (nu donkere tekst op de lichte kleur), rode tellers in Donker/OLED, de voettekst en tellers in Aero, ADONIS, Licht en OLED, en de APK-datums in Neon/Black Ice. Alles is per thema nagemeten.',

@@ -12,7 +12,7 @@
 
   function end() {
     clearTimeout(timer);
-    var box = document.querySelector('.app-boot, .vcds-boot, .olympus-boot, .aero-boot');
+    var box = document.querySelector('.app-boot, .vcds-boot, .w98-boot, .olympus-boot, .aero-boot');
     if (box) box.remove();
     root.removeAttribute('data-boot');
     removeEventListener('keydown', end, true);
@@ -20,21 +20,22 @@
   }
 
   /* VCDS: een klassiek "verbinding maken"-venster met een blokjesbalk. */
-  function startVcds() {
+  function startVcds(w98) {
     var mark = document.querySelector('.logo .logo-mark');
     var box = document.createElement('div');
-    box.className = 'vcds-boot';
+    var pre = w98 ? 'w98-boot' : 'vcds-boot';
+    box.className = pre;
     box.setAttribute('aria-hidden', 'true');
     var win = document.createElement('div');
-    win.className = 'vcds-boot-win';
+    win.className = pre + '-win';
     var title = document.createElement('div');
-    title.className = 'vcds-boot-title';
+    title.className = pre + '-title';
     if (mark) title.append(mark.cloneNode(true));
-    title.append('ADONIS \u2013 Verbinden');
+    title.append(w98 ? 'ADONIS 98' : 'ADONIS \u2013 Verbinden');
     var body = document.createElement('div');
-    body.className = 'vcds-boot-body';
+    body.className = pre + '-body';
     if (mark) body.append(mark.cloneNode(true));
-    [['Interface zoeken\u2026', ''], ['Interface: ', 'gevonden!'], ['Werkplaats-database: ', 'OK']].forEach(function (l, i) {
+    (w98 ? [['ADONIS wordt gestart\u2026', ''], ['Instellingen laden: ', 'OK'], ['Werkplaats-database: ', 'OK']] : [['Interface zoeken\u2026', ''], ['Interface: ', 'gevonden!'], ['Werkplaats-database: ', 'OK']]).forEach(function (l, i) {
       var p = document.createElement('p');
       p.style.setProperty('--i', i);
       p.append(l[0]);
@@ -42,7 +43,7 @@
       body.append(p);
     });
     var bar = document.createElement('div');
-    bar.className = 'vcds-boot-bar';
+    bar.className = pre + '-bar';
     bar.append(document.createElement('i'));
     body.append(bar);
     win.append(title, body);
@@ -115,7 +116,8 @@
 
   function start() {
     if (root.getAttribute('data-boot') !== '1') return;
-    if (theme === 'vcds') return startVcds();
+    if (theme === 'vcds') return startVcds(false);
+    if (theme === 'w98') return startVcds(true);
     if (theme === 'adonis') return startAdonis();
     if (theme === 'aero') return startAero();
     var box = document.createElement('div');
