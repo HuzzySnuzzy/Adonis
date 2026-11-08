@@ -477,6 +477,26 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
   font-size: .9rem; text-decoration: none; transition: opacity .5s, transform .5s;
 }
 .live-toast.hide { opacity: 0; transform: translateY(6px); }
+.live-toast { position: relative; display: flex; align-items: flex-start; gap: .5rem; padding-right: .4rem; overflow: hidden; animation: toast-in .3s ease-out; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(10px); } }
+.live-toast-text { flex: 1; min-width: 0; color: inherit; text-decoration: none; line-height: 1.4; }
+a.live-toast-text:hover { text-decoration: underline; }
+.live-toast-x { flex: 0 0 auto; width: 24px; height: 24px; margin: -.2rem 0 0; padding: 0; border: 0; border-radius: 6px; background: none;
+  color: var(--muted); font-size: 1.15rem; line-height: 1; cursor: pointer; }
+.live-toast-x:hover { background: var(--hover); color: var(--text); }
+/* Hoe lang de melding nog blijft: een dun streepje onderaan (staat stil zolang de muis erop staat). */
+.live-toast:not(.is-sticky)::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: currentColor; opacity: .25;
+  transform-origin: 0 50%; animation: toast-time var(--toast-ms, 15s) linear forwards; }
+.live-toast.is-paused::after { animation-play-state: paused; }
+@keyframes toast-time { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.live-toast.toast-werkopdrachten { border-left-color: var(--primary); }
+.live-toast.toast-banden { border-left-color: #e0a526; }
+.live-toast.toast-voorraad { border-left-color: #13a3a3; }
+.live-toast.toast-klanten { border-left-color: #5b8def; }
+.live-toast.toast-notities { border-left-color: #f2d24b; }
+.live-toast.toast-herinneringen { border-left-color: #e2557a; }
+@media (prefers-reduced-motion: reduce) { .live-toast { animation: none; } }
+.notify-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: .8rem 1.4rem; margin: .4rem 0 .8rem; }
 .live-banner {
   padding: .6rem 1rem; background: var(--warn-bg); color: var(--warn-text); border-bottom: 1px solid var(--warn-border);
   display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; justify-content: center; font-size: .9rem;

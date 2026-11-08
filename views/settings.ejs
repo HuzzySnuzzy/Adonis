@@ -72,6 +72,22 @@
       <% } %>
     </section>
 
+    <section class="card" id="meldingen">
+      <h2>Meldingen</h2>
+      <p class="muted small">Rechtsonder verschijnt een melding als een collega iets doet. Ze blijven 15 seconden staan
+        (langer zolang de muis erop staat) en met een klik gaat u ernaartoe. Uw eigen wijzigingen ziet u niet als melding.</p>
+      <div class="notify-grid">
+      <% for (const [k, label, help] of NOTIFY_KINDS) { %>
+        <label class="check big-check">
+          <input type="hidden" name="n_<%= k %>" value="off">
+          <input type="checkbox" name="n_<%= k %>" value="on" <%= p['n_' + k] !== 'off' ? 'checked' : '' %>>
+          <span><b><%= label %></b><br><span class="muted small"><%= help %></span></span>
+        </label>
+      <% } %>
+      </div>
+      <p><button type="button" class="btn btn-small" data-notify-test>Voorbeeldmelding tonen</button></p>
+    </section>
+
     <section class="card" id="autofoto">
       <h2>Voorbeeldfoto's</h2>
       <label class="check big-check">

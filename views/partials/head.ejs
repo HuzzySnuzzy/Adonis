@@ -38,7 +38,7 @@
   <script src="/static/js/ice.js?v=<%= assetVersion %>" defer></script>
   <% } %>
 </head>
-<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>"<%- user.can_invoice ? ' data-can-invoice="1"' : '' %><% } %>>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>" data-notify="<%= ['werkopdrachten', 'banden', 'voorraad', 'klanten', 'notities', 'herinneringen'].filter((k) => prefs['n_' + k] !== 'off').join(' ') %>"<%- user.can_invoice ? ' data-can-invoice="1"' : '' %><% } %>>
 <% if (prefs.theme === 'ice') { %>
 <div class="ice-field no-print" aria-hidden="true"><i class="ice-aurora"></i><i class="ice-aurora"></i><i class="ice-aurora"></i><i class="ice-core"></i><i class="ice-glint"></i></div>
 <% } %>

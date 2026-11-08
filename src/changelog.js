@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.35.0', date: '2026-11-08', title: 'Meer en langere meldingen',
+    items: [
+      'Meldingen rechtsonder blijven nu 15 seconden staan (een streepje laat zien hoe lang nog), en blijven staan zolang de muis erop staat. Met het kruisje sluit u ze, met een klik gaat u ernaartoe.',
+      'Nieuwe meldingen als een collega iets doet: werkopdracht gefactureerd of verwijderd, banden ingeslagen/gewisseld/uitgegeven, voorraad toegevoegd/gewijzigd/op, klantgegevens of kenteken gewijzigd, klant gebeld voor de APK en nieuwe gedeelde plaknotities.',
+      'Herinneringen: één keer per dag hoeveel klanten gebeld moeten worden voor de APK (binnen 2 weken of net verlopen) en voor de bandenwissel. Die blijven op elke pagina staan tot u ze sluit.',
+      'Bij Instellingen → Meldingen zet u elke soort aan of uit, en kunt u een voorbeeldmelding bekijken.',
+    ],
+  },
+  {
     version: '1.34.0', date: '2026-11-08', title: 'Lijsten sorteren op kolom',
     items: [
       'Klik op een kolomkop (Nr., Status, Datum, Kenteken, Naam, Km-stand…) om de lijst daarop te sorteren, zoals in Taakbeheer. Nog een keer klikken draait de volgorde om; een derde keer zet de gewone volgorde terug.',

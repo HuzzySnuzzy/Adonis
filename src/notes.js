@@ -54,7 +54,9 @@ module.exports = function register(app) {
     const orderId = orderOf(req.body.werkopdracht);
     const r = db.prepare('INSERT INTO sticky_notes (user_id, text, color, shared, order_id, updated_by) VALUES (?, ?, ?, ?, ?, ?)').run(req.user.id, text, color, shared, orderId, req.user.id);
     const note = visibleTo(req.user, orderId).find((n) => n.id === Number(r.lastInsertRowid));
-    if (shared) notify(req, note);
+    if (shared) events.broadcast({ type: 'notes', byId: req.user.id, id: note.id, cat: 'notities',
+      msg: `Nieuwe plaknotitie van ${req.user.name}${note.order_nummer ? ' op werkopdracht ' + note.order_nummer : ''}${text.trim() ? ': “' + text.trim().slice(0, 60) + (text.trim().length > 60 ? '…' : '') + '”' : ''}`,
+      href: note.order_id ? `/werkopdracht/${note.order_id}` : null });
     res.json({ note });
   });
   app.post('/notities/:id', (req, res) => {

@@ -16,6 +16,10 @@ const carimage = require('./carimage');
 module.exports = function register(app, { flash, wrap }) {
   const announce = (req, area, extra = {}) =>
     events.broadcast({ type: 'data', area, by: req.user.name, byId: req.user.id, ...extra });
+  // Meldingen voor collega's (zie live.js); cat = soort melding, uit te zetten bij Instellingen.
+  const tyreLabel = (t) => (t && (t.kenteken || t.klant_naam)) || 'een bandenset';
+  const stockLabel = (s) => (s && [s.merk, s.maat || s.type, s.nummer || s.oe_nummer].filter(Boolean).join(' ').trim()) || 'een artikel';
+  const note = (cat, msg, href) => ({ cat, msg, href });
   const notFound = (res, what) => res.status(404).render('error', { title: 'Niet gevonden', message: `${what} bestaat niet (meer).` });
   const wantsJson = (req) => (req.get('accept') || '').includes('application/json');
 
@@ -92,7 +96,7 @@ module.exports = function register(app, { flash, wrap }) {
     }
     const id = inv.saveTyre({ data, userId: req.user.id });
     const klant = inv.ensureCustomer(data);
-    announce(req, 'bandenhotel');
+    announce(req, 'bandenhotel', note('banden', `Banden ingeslagen: ${tyreLabel(data)}${data.locatie ? ' (' + data.locatie + ')' : ''}`, `/bandenhotel/${id}`));
     flash(req, 'ok', `Banden${data.kenteken ? ' van ' + data.kenteken : ''} opgeslagen in ${data.soort === 'opslag' ? 'de overige opslag' : 'het bandenhotel'}${data.locatie ? ' (' + data.locatie + ')' : ''}.` +
       (klant === 'nieuw' ? ` ${data.kenteken} is ook toegevoegd aan Klanten.` : ''));
     res.redirect(`/bandenhotel/${id}`);
@@ -116,7 +120,7 @@ module.exports = function register(app, { flash, wrap }) {
     if (error) return renderTyre(res, { tyre, data, error, status: 400 });
     inv.saveTyre({ id: tyre.id, data, userId: req.user.id });
     const klant = inv.ensureCustomer(data);
-    announce(req, 'bandenhotel', { id: tyre.id });
+    announce(req, 'bandenhotel', { id: tyre.id, ...note('banden', `Bandenset ${tyreLabel(data)} gewijzigd`, `/bandenhotel/${tyre.id}`) });
     flash(req, 'ok', 'Opgeslagen.' + (klant === 'nieuw' ? ` ${data.kenteken} is ook toegevoegd aan Klanten.` : ''));
     res.redirect(`/bandenhotel/${tyre.id}`);
   });
@@ -145,7 +149,7 @@ module.exports = function register(app, { flash, wrap }) {
     }
     const r = inv.swapOnto(tyre.id, req.user.id, { eraf: req.body.eraf, locatie: req.body.locatie });
     if (r.error) { flash(req, 'err', r.error); return res.redirect(`/bandenhotel/${tyre.id}`); }
-    announce(req, 'bandenhotel', { id: tyre.id });
+    announce(req, 'bandenhotel', { id: tyre.id, ...note('banden', `Banden gewisseld: ${tyreLabel(tyre)}${tyre.seizoen ? ' – ' + tyre.seizoen.toLowerCase() + 'banden op de auto' : ''}`, tyre.customer_id ? `/klant/${tyre.customer_id}#banden` : `/bandenhotel/${tyre.id}`) });
     const on = (tyre.seizoen || 'de').toLowerCase();
     if (r.eraf === 'geen') {
       flash(req, 'ok', `De ${/^(zomer|winter)$/.test(on) ? on + 'set' : 'set'} staat nu op de auto. Er gaat niets de opslag in.`);
@@ -162,7 +166,8 @@ module.exports = function register(app, { flash, wrap }) {
   // Gebeld/uitgenodigd om te komen wisselen (aan/uit).
   app.post('/bandenhotel/:id/gebeld', (req, res) => {
     const at = inv.toggleInvited(req.params.id, req.user.id);
-    announce(req, 'bandenhotel', { id: Number(req.params.id) });
+    const t = inv.getTyre(req.params.id);
+    announce(req, 'bandenhotel', { id: Number(req.params.id), ...(at ? note('banden', `${tyreLabel(t)}: gebeld om te komen wisselen`, `/bandenhotel/${req.params.id}`) : {}) });
     if (wantsJson(req)) return res.json({ ok: true, uitgenodigd_at: at });
     const back = req.get('referer') && /\/bandenhotel/.test(req.get('referer')) ? req.get('referer') : `/bandenhotel/${req.params.id}`;
     res.redirect(back);
@@ -173,7 +178,7 @@ module.exports = function register(app, { flash, wrap }) {
     if (!tyre) return notFound(res, 'Deze bandenset');
     const status = ['uitgegeven', 'op_auto', 'opgeslagen'].includes(req.body.status) ? req.body.status : 'opgeslagen';
     inv.setTyreStatus(tyre.id, status, req.user.id);
-    announce(req, 'bandenhotel', { id: tyre.id });
+    announce(req, 'bandenhotel', { id: tyre.id, ...note('banden', `${tyreLabel(tyre)}: ${status === 'uitgegeven' ? 'banden uitgegeven' : status === 'op_auto' ? 'banden op de auto' : 'banden weer in de opslag'}`, `/bandenhotel/${tyre.id}`) });
     if (status === 'uitgegeven' && req.body.wisselen === '1') {
       flash(req, 'ok', `${tyre.seizoen || 'De'} set van ${tyre.kenteken || tyre.klant_naam} is uitgegeven. Vul nu de set in die je inslaat.`);
       return res.redirect(`/bandenhotel/nieuw?van=${tyre.id}`);
@@ -189,7 +194,7 @@ module.exports = function register(app, { flash, wrap }) {
     if (tyre) {
       photos.removeFor('tyre', tyre.id);
       inv.deleteTyre(tyre.id);
-      announce(req, 'bandenhotel', { id: tyre.id });
+      announce(req, 'bandenhotel', { id: tyre.id, ...note('banden', `Bandenset ${tyreLabel(tyre)} verwijderd`, '/bandenhotel') });
       flash(req, 'ok', 'De bandenset is verwijderd.');
     }
     res.redirect(tyre && tyre.soort === 'opslag' ? '/bandenhotel?soort=opslag' : '/bandenhotel');
@@ -248,7 +253,7 @@ module.exports = function register(app, { flash, wrap }) {
       return renderStock(res, { item: null, data, error: 'Vul minstens een nummer, soort, maat of omschrijving in.', status: 400 });
     }
     const id = inv.saveStock({ data, userId: req.user.id });
-    announce(req, 'voorraad');
+    announce(req, 'voorraad', note('voorraad', `Toegevoegd aan de voorraad: ${stockLabel(data)}`, `/voorraad/${id}`));
     flash(req, 'ok', 'Toegevoegd aan de voorraad.');
     res.redirect(req.body.nog_een === '1' ? `/voorraad/nieuw?soort=${data.soort}` : `/voorraad?soort=${data.soort}`);
   });
@@ -266,7 +271,7 @@ module.exports = function register(app, { flash, wrap }) {
     else if (req.body.versie !== item.updated_at) error = `${item.updated_by_name || 'Iemand anders'} heeft dit intussen gewijzigd (bijvoorbeeld het aantal). Open het opnieuw om de laatste versie te zien; jouw wijzigingen zijn NIET opgeslagen.`;
     if (error) return renderStock(res, { item, data, error, status: 400 });
     inv.saveStock({ id: item.id, data, userId: req.user.id });
-    announce(req, 'voorraad', { id: item.id });
+    announce(req, 'voorraad', { id: item.id, ...note('voorraad', `Voorraad gewijzigd: ${stockLabel(data)}`, `/voorraad/${item.id}`) });
     flash(req, 'ok', 'Opgeslagen.');
     res.redirect(`/voorraad?soort=${item.soort}`);
   });
@@ -276,7 +281,8 @@ module.exports = function register(app, { flash, wrap }) {
     if (!item) return wantsJson(req) ? res.status(404).json({ error: 'Niet gevonden' }) : res.redirect('/voorraad');
     const delta = Math.max(-100, Math.min(100, parseInt(req.body.delta, 10) || 0));
     const updated = inv.adjustStock(item.id, delta, req.user.id);
-    announce(req, 'voorraad', { id: item.id, aantal: updated.aantal });
+    // Alleen een melding als iets op raakt (anders bij elke + en − een melding).
+    announce(req, 'voorraad', { id: item.id, aantal: updated.aantal, ...(updated.aantal === 0 && delta < 0 ? note('voorraad', `Op: ${stockLabel(item)} (nog 0 in voorraad)`, `/voorraad/${item.id}`) : {}) });
     if (wantsJson(req)) return res.json({ ok: true, aantal: updated.aantal, beschikbaar: updated.beschikbaar });
     res.redirect(req.get('referer') && /\/voorraad/.test(req.get('referer')) ? req.get('referer') : `/voorraad?soort=${item.soort}`);
   });
@@ -285,7 +291,7 @@ module.exports = function register(app, { flash, wrap }) {
     if (item) {
       photos.removeFor('stock', item.id);
       inv.deleteStock(item.id);
-      announce(req, 'voorraad', { id: item.id });
+      announce(req, 'voorraad', { id: item.id, ...note('voorraad', `Verwijderd uit de voorraad: ${stockLabel(item)}`, `/voorraad?soort=${item.soort}`) });
       flash(req, 'ok', 'Verwijderd uit de voorraad.');
     }
     res.redirect(`/voorraad?soort=${item ? item.soort : 'onderdeel'}`);

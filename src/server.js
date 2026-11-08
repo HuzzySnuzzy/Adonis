@@ -370,6 +370,22 @@ app.get('/start', (req, res) => {
   });
 });
 app.get('/hulp', (req, res) => res.render('help', { title: 'Hulp' }));
+// Herinneringen (één keer per dag, zie live.js): wie moet er gebeld worden?
+app.get('/meldingen/herinneringen', (req, res) => {
+  const items = [];
+  try {
+    const rows = apkRows().filter((r) => !r.called);
+    const soon = rows.filter((r) => r.days >= 0 && r.days <= 14).length;
+    const late = rows.filter((r) => r.days < 0 && r.days >= -7).length;
+    if (soon || late) items.push({ text: `APK: ${[soon ? `${soon} klant${soon === 1 ? '' : 'en'} binnen 2 weken` : '', late ? `${late} net verlopen` : ''].filter(Boolean).join(' en ')} – nog niet gebeld.`, href: '/apk' });
+  } catch { /* geen APK-gegevens */ }
+  try {
+    const target = inv.swapTarget();
+    const n = inv.swapList(target).wisselen.filter((i) => !i.match.uitgenodigd_at).length;
+    if (n) items.push({ text: `Bandenwissel: ${n} klant${n === 1 ? '' : 'en'} met ${target === 'winter' ? 'winter' : 'zomer'}banden in het bandenhotel nog bellen.`, href: '/bandenhotel/wissellijst' });
+  } catch { /* geen bandenhotel */ }
+  res.json({ items });
+});
 
 /* APK-lijst: wie moet binnenkort (of al) naar de APK? Met telefoonnummer en "Gebeld". */
 function apkRows() {
@@ -404,7 +420,8 @@ app.post('/apk/:id/gebeld', (req, res) => {
     const already = c.apk_gebeld_voor === c.apk_vervaldatum && c.apk_gebeld;
     at = already ? null : orders.todayISO();
     db.prepare('UPDATE customers SET apk_gebeld = ?, apk_gebeld_voor = ? WHERE id = ?').run(at, at ? c.apk_vervaldatum : null, c.id);
-    events.broadcast({ type: 'data', area: 'apk', by: req.user.name, byId: req.user.id });
+    events.broadcast({ type: 'data', area: 'apk', by: req.user.name, byId: req.user.id,
+      ...(at ? { cat: 'klanten', msg: `${c.kenteken}${c.naam ? ' (' + c.naam + ')' : ''}: gebeld voor de APK`, href: `/klant/${c.id}` } : {}) });
   }
   if ((req.get('accept') || '').includes('application/json')) return res.json({ ok: true, uitgenodigd_at: at });
   res.redirect('/apk');
@@ -475,7 +492,8 @@ app.post('/klant/:id/bewerken', wrap(async (req, res) => {
   if (!customer) return res.redirect('/');
   try {
     const r = orders.updateCustomer(customer.id, req.body.c || {}, plates.formatPlate);
-    events.broadcast({ type: 'data', area: 'klanten', id: customer.id, by: req.user.name, byId: req.user.id });
+    events.broadcast({ type: 'data', area: 'klanten', id: customer.id, by: req.user.name, byId: req.user.id,
+      cat: 'klanten', msg: r.plateChanged ? `Kenteken gewijzigd: ${r.oldKenteken} → ${r.kenteken}` : `Klantgegevens gewijzigd: ${customer.kenteken}${customer.naam ? ' (' + customer.naam + ')' : ''}`, href: `/klant/${customer.id}` });
     if (r.plateChanged) rdw.refreshInBackground(r.kenteken);
     flash(req, 'ok', r.plateChanged
       ? `Klantgegevens opgeslagen. Het kenteken is gewijzigd van ${r.oldKenteken} naar ${r.kenteken}, ook op de werkopdrachten en in het bandenhotel.`
@@ -812,7 +830,7 @@ function serverOrigin(req) {
 function renderSettings(res, { error = null, status = 200 } = {}) {
   const repo = process.env.UPDATE_REPO || updater.DEFAULT_REPO;
   res.status(status).render('settings', {
-    title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS, SECRET_THEMES: auth.SECRET_THEMES, changelog: require('./changelog'),
+    title: 'Instellingen', error, OPTIONS: auth.PREF_OPTIONS, NOTIFY_KINDS: auth.NOTIFY_KINDS, SECRET_THEMES: auth.SECRET_THEMES, changelog: require('./changelog'),
     serverUrl: serverOrigin(res.req),
     // De ADONIS-app zet "ADONIS-app/<versie>" in de user-agent.
     inApp: /ADONIS-app\//.test(res.req.get('user-agent') || ''),
@@ -847,6 +865,7 @@ app.post('/instellingen', (req, res) => {
     simple: [].concat(req.body.simple || []).includes('on') ? 'on' : 'off',
     carimg: [].concat(req.body.carimg || []).includes('on') ? 'on' : 'off',
     partimg: [].concat(req.body.partimg || []).includes('on') ? 'on' : 'off',
+    ...Object.fromEntries(auth.NOTIFY_KINDS.map(([k]) => ['n_' + k, [].concat(req.body['n_' + k] || []).includes('on') ? 'on' : 'off'])),
   });
   setThemeCookie(res, prefs.theme);
   flash(req, 'ok', 'Je instellingen zijn opgeslagen.');

@@ -244,6 +244,7 @@
 :root[data-theme="adonis"] .flash-ok { background: #eef2dd; color: #3d5a1c; border-color: #c4d29a #c4d29a #c4d29a #6b8a2e; }
 :root[data-theme="adonis"] :is(.flash-err, .alert) { background: #f9e7df; color: #8a2c17; border-color: #e7bfb0 #e7bfb0 #e7bfb0 #a63d24; }
 :root[data-theme="adonis"] .live-toast { border-radius: 3px; border: 1px solid #d9c9a0; background: #fffdf8; box-shadow: var(--frame), var(--shadow); }
+:root[data-theme="adonis"] .live-toast { border-left: 4px solid var(--gold); }
 
 /* ---------- Startscherm ---------- */
 :root[data-theme="adonis"] .start-new {
