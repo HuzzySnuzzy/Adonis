@@ -256,7 +256,7 @@ document.addEventListener('keydown', (e) => {
   if (window.MutationObserver) new MutationObserver(() => requestAnimationFrame(all)).observe(document.body, { childList: true, subtree: true });
   all();
 })();
-// Instellingen: "Geheime thema's" aan/uit toont of verbergt Neon en Black Ice meteen.
+// Instellingen: "Geheime thema's" aan/uit toont of verbergt alle thema's behalve Systeem, Licht en Donker meteen.
 (function () {
   const toggle = document.querySelector('[data-secret-toggle]');
   if (!toggle) return;

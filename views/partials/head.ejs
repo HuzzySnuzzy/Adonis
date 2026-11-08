@@ -75,17 +75,18 @@
     <a class="btn btn-primary new-order-btn" href="/werkopdracht/nieuw" title="Nieuwe werkopdracht">+<span class="nw-long"> Nieuwe werkopdracht</span><span class="nw-short"> Nieuw</span></a>
     <%
       const THEMES_MENU = [
-        { v: 'adonis', name: 'ADONIS', sub: 'Het thema der thema\'s: wit marmer, bladgoud en Egeïsch blauw' },
         { v: 'system', name: 'Systeem', sub: 'Volgt de instelling van je apparaat' },
         { v: 'light', name: 'Licht', sub: 'Helder en rustig' },
         { v: 'dark', name: 'Donker', sub: 'Gedimd, prettig in een donkere werkplaats' },
+        { v: 'adonis', name: 'ADONIS', sub: 'Het thema der thema\'s: wit marmer, bladgoud en Egeïsch blauw' },
         { v: 'oled', name: 'OLED', sub: 'Puur zwart, alles zweeft in de lucht' },
         { v: 'vcds', name: 'VCDS', sub: 'Klassiek diagnosevenster: grijs, 3D-knoppen, blauwe titelbalk' },
         { v: 'neon', name: 'Neon', sub: 'Amberkleurige nevel, hologrammen en regen' },
         { v: 'ice', name: 'Black Ice', sub: 'ICE·XVIII: zwart kristalrooster, ionensporen en rijp' },
       ];
       const fxNow = prefs.fx || 'full';
-      const secretOn = prefs.secret === 'on' || ['neon', 'ice'].includes(prefs.theme);
+      const SECRET = ['adonis', 'oled', 'vcds', 'neon', 'ice'];
+      const secretOn = prefs.secret === 'on' || SECRET.includes(prefs.theme);
     %>
     <div class="theme-wrap"<%- prefs.simple === 'on' ? ' hidden' : '' %>>
       <%# Zonder JavaScript wisselt de knop gewoon naar het volgende thema (formulier). %>
@@ -106,7 +107,7 @@
         </button>
       </form>
       <div id="themeMenu" class="theme-menu" role="menu" aria-label="Thema" hidden data-csrf="<%= csrf %>">
-        <% for (const t of THEMES_MENU) { if (['neon', 'ice'].includes(t.v) && !secretOn) continue; %>
+        <% for (const t of THEMES_MENU) { if (SECRET.includes(t.v) && !secretOn) continue; %>
         <button type="button" role="menuitemradio" class="theme-item" data-theme-value="<%= t.v %>" aria-checked="<%= prefs.theme === t.v %>" tabindex="-1">
           <span class="theme-swatch sw-<%= t.v %>" aria-hidden="true"></span><span class="theme-name<%= t.v === 'neon' ? ' theme-name-neon' : t.v === 'ice' ? ' theme-name-ice' : t.v === 'vcds' ? ' theme-name-vcds' : t.v === 'adonis' ? ' theme-name-adonis' : '' %>"><%= t.name %></span>
           <span class="theme-sub"><%= t.sub %></span>

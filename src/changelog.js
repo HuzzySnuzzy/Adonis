@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.33.1', date: '2026-11-08', title: 'Alleen Systeem, Licht en Donker standaard zichtbaar',
+    items: [
+      'In de themalijst staan standaard alleen Systeem, Licht en Donker. ADONIS, OLED, VCDS, Neon en Black Ice verschijnen als u bij Instellingen "Geheime thema\'s" aanzet.',
+      'Wie al een van die thema\'s gebruikte, houdt het gewoon (de geheime thema\'s staan dan voor u aan).',
+    ],
+  },
+  {
     version: '1.33.0', date: '2026-11-08', title: 'Server werkt zichzelf live bij',
     items: [
       'De server (bijv. op Pterodactyl) kijkt nu elke 15 seconden of er een nieuwe versie is, ook terwijl hij draait. Instelbaar met update-check-seconds (Pterodactyl: "Controleren op updates"); 0 = alleen bij het starten.',

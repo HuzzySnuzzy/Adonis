@@ -29,7 +29,8 @@ const PREF_OPTIONS = {
 };
 const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off', mscale: '90', simple: 'off', carimg: 'on', partimg: 'on' };
 /** Thema's die alleen zichtbaar zijn met de voorkeur "Geheime thema's". */
-const SECRET_THEMES = ['neon', 'ice'];
+// Alleen Systeem, Licht en Donker staan altijd in de lijst; de rest is te zien met "Geheime thema's".
+const SECRET_THEMES = ['adonis', 'oled', 'vcds', 'neon', 'ice'];
 /** Thema's die iemand met deze voorkeuren kan kiezen (in volgorde van het menu). */
 function visibleThemes(prefs) {
   return PREF_OPTIONS.theme.filter((t) => prefs.secret === 'on' || !SECRET_THEMES.includes(t));
@@ -41,8 +42,8 @@ function parsePrefs(json) {
   const out = {};
   for (const [k, opts] of Object.entries(PREF_OPTIONS)) out[k] = opts.includes(raw[k]) ? raw[k] : PREF_DEFAULTS[k];
   // Wie al een geheim thema gebruikte (van vóór deze voorkeur), houdt het: geheime thema's staan dan aan.
-  if (raw.secret === undefined && SECRET_THEMES.includes(out.theme)) out.secret = 'on';
-  if (out.secret !== 'on' && SECRET_THEMES.includes(out.theme)) out.theme = 'system';
+  // Ook wie een thema gebruikt dat later geheim werd (OLED, VCDS, ADONIS), houdt het.
+  if (out.secret !== 'on' && SECRET_THEMES.includes(out.theme)) out.secret = 'on';
   return out;
 }
 
