@@ -247,6 +247,13 @@ label { display: block; font-size: .9rem; color: var(--muted); }
 .page { max-width: 1180px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
 .page.narrow { max-width: 560px; }
 .page-head { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; margin: 1rem 0; }
+/* Overal dezelfde plek (spiergeheugen): titel linksboven, knoppen rechtsboven (de blauwe hoofdknop helemaal rechts),
+   zoekbalk op een eigen regel eronder. */
+.page-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title actions" "search search"; align-items: start; gap: .75rem 1.25rem; }
+.page-head > :is(h1, h2, div:not(.head-buttons, .actions, .portal-search)) { grid-area: title; align-self: center; }
+.page-head > :is(.search, .portal-search, form[role="search"]) { grid-area: search; width: 100%; max-width: 640px; }
+.page-head > :is(.head-buttons, .actions) { grid-area: actions; justify-self: end; justify-content: flex-end; align-items: center; }
+.page-head :is(.head-buttons, .actions) > :is(.btn-primary, form:has(.btn-primary)) { order: 10; }
 .page-head h1, .page-head h2 { margin: 0; }
 .search { display: flex; gap: .4rem; flex: 1 1 340px; max-width: 560px; }
 .search input { margin-top: 0 !important; }
@@ -1044,7 +1051,8 @@ table.list.stock-list td { overflow-wrap: anywhere; }
   .logout-btn { display: inline-flex; align-items: center; padding: 4px; text-decoration: none; }
   .mainnav a { padding: .35rem .6rem; font-size: .95rem; }
   .page { padding: 1rem .75rem 2.5rem; }
-  .page-head { margin: .6rem 0 .8rem; gap: .6rem; }
+  .page-head { margin: .6rem 0 .8rem; gap: .6rem; grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "search" "actions"; }
+  .page-head > :is(.head-buttons, .actions) { justify-self: start; justify-content: flex-start; }
   .page-head h1 { font-size: 1.35rem; }
 
   /* ----- tabellen als kaarten ----- */

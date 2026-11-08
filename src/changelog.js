@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.33.2', date: '2026-11-08', title: 'Knoppen overal op dezelfde plek',
+    items: [
+      'Op elke pagina staat de titel linksboven, de knoppen rechtsboven (de blauwe hoofdknop helemaal rechts) en de zoekbalk op een eigen regel eronder. Zo zitten knoppen niet meer op de ene pagina naast de zoekbalk en op de andere onder de uitleg.',
+      'Klanten en Werkopdrachten zijn even breed als APK-lijst, Bandenhotel, Voorraad en Portaal, zodat de knoppen rechts precies op dezelfde plek staan.',
+      'Op de telefoon: titel, dan de zoekbalk, dan de knoppen.',
+    ],
+  },
+  {
     version: '1.33.1', date: '2026-11-08', title: 'Alleen Systeem, Licht en Donker standaard zichtbaar',
     items: [
       'In de themalijst staan standaard alleen Systeem, Licht en Donker. ADONIS, OLED, VCDS, Neon en Black Ice verschijnen als u bij Instellingen "Geheime thema\'s" aanzet.',

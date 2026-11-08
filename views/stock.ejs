@@ -12,7 +12,9 @@
       <button class="btn" type="submit">Zoeken</button>
       <% if (q) { %><a class="btn btn-ghost" href="/voorraad?soort=<%= soort %>">Wissen</a><% } %>
     </form>
-    <a class="btn btn-primary" href="/voorraad/nieuw?soort=<%= soort %>">+ <%= soort === 'band' ? 'Band' : 'Onderdeel' %> toevoegen</a>
+    <div class="head-buttons">
+      <a class="btn btn-primary" href="/voorraad/nieuw?soort=<%= soort %>">+ <%= soort === 'band' ? 'Band' : 'Onderdeel' %> toevoegen</a>
+    </div>
   </div>
   <%
     const qs = (o) => {
