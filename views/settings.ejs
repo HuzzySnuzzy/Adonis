@@ -74,6 +74,20 @@
       <% } %>
     </section>
 
+    <section class="card" id="bureaublad">
+      <h2>Bureaubladmodus</h2>
+      <label class="check big-check">
+        <input type="hidden" name="desktop" value="off">
+        <input type="checkbox" name="desktop" value="on" <%= p.desktop === 'on' ? 'checked' : '' %>>
+        <span><b>Pagina's als vensters, zoals op een computer</b><br><span class="muted small">ADONIS opent dan op een bureaublad met
+          pictogrammen. Elke pagina opent in een venster dat u kunt verslepen, groter of kleiner maken en naast elkaar zetten
+          (bijv. een werkopdracht, de klant en de APK-lijst tegelijk). Onderaan staat een taakbalk met een startmenu en een klok.
+          Ctrl+klik op een link opent een nieuw venster. Alleen op de computer; op een telefoon of tablet blijft alles gewoon.
+          Mooi met de thema's Windows 98, Aero en VCDS.</span></span>
+      </label>
+      <% if (p.desktop === 'on') { %><p><a class="btn btn-small" href="/bureaublad">Bureaublad openen</a></p><% } %>
+    </section>
+
     <section class="card" id="meldingen">
       <h2>Meldingen</h2>
       <p class="muted small">Rechtsonder verschijnt een melding als een collega iets doet. Ze blijven 15 seconden staan

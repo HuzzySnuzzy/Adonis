@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.38.0', date: '2026-11-08', title: 'Bureaubladmodus: pagina\'s als vensters',
+    items: [
+      'Nieuw bij Instellingen: Bureaubladmodus. ADONIS opent dan als een bureaublad met pictogrammen; elke pagina opent in een venster dat u kunt verslepen, groter/kleiner maken, minimaliseren en maximaliseren (dubbelklik op de titelbalk, of sleep naar de bovenrand). Zo staan bijv. een werkopdracht, de klant en de APK-lijst naast elkaar.',
+      'Onderaan een taakbalk met een startmenu (alle onderdelen, Instellingen, "Vensters schikken", Uitloggen), een knop per open venster en een klok. Ctrl+klik of de middelste muisknop op een link of rij opent een nieuw venster.',
+      'De vensters en hun plek worden onthouden. De vensters nemen de stijl van het thema over (grijs 3D in Windows 98/VCDS, glas in Aero, goud in ADONIS). Op een telefoon of tablet blijft alles gewoon.',
+    ],
+  },
+  {
     version: '1.37.0', date: '2026-11-08', title: 'Geheim thema Windows 98',
     items: [
       'Nieuw geheim thema: Windows 98. Het groenblauwe bureaublad, grijze 3D-vensters en knoppen, titelbalken van donker- naar lichtblauw en onderaan een taakbalk met een startknop en een klok. Met een eigen opstartvenster "ADONIS 98".',

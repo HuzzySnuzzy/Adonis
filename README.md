@@ -136,6 +136,10 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Thema ADONIS** (het thema der thema's): marmer met gouden aders, bladgoud en lapisblauw, Griekse sleutelrand,
   Cinzel + EB Garamond (OFL), draaiende zonnestralen, gouden stofjes, eigen opstartreeks (zon, lauwerkrans, vergulde
   letters) en een tempel achter het inlogscherm. Tekeningen zijn eigen SVG's in `public/img/fx/*-adonis-v1.svg`.
+- **Bureaubladmodus** (`/bureaublad`, voorkeur `desktop`): pagina's als versleepbare vensters (iframes van gewone pagina's;
+  `early.js` herkent een venster en verbergt menubalk/voettekst, zet effecten op rustig), met taakbalk, startmenu, klok,
+  minimaliseren/maximaliseren/schikken, Ctrl+klik = nieuw venster (postMessage), en de indeling per pc in localStorage.
+  `X-Frame-Options: SAMEORIGIN` en `frame-ancestors 'self'`: alleen ADONIS zelf mag zijn pagina's in een venster tonen.
 - **Plaknotities:** knop links op elk scherm. Kleur (standaard geel), zichtbaar voor alleen de maker of voor iedereen, en
   op het scherm (elke pagina, `position: fixed`) of op een werkopdracht (scrolt mee, alleen daar zichtbaar; briefje-teken in
   de lijsten). Verslepen, inklappen, verbergen; plek per browser onthouden. Gedeelde notities live via SSE; alleen de maker

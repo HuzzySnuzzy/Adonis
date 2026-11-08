@@ -1,0 +1,66 @@
+<%- include('/partials/head', { bodyClass: 'desktop-shell' }) %>
+<%
+  const ICONS = {
+    ai: '<path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/><rect x="5.5" y="5.5" width="13" height="13" rx="3"/><path d="M8.6 15.2 10.4 9h.4l1.8 6.2M9.2 13.4h2.6M15 9v6.2"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.6.2 4.6 1.9 5.3 4.9"/>',
+    list: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    euro: '<path d="M17 6.5A6.5 6.5 0 1 0 17 17.5M5 10.5h9M5 13.5h9"/>',
+    tyre: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5"/>',
+    swap: '<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
+    calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14.5l2.5 2.5 5-5"/>',
+    box: '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
+    camera: '<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    grid: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 4"/><circle cx="12" cy="17.5" r=".6" fill="currentColor"/>',
+  };
+  const apps = [
+    { href: '/', icon: 'people', title: 'Klanten' },
+    { href: '/werkopdrachten', icon: 'list', title: 'Werkopdrachten' },
+  ];
+  if (user.can_invoice) apps.push({ href: '/werkopdrachten?status=klaar', icon: 'euro', title: 'Facturatie' });
+  apps.push(
+    { href: '/apk', icon: 'calendar', title: 'APK-lijst' },
+    { href: '/bandenhotel', icon: 'tyre', title: 'Bandenhotel' },
+    { href: '/bandenhotel/wissellijst', icon: 'swap', title: 'Wissellijst' },
+    { href: '/voorraad', icon: 'box', title: 'Voorraad' },
+    { href: '/portaal', icon: 'grid', title: 'Portaal' },
+  );
+  if (aiOn) apps.push({ href: '/ai-analyse', icon: 'ai', title: 'AI-analyse' });
+  if (importOn) apps.push({ href: '/importeren', icon: 'camera', title: 'Importeren' });
+  apps.push({ href: '/start', icon: 'grid', title: 'Startscherm' }, { href: '/hulp', icon: 'help', title: 'Hulp' });
+  const svg = (k, s = 30) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ICONS.grid}</svg>`;
+%>
+<main class="dt" data-desktop data-user="<%= user.id %>" aria-label="Bureaublad">
+  <ul class="dt-icons" role="list">
+    <li><button type="button" class="dt-icon dt-icon-new" data-open="/werkopdracht/nieuw" data-icon="plus"><span class="dt-icon-img"><%- svg('plus') %></span><span class="dt-icon-name">Nieuwe werkopdracht</span></button></li>
+    <% for (const a of apps) { %>
+    <li><button type="button" class="dt-icon" data-open="<%= a.href %>" data-icon="<%= a.icon %>"><span class="dt-icon-img"><%- svg(a.icon) %></span><span class="dt-icon-name"><%= a.title %></span></button></li>
+    <% } %>
+  </ul>
+  <div class="dt-windows" data-windows></div>
+  <p class="dt-hint muted small" data-hint>Dubbelklik op een pictogram om een venster te openen. Ctrl+klik op een link in een venster opent een nieuw venster.</p>
+</main>
+<template id="dt-icon-svgs"><% for (const k of Object.keys(ICONS)) { %><span data-k="<%= k %>"><%- svg(k, 16) %></span><% } %></template>
+
+<nav class="dt-taskbar no-print" aria-label="Taakbalk">
+  <button type="button" class="dt-start" data-start aria-haspopup="menu" aria-expanded="false"><%- include('/partials/logo') %></button>
+  <div class="dt-tasks" data-tasks role="list"></div>
+  <span class="dt-clock" data-clock></span>
+</nav>
+<div class="dt-menu no-print" data-menu role="menu" hidden>
+  <div class="dt-menu-head"><b><%= user.name %></b><span class="muted small">ADONIS v<%= locals.appInfo ? appInfo.version : '' %></span></div>
+  <button type="button" role="menuitem" class="dt-menu-item dt-menu-new" data-open="/werkopdracht/nieuw" data-icon="plus"><%- svg('plus', 18) %> Nieuwe werkopdracht</button>
+  <% for (const a of apps) { %><button type="button" role="menuitem" class="dt-menu-item" data-open="<%= a.href %>" data-icon="<%= a.icon %>"><%- svg(a.icon, 18) %> <%= a.title %></button><% } %>
+  <div class="dt-menu-sep"></div>
+  <button type="button" role="menuitem" class="dt-menu-item" data-open="/instellingen" data-icon="grid">Instellingen</button>
+  <% if (user.is_admin) { %><button type="button" role="menuitem" class="dt-menu-item" data-open="/gebruikers" data-icon="people">Gebruikers</button><% } %>
+  <% if (user.is_owner) { %><button type="button" role="menuitem" class="dt-menu-item" data-open="/systeem" data-icon="grid">Systeem</button><% } %>
+  <button type="button" role="menuitem" class="dt-menu-item" data-arrange>Vensters schikken</button>
+  <button type="button" role="menuitem" class="dt-menu-item" data-closeall>Alle vensters sluiten</button>
+  <a role="menuitem" class="dt-menu-item" href="/start?klassiek=1">Gewone weergave (zonder vensters)</a>
+  <form method="post" action="/logout" class="dt-menu-item-form"><input type="hidden" name="_csrf" value="<%= csrf %>"><button type="submit" role="menuitem" class="dt-menu-item">Uitloggen</button></form>
+</div>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/desktop.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

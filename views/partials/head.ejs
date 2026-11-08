@@ -40,7 +40,7 @@
   <script src="/static/js/ice.js?v=<%= assetVersion %>" defer></script>
   <% } %>
 </head>
-<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>" data-notify="<%= ['werkopdrachten', 'banden', 'voorraad', 'klanten', 'notities', 'herinneringen'].filter((k) => prefs['n_' + k] !== 'off').join(' ') %>"<%- user.can_invoice ? ' data-can-invoice="1"' : '' %><% } %>>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>" data-desktop="<%= prefs.desktop === 'on' ? 'on' : 'off' %>" data-notify="<%= ['werkopdrachten', 'banden', 'voorraad', 'klanten', 'notities', 'herinneringen'].filter((k) => prefs['n_' + k] !== 'off').join(' ') %>"<%- user.can_invoice ? ' data-can-invoice="1"' : '' %><% } %>>
 <% if (prefs.theme === 'ice') { %>
 <div class="ice-field no-print" aria-hidden="true"><i class="ice-aurora"></i><i class="ice-aurora"></i><i class="ice-aurora"></i><i class="ice-core"></i><i class="ice-glint"></i></div>
 <% } %>
@@ -54,7 +54,7 @@
 <div class="hud-rail hud-rail-r no-print" aria-hidden="true"><i class="hud-rail-mark"></i><span data-hud-depth>DIEPTE 000</span><span>SIG NOMINAAL</span></div>
 <% } %>
 <% } %>
-<% if (locals.user) { %>
+<% if (locals.user && !locals.desktopShell) { %>
 <header class="topbar no-print">
   <% const simple = prefs.simple === 'on'; %>
   <% if (locals.inApp) { %><button class="iconbtn app-back" type="button" data-history-back title="Terug naar de vorige pagina (Alt + ←)" aria-label="Terug"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><% } %>
@@ -130,6 +130,7 @@
         </div>
       </div>
     </div>
+    <% if (prefs.desktop === 'on') { %><a href="/bureaublad" class="iconbtn desktop-link" title="Bureaublad (vensters)" aria-label="Bureaublad"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3" y="4" width="11" height="9" rx="1.5"/><rect x="9" y="9" width="12" height="9" rx="1.5" fill="currentColor" fill-opacity=".15"/><path d="M3 21h18"/></svg></a><% } %>
     <a href="/hulp" class="help-link<%= path === '/hulp' ? ' active' : '' %>" title="Hulp: uitleg in stappen" aria-label="Hulp"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.1" fill="currentColor"/></svg><span class="help-text">Hulp</span></a>
     <a href="/instellingen" class="username" title="Instellingen"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.7 7.7 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.7 7.7 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.7 7.7 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.7 7.7 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="uname"><%= user.name %></span></a>
     <form method="post" action="/logout" class="inline">

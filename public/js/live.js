@@ -10,8 +10,9 @@
   /* Meldingen rechtsonder: 15 seconden (blijven staan zolang de muis erop staat), met een kruisje om te sluiten.
    * sticky: blijft staan tot u hem sluit of erop klikt (herinneringen). */
   const SHOW_MS = 15000;
+  const inWindow = document.documentElement.classList.contains('in-window');
   function toast(text, href, { sticky = false, kind = '', onDismiss = null } = {}) {
-    if (!toasts) return;
+    if (!toasts || inWindow) return; // in de bureaubladmodus toont het bureaublad zelf de meldingen
     const el = document.createElement('div');
     el.className = 'live-toast' + (kind ? ' toast-' + kind : '') + (sticky ? ' is-sticky' : '');
     el.setAttribute('role', 'status');
@@ -108,9 +109,11 @@
     refreshLists();
     if (!updatingTo) return;
     const v = updatingTo; updatingTo = null;
+    if (inWindow) return; // het bureaublad herlaadt zichzelf (en daarmee alle vensters)
     // In de ADONIS-app: meteen kijken of de app zelf ook bijgewerkt moet worden.
     try { if (window.adonisApp && window.adonisApp.checkUpdate) window.adonisApp.checkUpdate(); } catch { /* gewone browser */ }
     const busy = (window.adonisOrderDirty && window.adonisOrderDirty()) || (window.adonisFormDirty && window.adonisFormDirty())
+      || (window.adonisDesktopDirty && window.adonisDesktopDirty())
       || document.querySelector('dialog[open], .ai-busy:not([hidden])')
       || typing();
     if (!busy) { window.adonisLeaving = true; location.reload(); return; }
@@ -204,7 +207,7 @@
 
   /* Herinneringen: één keer per dag (per gebruiker en browser), blijven staan tot u ze sluit. */
   (function reminders() {
-    if (!wants('herinneringen') || location.pathname === '/login') return;
+    if (!wants('herinneringen') || location.pathname === '/login' || inWindow) return;
     // Eén keer per dag ophalen; daarna op elke pagina tonen tot u hem sluit of erop klikt.
     const key = 'adonis-reminders-' + me;
     const today = new Date().toISOString().slice(0, 10);

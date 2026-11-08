@@ -1769,3 +1769,150 @@ table.list th.sort-asc::after { opacity: .9; }
 table.list th.sort-desc::after { opacity: .9; border-bottom: 0; border-top: .46em solid currentColor; }
 table.list th.sort-asc, table.list th.sort-desc { color: var(--text); }
 table.list th.sort-th:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+
+/* =====================================================================
+   Bureaubladmodus: vensters, taakbalk en startmenu (public/js/desktop.js)
+   ===================================================================== */
+/* Een pagina ín een venster: zonder menubalk, voettekst en eigen meldingen. */
+html.in-window .topbar, html.in-window .app-footer, html.in-window .live-toasts, html.in-window .hud-rail,
+html.in-window .ice-field, html.in-window .olympus, html.in-window .liquid { display: none !important; }
+html.in-window main.page { padding-top: .6rem; }
+html.in-window .flash { margin-top: .5rem; }
+
+body.desktop-shell { overflow: hidden; height: 100vh; }
+.desktop-shell .app-footer { display: none; }
+.dt { position: fixed; inset: 0 0 44px 0; overflow: hidden; }
+.dt-icons { list-style: none; margin: 0; padding: 14px 10px; display: grid; grid-auto-flow: column; grid-template-rows: repeat(auto-fill, 96px); grid-auto-columns: 92px; gap: 4px 6px; height: 100%; box-sizing: border-box; align-content: start; }
+.dt-icon { width: 88px; height: 92px; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 2px; border: 1px solid transparent; border-radius: 6px;
+  background: none; color: var(--text); font: inherit; font-size: 12.5px; line-height: 1.2; text-align: center; cursor: default; }
+.dt-icon-img { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; background: var(--surface); color: var(--primary); box-shadow: 0 2px 8px rgba(0, 0, 0, .18); }
+.dt-icon-new .dt-icon-img { background: var(--primary); color: #fff; }
+.dt-icon-name { text-shadow: 0 1px 2px var(--bg), 0 0 6px var(--bg); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.dt-icon:hover { background: color-mix(in srgb, var(--primary) 12%, transparent); border-color: color-mix(in srgb, var(--primary) 25%, transparent); }
+.dt-icon.is-sel, .dt-icon:focus-visible { background: color-mix(in srgb, var(--primary) 24%, transparent); border-color: color-mix(in srgb, var(--primary) 50%, transparent); outline: none; }
+.dt-hint { position: absolute; right: 18px; bottom: 12px; max-width: 360px; text-align: right; }
+.dt-windows { position: absolute; inset: 0; pointer-events: none; }
+.dw { position: absolute; display: flex; flex-direction: column; min-width: 320px; min-height: 200px; pointer-events: auto;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .28), 0 2px 6px rgba(0, 0, 0, .12); }
+.dw[hidden] { display: none; }
+.dw.is-max { border-radius: 0; }
+.dw-bar { flex: 0 0 auto; display: flex; align-items: center; gap: .5rem; height: 36px; padding: 0 4px 0 10px; background: var(--surface-2); border-bottom: 1px solid var(--border);
+  color: var(--muted); user-select: none; cursor: default; touch-action: none; }
+.dw.is-active .dw-bar { color: var(--text); background: color-mix(in srgb, var(--primary) 9%, var(--surface-2)); }
+.dw-ico { display: grid; place-items: center; width: 18px; height: 18px; color: var(--primary); flex: 0 0 auto; }
+.dw-ico svg { width: 16px; height: 16px; }
+.dw-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; font-weight: 600; }
+.dw-btns { display: flex; gap: 2px; }
+.dw-btn { position: relative; width: 36px; height: 28px; border: 0; border-radius: 6px; background: none; color: inherit; cursor: pointer; }
+.dw-btn:hover { background: var(--hover); }
+.dw-close:hover { background: #c42b1c; color: #fff; }
+.dw-btn i { position: absolute; left: 50%; top: 50%; width: 11px; height: 11px; transform: translate(-50%, -50%); }
+.dw-min i { height: 0; border-top: 1.6px solid currentColor; }
+.dw-max i { border: 1.6px solid currentColor; border-radius: 1px; }
+.dw.is-max .dw-max i { width: 9px; height: 9px; transform: translate(-40%, -60%); box-shadow: -3px 3px 0 -1.6px var(--surface-2), -3px 3px 0 0 currentColor; }
+.dw-close i::before, .dw-close i::after { content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 1.6px; background: currentColor; transform: translate(-50%, -50%) rotate(45deg); }
+.dw-close i::after { transform: translate(-50%, -50%) rotate(-45deg); }
+.dw-body { position: relative; flex: 1; min-height: 0; background: var(--bg); }
+.dw-body iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--bg); }
+.dw-loading { position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg); transition: opacity .2s; }
+.dw.is-loaded .dw-loading { opacity: 0; pointer-events: none; }
+.dw-grip { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; touch-action: none;
+  background: linear-gradient(135deg, transparent 50%, color-mix(in srgb, var(--muted) 55%, transparent) 50% 58%, transparent 58% 70%, color-mix(in srgb, var(--muted) 55%, transparent) 70% 78%, transparent 78%); }
+.dw.is-max .dw-grip { display: none; }
+/* Tijdens slepen: de iframes mogen de muis niet afvangen. */
+html.dt-busy .dw-body iframe { pointer-events: none; }
+html.dt-busy, html.dt-busy * { user-select: none; }
+
+.dt-taskbar { position: fixed; left: 0; right: 0; bottom: 0; height: 44px; z-index: 9000; display: flex; align-items: center; gap: 6px; padding: 0 8px;
+  background: color-mix(in srgb, var(--topbar-bg) 92%, transparent); color: var(--topbar-text); border-top: 1px solid rgba(255, 255, 255, .08);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.dt-start { display: flex; align-items: center; height: 34px; padding: 0 12px 0 8px; border: 0; border-radius: 8px; background: none; color: #fff; cursor: pointer; }
+.dt-start .logo-mark { width: 24px; height: 24px; }
+.dt-start .logo-sub { display: none; }
+.dt-start .logo-word { font-size: .85rem; }
+.dt-start:hover, .dt-start.is-open { background: var(--topbar-hover); }
+.dt-tasks { flex: 1; min-width: 0; display: flex; gap: 4px; overflow: hidden; }
+.dt-task { flex: 0 1 200px; min-width: 44px; height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 10px; border: 0; border-radius: 6px;
+  background: rgba(255, 255, 255, .06); color: var(--topbar-text); font: inherit; font-size: .85rem; cursor: pointer; position: relative; }
+.dt-task:hover { background: var(--topbar-hover); }
+.dt-task.is-active { background: var(--topbar-active); color: #fff; }
+.dt-task.is-active::after { content: ""; position: absolute; left: 30%; right: 30%; bottom: 2px; height: 3px; border-radius: 2px; background: var(--accent); }
+.dt-task.is-min { opacity: .7; }
+.dt-task-ico { display: grid; place-items: center; flex: 0 0 auto; }
+.dt-task-ico svg { width: 16px; height: 16px; }
+.dt-task-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dt-clock { padding: 0 8px; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.dt-menu { position: fixed; left: 8px; bottom: 50px; z-index: 9001; width: 300px; max-height: calc(100vh - 70px); overflow-y: auto; padding: 6px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 50px rgba(0, 0, 0, .35); }
+.dt-menu[hidden] { display: none; }
+.dt-menu-head { display: flex; flex-direction: column; padding: 8px 10px 10px; border-bottom: 1px solid var(--border-soft); margin-bottom: 4px; }
+.dt-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 6px; background: none; color: inherit; font: inherit; font-size: .95rem; text-align: left; text-decoration: none; cursor: pointer; }
+.dt-menu-item svg { color: var(--primary); flex: 0 0 auto; }
+.dt-menu-item:hover, .dt-menu-item:focus-visible { background: var(--hover); outline: none; }
+.dt-menu-new { font-weight: 700; }
+.dt-menu-sep { height: 1px; margin: 4px 6px; background: var(--border-soft); }
+.dt-menu-item-form { margin: 0; }
+.desktop-link { color: var(--topbar-text); }
+
+/* Retro: Windows 98 en VCDS */
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw { border: 0; border-radius: 0; padding: 3px; background: var(--face); box-shadow: var(--raised), 2px 2px 0 rgba(0, 0, 0, .35); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw-bar { height: 22px; padding: 0 2px 0 4px; border: 0; color: #d4d0c8; font-weight: 700; background: linear-gradient(90deg, #808080, #c0c0c0); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw.is-active .dw-bar { color: #fff; background: linear-gradient(90deg, var(--title-a), var(--title-b)); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw-title { font-size: 12px; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw-ico { color: inherit; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw-btn { width: 16px; height: 14px; margin-left: 2px; border-radius: 0; background: var(--face); color: #000; box-shadow: var(--raised); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw-btn:active { box-shadow: var(--pressed); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw-close { margin-left: 4px; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw-close:hover { background: var(--face); color: #000; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw-btn i { width: 8px; height: 7px; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw-close i::before, :root:is([data-theme="w98"], [data-theme="vcds"]) .dw-close i::after { width: 9px; height: 2px; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dw-body { box-shadow: var(--sunken); padding: 2px; margin-top: 2px; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-taskbar { height: 30px; padding: 0 2px; background: var(--face); color: #000; border: 0; box-shadow: inset 0 1px 0 var(--face-light), inset 0 2px 0 #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt { inset: 0 0 30px 0; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-start { height: 22px; border-radius: 0; color: #000; background: var(--face); box-shadow: var(--raised); padding: 0 8px 0 4px; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-start.is-open { box-shadow: var(--pressed); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-start .logo-mark { width: 16px; height: 16px; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-start .logo-word { font-size: 12px; letter-spacing: .08em; color: #000; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-task { height: 22px; border-radius: 0; background: var(--face); color: #000; font-size: 12px; box-shadow: var(--raised); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-task.is-active { box-shadow: var(--pressed); background: repeating-conic-gradient(#fff 0 25%, var(--face) 0 50%) 0 0 / 2px 2px; font-weight: 700; color: #000; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-task.is-active::after { display: none; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-clock { height: 22px; display: flex; align-items: center; font-size: 12px; box-shadow: inset 1px 1px 0 var(--shade), inset -1px -1px 0 #fff; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-menu { bottom: 32px; left: 2px; border: 0; border-radius: 0; padding: 3px 3px 3px 26px; background: var(--face) linear-gradient(0deg, var(--title-a), var(--title-b)) 0 0 / 22px 100% no-repeat; box-shadow: var(--raised), 2px 2px 0 rgba(0, 0, 0, .35); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-menu-item { border-radius: 0; font-size: 13px; padding: 6px 8px; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-menu-item:hover, :root:is([data-theme="w98"], [data-theme="vcds"]) .dt-menu-item:focus-visible { background: var(--sel); color: #fff; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-menu-item:hover svg { color: #fff; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-icon { border-radius: 0; color: #fff; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-icon-name { text-shadow: none; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-icon.is-sel .dt-icon-name, :root:is([data-theme="w98"], [data-theme="vcds"]) .dt-icon:focus-visible .dt-icon-name { background: var(--sel); outline: 1px dotted #fff; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-icon.is-sel, :root:is([data-theme="w98"], [data-theme="vcds"]) .dt-icon:hover { background: none; border-color: transparent; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-icon-img { border-radius: 0; background: var(--face); color: var(--title-a); box-shadow: var(--raised); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .dt-hint { color: #fff; }
+
+/* Aero: glazen vensterranden en taakbalk */
+:root[data-theme="aero"] .dw { border: 1px solid rgba(30, 60, 100, .55); border-radius: 8px; padding: 0 6px 6px; background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.12) 40px, rgba(185,215,245,.5) 41px), rgba(170, 205, 240, .55);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5); box-shadow: inset 0 0 0 1px rgba(255,255,255,.6), 0 14px 40px rgba(0, 30, 80, .45); }
+:root[data-theme="aero"] .dw-bar, :root[data-theme="aero"] .dw.is-active .dw-bar { background: none; border: 0; color: #0b1f3a; text-shadow: 0 0 10px #fff, 0 0 3px #fff; font-weight: 400; }
+:root[data-theme="aero"] .dw:not(.is-active) { background: rgba(200, 215, 230, .6); }
+:root[data-theme="aero"] .dw-body { border: 1px solid rgba(30, 60, 100, .5); }
+:root[data-theme="aero"] .dw-close { background: linear-gradient(180deg, #e8a493, #c75050 50%, #b42b1c 51%, #d0503a); color: #fff; border-radius: 0 0 5px 0; }
+:root[data-theme="aero"] .dt-taskbar { background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.08) 50%, rgba(0,0,0,.05) 51%), rgba(20, 50, 90, .55); color: #fff; }
+:root[data-theme="aero"] .dt-task { color: #fff; text-shadow: 0 0 6px rgba(0,0,0,.6); }
+:root[data-theme="aero"] .dt-icon { color: #fff; }
+:root[data-theme="aero"] .dt-icon-name { text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+:root[data-theme="aero"] .dt-hint { color: #0b1f3a; text-shadow: 0 0 8px #fff; }
+
+/* ADONIS: marmer met een gouden lijst */
+:root[data-theme="adonis"] .dw { border: 1px solid #c9a24a; border-radius: 4px; box-shadow: var(--frame), 0 18px 46px rgba(90, 70, 20, .3); }
+:root[data-theme="adonis"] .dw-bar { background: linear-gradient(180deg, #fbf6e8, #f2e8cf); border-bottom: 1px solid #d9c9a0; font-family: var(--f-display); letter-spacing: .04em; }
+:root[data-theme="adonis"] .dw.is-active .dw-bar { background: linear-gradient(180deg, #1a3274, #11214f); color: #f3d77c; }
+:root[data-theme="adonis"] .dw.is-active .dw-ico { color: #f3d77c; }
+:root[data-theme="adonis"] .dt-taskbar { background: url(../img/fx/meander-adonis-v1.svg) 0 0 / 10px 10px repeat-x, linear-gradient(180deg, #1a3274, #0d1a40); padding-top: 6px; height: 50px; }
+:root[data-theme="adonis"] .dt { inset: 0 0 50px 0; }
+:root[data-theme="adonis"] .dt-menu { bottom: 56px; }
+:root[data-theme="adonis"] .dt-icon-img { border-radius: 50%; color: var(--lapis); background: radial-gradient(circle at 35% 30%, #fffdf6, #f1e5c6); box-shadow: inset 0 0 0 1px #d9b968, 0 2px 8px rgba(90, 70, 20, .25); }
+:root[data-theme="adonis"] .dt-icon-name { font-family: var(--f-display); font-weight: 600; color: #1b2a5e; text-shadow: 0 0 6px #fff, 0 0 2px #fff; }
+/* Bureaubladmodus: de backupwaarschuwing één keer, bovenaan het bureaublad (niet in elk venster). */
+html.in-window .backup-warn, html.in-window .note-dock { display: none !important; }
+.desktop-shell .backup-warn { position: fixed; left: 10px; bottom: 54px; z-index: 8500; width: min(420px, calc(100vw - 20px)); margin: 0; flex-wrap: wrap; font-size: .85rem; box-shadow: 0 10px 30px rgba(0, 0, 0, .3); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .plate-sites-label { color: #fff; }

@@ -25,6 +25,7 @@ const PREF_OPTIONS = {
   mscale: ['100', '90', '80', '70', '60'], // weergave op telefoon (procent)
   simple: ['off', 'on'], // eenvoudige weergave: grote knoppen, alleen het belangrijkste in het menu
   carimg: ['on', 'off'], // foto van het automodel op de klantpagina (Wikipedia)
+  desktop: ['off', 'on'], // bureaubladmodus: pagina's als vensters (alleen op de computer)
   partimg: ['on', 'off'], // voorbeeldfoto van de soort onderdeel in de voorraad (Wikipedia)
   // Meldingen (rechtsonder) over wat collega's doen, per soort aan/uit.
   n_werkopdrachten: ['on', 'off'], n_banden: ['on', 'off'], n_voorraad: ['on', 'off'],
@@ -38,7 +39,7 @@ const NOTIFY_KINDS = [
   ['notities', 'Plaknotities', 'Nieuwe gedeelde plaknotities van collega\'s'],
   ['herinneringen', 'Herinneringen', 'Eén keer per dag: welke klanten gebeld moeten worden voor de APK of de bandenwissel'],
 ];
-const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off', mscale: '90', simple: 'off', carimg: 'on', partimg: 'on',
+const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off', mscale: '90', simple: 'off', carimg: 'on', partimg: 'on', desktop: 'off',
   n_werkopdrachten: 'on', n_banden: 'on', n_voorraad: 'on', n_klanten: 'on', n_notities: 'on', n_herinneringen: 'on' };
 /** Thema's die alleen zichtbaar zijn met de voorkeur "Geheime thema's". */
 // Alleen Systeem, Licht en Donker staan altijd in de lijst; de rest is te zien met "Geheime thema's".

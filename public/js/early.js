@@ -13,6 +13,16 @@
   } catch (e) { /* geen verwijzer */ }
   document.addEventListener('visibilitychange', function () { d.toggleAttribute('data-hidden', document.hidden); });
 
+  // In een venster van de bureaubladmodus: geen menubalk/voettekst (zie app.css) en geen zware effecten
+  // (elk venster is een eigen pagina; anders draaien de achtergronden van het thema tien keer tegelijk).
+  var inWin = false;
+  try { inWin = window.top !== window && window.top.location.origin === location.origin; } catch (e) { /* ander adres */ }
+  if (inWin) {
+    d.classList.add('in-window');
+    d.setAttribute('data-fx', 'calm');
+    // Uitgelogd: het hele bureaublad naar het inlogscherm, niet alleen dit venster.
+    if (location.pathname === '/login' || location.pathname === '/setup') { window.top.location.href = location.pathname; }
+  }
   var still = d.getAttribute('data-fx') === 'calm'
     || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   // Opstartanimatie: eenmaal per tabblad, bij elk thema (Neon/Black Ice hebben een eigen reeks).

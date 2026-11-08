@@ -3,6 +3,8 @@
  * Bij het maken kiest u de kleur, wie hem ziet en waar hij komt. Verslepen aan de bovenrand; de plek onthoudt deze browser. */
 (function () {
   if (!document.body.dataset.userId) return;
+  // Bureaubladmodus: notities "op het scherm" horen bij het bureaublad, die op een werkopdracht bij dat venster.
+  const inWindow = document.documentElement.classList.contains('in-window');
   const csrf = (document.querySelector('input[name="_csrf"]') || {}).value
     || (document.querySelector('[data-csrf]') || { dataset: {} }).dataset.csrf || '';
   const liveOrder = document.getElementById('live-order');
@@ -32,6 +34,7 @@
   dock.innerHTML = `<button type="button" class="note-dock-btn" data-note-new title="Nieuwe plaknotitie" aria-label="Nieuwe plaknotitie">${svg(ICON.note)}<b>+</b></button>
     <button type="button" class="note-dock-btn" data-note-toggle hidden></button>`;
   document.body.append(dock);
+  if (inWindow && !orderId) dock.hidden = true; // op het bureaublad zelf staat de knop al
   const toggleBtn = dock.querySelector('[data-note-toggle]');
   let hidden = !!store.get('hidden');
   function renderToggle() {
@@ -233,7 +236,7 @@
     try {
       const r = await (await fetch('/notities' + (orderId ? '?werkopdracht=' + orderId : ''), { credentials: 'same-origin' })).json();
       const seen = new Set();
-      for (const n of r.notes) { seen.add(n.id); upsert(n); }
+      for (const n of r.notes) { if (inWindow && !n.order_id) continue; seen.add(n.id); upsert(n); }
       for (const id of [...notes.keys()]) if (!seen.has(id)) remove(id);
     } catch { /* volgende keer */ }
     renderToggle();

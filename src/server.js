@@ -50,10 +50,10 @@ app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : 'loopback');
 app.use((req, res, next) => {
   res.set({
     'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
+    'X-Frame-Options': 'SAMEORIGIN', // alleen ADONIS zelf mag pagina's in een venster tonen (bureaubladmodus)
     'Referrer-Policy': 'same-origin',
     'Content-Security-Policy':
-      "default-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+      "default-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'self'; base-uri 'none'",
   });
   if (req.secure) res.set('Strict-Transport-Security', 'max-age=31536000');
   next();
@@ -277,7 +277,7 @@ app.post('/login', wrap(async (req, res) => {
     // Startpagina uit de persoonlijke instellingen, tenzij er naar een specifieke pagina werd gevraagd.
     const prefs = auth.findUserById(user.id).prefs;
     setThemeCookie(res, prefs.theme);
-    res.redirect(next === '/' ? prefs.start : next);
+    res.redirect(next === '/' ? (prefs.desktop === 'on' ? '/bureaublad' : prefs.start) : next);
   });
 }));
 app.post('/logout', (req, res) => {
@@ -325,6 +325,7 @@ function announce(req, action, order) {
 app.get('/', (req, res) => {
   const q = String(req.query.q || '').trim();
   // ADONIS (de app of de browser) wordt geopend: naar de gekozen startpagina.
+  if (req.firstPage && !q && req.user.prefs.desktop === 'on') return res.redirect('/bureaublad');
   if (req.firstPage && !q && req.user.prefs.start && req.user.prefs.start !== '/') return res.redirect(req.user.prefs.start);
   let rows;
   const base = `
@@ -370,6 +371,8 @@ app.get('/start', (req, res) => {
   });
 });
 app.get('/hulp', (req, res) => res.render('help', { title: 'Hulp' }));
+// Bureaubladmodus: pagina's als vensters die je kunt verslepen (zie public/js/desktop.js).
+app.get('/bureaublad', (req, res) => res.render('desktop', { title: 'Bureaublad', desktopShell: true, importOn: importer.isConfigured(), aiOn: importer.isConfigured() }));
 // Herinneringen (één keer per dag, zie live.js): wie moet er gebeld worden?
 app.get('/meldingen/herinneringen', (req, res) => {
   const items = [];
@@ -865,6 +868,7 @@ app.post('/instellingen', (req, res) => {
     simple: [].concat(req.body.simple || []).includes('on') ? 'on' : 'off',
     carimg: [].concat(req.body.carimg || []).includes('on') ? 'on' : 'off',
     partimg: [].concat(req.body.partimg || []).includes('on') ? 'on' : 'off',
+    desktop: [].concat(req.body.desktop || []).includes('on') ? 'on' : 'off',
     ...Object.fromEntries(auth.NOTIFY_KINDS.map(([k]) => ['n_' + k, [].concat(req.body['n_' + k] || []).includes('on') ? 'on' : 'off'])),
   });
   setThemeCookie(res, prefs.theme);

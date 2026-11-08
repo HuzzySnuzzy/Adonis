@@ -139,6 +139,7 @@ document.addEventListener('error', (e) => {
 // Escape: naar het startscherm. Eerst sluit Esc een open venster of menu, en in een invoerveld verlaat Esc eerst het veld.
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape' || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  if (document.documentElement.classList.contains('in-window')) return; // in een venster: niet naar Start
   // Nu al vastleggen (een venster dat Esc sluit, is na deze toetsaanslag al dicht).
   const busy = e.defaultPrevented || document.querySelector('dialog[open], .theme-menu:not([hidden]), .ai-busy:not([hidden]), .lightbox:not([hidden])');
   const el = document.activeElement;
@@ -554,4 +555,32 @@ document.addEventListener('click', async (e) => {
   }
   setup();
   document.addEventListener('adonis:swapped', setup);
+})();
+
+// Bureaubladmodus: in een venster opent Ctrl+klik of de middelste muisknop een link in een NIEUW venster.
+(function () {
+  if (!document.documentElement.classList.contains('in-window')) return;
+  const open = (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+    const u = new URL(a.href, location.href);
+    if (u.origin !== location.origin || !(e.ctrlKey || e.metaKey || e.button === 1)) return;
+    e.preventDefault();
+    window.top.postMessage({ adonisOpen: u.pathname + u.search + u.hash }, location.origin);
+  };
+  document.addEventListener('click', open, true);
+  document.addEventListener('auxclick', open, true);
+  // Klikbare rijen (tr[data-href]) met Ctrl: ook in een nieuw venster.
+  document.addEventListener('click', (e) => {
+    const tr = e.target.closest && e.target.closest('tr[data-href]');
+    if (!tr || !(e.ctrlKey || e.metaKey) || e.target.closest('a, button, input')) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.top.postMessage({ adonisOpen: tr.dataset.href }, location.origin);
+  }, true);
+})();
+// Bureaubladmodus: Instellingen opgeslagen in een venster (bijv. ander thema) -> het hele bureaublad bijwerken.
+(function () {
+  if (!document.documentElement.classList.contains('in-window') || location.pathname !== '/instellingen' || !document.querySelector('.flash-ok')) return;
+  try { if (sessionStorage.getItem('adonis-dt-reloaded') === location.href + document.querySelector('.flash-ok').textContent) return; sessionStorage.setItem('adonis-dt-reloaded', location.href + document.querySelector('.flash-ok').textContent); } catch { /* geen opslag */ }
+  window.top.location.reload();
 })();
