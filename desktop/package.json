@@ -22,6 +22,8 @@
       "setup.js",
       "offline.html",
       "offline.js",
+      "update.html",
+      "update.js",
       "build/icon.png"
     ],
     "directories": {

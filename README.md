@@ -161,8 +161,9 @@ inlog, venstergrootte en -positie). Links naar andere websites openen in de gewo
   met de grijze vakken) met knoppen voor afdrukken en opslaan als PDF. Het afdrukscherm van Windows zelf heeft in de app
   geen voorbeeld en staat standaard op staand.
 - **Werkt zichzelf bij** (vanaf 1.24.4): de app vraagt de server welke versie daar draait (`/app-versie`) en downloadt
-  precies die `ADONIS-app.exe`, alleen van de GitHub-releases van ADONIS. De nieuwe versie wordt gebruikt bij de volgende
-  start (of meteen, via de melding). Controle 20 s na het starten en elke 6 uur; met de hand via menu (Alt) →
+  precies die `ADONIS-app.exe`, alleen van de GitHub-releases van ADONIS. Rechtsonder in het venster staat de voortgang;
+  daarna vraagt de app **Nu opnieuw starten** of **Later** (dan bij de volgende start). Niet-opgeslagen werk wordt eerst
+  gevraagd. Controle 20 s na het starten en elke 6 uur; met de hand via menu (Alt) →
   *Controleren op updates*. De map van de .exe moet beschrijfbaar zijn (dus niet in `C:\Program Files`).
 - Broncode in `desktop/` (Electron); gebouwd door GitHub Actions.
 

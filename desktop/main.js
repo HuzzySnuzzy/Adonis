@@ -9,7 +9,7 @@
  * - Ctrl+, = adres wijzigen, Ctrl+R = herladen, F11 = volledig scherm.
  * - Werkt zichzelf bij naar de versie van de server (zie updater.js).
  */
-const { app, BrowserWindow, Menu, shell, ipcMain, net, session, Notification } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, net, session, dialog } = require('electron');
 const updater = require('./updater');
 const path = require('node:path');
 const fs = require('node:fs');
@@ -109,16 +109,32 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   if (b.maximized) win.maximize();
+  win.on('closed', () => { if (pendingRestart) updater.restartIntoNew(); });
   win.on('close', () => {
     config.window = { ...win.getNormalBounds(), maximized: win.isMaximized() };
     saveConfig(config);
   });
+  // Het update-hoekje schuift mee met het venster.
+  for (const ev of ['move', 'resize', 'maximize', 'unmaximize', 'restore']) win.on(ev, () => placeToast());
   win.on('page-title-updated', (e, title) => {
     e.preventDefault();
     win.setTitle(title && title !== 'ADONIS' ? title.replace(/ · ADONIS$/, '') + ' – ADONIS' : 'ADONIS');
   });
 
   const wc = win.webContents;
+  // Sluiten of opnieuw starten terwijl er nog iets niet is opgeslagen: vragen (anders gebeurt er stil niets).
+  wc.on('will-prevent-unload', (e) => {
+    const choice = dialog.showMessageBoxSync(win, {
+      type: 'question', title: 'ADONIS', buttons: ['Toch sluiten', 'Annuleren'], defaultId: 1, cancelId: 1, noLink: true,
+      message: 'Er zijn wijzigingen die nog niet zijn opgeslagen.',
+      detail: 'Een werkopdracht wordt op deze computer bewaard: de volgende keer vraagt ADONIS of hij teruggezet moet worden.',
+    });
+    if (choice === 0) e.preventDefault(); // toch doorgaan
+    else if (pendingRestart) { // geannuleerd: niet later alsnog opnieuw starten, en de vraag weer tonen
+      pendingRestart = false;
+      if (lastState && lastState.state === 'klaar') showToast(lastState);
+    }
+  });
   // Andere websites (bijv. rdw.nl) in de gewone browser; dit venster blijft bij ADONIS.
   wc.on('will-navigate', (e, url) => {
     if (url.startsWith('file:') || sameOrigin(url)) return;
@@ -206,26 +222,76 @@ ipcMain.handle('adonis:print', (e) => {
   if (w) return printPreview(w);
 });
 
-/* ---------------- zelf bijwerken ---------------- */
-function notify(title, body, onClick) {
-  if (!Notification.isSupported()) return;
-  const n = new Notification({ title, body, icon: ICON });
-  if (onClick) n.on('click', onClick);
-  n.show();
+/* ---------------- zelf bijwerken ----------------
+ * Een klein venster rechtsonder in ADONIS toont de voortgang van het downloaden en vraagt daarna om opnieuw te starten.
+ * Het neemt de toetsenbordfocus niet over (je kunt gewoon doortypen) en schuift mee met het hoofdvenster. */
+let toast = null;
+let pendingRestart = false; // "Nu opnieuw starten": pas als het venster echt dicht is (niet-opgeslagen werk wordt eerst gevraagd)
+let toastTimer = null;
+let lastState = null;
+const TOAST_W = 380;
+function toastHeight(state) { return state === 'klaar' ? 132 : state === 'fout' ? 112 : 100; }
+function placeToast() {
+  if (!toast || toast.isDestroyed() || !win || win.isDestroyed()) return;
+  const b = win.getContentBounds();
+  const h = toastHeight(lastState && lastState.state);
+  toast.setBounds({ x: Math.round(b.x + b.width - TOAST_W - 12), y: Math.round(b.y + b.height - h - 12), width: TOAST_W, height: h });
+}
+function showToast(state, { autoHide = 0 } = {}) {
+  lastState = state;
+  clearTimeout(toastTimer);
+  if (!win || win.isDestroyed()) return;
+  if (!toast || toast.isDestroyed()) {
+    toast = new BrowserWindow({
+      parent: win, width: TOAST_W, height: toastHeight(state.state), frame: false, transparent: true, resizable: false, movable: false,
+      minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, focusable: false, show: false, hasShadow: false,
+      backgroundColor: '#00000000',
+      webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
+    });
+    toast.loadFile(path.join(__dirname, 'update.html'));
+    toast.webContents.once('did-finish-load', () => { if (lastState) toast.webContents.send('adonis:update-state', lastState); placeToast(); toast.showInactive(); });
+    toast.on('closed', () => { toast = null; });
+  } else {
+    toast.webContents.send('adonis:update-state', state);
+    placeToast();
+    if (!toast.isVisible()) toast.showInactive();
+  }
+  // De vraag om opnieuw te starten moet je kunnen aanklikken (ook met het toetsenbord).
+  toast.setFocusable(state.state === 'klaar');
+  if (autoHide) toastTimer = setTimeout(hideToast, autoHide);
+}
+function hideToast() {
+  clearTimeout(toastTimer);
+  if (toast && !toast.isDestroyed()) toast.close();
 }
 async function checkUpdate(byHand = false) {
-  const r = await updater.check(config.url, (m) => console.log('  ' + m));
+  if (byHand) showToast({ state: 'bezig' });
+  const r = await updater.check(config.url, (m) => console.log('  ' + m), {
+    onStart: (version, total) => showToast({ state: 'download', version, received: 0, total }),
+    onProgress: (received, total) => { if (lastState && lastState.state === 'download') showToast({ ...lastState, received, total }); },
+  });
   if (r.state === 'bijgewerkt' || (byHand && r.state === 'klaar')) {
-    notify('ADONIS is bijgewerkt', `Versie ${r.version} staat klaar en wordt gebruikt bij de volgende start. Klik hier om nu opnieuw te starten.`,
-      () => updater.restartIntoNew());
-  } else if (byHand) {
-    const text = { actueel: `Je hebt de nieuwste versie (${app.getVersion()}).`, 'geen-portable': 'Bijwerken kan alleen met ADONIS-app.exe.',
-      bezig: 'Er wordt al gecontroleerd.', fout: `Bijwerken lukte niet: ${r.error}.` }[r.state] || '';
-    notify('ADONIS-app', text);
+    showToast({ state: 'klaar', version: r.version });
   } else if (r.state === 'fout') {
     console.log('  ADONIS-app bijwerken: ' + r.error);
+    // Mislukt tijdens de download (of met de hand gevraagd): even laten zien; anders stil later opnieuw.
+    if (byHand || (lastState && lastState.state === 'download')) showToast({ state: 'fout', error: r.error }, { autoHide: 12000 });
+  } else if (byHand) {
+    if (r.state === 'actueel') showToast({ state: 'actueel', version: app.getVersion() }, { autoHide: 4000 });
+    else if (r.state === 'geen-portable') showToast({ state: 'fout', error: 'bijwerken kan alleen met ADONIS-app.exe' }, { autoHide: 6000 });
+    else hideToast();
   }
 }
+ipcMain.handle('adonis:update-restart', (e) => {
+  if (!toast || e.sender !== toast.webContents) return;
+  pendingRestart = true;
+  hideToast();
+  win.close(); // vraagt eerst bij niet-opgeslagen werk; daarna 'closed' -> opnieuw starten met de nieuwe versie
+});
+ipcMain.handle('adonis:update-hide', (e) => {
+  if (!toast || e.sender !== toast.webContents) return;
+  hideToast();
+});
 
 /* ---------------- communicatie met de lokale pagina's (setup/offline) ---------------- */
 ipcMain.handle('adonis:get-config', () => ({ url: config.url || '' }));

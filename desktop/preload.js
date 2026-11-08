@@ -10,6 +10,10 @@ if (location.protocol === 'http:' || location.protocol === 'https:') {
   });
 } else if (location.protocol === 'file:') {
   contextBridge.exposeInMainWorld('adonisApp', {
+    // Hoekje "ADONIS bijwerken" (update.html)
+    onUpdateState: (cb) => ipcRenderer.on('adonis:update-state', (_e, s) => cb(s)),
+    updateRestart: () => ipcRenderer.invoke('adonis:update-restart'),
+    updateHide: () => ipcRenderer.invoke('adonis:update-hide'),
     getConfig: () => ipcRenderer.invoke('adonis:get-config'),
     saveUrl: (url) => ipcRenderer.invoke('adonis:save-url', url),
     open: () => ipcRenderer.invoke('adonis:open'),

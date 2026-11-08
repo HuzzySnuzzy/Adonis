@@ -47,7 +47,7 @@ function cleanup() {
  * Controleer en installeer zo nodig. Geeft { state, version?, error? }:
  * 'geen-portable' | 'actueel' | 'klaar' (al geïnstalleerd, wacht op herstart) | 'bijgewerkt' | 'fout'
  */
-async function check(serverUrl, log = () => {}) {
+async function check(serverUrl, log = () => {}, hooks = {}) {
   const exe = exePath();
   if (!exe) return { state: 'geen-portable' };
   if (installed) return { state: 'klaar', version: installed };
@@ -64,9 +64,31 @@ async function check(serverUrl, log = () => {}) {
     log(`ADONIS-app: versie ${version} downloaden (nu ${app.getVersion()})…`);
     const dl = await net.fetch(`${BASE}/v${version}/ADONIS-app.exe`, { signal: AbortSignal.timeout(15 * 60 * 1000) });
     if (!dl.ok) return { state: 'fout', error: `download mislukt (${dl.status})` };
-    const buf = Buffer.from(await dl.arrayBuffer());
-    if (buf.length < MIN_SIZE || buf[0] !== 0x4d || buf[1] !== 0x5a) return { state: 'fout', error: 'download is geen geldig programma' };
-    fs.writeFileSync(tmp, buf);
+    // In stukjes naar schijf, met voortgang (voor het hoekje rechtsonder).
+    const total = Number(dl.headers.get('content-length')) || 0;
+    if (hooks.onStart) hooks.onStart(version, total);
+    const out = fs.openSync(tmp, 'w');
+    let received = 0;
+    let head = null;
+    let lastTick = 0;
+    try {
+      const reader = dl.body.getReader();
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (!head) head = Buffer.from(value.subarray(0, 2));
+        fs.writeSync(out, value);
+        received += value.length;
+        if (hooks.onProgress && Date.now() - lastTick > 150) { lastTick = Date.now(); hooks.onProgress(received, total); }
+      }
+    } finally {
+      fs.closeSync(out);
+    }
+    if (hooks.onProgress) hooks.onProgress(received, total);
+    if (received < MIN_SIZE || !head || head[0] !== 0x4d || head[1] !== 0x5a || (total && received !== total)) {
+      fs.rmSync(tmp, { force: true });
+      return { state: 'fout', error: 'de download is onvolledig of geen geldig programma' };
+    }
 
     const old = oldPath(exe);
     fs.rmSync(old, { force: true });
@@ -92,6 +114,7 @@ async function check(serverUrl, log = () => {}) {
 function restartIntoNew() {
   const exe = exePath();
   if (!exe) return;
+  if (process.env.ADONIS_APP_TEST_NORELAUNCH) { console.log('  (test) opnieuw starten met ' + exe); app.quit(); return; }
   app.relaunch({ execPath: exe, args: [] });
   app.quit();
 }
