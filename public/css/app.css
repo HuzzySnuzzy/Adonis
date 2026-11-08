@@ -1969,3 +1969,6 @@ html.dt-busy .dw-body webview { pointer-events: none; }
 .desktop-shell .live-toasts { bottom: 54px; z-index: 9050; }
 :root:is([data-theme="w98"], [data-theme="vcds"]) .desktop-shell .live-toasts { bottom: 38px; }
 :root[data-theme="adonis"] .desktop-shell .live-toasts { bottom: 60px; }
+.dt-scale { display: flex; align-items: center; gap: .8rem; }
+.dt-scale input { flex: 1; accent-color: var(--primary); }
+.dt-scale output { min-width: 3.2em; font-weight: 700; font-variant-numeric: tabular-nums; }

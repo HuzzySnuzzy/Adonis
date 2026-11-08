@@ -98,7 +98,7 @@
     const v = w.frame; const addr = w.el.querySelector('.dw-addr');
     const show = () => { let u = ''; try { u = v.getURL(); } catch { return; } w.st.url = u; try { const x = new URL(u); addr.textContent = x.hostname.replace(/^www\./, '') + x.pathname; } catch { addr.textContent = u; } addr.title = u;
       try { w.el.querySelector('[data-nav=back]').disabled = !v.canGoBack(); w.el.querySelector('[data-nav=fwd]').disabled = !v.canGoForward(); } catch { /* nog niet klaar */ } save(); };
-    v.addEventListener('did-stop-loading', () => { w.el.classList.add('is-loaded'); show(); });
+    v.addEventListener('did-stop-loading', () => { w.el.classList.add('is-loaded'); show(); applyScale(w); });
     v.addEventListener('did-navigate', show);
     v.addEventListener('did-navigate-in-page', show);
     v.addEventListener('page-title-updated', (e) => setTitle(w, e.title, w.st.url));
@@ -108,6 +108,14 @@
       if (b.dataset.nav === 'back') v.goBack(); else if (b.dataset.nav === 'fwd') v.goForward(); else if (b.dataset.nav === 'reload') v.reload();
       else if (b.dataset.nav === 'ext' && window.adonisApp) window.adonisApp.openExternal(v.getURL() || w.st.url);
     });
+  }
+  /* Schaal van de inhoud van de vensters (Personaliseren): alles kleiner of groter, zodat er meer in past. */
+  function applyScale(w) {
+    const z = (typeof look !== 'undefined' && look.scale) || 100;
+    try {
+      if (w.st.site) w.frame.setZoomFactor(z / 100);
+      else { const d = w.frame.contentDocument; if (d) d.documentElement.style.zoom = z === 100 ? '' : String(z / 100); }
+    } catch { /* nog niet klaar */ }
   }
   function onLoad(w) {
     w.el.classList.add('is-loaded');
@@ -119,6 +127,7 @@
     if (loc.pathname === '/bureaublad') { w.frame.src = '/start'; return; }
     w.st.url = loc.pathname + loc.search + loc.hash;
     setTitle(w, doc.title, w.st.url);
+    applyScale(w);
     // Titelwijzigingen in het venster volgen (bijv. na live bijwerken).
     try { new MutationObserver(() => setTitle(w, doc.title, w.st.url)).observe(doc.querySelector('title'), { childList: true }); } catch { /* geen titel */ }
     save();
@@ -257,7 +266,7 @@
   const IMG_KEY = KEY + '-img';
   const icons = [...desk.querySelectorAll('.dt-icon')];
   const defaultOrder = icons.map((b) => b.dataset.open);
-  let look = { bg: 'theme', fit: 'cover', size: 'm' };
+  let look = { bg: 'theme', fit: 'cover', size: 'm', scale: 100 };
   try { look = Object.assign(look, JSON.parse(localStorage.getItem(LOOK_KEY)) || {}); } catch { /* standaard */ }
   const cell = () => ({ w: look.size === 'l' ? 112 : look.size === 's' ? 76 : 92, h: look.size === 'l' ? 118 : look.size === 's' ? 80 : 96 });
   let pos = {};
@@ -398,6 +407,10 @@
           <label class="swap-choice"><input type="radio" name="fit" value="tile"> <span>Naast elkaar</span></label>
           <label class="swap-choice"><input type="radio" name="fit" value="center"> <span>In het midden</span></label>
         </fieldset>
+        <fieldset class="swap-step"><legend>Grootte van de vensterinhoud</legend>
+          <div class="dt-scale"><input type="range" name="scale" min="60" max="120" step="5" aria-label="Grootte van de vensterinhoud"><output data-scale-out></output></div>
+          <p class="muted small">Kleiner = meer past in een venster. Geldt voor alle vensters, ook websites.</p>
+        </fieldset>
         <fieldset class="swap-step"><legend>Pictogrammen</legend>
           <label class="swap-choice"><input type="radio" name="size" value="s"> <span>Klein</span></label>
           <label class="swap-choice"><input type="radio" name="size" value="m"> <span>Normaal</span></label>
@@ -417,6 +430,11 @@
       dlg.addEventListener('change', (e) => {
         if (e.target.name === 'fit') { look.fit = e.target.value; saveLook(); }
         if (e.target.name === 'size') { look.size = e.target.value; saveLook(); layoutIcons(); }
+      });
+      dlg.addEventListener('input', (e) => {
+        if (e.target.name !== 'scale') return;
+        look.scale = Number(e.target.value); dlg.querySelector('[data-scale-out]').textContent = look.scale + '%';
+        saveLook(); wins.forEach(applyScale);
       });
       dlg.querySelector('[data-img]').addEventListener('change', async (e) => {
         const f = e.target.files[0]; if (!f) return;
@@ -443,6 +461,8 @@
     dlg.querySelector('[data-fitbox]').hidden = look.bg !== 'image';
     dlg.querySelectorAll('input[name=fit]').forEach((r) => { r.checked = r.value === look.fit; });
     dlg.querySelectorAll('input[name=size]').forEach((r) => { r.checked = r.value === look.size; });
+    dlg.querySelector('input[name=scale]').value = look.scale || 100;
+    dlg.querySelector('[data-scale-out]').textContent = (look.scale || 100) + '%';
   }
   menu.querySelector('[data-arrange]').insertAdjacentHTML('beforebegin', '<button type="button" role="menuitem" class="dt-menu-item" data-personal>Personaliseren…</button>');
   menu.querySelector('[data-personal]').addEventListener('click', () => { toggleMenu(false); personalize(); });

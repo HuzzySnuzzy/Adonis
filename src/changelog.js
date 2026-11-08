@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.39.0', date: '2026-11-08', title: 'Websites uit het Portaal binnen ADONIS',
+    items: [
+      'In de ADONIS-app openen websites uit het Portaal (en "Opzoeken met …" bij een kenteken) nu binnen ADONIS: in een eigen venster met terug, vooruit, opnieuw laden, het adres en "Openen in browser". In de bureaubladmodus als venster op het bureaublad. Shift+klik opent toch de gewone browser.',
+      'Inloggen bij leveranciers blijft bewaard. De websites krijgen geen toegang tot de app (camera e.d. staat uit). In een gewone browser opent een website zoals vroeger in een nieuw tabblad.',
+      'Bureaublad: bij Personaliseren kunt u nu de grootte van de vensterinhoud kiezen (60–120%), zodat er meer in een venster past.',
+      'Bureaublad: meldingen staan nu boven de taakbalk in plaats van erachter.',
+    ],
+  },
+  {
     version: '1.38.2', date: '2026-11-08', title: 'De app onthoudt volledig scherm',
     items: [
       'De ADONIS-app onthoudt nu of hij op volledig scherm (F11) stond, net als de grootte, plek en gemaximaliseerd. Bij de volgende start staat hij weer zo.',
