@@ -12,7 +12,7 @@
 
   function end() {
     clearTimeout(timer);
-    var box = document.querySelector('.app-boot, .vcds-boot, .olympus-boot');
+    var box = document.querySelector('.app-boot, .vcds-boot, .olympus-boot, .aero-boot');
     if (box) box.remove();
     root.removeAttribute('data-boot');
     removeEventListener('keydown', end, true);
@@ -88,10 +88,36 @@
     addEventListener('pointerdown', end, true);
   }
 
+  /* Aero: een glazen paneel met "Welkom" en een draaiend ringetje. */
+  function startAero() {
+    var mark = document.querySelector('.logo .logo-mark');
+    var box = document.createElement('div');
+    box.className = 'aero-boot';
+    box.setAttribute('aria-hidden', 'true');
+    var pane = document.createElement('div');
+    pane.className = 'aero-boot-pane';
+    if (mark) pane.append(mark.cloneNode(true));
+    var word = document.createElement('div');
+    word.className = 'aero-boot-word';
+    word.textContent = 'ADONIS';
+    var busy = document.createElement('div');
+    busy.className = 'aero-boot-busy';
+    var ring = document.createElement('i');
+    ring.className = 'aero-boot-ring';
+    busy.append(ring, 'Welkom');
+    pane.append(word, busy);
+    box.append(pane);
+    document.body.append(box);
+    timer = setTimeout(end, 2300);
+    addEventListener('keydown', end, true);
+    addEventListener('pointerdown', end, true);
+  }
+
   function start() {
     if (root.getAttribute('data-boot') !== '1') return;
     if (theme === 'vcds') return startVcds();
     if (theme === 'adonis') return startAdonis();
+    if (theme === 'aero') return startAero();
     var box = document.createElement('div');
     box.className = 'app-boot';
     box.setAttribute('aria-hidden', 'true');

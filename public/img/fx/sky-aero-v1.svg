@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <!-- Hemelsblauwe achtergrond met zachte lichtlinten (eigen ontwerp, ADONIS-thema Aero) -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c6fc4"/><stop offset=".45" stop-color="#3f9be6"/><stop offset="1" stop-color="#9fd8f7"/></linearGradient>
+    <radialGradient id="sun" cx=".22" cy=".12" r=".55"><stop offset="0" stop-color="#ffffff" stop-opacity=".75"/><stop offset=".35" stop-color="#d9f3ff" stop-opacity=".3"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glow" cx=".8" cy=".95" r=".6"><stop offset="0" stop-color="#b7f0ff" stop-opacity=".65"/><stop offset="1" stop-color="#b7f0ff" stop-opacity="0"/></radialGradient>
+    <filter id="soft" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="22"/></filter>
+    <filter id="fine" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <g filter="url(#soft)"><path d="M-100 210 C 400 56, 900 364, 1700 148" fill="none" stroke="#ffffff" stroke-width="104" stroke-opacity="0.55" stroke-linecap="round"/><path d="M-100 345 C 400 191, 900 499, 1700 284" fill="none" stroke="#bfe6ff" stroke-width="114" stroke-opacity="0.6" stroke-linecap="round"/><path d="M-100 382 C 400 256, 900 509, 1700 332" fill="none" stroke="#e8fbff" stroke-width="115" stroke-opacity="0.5" stroke-linecap="round"/><path d="M-100 542 C 400 372, 900 712, 1700 474" fill="none" stroke="#9fd3ff" stroke-width="49" stroke-opacity="0.45" stroke-linecap="round"/><path d="M-100 638 C 400 533, 900 742, 1700 596" fill="none" stroke="#ffffff" stroke-width="84" stroke-opacity="0.35" stroke-linecap="round"/></g>
+  <g filter="url(#fine)" fill="none" stroke="#ffffff" stroke-linecap="round">
+    <path d="M-100 520 C 380 380, 860 700, 1700 470" stroke-width="3" stroke-opacity=".7"/>
+    <path d="M-100 600 C 420 470, 900 760, 1700 560" stroke-width="1.5" stroke-opacity=".55"/>
+    <path d="M-100 690 C 460 560, 950 830, 1700 640" stroke-width="2" stroke-opacity=".4"/>
+  </g>
+  <rect width="1600" height="1000" fill="url(#sun)"/>
+  <rect width="1600" height="1000" fill="url(#glow)"/>
+</svg>

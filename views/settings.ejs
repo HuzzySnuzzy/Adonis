@@ -6,6 +6,7 @@
     { value: 'light', label: 'Licht', help: 'Altijd licht' },
     { value: 'dark', label: 'Donker', help: 'Altijd donker, prettig in een donkere werkplaats' },
     { value: 'adonis', label: 'ADONIS', help: 'Het thema der thema\'s: wit marmer met gouden aders, bladgoud, Egeïsch blauw en een Griekse sleutelrand' },
+    { value: 'aero', label: 'Aero', help: 'Doorschijnend, wazig glas, een blauwe hemel en glanzende knoppen, zoals Windows 7' },
     { value: 'oled', label: 'OLED', help: 'Puur zwart: alles lijkt in de lucht te zweven' },
     { value: 'vcds', label: 'VCDS', help: 'Klassiek diagnosevenster: grijs, 3D-knoppen en een blauwe titelbalk' },
     { value: 'neon', label: 'Neon', help: 'Futuristisch: neon, hologrammen en animaties' },
@@ -124,7 +125,7 @@
       <label class="check secret-toggle">
         <input type="hidden" name="secret" value="off">
         <input type="checkbox" name="secret" value="on" data-secret-toggle <%= p.secret === 'on' ? 'checked' : '' %>>
-        <span><b>Geheime thema's</b> <span class="muted small">– toont ook ADONIS, OLED, VCDS, Neon en Black Ice</span></span>
+        <span><b>Geheime thema's</b> <span class="muted small">– toont ook ADONIS, Aero, OLED, VCDS, Neon en Black Ice</span></span>
       </label>
       <p class="muted small">Tip: met de themaknop naast “Nieuwe werkopdracht” in de menubalk kies je snel een thema.</p>
     </section>

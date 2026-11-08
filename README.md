@@ -130,6 +130,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   Aandachtspunten en APK-punten staan in **inklapbare vakken** (open/dicht wordt onthouden).
   Op de **APK-lijst** zoekt een knop (beheerders) de punten op voor alle modellen in het getoonde tabblad die nog niet
   zijn opgezocht; per klant staat dan "n APK-punten voor dit model".
+- **Geheim thema Aero:** glas in de stijl van Windows 7 (backdrop-filter in menubalk/werkbalk, glazen vensterranden via
+  box-shadow, glanzende knoppen, Verkenner-selecties), eigen achtergrond `public/img/fx/sky-aero-v1.svg` en een
+  "Welkom"-opstartreeks. Geen afbeeldingen van Microsoft; Segoe UI alleen als die op de pc staat.
 - **Thema ADONIS** (het thema der thema's): marmer met gouden aders, bladgoud en lapisblauw, Griekse sleutelrand,
   Cinzel + EB Garamond (OFL), draaiende zonnestralen, gouden stofjes, eigen opstartreeks (zon, lauwerkrans, vergulde
   letters) en een tempel achter het inlogscherm. Tekeningen zijn eigen SVG's in `public/img/fx/*-adonis-v1.svg`.
@@ -220,7 +223,7 @@ inlog, venstergrootte en -positie). Links naar andere websites openen in de gewo
   daarna vraagt de app **Nu opnieuw starten** of **Later** (dan bij de volgende start). Windows houdt de draaiende
   .exe vast, dus de nieuwe versie wordt eerst ernaast gezet (`ADONIS-app.exe.nieuw`) en pas na het afsluiten op zijn
   plek gezet. Niet-opgeslagen werk wordt eerst
-  gevraagd. Controle 20 s na het starten en elke 6 uur; met de hand via menu (Alt) →
+  gevraagd. Controle kort na het starten en daarna elke 30 seconden (een klein vraagje aan de eigen server; ook meteen nadat de server zichzelf heeft bijgewerkt); met de hand via menu (Alt) →
   *Controleren op updates*. De map van de .exe moet beschrijfbaar zijn (dus niet in `C:\Program Files`).
 - Broncode in `desktop/` (Electron); gebouwd door GitHub Actions.
 

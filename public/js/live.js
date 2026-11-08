@@ -108,6 +108,8 @@
     refreshLists();
     if (!updatingTo) return;
     const v = updatingTo; updatingTo = null;
+    // In de ADONIS-app: meteen kijken of de app zelf ook bijgewerkt moet worden.
+    try { if (window.adonisApp && window.adonisApp.checkUpdate) window.adonisApp.checkUpdate(); } catch { /* gewone browser */ }
     const busy = (window.adonisOrderDirty && window.adonisOrderDirty()) || (window.adonisFormDirty && window.adonisFormDirty())
       || document.querySelector('dialog[open], .ai-busy:not([hidden])')
       || typing();

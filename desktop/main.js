@@ -311,6 +311,14 @@ ipcMain.handle('adonis:update-restart', (e) => {
   hideToast();
   win.close(); // vraagt eerst bij niet-opgeslagen werk; daarna 'closed' -> opnieuw starten met de nieuwe versie
 });
+// Vanuit de ADONIS-pagina (na een update van de server): nu even kijken. Alleen de eigen server, en niet te vaak.
+let lastAsked = 0;
+ipcMain.handle('adonis:update-check', (e) => {
+  if (!win || e.sender !== win.webContents || !sameOrigin(e.senderFrame.url)) return;
+  if (Date.now() - lastAsked < 10000) return;
+  lastAsked = Date.now();
+  setTimeout(() => checkUpdate(), 1500);
+});
 ipcMain.handle('adonis:update-hide', (e) => {
   if (!toast || e.sender !== toast.webContents) return;
   hideToast();
@@ -361,9 +369,10 @@ if (!app.requestSingleInstanceLock()) {
     createWindow();
     // Een update die al klaarstaat (gedownload, nog niet geplaatst): meteen weer vragen.
     if (updater.pendingVersion()) setTimeout(() => showToast({ state: 'klaar', version: updater.pendingVersion() }), 2500);
-    // Kort na het starten, daarna elke 6 uur (de server kan intussen zijn bijgewerkt).
+    // Kort na het starten, daarna elke 30 seconden: de server werkt zichzelf live bij, en de app volgt die versie.
+    // (Dat is alleen een klein vraagje aan de eigen server; downloaden gebeurt pas als er echt iets nieuws is.)
     setTimeout(() => checkUpdate(), Number(process.env.ADONIS_APP_UPDATE_DELAY || 6000));
-    setInterval(() => checkUpdate(), 6 * 3600 * 1000);
+    setInterval(() => checkUpdate(), Number(process.env.ADONIS_APP_UPDATE_EVERY || 30000));
   });
   app.on('window-all-closed', () => app.quit());
   // Bij het afsluiten: een klaargezette update op zijn plek zetten (pas dan is de .exe vrij).

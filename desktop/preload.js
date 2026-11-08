@@ -7,6 +7,8 @@ if (location.protocol === 'http:' || location.protocol === 'https:') {
   // De ADONIS-website krijgt alleen "afdrukken met voorbeeld" (de app controleert dat het de eigen server is).
   contextBridge.exposeInMainWorld('adonisApp', {
     print: () => ipcRenderer.invoke('adonis:print'),
+    // De server is net bijgewerkt: meteen kijken of de app mee moet (de app volgt de versie van de server).
+    checkUpdate: () => ipcRenderer.invoke('adonis:update-check'),
   });
 } else if (location.protocol === 'file:') {
   contextBridge.exposeInMainWorld('adonisApp', {

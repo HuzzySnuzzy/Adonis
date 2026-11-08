@@ -1,0 +1,240 @@
+/* =====================================================================
+   ADONIS – geheim thema "Aero": glas in de stijl van Windows 7.
+   Doorschijnend, wazig glas voor de menubalk en de vensterranden, een hemelsblauwe achtergrond
+   met lichtlinten, glanzende knoppen die blauw oplichten en selecties zoals in de Verkenner.
+   - Alle regels beginnen met :root[data-theme="aero"] (behalve de opstartreeks).
+   - Eigen ontwerp: geen afbeeldingen of logo's van Microsoft. Achtergrond: /static/img/fx/sky-aero-v1.svg.
+   - Lettertype: Segoe UI als dat op de computer staat (Windows), anders het systeemlettertype.
+   ===================================================================== */
+
+:root[data-theme="aero"] {
+  color-scheme: light;
+  --bg: #4c9fe3;
+  --surface: #ffffff; --surface-2: #f4f8fc; --hover: #e5f3fb;
+  --text: #1e1e1e; --muted: #5a6573;
+  --border: #b9c9da; --border-soft: #e3eaf2;
+  --input-bg: #ffffff;
+  --brand: #1f6fc5; --accent: #3399ff;
+  --primary: #1f6fc5; --primary-hover: #155aa6; --link: #0066cc;
+  --danger: #c42b1c; --danger-border: #e8b4ae;
+  --ok-bg: #e8f6e5; --ok-text: #1d5e1a;
+  --err-bg: #fdecea; --err-text: #9b1c12;
+  --warn-bg: #ffffe1; --warn-text: #4d3f00; --warn-border: #c9b55a;
+  --code-bg: rgba(31, 111, 197, .08);
+  --shadow: 0 8px 30px rgba(0, 32, 80, .35);
+  --topbar-bg: rgba(160, 200, 240, .55); --topbar-text: #0b1f3a; --topbar-hover: rgba(255, 255, 255, .35); --topbar-active: rgba(255, 255, 255, .5);
+  --ordernr: #c42b1c;
+  --plate: #f7c600;
+  --radius: 6px;
+  --paper: #ffffff;
+  --form-grey: #edf2f8;
+  --form-grey-dark: #dde6f0;
+  --label: #2d3a4a;
+  --ink: #0b4fa1;
+  --red: #c42b1c;
+  --ink-hover: rgba(51, 153, 255, .08);
+  --ink-focus: rgba(51, 153, 255, .14);
+  --placeholder: rgba(11, 79, 161, .35);
+  --box-bg: #eef3f9;
+  --box-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 2.5 14 13.5M13.5 2 2.5 14' stroke='%230b4fa1' stroke-width='2.4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+  --tread-bad: #f6c2bd;
+  --tread-warn: #fbe7a6;
+  --desk: transparent;
+  --toolbar-bg: rgba(225, 238, 252, .82);
+  --wo-title: #1e1e1e;
+  --sheet-shadow: 0 0 0 1px rgba(255, 255, 255, .7), 0 0 0 7px rgba(185, 215, 245, .55), 0 0 0 8px rgba(30, 60, 100, .5), 0 14px 40px rgba(0, 30, 80, .45);
+  /* eigen */
+  --glass: rgba(170, 205, 240, .5);
+  --glass-strong: rgba(150, 190, 235, .72);
+  --glass-edge: rgba(30, 60, 100, .55);
+  --gloss: linear-gradient(180deg, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, .18) 49%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, .12) 100%);
+  /* een venster: wit binnenwerk met een rand van glas eromheen (met schaduwen, dus zonder dat de indeling verschuift) */
+  --window: 0 0 0 1px rgba(255, 255, 255, .85), 0 0 0 7px rgba(185, 215, 245, .62), 0 0 0 8px rgba(30, 60, 100, .5), 0 12px 32px rgba(0, 30, 80, .38);
+  --f-ui: "Segoe UI", "Segoe UI Variable Text", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  caret-color: #0b4fa1;
+  accent-color: #1f6fc5;
+  background: var(--bg);
+}
+:root[data-theme="aero"] ::selection { background: #3399ff; color: #fff; }
+:root[data-theme="aero"] body, :root[data-theme="aero"] body.order-page { background: transparent; }
+:root[data-theme="aero"] body { font-family: var(--f-ui); }
+
+/* ---------- Achtergrond: hemel met lichtlinten ---------- */
+:root[data-theme="aero"]::before {
+  content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background: #3f9be6 url(../img/fx/sky-aero-v1.svg) 50% 50% / cover no-repeat;
+}
+/* Een zachte lichtglans die heel langzaam over het scherm schuift. */
+:root[data-theme="aero"]::after {
+  content: ""; position: fixed; z-index: -1; pointer-events: none; top: -20vh; bottom: -20vh; left: -60vw; width: 60vw;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, .16) 50%, transparent 80%);
+  animation: aero-shine 26s ease-in-out infinite; animation-delay: calc(var(--clock, 0) * -1s); will-change: transform;
+}
+@keyframes aero-shine { 0%, 30% { transform: translateX(0); } 70%, 100% { transform: translateX(260vw); } }
+
+/* ---------- Tekst ---------- */
+/* Titels op de hemel: donker met een witte gloed, zoals de titel van een venster. */
+:root[data-theme="aero"] :is(.page-head h1, main.page > h1, .start-hero h1, .page-head h2) {
+  font-family: var(--f-ui); font-weight: 400; letter-spacing: 0; color: #0b1f3a;
+  text-shadow: 0 0 12px #fff, 0 0 18px rgba(255, 255, 255, .9), 0 0 2px #fff;
+}
+:root[data-theme="aero"] :is(.page-head, main.page > p, .start-hero) .muted, :root[data-theme="aero"] main.page > :is(p, .muted) {
+  color: #0b1f3a; text-shadow: 0 0 8px rgba(255, 255, 255, .95), 0 0 2px #fff;
+}
+:root[data-theme="aero"] h2 { font-weight: 400; color: #1e3a5f; }
+:root[data-theme="aero"] .card > h2:first-child, :root[data-theme="aero"] .rdw-card > h2:first-child { color: #1e3a5f; font-size: 1.15rem; }
+:root[data-theme="aero"] a:not([class]) { color: var(--link); }
+:root[data-theme="aero"] :where(table.list th) { color: #4c607a; }
+:root[data-theme="aero"] .start-label { color: #0b1f3a; text-shadow: 0 0 8px #fff, 0 0 2px #fff; }
+
+/* ---------- Menubalk: glas ---------- */
+:root[data-theme="aero"] .topbar {
+  background: var(--gloss), var(--glass-strong);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
+  border-bottom: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -1px 0 rgba(255, 255, 255, .35), 0 4px 16px rgba(0, 30, 80, .25);
+  color: var(--topbar-text);
+}
+:root[data-theme="aero"] .brand { color: #0b1f3a; }
+:root[data-theme="aero"] .logo-word, :root[data-theme="aero"] .logo-sub { text-shadow: 0 0 8px #fff, 0 0 2px #fff; color: #0b1f3a; }
+:root[data-theme="aero"] .logo-mark { filter: drop-shadow(0 0 6px rgba(255, 255, 255, .9)); }
+:root[data-theme="aero"] .mainnav a { color: #0b1f3a; border-radius: 4px; border: 1px solid transparent; text-shadow: 0 0 8px rgba(255, 255, 255, .95), 0 0 2px #fff; }
+:root[data-theme="aero"] .mainnav a:hover { color: #000; border-color: rgba(255, 255, 255, .6); background: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .08) 51%, rgba(255, 255, 255, .3)); box-shadow: 0 0 10px rgba(255, 255, 255, .6); }
+:root[data-theme="aero"] .mainnav a.active { color: #000; border-color: rgba(30, 60, 100, .45); background: linear-gradient(180deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, .3) 50%, rgba(220, 240, 255, .2) 51%, rgba(255, 255, 255, .45)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7), 0 0 12px rgba(255, 255, 255, .5); }
+:root[data-theme="aero"] .iconbtn, :root[data-theme="aero"] :is(.usernav .username, .topbar .linkbtn, .help-link) { color: #0b1f3a; }
+:root[data-theme="aero"] .iconbtn:hover { color: #000; background: rgba(255, 255, 255, .4); }
+:root[data-theme="aero"] .nav-count { background: #3399ff; color: #fff; box-shadow: 0 0 6px rgba(51, 153, 255, .8); }
+
+/* ---------- Vensters (kaarten, lijsten, dialogen) ---------- */
+:root[data-theme="aero"] :where(.card, .rdw-card, .customer-head, .table-wrap, .empty, .auth-card, .apk-box, .review-block, .bl-box, .va-specs > div, .start-stat, .start-page .start-tile) {
+  background: #fff; border: 1px solid rgba(30, 60, 100, .35); border-radius: 6px; box-shadow: var(--window);
+}
+:root[data-theme="aero"] .empty { border-style: solid; }
+:root[data-theme="aero"] :is(.swap-dialog, .theme-menu, .sn-menu, .rdw-pop, .ai-busy-card) { background: #fff; border: 1px solid rgba(30, 60, 100, .5); border-radius: 6px; box-shadow: var(--window); }
+:root[data-theme="aero"] .swap-dialog::backdrop { background: rgba(0, 30, 70, .25); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+:root[data-theme="aero"] .swap-form h1 { font-weight: 400; color: #1e3a5f; }
+
+/* ---------- Knoppen: glanzend, blauw oplichtend ---------- */
+:root[data-theme="aero"] .btn {
+  border: 1px solid #707070; border-radius: 3px; color: #1e1e1e; font-weight: 400;
+  background: linear-gradient(180deg, #f6f6f6 0%, #ebebeb 49%, #dddddd 50%, #cfcfcf 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .8); text-shadow: none; transition: background .25s, border-color .25s, box-shadow .25s;
+}
+:root[data-theme="aero"] .btn:hover {
+  border-color: #3c7fb1; background: linear-gradient(180deg, #eaf6fd 0%, #d9f0fc 49%, #bee6fd 50%, #a7d9f5 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .8), 0 0 6px rgba(51, 153, 255, .45);
+}
+:root[data-theme="aero"] .btn:active:not(:disabled) { border-color: #2c628b; background: linear-gradient(180deg, #e5f4fc 0%, #c4e5f6 49%, #98d1ef 50%, #68b3db 100%); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .3); }
+:root[data-theme="aero"] .btn-primary {
+  color: #fff; border-color: #0b4b8f; text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
+  background: linear-gradient(180deg, #7cbcf4 0%, #3d93e6 49%, #1f6fc5 50%, #2b85dc 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45), 0 0 6px rgba(51, 153, 255, .35);
+}
+:root[data-theme="aero"] .btn-primary:hover { color: #fff; border-color: #0b4b8f; background: linear-gradient(180deg, #99cdf8 0%, #59a7ee 49%, #2f83d9 50%, #47a1ef 100%); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55), 0 0 12px rgba(51, 153, 255, .7); }
+:root[data-theme="aero"] .btn-ok { color: #fff; border-color: #2b6b1f; text-shadow: 0 1px 1px rgba(0, 0, 0, .3); background: linear-gradient(180deg, #8fd47d 0%, #55b043 49%, #3a9a2a 50%, #4fb33c 100%); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45); }
+:root[data-theme="aero"] .btn-ok:hover { border-color: #2b6b1f; background: linear-gradient(180deg, #a3df93 0%, #66c053 49%, #46a935 50%, #5ec34a 100%); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5), 0 0 10px rgba(80, 190, 60, .6); }
+:root[data-theme="aero"] .btn-danger { color: var(--danger); }
+:root[data-theme="aero"] .btn-ghost { background: transparent; border-color: transparent; box-shadow: none; }
+:root[data-theme="aero"] .btn-ghost:hover { border-color: #7da2ce; background: linear-gradient(180deg, #f2f8fd, #dcecfb); }
+:root[data-theme="aero"] .page-head .btn-ghost { color: #0b1f3a; text-shadow: 0 0 8px #fff, 0 0 2px #fff; }
+:root[data-theme="aero"] :is(.btn, .iconbtn, a, .start-tile):focus-visible { outline: 1px dotted #000; outline-offset: 2px; box-shadow: 0 0 0 2px rgba(51, 153, 255, .5); }
+:root[data-theme="aero"] .topbar .new-order-btn { border-radius: 4px; }
+
+/* ---------- Invoervelden ---------- */
+:root[data-theme="aero"] :is(.page input:not([type=checkbox], [type=radio], [type=file], [type=hidden], [type=range], .ink, .nr-input, .plate-input), .auth-card input, select, textarea:not(.ink, .sn-text)) {
+  border: 1px solid #abadb3; border-top-color: #8e9197; border-radius: 2px; background: #fff; transition: border-color .2s;
+}
+:root[data-theme="aero"] :is(input, select, textarea):not(.ink, .sn-text):hover { border-color: #7eb4ea; }
+:root[data-theme="aero"] :is(input, select, textarea):not(.ink, .sn-text):focus-visible { outline: none; border-color: #569de5; box-shadow: 0 0 0 1px rgba(86, 157, 229, .35); }
+:root[data-theme="aero"] .start-search-row input[type=search] { border-radius: 4px !important; border-color: rgba(30, 60, 100, .45) !important; box-shadow: var(--window); }
+
+/* ---------- Lijsten: zoals de Verkenner ---------- */
+:root[data-theme="aero"] table.list th { background: linear-gradient(180deg, #ffffff 0%, #f1f5fb 100%); border-bottom: 1px solid #d5dfea; font-weight: 400; text-transform: none; letter-spacing: 0; font-size: .85rem; }
+:root[data-theme="aero"] table.list th.sort-th:hover { background: linear-gradient(180deg, #f3f9fd, #e1effb); }
+:root[data-theme="aero"] table.list td { border-bottom-color: #eef2f7; }
+:root[data-theme="aero"] table.list.clickable tbody tr:hover > td { background: linear-gradient(180deg, #f2f8fd, #e1effb); box-shadow: inset 0 1px 0 #b8d6fb, inset 0 -1px 0 #b8d6fb; }
+:root[data-theme="aero"] table.list.clickable tbody tr:hover > td:first-child { box-shadow: inset 1px 1px 0 #b8d6fb, inset 0 -1px 0 #b8d6fb; border-radius: 3px 0 0 3px; }
+:root[data-theme="aero"] table.list.clickable tbody tr:hover > td:last-child { box-shadow: inset -1px 1px 0 #b8d6fb, inset 0 -1px 0 #b8d6fb; border-radius: 0 3px 3px 0; }
+:root[data-theme="aero"] .status-tabs a { border-radius: 3px; border-color: #b9c9da; background: linear-gradient(180deg, #fff, #eef3f9); }
+:root[data-theme="aero"] .status-tabs a:hover { border-color: #7da2ce; background: linear-gradient(180deg, #f2f8fd, #dcecfb); }
+:root[data-theme="aero"] .status-tabs a.active { color: #fff; border-color: #0b4b8f; background: linear-gradient(180deg, #7cbcf4 0%, #3d93e6 49%, #1f6fc5 50%, #2b85dc 100%); text-shadow: 0 1px 1px rgba(0, 0, 0, .3); }
+
+/* ---------- Meldingen ---------- */
+:root[data-theme="aero"] :is(.flash, .alert) { border-radius: 4px; border: 1px solid; box-shadow: 0 2px 10px rgba(0, 30, 80, .25); }
+:root[data-theme="aero"] .flash-ok { background: #f1fbef; color: #1d5e1a; border-color: #8cc47e; }
+:root[data-theme="aero"] :is(.flash-err, .alert) { background: #fff4f2; color: #9b1c12; border-color: #e6a39b; }
+:root[data-theme="aero"] .backup-warn { box-shadow: 0 2px 10px rgba(0, 30, 80, .25); }
+/* Meldingen rechtsonder: als een ballon uit het systeemvak. */
+:root[data-theme="aero"] .live-toast { border-radius: 6px; border: 1px solid rgba(30, 60, 100, .5); border-left-width: 4px; background: linear-gradient(180deg, #fff, #eef5fd); box-shadow: var(--window); }
+
+/* ---------- Startscherm ---------- */
+:root[data-theme="aero"] .start-new {
+  border-radius: 6px; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  background: var(--gloss), linear-gradient(120deg, #2b85dc, #1f6fc5 60%, #155aa6);
+  border: 1px solid #0b4b8f; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45), 0 0 0 6px rgba(185, 215, 245, .5), 0 12px 30px rgba(0, 30, 80, .4);
+}
+:root[data-theme="aero"] .start-new:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6), 0 0 0 6px rgba(200, 228, 255, .7), 0 0 26px rgba(120, 190, 255, .9); }
+:root[data-theme="aero"] .start-new-icon { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #bfe3ff 45%, #4aa0ea); color: #0b4b8f; box-shadow: 0 0 10px rgba(255, 255, 255, .7); }
+:root[data-theme="aero"] :is(.start-stat, .start-page .start-tile):hover { border-color: #3c7fb1; background: linear-gradient(180deg, #f6fbff, #e5f3fb); box-shadow: var(--window), 0 0 16px rgba(120, 190, 255, .8); }
+:root[data-theme="aero"] :is(.start-stat-icon, .start-tile-icon) { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, color-mix(in srgb, var(--hue) 22%, #fff) 60%, color-mix(in srgb, var(--hue) 40%, #fff)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hue) 45%, #fff), 0 1px 4px rgba(0, 30, 80, .2); }
+
+/* ---------- Werkopdracht ---------- */
+:root[data-theme="aero"] :is(.order-toolbar, .review-bar) { -webkit-backdrop-filter: blur(12px) saturate(1.5); backdrop-filter: blur(12px) saturate(1.5); border-bottom: 1px solid var(--glass-edge); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); }
+
+/* ---------- Voettekst: glazen taakbalk ---------- */
+:root[data-theme="aero"] .app-footer { color: #fff; text-shadow: 0 0 6px rgba(0, 20, 50, .8); }
+:root[data-theme="aero"] .app-footer a { color: #fff; }
+
+/* ---------- Themamenu ---------- */
+:root[data-theme="aero"] :is(.theme-item, .theme-fx-item) { border-radius: 3px; border: 1px solid transparent; }
+:root[data-theme="aero"] :is(.theme-item, .theme-fx-item):hover { border-color: #b8d6fb; background: linear-gradient(180deg, #f2f8fd, #e1effb); }
+:root[data-theme="aero"] .theme-menu [aria-checked="true"] { border-color: #7da2ce; background: linear-gradient(180deg, #dcebfc, #c1dcfc); }
+
+/* ---------- Inloggen ---------- */
+:root[data-theme="aero"] .auth-card { background: rgba(255, 255, 255, .92); }
+
+/* ---------- Opstartreeks: "Welkom" op glas ---------- */
+.aero-boot { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: #3f9be6 url(/static/img/fx/sky-aero-v1.svg) 50% 50% / cover no-repeat;
+  animation: aero-boot-out .5s ease 1.75s both; }
+.aero-boot-pane { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 30px 46px 26px; border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .45), rgba(255, 255, 255, .12) 50%, rgba(255, 255, 255, .06) 51%, rgba(255, 255, 255, .22)), rgba(170, 205, 240, .45);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6); backdrop-filter: blur(16px) saturate(1.6);
+  border: 1px solid rgba(30, 60, 100, .55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7), 0 18px 50px rgba(0, 30, 80, .45);
+  animation: aero-boot-in .55s cubic-bezier(.2, .8, .2, 1) both; }
+.aero-boot-pane .logo-mark { width: 64px; height: 64px; filter: drop-shadow(0 0 10px rgba(255, 255, 255, .9)); }
+.aero-boot-word { font: 300 34px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: .22em; padding-left: .22em; color: #0b1f3a; text-shadow: 0 0 14px #fff, 0 0 3px #fff; }
+.aero-boot-busy { display: flex; align-items: center; gap: 10px; font: 400 15px/1 "Segoe UI", system-ui, sans-serif; color: #0b1f3a; text-shadow: 0 0 8px #fff; }
+.aero-boot-ring { width: 22px; height: 22px; border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(51, 153, 255, 0) 0deg, #3399ff 260deg, #bfe6ff 330deg, rgba(51, 153, 255, 0) 360deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 58%, #000 62%); mask: radial-gradient(closest-side, transparent 58%, #000 62%);
+  animation: aero-spin .9s linear infinite; }
+@keyframes aero-boot-in { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes aero-boot-out { to { opacity: 0; visibility: hidden; } }
+@keyframes aero-spin { to { transform: rotate(360deg); } }
+:root[data-theme="aero"][data-boot] :is(main, .order-toolbar, .sheet-scroll, .flash, .app-footer) { animation: aero-rise .45s ease-out 1.8s both; }
+:root[data-theme="aero"][data-boot] .topbar { animation: aero-rise .45s ease-out 1.75s both; }
+@keyframes aero-rise { from { opacity: 0; transform: scale(.985); } to { opacity: 1; transform: none; } }
+/* Pagina's verschijnen kort vervagend, zoals vensters in Aero. */
+:root[data-theme="aero"]:not([data-boot]) main { animation: aero-rise .25s ease-out both; }
+
+/* ---------- Telefoon ---------- */
+@media (max-width: 760px) {
+  :root[data-theme="aero"] { --window: 0 0 0 1px rgba(255, 255, 255, .85), 0 0 0 4px rgba(185, 215, 245, .62), 0 0 0 5px rgba(30, 60, 100, .5), 0 8px 20px rgba(0, 30, 80, .3); }
+}
+
+/* ---------- Rustig / minder beweging ---------- */
+:root[data-theme="aero"][data-fx="calm"]::after, :root[data-theme="aero"][data-fx="calm"] .aero-boot { display: none; }
+:root[data-theme="aero"][data-fx="calm"] main { animation: none; }
+:root[data-theme="aero"][data-hidden]::after { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="aero"]::after, .aero-boot { display: none; }
+  :root[data-theme="aero"] :is(main, .topbar, .order-toolbar, .sheet-scroll, .flash, .app-footer) { animation: none !important; }
+}
+
+/* ---------- Afdrukken ---------- */
+@media print {
+  :root[data-theme="aero"], :root[data-theme="aero"] body { background: #fff !important; }
+  :root[data-theme="aero"]::before, :root[data-theme="aero"]::after, .aero-boot { display: none !important; }
+  :root[data-theme="aero"] :is(.page-head h1, main.page > h1, .page-head h2) { text-shadow: none; }
+  :root[data-theme="aero"] :is(.card, .rdw-card, .customer-head, .table-wrap, .empty, .bl-box) { box-shadow: none; }
+}

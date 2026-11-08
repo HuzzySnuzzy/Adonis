@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.36.0', date: '2026-11-08', title: 'Geheim thema Aero, en de app werkt zichzelf bij terwijl hij draait',
+    items: [
+      'Nieuw geheim thema: Aero. Doorschijnend, wazig glas in de menubalk en rond de vensters, een blauwe hemel met lichtlinten, glanzende knoppen die blauw oplichten en selecties zoals in de Verkenner, in de stijl van Windows 7. Met een eigen "Welkom" bij het opstarten.',
+      'De ADONIS-app kijkt nu elke 30 seconden of de server een nieuwere versie heeft (en meteen nadat de server is bijgewerkt), in plaats van alleen bij het starten. De nieuwe app wordt op de achtergrond gedownload; daarna verschijnt rechtsonder "Nu opnieuw starten".',
+    ],
+  },
+  {
     version: '1.35.0', date: '2026-11-08', title: 'Meer en langere meldingen',
     items: [
       'Meldingen rechtsonder blijven nu 15 seconden staan (een streepje laat zien hoe lang nog), en blijven staan zolang de muis erop staat. Met het kruisje sluit u ze, met een klik gaat u ernaartoe.',
