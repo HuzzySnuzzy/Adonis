@@ -17,6 +17,12 @@ module.exports = function register(app, { flash, wrap }) {
   /* ================= kostenschatting vooraf ================= */
   // Voor het venster "Hoeveel moeite mag Claude doen?": per inspanningsniveau een bedrag en tijd.
   app.get('/ai/schatting', (req, res) => {
+    try { estimateRoute(req, res); } catch (err) {
+      console.error('Kostenschatting:', err);
+      res.status(500).json({ error: 'De kostenschatting lukte niet (' + err.message + '). Probeer het opnieuw.' });
+    }
+  });
+  function estimateRoute(req, res) {
     if (!importer.isConfigured()) return res.status(400).json({ error: 'Claude is niet ingesteld: vul anthropic-api-key in config.properties in.' });
     const taak = String(req.query.taak || '');
     let levels; let detail = ''; let aanbevolen = 'normaal';
@@ -65,12 +71,13 @@ module.exports = function register(app, { flash, wrap }) {
       detail, aanbevolen,
       levels: levels.map((l) => ({ ...l, prijs: '≈ ' + ai.formatRange(l.eurMin, l.eurMax), tijd: l.seconds < 90 ? `± ${Math.max(5, Math.round(l.seconds / 5) * 5)} seconden` : `± ${Math.round(l.seconds / 60)} minuten` })),
     });
-  });
+  }
 
   // Klanten in de getoonde APK-lijst (zelfde tabbladen als op /apk).
   function apkCustomers(req) {
     const rows = req.app.get('apkRows')();
-    const toon = ['verlopen', 'binnenkort', 'alles'].includes(req.query.toon || req.body.toon) ? (req.query.toon || req.body.toon) : 'binnenkort';
+    const wanted = (req.query && req.query.toon) || (req.body && req.body.toon); // GET heeft geen body
+    const toon = ['verlopen', 'binnenkort', 'alles'].includes(wanted) ? wanted : 'binnenkort';
     const pick = { verlopen: (r) => r.days < 0, binnenkort: (r) => r.days <= 60 && r.days >= -7, alles: () => true }[toon];
     return rows.filter(pick);
   }

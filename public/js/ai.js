@@ -48,7 +48,8 @@
     d.showModal();
     try {
       const res = await fetch('/ai/schatting?' + new URLSearchParams({ taak, ...params }), { credentials: 'same-origin' });
-      const r = await res.json();
+      let r;
+      try { r = await res.json(); } catch { throw new Error(res.status === 401 || res.redirected ? 'U bent uitgelogd. Log opnieuw in en probeer het nog eens.' : 'De kostenschatting lukte niet (de server gaf een fout). Probeer het opnieuw.'); }
       if (!res.ok) throw new Error(r.error || 'De schatting lukte niet.');
       d.querySelector('[data-ai-detail]').textContent = r.detail;
       const pick = remembered(taak) || r.aanbevolen;

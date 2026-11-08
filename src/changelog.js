@@ -10,6 +10,7 @@ module.exports = [
       'Het startscherm is opnieuw ontworpen: een rustige kop met de datum, één grote zoekbalk en "Nieuwe werkopdracht" als duidelijke hoofdknop.',
       'Onder "Vandaag" staat met grote getallen wat er te doen is: klanten bellen voor de bandenwissel en de APK, en wat klaar is om te factureren.',
       'Onder "Snel naar" heeft elk onderdeel een eigen kleur en past alles op één regel. Op de telefoon staan de getallen naast elkaar.',
+      'Opgelost: de kostenschatting voor "APK-aandachtspunten opzoeken" op de APK-lijst gaf soms "Unexpected token <".',
     ],
   },
   {
