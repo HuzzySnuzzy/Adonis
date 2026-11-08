@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" fill="none" stroke="#b8923a" stroke-width="2" stroke-linejoin="round">
+  <!-- Tempelgevel (eigen tekening): fronton, architraaf, acht gecanneleerde zuilen, trappen -->
+  <path d="M90 190 600 40 1110 190Z" stroke-width="3"/>
+  <path d="M170 176 600 62 1030 176" opacity=".55"/>
+  <circle cx="600" cy="130" r="26" opacity=".7"/><path d="M600 108v44M578 130h44" opacity=".5"/>
+  <rect x="80" y="190" width="1040" height="22" stroke-width="3"/>
+  <path d="M80 236h1040" stroke-width="3"/>
+  <path d="M80 212h1040" opacity=".5"/>
+  <g opacity=".9">
+    <path d="M100 212v24M150 212v24M200 212v24M250 212v24M300 212v24M350 212v24M400 212v24M450 212v24M500 212v24M550 212v24M600 212v24M650 212v24M700 212v24M750 212v24M800 212v24M850 212v24M900 212v24M950 212v24M1000 212v24M1050 212v24M1100 212v24" opacity=".45"/>
+  </g>
+  <g id="col">
+    <path d="M118 236h64v12h-64zM124 248h52"/>
+    <path d="M128 252v300M172 252v300" stroke-width="2.5"/>
+    <path d="M139 256v292M150 254v296M161 256v292" opacity=".4"/>
+    <path d="M122 552h56v14h-56z"/>
+  </g>
+  <use href="#col" x="122"/><use href="#col" x="244"/><use href="#col" x="366"/>
+  <use href="#col" x="566"/><use href="#col" x="688"/><use href="#col" x="810"/><use href="#col" x="932"/>
+  <path d="M60 566h1080v18H60zM40 584h1120v18H40zM20 602h1160v18H20z"/>
+</svg>

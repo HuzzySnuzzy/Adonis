@@ -12,7 +12,7 @@
 
   function end() {
     clearTimeout(timer);
-    var box = document.querySelector('.app-boot, .vcds-boot');
+    var box = document.querySelector('.app-boot, .vcds-boot, .olympus-boot');
     if (box) box.remove();
     root.removeAttribute('data-boot');
     removeEventListener('keydown', end, true);
@@ -53,9 +53,45 @@
     addEventListener('pointerdown', end, true);
   }
 
+  /* ADONIS: de zon komt op, de lauwerkrans groeit, de letters worden verguld. */
+  function startAdonis() {
+    var mark = document.querySelector('.logo .logo-mark');
+    var box = document.createElement('div');
+    box.className = 'olympus-boot';
+    box.setAttribute('aria-hidden', 'true');
+    var c = document.createElement('div');
+    c.className = 'olympus-boot-c';
+    var laurel = document.createElement('img');
+    laurel.className = 'olympus-boot-laurel';
+    laurel.src = '/static/img/fx/laurel-adonis-v1.svg';
+    laurel.alt = '';
+    c.append(laurel);
+    if (mark) { var m = mark.cloneNode(true); m.setAttribute('class', 'logo-mark olympus-boot-mark'); c.append(m); }
+    var word = document.createElement('div');
+    word.className = 'olympus-boot-word';
+    'ADONIS'.split('').forEach(function (ch, i) {
+      var s = document.createElement('span');
+      s.textContent = ch;
+      s.style.setProperty('--i', i);
+      word.append(s);
+    });
+    var rule = document.createElement('div');
+    rule.className = 'olympus-boot-rule';
+    var sub = document.createElement('div');
+    sub.className = 'olympus-boot-sub';
+    sub.textContent = 'Werkopdrachten';
+    c.append(word, rule, sub);
+    box.append(c);
+    document.body.append(box);
+    timer = setTimeout(end, 2650);
+    addEventListener('keydown', end, true);
+    addEventListener('pointerdown', end, true);
+  }
+
   function start() {
     if (root.getAttribute('data-boot') !== '1') return;
     if (theme === 'vcds') return startVcds();
+    if (theme === 'adonis') return startAdonis();
     var box = document.createElement('div');
     box.className = 'app-boot';
     box.setAttribute('aria-hidden', 'true');

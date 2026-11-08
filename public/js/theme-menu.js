@@ -55,7 +55,7 @@
     check('.theme-item', 'themeValue', theme);
     try { await save({ theme }); } catch { check('.theme-item', 'themeValue', before); return; }
     // Neon, Black Ice en VCDS hebben een eigen stijlblad of achtergrondlagen: dan de pagina even herladen.
-    if (['neon', 'ice', 'vcds'].includes(theme) || ['neon', 'ice', 'vcds'].includes(before)) {
+    if (['neon', 'ice', 'vcds', 'adonis'].includes(theme) || ['neon', 'ice', 'vcds', 'adonis'].includes(before)) {
       window.adonisLeaving = true; // geen "niet opgeslagen"-waarschuwing; ingevulde gegevens blijven staan in het formulier
       location.reload();
       return;
@@ -64,7 +64,7 @@
     else root.setAttribute('data-theme', theme);
     const meta = document.querySelector('meta[name="color-scheme"]');
     if (meta) meta.content = theme === 'system' ? 'light dark' : theme === 'oled' ? 'dark' : theme;
-    const label = { system: 'Systeem', light: 'Licht', dark: 'Donker', oled: 'OLED', vcds: 'VCDS', neon: 'Neon', ice: 'Black Ice' }[theme];
+    const label = { system: 'Systeem', light: 'Licht', dark: 'Donker', oled: 'OLED', vcds: 'VCDS', neon: 'Neon', ice: 'Black Ice', adonis: 'ADONIS' }[theme];
     btn.title = 'Thema: ' + label;
     btn.setAttribute('aria-label', 'Thema kiezen (nu ' + label + ')');
     close(true);

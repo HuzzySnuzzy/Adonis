@@ -130,6 +130,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   Aandachtspunten en APK-punten staan in **inklapbare vakken** (open/dicht wordt onthouden).
   Op de **APK-lijst** zoekt een knop (beheerders) de punten op voor alle modellen in het getoonde tabblad die nog niet
   zijn opgezocht; per klant staat dan "n APK-punten voor dit model".
+- **Thema ADONIS** (het thema der thema's): marmer met gouden aders, bladgoud en lapisblauw, Griekse sleutelrand,
+  Cinzel + EB Garamond (OFL), draaiende zonnestralen, gouden stofjes, eigen opstartreeks (zon, lauwerkrans, vergulde
+  letters) en een tempel achter het inlogscherm. Tekeningen zijn eigen SVG's in `public/img/fx/*-adonis-v1.svg`.
 - **Plaknotities:** knop links op elk scherm. Kleur (standaard geel), zichtbaar voor alleen de maker of voor iedereen, en
   op het scherm (elke pagina, `position: fixed`) of op een werkopdracht (scrolt mee, alleen daar zichtbaar; briefje-teken in
   de lijsten). Verslepen, inklappen, verbergen; plek per browser onthouden. Gedeelde notities live via SSE; alleen de maker

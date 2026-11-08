@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+  <!-- Griekse sleutelrand (meander), herhaalt horizontaal -->
+  <path d="M0 17.5H15.5V2.5H3.5V13.5H11.5V6.5H7.5V10M15.5 17.5H20" fill="none" stroke="#d4af4f" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>
+</svg>

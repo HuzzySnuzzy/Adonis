@@ -17,7 +17,7 @@ if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'prefer
 }
 
 const PREF_OPTIONS = {
-  theme: ['system', 'light', 'dark', 'oled', 'vcds', 'neon', 'ice'],
+  theme: ['system', 'light', 'dark', 'oled', 'vcds', 'neon', 'ice', 'adonis'],
   fx: ['full', 'calm'],
   ink: ['hand', 'plain'],
   start: ['/start', '/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw', '/bandenhotel', '/voorraad', '/portaal'],
@@ -165,7 +165,7 @@ function loadUser(req, res, next) {
   if (!req.session.csrf) req.session.csrf = crypto.randomBytes(24).toString('hex');
   res.locals.user = req.user;
   // Thema: van de gebruiker, of (op de inlogpagina) van de laatst gekozen instelling op dit apparaat.
-  const cookieTheme = /(?:^|;\s*)wo_theme=(light|dark|system|oled|vcds|neon|ice)/.exec(req.headers.cookie || '');
+  const cookieTheme = /(?:^|;\s*)wo_theme=(light|dark|system|oled|vcds|neon|ice|adonis)/.exec(req.headers.cookie || '');
   res.locals.prefs = req.user ? req.user.prefs : { ...PREF_DEFAULTS, theme: cookieTheme ? cookieTheme[1] : 'system' };
   res.locals.csrf = req.session.csrf;
   next();

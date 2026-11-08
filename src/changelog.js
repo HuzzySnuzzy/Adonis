@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.32.0', date: '2026-11-08', title: 'Het thema ADONIS',
+    items: [
+      'Nieuw thema: ADONIS, het thema der thema\'s. Griekse schoonheid: wit marmer met gouden aders, bladgoud, Egeïsch blauw, een Griekse sleutelrand onder de menubalk en klassieke letters.',
+      'Zonnestralen vallen langzaam draaiend over het marmer en gouden stofjes zweven in het licht. Bij het opstarten komt de zon op, groeit een lauwerkrans rond het logo en worden de letters verguld.',
+      'Het inlogscherm staat voor een Griekse tempel. Kies het thema via het themaknopje rechtsboven (het bovenste in de lijst) of bij Instellingen.',
+      'Met Effecten: Rustig staan alle bewegingen stil; afdrukken blijft gewoon zwart op wit.',
+    ],
+  },
+  {
     version: '1.31.0', date: '2026-11-08', title: 'Plaknotities',
     items: [
       'Nieuw: plaknotities, zoals gele memoblaadjes. Klik op het gele knopje links op het scherm.',
