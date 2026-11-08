@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.34.0', date: '2026-11-08', title: 'Lijsten sorteren op kolom',
+    items: [
+      'Klik op een kolomkop (Nr., Status, Datum, Kenteken, Naam, Km-stand…) om de lijst daarop te sorteren, zoals in Taakbeheer. Nog een keer klikken draait de volgorde om; een derde keer zet de gewone volgorde terug.',
+      'Werkt bij Werkopdrachten, Klanten, APK-lijst, Bandenhotel, Wissellijst en Voorraad. Datums en getallen sorteren goed, lege vakken komen onderaan, en de keuze blijft staan als de lijst live wordt bijgewerkt.',
+    ],
+  },
+  {
     version: '1.33.2', date: '2026-11-08', title: 'Knoppen overal op dezelfde plek',
     items: [
       'Op elke pagina staat de titel linksboven, de knoppen rechtsboven (de blauwe hoofdknop helemaal rechts) en de zoekbalk op een eigen regel eronder. Zo zitten knoppen niet meer op de ene pagina naast de zoekbalk en op de andere onder de uitleg.',

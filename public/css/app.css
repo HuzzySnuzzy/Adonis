@@ -1725,3 +1725,14 @@ h1 .ai-ico { width: 1.05em; height: 1.05em; color: var(--hue, #e2557a); }
 @media (prefers-reduced-motion: reduce) { .sticky-note { animation: none; } .note-dock-btn { transition: none; } }
 :root[data-fx="calm"] .sticky-note { animation: none; }
 @media print { .note-dock, .sticky-note { display: none !important; } }
+
+/* Sorteerbare kolomkoppen */
+table.list th.sort-th { cursor: pointer; user-select: none; white-space: nowrap; }
+table.list th.sort-th:hover { color: var(--text); }
+table.list th.sort-th::after { content: ""; display: inline-block; width: 0; height: 0; margin-left: .35em; vertical-align: .15em;
+  border-left: .36em solid transparent; border-right: .36em solid transparent; border-bottom: .46em solid currentColor; opacity: 0; transition: opacity .15s; }
+table.list th.sort-th:hover::after { opacity: .3; }
+table.list th.sort-asc::after { opacity: .9; }
+table.list th.sort-desc::after { opacity: .9; border-bottom: 0; border-top: .46em solid currentColor; }
+table.list th.sort-asc, table.list th.sort-desc { color: var(--text); }
+table.list th.sort-th:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }

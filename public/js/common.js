@@ -489,3 +489,69 @@ document.addEventListener('click', async (e) => {
     }
   });
 })();
+// Lijsten sorteren door op een kolomkop te klikken (zoals in Taakbeheer): oplopend → aflopend → oorspronkelijke volgorde.
+// Werkt voor lijsten met klikbare rijen; de keuze blijft staan als de lijst live wordt bijgewerkt.
+(function () {
+  const coll = new Intl.Collator('nl', { numeric: true, sensitivity: 'base' });
+  const tables = () => [...document.querySelectorAll('table.list')].filter((t) => t.tHead && t.tBodies[0] && (t.matches('.sortable') || t.tBodies[0].querySelector('tr[data-href]')) && !t.matches('.no-sort'));
+  const keyOf = (t) => 'adonis-sort:' + location.pathname + ':' + tables().indexOf(t);
+  const sortable = (th) => th.textContent.trim() && !th.matches('.act-col, .chk, .no-sort');
+  function value(td) {
+    if (!td) return null;
+    if (td.dataset.sort !== undefined) return td.dataset.sort === '' ? null : (isNaN(+td.dataset.sort) ? td.dataset.sort : +td.dataset.sort);
+    const plate = td.querySelector('.plate-txt');
+    // Tekst per onderdeel met spaties ertussen ("19-10-26" en "20 dagen" niet aan elkaar plakken).
+    const parts = []; const walk = document.createTreeWalker(plate || td, NodeFilter.SHOW_TEXT);
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) parts.push(n.nodeValue);
+    const text = parts.join(' ').replace(/\s+/g, ' ').trim();
+    if (!text || text === '–' || text === '-') return null;
+    const d = /(?:^|\D)(\d{1,2})-(\d{1,2})-(\d{4}|\d{2})(?!\d)/.exec(text);
+    if (d && !plate) { const y = d[3].length === 2 ? 2000 + +d[3] : +d[3]; return y * 10000 + +d[2] * 100 + +d[1]; }
+    if (/^[€\s]*-?[\d.]+(,\d+)?\s*(km|x|×)?$/i.test(text)) return parseFloat(text.replace(/[€\s.a-z×]/gi, '').replace(',', '.'));
+    return text;
+  }
+  function apply(table, col, dir) {
+    const body = table.tBodies[0];
+    const rows = [...body.rows];
+    rows.forEach((r, i) => { if (r.dataset.origIndex === undefined) r.dataset.origIndex = i; });
+    const ths = [...table.tHead.rows[0].cells];
+    ths.forEach((th, i) => {
+      th.classList.toggle('sort-asc', i === col && dir === 1);
+      th.classList.toggle('sort-desc', i === col && dir === -1);
+      if (sortable(th)) th.setAttribute('aria-sort', i === col && dir ? (dir === 1 ? 'ascending' : 'descending') : 'none');
+    });
+    const sorted = rows.slice().sort((a, b) => {
+      if (!dir) return a.dataset.origIndex - b.dataset.origIndex;
+      const x = value(a.cells[col]); const y = value(b.cells[col]);
+      if (x === null || y === null) return x === null && y === null ? a.dataset.origIndex - b.dataset.origIndex : x === null ? 1 : -1; // leeg altijd onderaan
+      const c = typeof x === 'number' && typeof y === 'number' ? x - y : coll.compare(String(x), String(y));
+      return c ? c * dir : a.dataset.origIndex - b.dataset.origIndex;
+    });
+    sorted.forEach((r) => body.append(r));
+  }
+  function setup() {
+    for (const table of tables()) {
+      const ths = [...table.tHead.rows[0].cells];
+      ths.forEach((th, i) => {
+        if (!sortable(th) || th.dataset.sortBound) return;
+        th.dataset.sortBound = '1';
+        th.classList.add('sort-th');
+        th.tabIndex = 0;
+        th.title = 'Sorteren op ' + th.textContent.trim().toLowerCase();
+        const go = () => {
+          const t = th.closest('table');
+          let st = null; try { st = JSON.parse(sessionStorage.getItem(keyOf(t))); } catch { /* geen */ }
+          const dir = st && st.col === i ? (st.dir === 1 ? -1 : st.dir === -1 ? 0 : 1) : 1;
+          try { if (dir) sessionStorage.setItem(keyOf(t), JSON.stringify({ col: i, dir })); else sessionStorage.removeItem(keyOf(t)); } catch { /* geen opslag */ }
+          apply(t, i, dir);
+        };
+        th.addEventListener('click', (e) => { e.stopPropagation(); go(); });
+        th.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      });
+      let st = null; try { st = JSON.parse(sessionStorage.getItem(keyOf(table))); } catch { /* geen */ }
+      if (st && st.dir && ths[st.col] && sortable(ths[st.col])) apply(table, st.col, st.dir);
+    }
+  }
+  setup();
+  document.addEventListener('adonis:swapped', setup);
+})();
