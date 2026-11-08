@@ -117,7 +117,7 @@ function validatePassword(password) {
   return null;
 }
 
-async function createUser({ username, name, password, isAdmin, role }) {
+async function createUser({ username, name, password, isAdmin, role, simple = false }) {
   username = String(username || '').trim();
   name = String(name || '').trim() || username;
   if (!/^[A-Za-z0-9._-]{2,40}$/.test(username)) {
@@ -135,6 +135,12 @@ async function createUser({ username, name, password, isAdmin, role }) {
   db.prepare('INSERT INTO users (username, name, password_hash, is_admin, is_owner, role) VALUES (?, ?, ?, ?, ?, ?)').run(
     username, name.slice(0, 80), hash, r === 'beheerder' ? 1 : 0, first ? 1 : 0, r
   );
+  // Nieuwe gebruikers beginnen in de eenvoudige weergave (startscherm met grote knoppen); niet de eigenaar,
+  // die heeft Gebruikers en Systeem nodig om ADONIS in te richten.
+  if (simple && !first) {
+    const id = db.prepare('SELECT id FROM users WHERE username = ?').get(username).id;
+    savePrefs(id, { simple: 'on', start: '/start' });
+  }
 }
 
 async function setPassword(userId, password) {

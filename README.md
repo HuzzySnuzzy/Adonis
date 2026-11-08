@@ -70,7 +70,8 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Excel importeren met Claude als meekijker** (alleen beheerders): zet bestaande lijsten (.xlsx of .csv) over naar
   het bandenhotel, de overige opslag of de voorraad. Zie [Excel-import](#excel-import).
 - **Eenvoudig in gebruik.** Voor wie niet zo handig is met computers: de beheerder zet bij *Gebruikers* (of iemand zelf bij
-  *Instellingen*) **Eenvoudige weergave** aan. Dan opent ADONIS met een **startscherm** met grote knoppen en één zoekvak,
+  *Instellingen*) **Eenvoudige weergave** aan. Nieuwe gebruikers (aangemaakt bij *Gebruikers*) krijgen dit standaard; het vinkje staat op het
+  formulier en kan uit. De eigenaar (eerste account) begint in de gewone weergave. Dan opent ADONIS met een **startscherm** met grote knoppen en één zoekvak,
   is alles groter en staat alleen het belangrijkste in het menu (animaties volgen gewoon *Effecten*). Voor iedereen geldt:
   - **Hulp** (vraagteken rechtsboven): uitleg in korte stappen met precies dezelfde knopnamen als op het scherm.
   - Een werkopdracht wordt tijdens het typen **op het apparaat bewaard**; na een ongeluk (pagina dicht, uitgelogd,

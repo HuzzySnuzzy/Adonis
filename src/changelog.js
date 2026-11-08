@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.29.2', date: '2026-11-08', title: 'Nieuwe gebruikers beginnen eenvoudig',
+    items: [
+      'Nieuwe gebruikers krijgen standaard de eenvoudige weergave (startscherm met grote knoppen). Bij Gebruikers kunt u het vinkje "Eenvoudige weergave" uitzetten bij het aanmaken; later wijzigen kan ook.',
+    ],
+  },
+  {
     version: '1.29.1', date: '2026-11-08', title: 'Escape naar Start, Terug naar waar u vandaan kwam',
     items: [
       'De Escape-toets brengt u altijd naar het startscherm. Een open venster of menu sluit eerst, en in een invoerveld verlaat de eerste Escape alleen het veld.',

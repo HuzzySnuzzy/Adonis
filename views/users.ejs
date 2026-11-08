@@ -73,6 +73,8 @@
           <% for (const [k, label] of Object.entries(ROLES)) { %><option value="<%= k %>"><%= label %></option><% } %>
         </select>
       </label>
+      <label class="check" title="Startscherm met grote knoppen en alleen het belangrijkste in het menu. Later te wijzigen bij deze gebruiker of in diens Instellingen.">
+        <input type="checkbox" name="eenvoudig" value="on" checked> Eenvoudige weergave</label>
       <button class="btn btn-primary" type="submit">Gebruiker toevoegen</button>
     </form>
   </section>

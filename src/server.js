@@ -1081,6 +1081,7 @@ app.post('/gebruikers', auth.requireAdmin, wrap(async (req, res) => {
   try {
     await auth.createUser({
       username: req.body.username, name: req.body.name, password: req.body.password, role: req.body.role,
+      simple: req.body.eenvoudig === 'on', // standaard aangevinkt op het formulier
     });
   } catch (err) {
     return renderUsers(req, res, err.message, 400);
