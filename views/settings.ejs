@@ -120,6 +120,12 @@
           <span class="choice-body"><span class="choice-label">Rustig</span><span class="choice-help">Geen opstartanimatie, veel minder beweging (fijn op oudere computers)</span></span>
         </label>
       </div>
+      <%# Waarom er (nu) geen animaties zijn, zodat dat geen raadsel is. %>
+      <% if (p.simple === 'on') { %><p class="fx-why">Let op: <b>Eenvoudige weergave</b> staat aan. Dan zijn er nooit animaties, ook niet met <i>Volledig</i>.</p><% } %>
+      <p class="fx-why" data-fx-reduced hidden>Let op: <b>dit apparaat vraagt om minder beweging</b>, daarom speelt ADONIS geen animaties af.
+        Op Windows zet je ze weer aan via <i>Instellingen → Toegankelijkheid → Visuele effecten → Animatie-effecten</i>.</p>
+      <p class="fx-replay"><button type="button" class="btn btn-small" data-replay-boot <%= p.simple === 'on' ? 'disabled' : '' %>>Opstartanimatie nu bekijken</button>
+        <span class="muted small">De opstartanimatie speelt één keer per venster (of bij het starten van de ADONIS-app), niet bij elke pagina.</span></p>
     </section>
 
     <% if (!inApp) { %>

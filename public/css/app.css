@@ -1034,7 +1034,7 @@ table.list.stock-list td { overflow-wrap: anywhere; }
   .topbar .brand { order: 1; }
   .topbar .usernav { order: 2; margin-left: auto; width: auto; justify-content: flex-end; gap: .55rem; }
   .topbar .mainnav { order: 3; }
-  .logo-sub { display: none; }
+  .topbar .logo-sub { display: none; }
   .logo-mark { width: 28px; height: 28px; }
   .new-order-btn { padding: .4rem .7rem; }
   .nw-long, .lo-text { display: none; }
@@ -1234,7 +1234,7 @@ table.list.stock-list td { overflow-wrap: anywhere; }
   .new-order-btn { padding-left: .8rem; padding-right: .8rem; }
 }
 @media (min-width: 761px) and (max-width: 1180px) {
-  .logo-sub { display: none; }
+  .topbar .logo-sub { display: none; }
 }
 /* Eenvoudige weergave: minder menu-items, dus woorden in plaats van pictogrammen. */
 @media (min-width: 761px) and (max-width: 1499px) {
@@ -1253,3 +1253,19 @@ form[role="search"].is-searching input[name="q"] {
 }
 @keyframes search-busy { to { background-position: 140% 100%; } }
 @media (prefers-reduced-motion: reduce) { form[role="search"].is-searching input[name="q"] { animation: none; } }
+
+/* Inlogscherm: met welke server verbonden (vervaagd tot je erop wijst of tikt) */
+.server-url { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: .2rem .5rem; margin-top: 1.1rem; padding-top: .9rem;
+  border-top: 1px solid var(--border-soft); font-size: .85rem; }
+.server-addr { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; color: var(--text); overflow-wrap: anywhere; text-align: center;
+  filter: blur(5px); transition: filter .25s; cursor: default; border-radius: 4px; padding: 0 .2rem; user-select: all; }
+.server-url:hover .server-addr, .server-addr:focus { filter: none; outline: none; }
+.server-addr:focus-visible { box-shadow: 0 0 0 2px var(--primary); }
+.server-change { font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .server-addr { transition: none; } }
+@media print { .server-url { display: none; } }
+
+.fx-why { margin: .4rem 0 .2rem; padding: .5rem .7rem; border-radius: 6px; background: var(--warn-bg); color: var(--warn-text); border: 1px solid var(--warn-border); font-size: .9rem; }
+.fx-why[hidden] { display: none; }
+.fx-replay { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; margin: .6rem 0 0; }
+.server-url kbd { font: inherit; font-size: .8em; padding: 0 .3em; border: 1px solid var(--border); border-radius: 3px; }

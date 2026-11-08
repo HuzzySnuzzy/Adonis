@@ -119,6 +119,9 @@ function createWindow() {
   wc.on('will-navigate', (e, url) => {
     if (url.startsWith('file:') || sameOrigin(url)) return;
     e.preventDefault();
+    // "Wijzigen" bij het serveradres op het inlogscherm: het scherm om een ander adres te kiezen.
+    // (Doet verder niets: je moet daar zelf een adres invullen.)
+    if (url === 'adonis-app:server-wijzigen') return showSetup('wijzigen');
     if (/^https?:|^mailto:/i.test(url)) shell.openExternal(url);
   });
   wc.setWindowOpenHandler(({ url }) => {

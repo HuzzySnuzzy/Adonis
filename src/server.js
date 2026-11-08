@@ -135,7 +135,12 @@ app.use((req, res, next) => {
   res.locals.path = req.path;
   // De ADONIS-app (Windows) zet "ADONIS-app/<versie>" in de user-agent.
   res.locals.inApp = /ADONIS-app\//.test(req.get('user-agent') || '');
+  { // Versie van de ADONIS-app (gelijk aan de release); de knop "Wijzigen" bij het serveradres kan het vanaf 1.24.1.
+    const v = ((req.get('user-agent') || '').match(/ADONIS-app\/(\d+)\.(\d+)\.(\d+)/) || []).slice(1).map(Number);
+    res.locals.appCanChangeServer = v.length === 3 && (v[0] * 1e6 + v[1] * 1e3 + v[2]) >= 1024001;
+  }
   res.locals.url = req.originalUrl;
+  res.locals.serverUrl = `${req.protocol}://${req.get('host') || ''}`;
   // Lange lijsten: eerst PAGE regels, met "Meer tonen" (?n=...).
   res.locals.shownLimit = Math.min(Math.max(parseInt(req.query.n, 10) || PAGE, PAGE), 10000);
   res.locals.appInfo = {

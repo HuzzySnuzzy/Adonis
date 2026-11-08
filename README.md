@@ -106,6 +106,13 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   100 regels, met *Meer tonen* / *Alles tonen*. Op een laptop past de menubalk op één rij (naam en uitloggen als pictogram;
   in de eenvoudige weergave blijven het woorden).
 
+- **Serveradres op het inlogscherm:** onderaan staat met welke server dit apparaat verbonden is (vervaagd tot je erop
+  wijst of tikt). In de ADONIS-app staat ernaast **Wijzigen** (opent het scherm om een ander adres te kiezen; in oudere
+  app-versies: `Ctrl + ,`).
+- **Opstartanimatie** speelt één keer per venster (of bij het starten van de app). Speelt hij niet, dan zegt
+  *Instellingen → Effecten* waarom (Rustig, Eenvoudige weergave, of Windows vraagt om minder beweging) en kun je hem
+  daar opnieuw bekijken.
+
 Sneltoetsen in het formulier: `Ctrl+S` slaat op, `Enter` springt naar het volgende vak.
 
 ## Installeren – één bestand

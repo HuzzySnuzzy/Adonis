@@ -15,5 +15,13 @@
     <label class="check remember"><input type="checkbox" name="remember" value="1" checked> Ingelogd blijven op dit apparaat</label>
     <button class="btn btn-primary btn-block" type="submit">Inloggen</button>
   </form>
+  <%# Met welke server is dit apparaat verbonden? Vervaagd tot je erop wijst of tikt (niet zomaar meelezen). %>
+  <div class="server-url">
+    <span class="muted">Server</span>
+    <span class="server-addr" tabindex="0" title="Aanwijzen of aantikken om het adres te zien" data-server-url><%= serverUrl %></span>
+    <% if (inApp && appCanChangeServer) { %><a href="adonis-app:server-wijzigen" class="server-change" title="Een ander serveradres kiezen (sneltoets Ctrl + ,)">Wijzigen</a>
+    <% } else if (inApp) { %><span class="muted small">Wijzigen: druk op <kbd>Ctrl</kbd> + <kbd>,</kbd></span><% } %>
+  </div>
 </main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

@@ -1,4 +1,22 @@
 'use strict';
+// Inlogscherm: het echte adres zoals dit apparaat het gebruikt (ook achter Cloudflare of een proxy).
+document.querySelectorAll('[data-server-url]').forEach((el) => { el.textContent = location.origin; });
+// Instellingen → Effecten: laten zien als het apparaat om minder beweging vraagt, en de opstartanimatie opnieuw afspelen.
+(function () {
+  const note = document.querySelector('[data-fx-reduced]');
+  const replay = document.querySelector('[data-replay-boot]');
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (note) note.hidden = !reduced;
+  if (!replay) return;
+  if (reduced) replay.disabled = true;
+  replay.addEventListener('click', () => {
+    const fx = document.querySelector('input[name="fx"]:checked');
+    if (fx && fx.value === 'calm') { window.alert('Kies eerst "Volledig" en klik op "Instellingen opslaan".'); return; }
+    try { Object.keys(sessionStorage).filter((k) => /^adonis-.*-boot$/.test(k)).forEach((k) => sessionStorage.removeItem(k)); } catch { /* geen opslag */ }
+    window.adonisLeaving = true;
+    location.reload();
+  });
+})();
 // Klikbare tabelrijen
 document.addEventListener('click', (e) => {
   const row = e.target.closest('tr[data-href]');
