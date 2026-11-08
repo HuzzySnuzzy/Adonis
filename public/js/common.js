@@ -135,7 +135,11 @@ document.addEventListener('keydown', (e) => {
   });
 })();
 // Afdrukknop
-document.addEventListener('click', (e) => { if (e.target.closest('[data-print]')) window.print(); });
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('[data-print]')) return;
+  // In de ADONIS-app: eigen afdrukvoorbeeld; in de browser het gewone afdrukscherm.
+  if (window.adonisApp && window.adonisApp.print) window.adonisApp.print(); else window.print();
+});
 // Wissellijst: "Gebeld" aan/uit zonder de pagina te herladen (je blijft op je plek in de lijst).
 document.addEventListener('submit', async (e) => {
   const form = e.target.closest('form.call-form');

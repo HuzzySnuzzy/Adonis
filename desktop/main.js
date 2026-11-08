@@ -152,7 +152,7 @@ function buildMenu() {
         { label: 'Adres van de server wijzigen…', accelerator: 'CmdOrCtrl+,', click: () => showSetup('wijzigen') },
         { label: 'Controleren op updates', click: () => checkUpdate(true) },
         { type: 'separator' },
-        { label: 'Afdrukken…', accelerator: 'CmdOrCtrl+P', click: () => win && win.webContents.print() },
+        { label: 'Afdrukken…', accelerator: 'CmdOrCtrl+P', click: () => { const w = BrowserWindow.getFocusedWindow() || win; if (w) printPreview(w); } },
         { type: 'separator' },
         { role: 'quit', label: 'Afsluiten' },
       ],
@@ -173,6 +173,38 @@ function buildMenu() {
     },
   ]));
 }
+
+/* ---------------- afdrukken met voorbeeld ----------------
+ * Het afdrukscherm van Windows toont bij Electron geen voorbeeld, staat altijd op "Staand" en laat de grijze vakken weg.
+ * Daarom: eerst een PDF maken zoals de pagina het vraagt (werkopdracht = A4 liggend, met achtergronden) en die tonen in
+ * een voorbeeldvenster met de knoppen Afdrukken en Opslaan (de PDF-weergave van Chromium). */
+async function printPreview(parent) {
+  const wc = parent.webContents;
+  let pdf;
+  try {
+    pdf = await wc.printToPDF({ printBackground: true, preferCSSPageSize: true, pageSize: 'A4' });
+  } catch {
+    wc.print({ printBackground: true }); // valt terug op het gewone afdrukscherm
+    return;
+  }
+  const title = (wc.getTitle() || 'ADONIS').replace(/ · ADONIS$/, '').replace(/[\\/:*?"<>|]+/g, '-').trim().slice(0, 80) || 'ADONIS';
+  const dir = fs.mkdtempSync(path.join(app.getPath('temp'), 'adonis-afdruk-'));
+  const file = path.join(dir, `${title}.pdf`); // deze naam krijgt de PDF ook bij "Opslaan"
+  fs.writeFileSync(file, pdf);
+  const v = new BrowserWindow({
+    parent, width: 1100, height: 820, title: `Afdrukvoorbeeld – ${title}`, icon: ICON, autoHideMenuBar: true, backgroundColor: '#28292c',
+    webPreferences: { plugins: true, contextIsolation: true, nodeIntegration: false, sandbox: true },
+  });
+  v.on('page-title-updated', (e) => e.preventDefault());
+  v.on('closed', () => fs.rm(dir, { recursive: true, force: true }, () => {}));
+  v.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  v.loadFile(file);
+}
+ipcMain.handle('adonis:print', (e) => {
+  if (!sameOrigin(e.senderFrame.url)) return;
+  const w = BrowserWindow.fromWebContents(e.sender);
+  if (w) return printPreview(w);
+});
 
 /* ---------------- zelf bijwerken ---------------- */
 function notify(title, body, onClick) {

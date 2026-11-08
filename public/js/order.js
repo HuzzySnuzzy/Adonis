@@ -204,7 +204,8 @@
   const printBtn = document.getElementById('printBtn');
   if (printBtn) printBtn.addEventListener('click', () => {
     fitAll();
-    window.print();
+    // In de ADONIS-app: eigen afdrukvoorbeeld (A4 liggend, met grijze vakken); anders het afdrukscherm van de browser.
+    if (window.adonisApp && window.adonisApp.print) window.adonisApp.print(); else window.print();
   });
   window.addEventListener('beforeprint', fitAll);
   window.addEventListener('afterprint', fitAll);

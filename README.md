@@ -156,6 +156,9 @@ inlog, venstergrootte en -positie). Links naar andere websites openen in de gewo
 - Vooraf instellen: zet `adonis-app.json` (`{"url": "https://adonis.voorbeeld.nl"}`) naast de .exe. ADONIS levert dit
   bestand kant-en-klaar via **Instellingen → ADONIS-app voor Windows**.
 - `Ctrl + ,` adres wijzigen · `Ctrl + R` herladen · `F11` volledig scherm · `Alt` toont het menu.
+- **Afdrukken met voorbeeld** (vanaf 1.24.6): *Afdrukken* of `Ctrl + P` opent een afdrukvoorbeeld (werkopdracht A4 liggend,
+  met de grijze vakken) met knoppen voor afdrukken en opslaan als PDF. Het afdrukscherm van Windows zelf heeft in de app
+  geen voorbeeld en staat standaard op staand.
 - **Werkt zichzelf bij** (vanaf 1.24.4): de app vraagt de server welke versie daar draait (`/app-versie`) en downloadt
   precies die `ADONIS-app.exe`, alleen van de GitHub-releases van ADONIS. De nieuwe versie wordt gebruikt bij de volgende
   start (of meteen, via de melding). Controle 20 s na het starten en elke 6 uur; met de hand via menu (Alt) →

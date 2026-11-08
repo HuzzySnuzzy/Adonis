@@ -214,6 +214,8 @@ td.tread-warn { background: var(--tread-warn); }
     break-after: page; page-break-after: always;
   }
   .sheet.back { break-after: auto; page-break-after: auto; }
+  /* Papier is smaller dan een scherm: de regels voor smalle schermen mogen hier geen schuifbalk maken. */
+  .sheet, .sheet .panel { overflow: visible !important; }
   .sheet .panel { min-width: 0; }
   .sheet, .sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .ink:focus, .ink:hover { background: transparent; box-shadow: none; }

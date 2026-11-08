@@ -3,7 +3,12 @@
 // De ADONIS-website zelf draait als gewone webpagina zonder extra rechten.
 const { contextBridge, ipcRenderer } = require('electron');
 
-if (location.protocol === 'file:') {
+if (location.protocol === 'http:' || location.protocol === 'https:') {
+  // De ADONIS-website krijgt alleen "afdrukken met voorbeeld" (de app controleert dat het de eigen server is).
+  contextBridge.exposeInMainWorld('adonisApp', {
+    print: () => ipcRenderer.invoke('adonis:print'),
+  });
+} else if (location.protocol === 'file:') {
   contextBridge.exposeInMainWorld('adonisApp', {
     getConfig: () => ipcRenderer.invoke('adonis:get-config'),
     saveUrl: (url) => ipcRenderer.invoke('adonis:save-url', url),
