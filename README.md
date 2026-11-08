@@ -70,7 +70,7 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   het bandenhotel, de overige opslag of de voorraad. Zie [Excel-import](#excel-import).
 - **Eenvoudig in gebruik.** Voor wie niet zo handig is met computers: de beheerder zet bij *Gebruikers* (of iemand zelf bij
   *Instellingen*) **Eenvoudige weergave** aan. Dan opent ADONIS met een **startscherm** met grote knoppen en één zoekvak,
-  is alles groter, staat alleen het belangrijkste in het menu en zijn er geen animaties. Voor iedereen geldt:
+  is alles groter en staat alleen het belangrijkste in het menu (animaties volgen gewoon *Effecten*). Voor iedereen geldt:
   - **Hulp** (vraagteken rechtsboven): uitleg in korte stappen met precies dezelfde knopnamen als op het scherm.
   - Een werkopdracht wordt tijdens het typen **op het apparaat bewaard**; na een ongeluk (pagina dicht, uitgelogd,
     opslaan mislukt) vraagt ADONIS of het **teruggezet** moet worden.
@@ -112,7 +112,7 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Startpagina** (Instellingen) geldt bij het inloggen én telkens als je de app of de browser opent; daarna blijven
   *Klanten* en F5 gewoon op Klanten.
 - **Opstartanimatie** speelt na het inloggen en één keer per venster (of bij het starten van de app). Speelt hij niet, dan zegt
-  *Instellingen → Effecten* waarom (Rustig, Eenvoudige weergave, of Windows vraagt om minder beweging) en kun je hem
+  *Instellingen → Effecten* waarom (Rustig, of Windows vraagt om minder beweging) en kun je hem
   daar opnieuw bekijken.
 
 Sneltoetsen in het formulier: `Ctrl+S` slaat op, `Enter` springt naar het volgende vak.

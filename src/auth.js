@@ -23,7 +23,7 @@ const PREF_OPTIONS = {
   start: ['/start', '/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw', '/bandenhotel', '/voorraad'],
   secret: ['off', 'on'],
   mscale: ['100', '90', '80', '70', '60'], // weergave op telefoon (procent)
-  simple: ['off', 'on'], // eenvoudige weergave: grote knoppen, alleen het belangrijkste, geen animaties
+  simple: ['off', 'on'], // eenvoudige weergave: grote knoppen, alleen het belangrijkste in het menu
   carimg: ['on', 'off'], // foto van het automodel op de klantpagina (Wikipedia)
   partimg: ['on', 'off'], // voorbeeldfoto van de soort onderdeel in de voorraad (Wikipedia)
 };

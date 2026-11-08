@@ -62,7 +62,7 @@
         <input type="hidden" name="simple" value="off">
         <input type="checkbox" name="simple" value="on" <%= p.simple === 'on' ? 'checked' : '' %>>
         <span><b>Eenvoudige weergave aan</b><br><span class="muted small">Grotere letters en knoppen, een startscherm met grote knoppen,
-          alleen het belangrijkste in het menu en geen animaties. Fijn als u niet zo vaak met computers werkt.</span></span>
+          alleen het belangrijkste in het menu. Fijn als u niet zo vaak met computers werkt.</span></span>
       </label>
       <% if (p.simple === 'on' && user.is_admin) { %>
       <p class="muted small">Beheer (staat in deze weergave niet in het menu):
@@ -125,10 +125,9 @@
         </label>
       </div>
       <%# Waarom er (nu) geen animaties zijn, zodat dat geen raadsel is. %>
-      <% if (p.simple === 'on') { %><p class="fx-why">Let op: <b>Eenvoudige weergave</b> staat aan. Dan zijn er nooit animaties, ook niet met <i>Volledig</i>.</p><% } %>
       <p class="fx-why" data-fx-reduced hidden>Let op: <b>dit apparaat vraagt om minder beweging</b>, daarom speelt ADONIS geen animaties af.
         Op Windows zet je ze weer aan via <i>Instellingen → Toegankelijkheid → Visuele effecten → Animatie-effecten</i>.</p>
-      <p class="fx-replay"><button type="button" class="btn btn-small" data-replay-boot <%= p.simple === 'on' ? 'disabled' : '' %>>Opstartanimatie nu bekijken</button>
+      <p class="fx-replay"><button type="button" class="btn btn-small" data-replay-boot>Opstartanimatie nu bekijken</button>
         <span class="muted small">De opstartanimatie speelt na het inloggen en één keer per venster (of bij het starten van de ADONIS-app), niet bij elke pagina.</span></p>
     </section>
 
