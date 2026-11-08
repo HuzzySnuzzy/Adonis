@@ -284,6 +284,13 @@ app.post('/logout', (req, res) => {
   });
 });
 
+// Voor de ADONIS-app: welke versie draait de server? De app werkt zichzelf bij naar precies deze versie
+// (en downloadt die alleen van de vaste GitHub-releases van ADONIS, nooit van een adres dat de server noemt).
+app.get('/app-versie', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ version: buildinfo.version });
+});
+
 /* ---------- alles hieronder vereist inloggen ---------- */
 app.use(auth.requireLogin);
 
@@ -788,6 +795,11 @@ function renderSettings(res, { error = null, status = 200 } = {}) {
       const num = (v) => { const m = /^(\d+)\.(\d+)\.(\d+)/.exec(v || ''); return m ? +m[1] * 1e6 + +m[2] * 1e3 + +m[3] : 0; };
       const app = num(((res.req.get('user-agent') || '').match(/ADONIS-app\/([\d.]+)/) || [])[1]);
       return app > 0 && app < num(res.locals.appInfo && res.locals.appInfo.version);
+    })(),
+    // Vanaf 1.24.4 werkt de app zichzelf bij.
+    appSelfUpdates: (() => {
+      const m = /ADONIS-app\/(\d+)\.(\d+)\.(\d+)/.exec(res.req.get('user-agent') || '');
+      return !!m && (+m[1] * 1e6 + +m[2] * 1e3 + +m[3]) >= 1024004;
     })(),
   });
 }

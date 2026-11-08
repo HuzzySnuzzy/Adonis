@@ -16,6 +16,7 @@
     "productName": "ADONIS",
     "files": [
       "main.js",
+      "updater.js",
       "preload.js",
       "setup.html",
       "setup.js",

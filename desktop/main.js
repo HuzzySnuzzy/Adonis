@@ -7,8 +7,10 @@
  * - Vooraf instellen: zet "adonis-app.json" met {"url": "https://adonis.voorbeeld.nl"} naast de .exe.
  * - Links naar andere websites openen in de gewone browser; dit venster blijft ADONIS.
  * - Ctrl+, = adres wijzigen, Ctrl+R = herladen, F11 = volledig scherm.
+ * - Werkt zichzelf bij naar de versie van de server (zie updater.js).
  */
-const { app, BrowserWindow, Menu, shell, ipcMain, net, session } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, net, session, Notification } = require('electron');
+const updater = require('./updater');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -148,6 +150,7 @@ function buildMenu() {
       submenu: [
         { label: 'Startpagina', accelerator: 'Alt+Home', click: () => openAdonis() },
         { label: 'Adres van de server wijzigen…', accelerator: 'CmdOrCtrl+,', click: () => showSetup('wijzigen') },
+        { label: 'Controleren op updates', click: () => checkUpdate(true) },
         { type: 'separator' },
         { label: 'Afdrukken…', accelerator: 'CmdOrCtrl+P', click: () => win && win.webContents.print() },
         { type: 'separator' },
@@ -169,6 +172,27 @@ function buildMenu() {
       ],
     },
   ]));
+}
+
+/* ---------------- zelf bijwerken ---------------- */
+function notify(title, body, onClick) {
+  if (!Notification.isSupported()) return;
+  const n = new Notification({ title, body, icon: ICON });
+  if (onClick) n.on('click', onClick);
+  n.show();
+}
+async function checkUpdate(byHand = false) {
+  const r = await updater.check(config.url, (m) => console.log('  ' + m));
+  if (r.state === 'bijgewerkt' || (byHand && r.state === 'klaar')) {
+    notify('ADONIS is bijgewerkt', `Versie ${r.version} staat klaar en wordt gebruikt bij de volgende start. Klik hier om nu opnieuw te starten.`,
+      () => updater.restartIntoNew());
+  } else if (byHand) {
+    const text = { actueel: `Je hebt de nieuwste versie (${app.getVersion()}).`, 'geen-portable': 'Bijwerken kan alleen met ADONIS-app.exe.',
+      bezig: 'Er wordt al gecontroleerd.', fout: `Bijwerken lukte niet: ${r.error}.` }[r.state] || '';
+    notify('ADONIS-app', text);
+  } else if (r.state === 'fout') {
+    console.log('  ADONIS-app bijwerken: ' + r.error);
+  }
 }
 
 /* ---------------- communicatie met de lokale pagina's (setup/offline) ---------------- */
@@ -212,7 +236,11 @@ if (!app.requestSingleInstanceLock()) {
       callback(sameOrigin(details.requestingUrl || wc.getURL()));
     });
     buildMenu();
+    updater.cleanup();
     createWindow();
+    // Even na het starten, daarna elke 6 uur (de server kan intussen zijn bijgewerkt).
+    setTimeout(() => checkUpdate(), Number(process.env.ADONIS_APP_UPDATE_DELAY || 20000));
+    setInterval(() => checkUpdate(), 6 * 3600 * 1000);
   });
   app.on('window-all-closed', () => app.quit());
 }

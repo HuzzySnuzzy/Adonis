@@ -156,6 +156,10 @@ inlog, venstergrootte en -positie). Links naar andere websites openen in de gewo
 - Vooraf instellen: zet `adonis-app.json` (`{"url": "https://adonis.voorbeeld.nl"}`) naast de .exe. ADONIS levert dit
   bestand kant-en-klaar via **Instellingen → ADONIS-app voor Windows**.
 - `Ctrl + ,` adres wijzigen · `Ctrl + R` herladen · `F11` volledig scherm · `Alt` toont het menu.
+- **Werkt zichzelf bij** (vanaf 1.24.4): de app vraagt de server welke versie daar draait (`/app-versie`) en downloadt
+  precies die `ADONIS-app.exe`, alleen van de GitHub-releases van ADONIS. De nieuwe versie wordt gebruikt bij de volgende
+  start (of meteen, via de melding). Controle 20 s na het starten en elke 6 uur; met de hand via menu (Alt) →
+  *Controleren op updates*. De map van de .exe moet beschrijfbaar zijn (dus niet in `C:\Program Files`).
 - Broncode in `desktop/` (Electron); gebouwd door GitHub Actions.
 
 ### Linux
