@@ -19,7 +19,7 @@
   document.getElementById('dt-icon-svgs').content.querySelectorAll('[data-k]').forEach((s) => { svgs[s.dataset.k] = s.innerHTML; });
   const ICON_FOR = [[/^\/werkopdracht\/nieuw/, 'plus'], [/^\/werkopdracht/, 'list'], [/^\/klant/, 'people'], [/^\/apk/, 'calendar'], [/^\/bandenhotel\/wissellijst/, 'swap'],
     [/^\/bandenhotel/, 'tyre'], [/^\/voorraad/, 'box'], [/^\/portaal/, 'grid'], [/^\/ai-analyse/, 'ai'], [/^\/importeren/, 'camera'], [/^\/hulp/, 'help'], [/^\/$/, 'people']];
-  const iconFor = (url) => (ICON_FOR.find(([re]) => re.test(url)) || [null, 'grid'])[1];
+  const iconFor = (url) => (/^https?:/.test(url) ? 'grid' : (ICON_FOR.find(([re]) => re.test(url)) || [null, 'grid'])[1]);
 
   const wins = new Map(); // id -> { el, frame, task, st }
   let topZ = 10; let seq = 0; let active = null;
@@ -52,9 +52,12 @@
     el.setAttribute('aria-label', st.title);
     el.innerHTML = `<header class="dw-bar"><span class="dw-ico" aria-hidden="true"></span><span class="dw-title"></span>
         <span class="dw-btns"><button type="button" class="dw-btn dw-min" title="Minimaliseren" aria-label="Minimaliseren"><i></i></button><button type="button" class="dw-btn dw-max" title="Maximaliseren" aria-label="Maximaliseren"><i></i></button><button type="button" class="dw-btn dw-close" title="Sluiten" aria-label="Sluiten"><i></i></button></span></header>
-      <div class="dw-body"><iframe title="Venster" loading="eager"></iframe><div class="dw-loading"><span class="spinner"></span></div></div>
+      <div class="dw-body">${st.site
+    ? '<div class="dw-nav"><button type="button" class="dw-nb" data-nav="back" title="Terug" aria-label="Terug">←</button><button type="button" class="dw-nb" data-nav="fwd" title="Vooruit" aria-label="Vooruit">→</button><button type="button" class="dw-nb" data-nav="reload" title="Opnieuw laden" aria-label="Opnieuw laden">⟳</button><span class="dw-addr"></span><button type="button" class="dw-nb dw-ext" data-nav="ext" title="In de gewone browser openen">Browser ↗</button></div><webview partition="persist:portaal"></webview>'
+    : '<iframe title="Venster" loading="eager"></iframe>'}<div class="dw-loading"><span class="spinner"></span></div></div>
       <i class="dw-grip" aria-hidden="true"></i>`;
-    const frame = el.querySelector('iframe');
+    if (st.site) el.classList.add('dw-site');
+    const frame = el.querySelector(st.site ? 'webview' : 'iframe');
     const task = document.createElement('button');
     task.type = 'button'; task.className = 'dt-task'; task.setAttribute('role', 'listitem');
     task.innerHTML = '<span class="dt-task-ico" aria-hidden="true"></span><span class="dt-task-title"></span>';
@@ -64,7 +67,7 @@
     wins.set(st.id, w);
     setTitle(w, st.title, st.url);
     place(w);
-    frame.addEventListener('load', () => onLoad(w));
+    if (st.site) siteView(w); else frame.addEventListener('load', () => onLoad(w));
     frame.src = st.url;
     // Bediening
     el.querySelector('.dw-close').addEventListener('click', () => close(w));
@@ -89,6 +92,22 @@
     const ico = svgs[iconFor(url || w.st.url)] || '';
     w.el.querySelector('.dw-ico').innerHTML = ico;
     w.task.querySelector('.dt-task-ico').innerHTML = ico;
+  }
+  /* Website uit het Portaal (alleen in de ADONIS-app): een <webview> met eigen knoppen. */
+  function siteView(w) {
+    const v = w.frame; const addr = w.el.querySelector('.dw-addr');
+    const show = () => { let u = ''; try { u = v.getURL(); } catch { return; } w.st.url = u; try { const x = new URL(u); addr.textContent = x.hostname.replace(/^www\./, '') + x.pathname; } catch { addr.textContent = u; } addr.title = u;
+      try { w.el.querySelector('[data-nav=back]').disabled = !v.canGoBack(); w.el.querySelector('[data-nav=fwd]').disabled = !v.canGoForward(); } catch { /* nog niet klaar */ } save(); };
+    v.addEventListener('did-stop-loading', () => { w.el.classList.add('is-loaded'); show(); });
+    v.addEventListener('did-navigate', show);
+    v.addEventListener('did-navigate-in-page', show);
+    v.addEventListener('page-title-updated', (e) => setTitle(w, e.title, w.st.url));
+    v.addEventListener('focus', () => focus(w));
+    w.el.querySelector('.dw-nav').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-nav]'); if (!b) return;
+      if (b.dataset.nav === 'back') v.goBack(); else if (b.dataset.nav === 'fwd') v.goForward(); else if (b.dataset.nav === 'reload') v.reload();
+      else if (b.dataset.nav === 'ext' && window.adonisApp) window.adonisApp.openExternal(v.getURL() || w.st.url);
+    });
   }
   function onLoad(w) {
     w.el.classList.add('is-loaded');
@@ -182,7 +201,7 @@
   // Klik in een venster (iframe) haalt dat venster naar voren.
   addEventListener('blur', () => setTimeout(() => {
     const f = document.activeElement;
-    if (f && f.tagName === 'IFRAME') { const w = [...wins.values()].find((o) => o.frame === f); if (w) focus(w); }
+    if (f && (f.tagName === 'IFRAME' || f.tagName === 'WEBVIEW')) { const w = [...wins.values()].find((o) => o.frame === f); if (w) focus(w); }
   }, 0));
   addEventListener('resize', () => wins.forEach(place));
 
@@ -224,7 +243,7 @@
   let saved = [];
   try { saved = JSON.parse(localStorage.getItem(KEY)) || []; } catch { /* niets */ }
   const params = new URLSearchParams(location.search);
-  if (saved.length) saved.forEach((st) => open(st.url, { ...st, z: ++topZ }));
+  if (saved.length) saved.filter((st) => !st.site || (window.adonisApp && window.adonisApp.webview)).forEach((st) => open(st.url, { ...st, z: ++topZ }));
   if (params.get('open')) launch(params.get('open'));
   if (!wins.size && !saved.length) document.querySelector('[data-hint]').hidden = false; else document.querySelector('[data-hint]').hidden = true;
   // Het bovenste venster actief maken
@@ -433,7 +452,15 @@
   addEventListener('pointerdown', () => { ctrlAlone = false; }, true);
   addEventListener('keyup', (e) => { if (e.code === 'ControlLeft' && ctrlAlone && Date.now() - ctrlAt < 800) { ctrlAlone = false; toggleMenu(menu.hidden); } }, true);
   addEventListener('message', (e) => { if (e.origin === location.origin && e.data && e.data.adonisStart) toggleMenu(menu.hidden); });
-  window.adonisDesktop = { open: launch };
+  // Websites uit het Portaal (common.js): in de ADONIS-app als venster op het bureaublad.
+  const openSite = (url, title) => {
+    if (!window.adonisApp || !window.adonisApp.webview) { window.open(url, '_blank', 'noopener'); return; }
+    if (!/^https?:\/\//i.test(url)) return;
+    const same = [...wins.values()].find((o) => o.st.site && o.st.url === url);
+    if (same) { minimize(same, false); focus(same); return; }
+    open(url, { site: true, title: title || 'Website' });
+  };
+  window.adonisDesktop = { open: launch, openSite };
   // Links op het bureaublad zelf (bijv. "Bekijken" bij de backupwaarschuwing) openen in een venster.
   document.addEventListener('click', (e) => {
     const a = e.target.closest('.backup-warn a[href], .live-toast a[href]');

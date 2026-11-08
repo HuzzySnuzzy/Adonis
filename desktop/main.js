@@ -106,7 +106,8 @@ function createWindow() {
     // Meteen tonen (met de donkere achtergrond) in plaats van te wachten tot de pagina geladen is:
     // anders is de opstartanimatie op een trage pc al voorbij voordat het venster verschijnt.
     show: true,
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
+    // webviewTag: websites uit het Portaal als venster op het ADONIS-bureaublad (zie will-attach-webview hieronder).
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: true },
   });
   if (b.maximized) win.maximize();
   // Volledig scherm (F11) onthouden, net als gemaximaliseerd.
@@ -168,6 +169,47 @@ function createWindow() {
   });
   openAdonis();
 }
+
+/* ---------------- websites uit het Portaal binnen ADONIS ----------------
+ * Een site opent in een eigen ADONIS-venster (site.html: knoppen terug/vooruit/herladen/in browser) of, in de
+ * bureaubladmodus, als venster op het ADONIS-bureaublad (<webview>). Die sites krijgen GEEN toegang tot de app:
+ * geen preload, sandbox aan, een eigen opslag ("persist:portaal", zodat inloggen bij leveranciers bewaard blijft)
+ * en geen rechten (camera e.d.). Alleen de eigen ADONIS-server en site.html mogen zo'n venster maken. */
+const siteWindows = new Set();
+const isWeb = (u) => { try { return /^https?:$/.test(new URL(u).protocol); } catch { return false; } };
+function openSiteWindow(url, title) {
+  if (!isWeb(url)) return;
+  const w = new BrowserWindow({
+    width: 1280, height: 860, minWidth: 600, minHeight: 400, title: title || 'ADONIS – website', icon: ICON, backgroundColor: '#14171c', autoHideMenuBar: true,
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: true },
+  });
+  siteWindows.add(w.webContents);
+  w.on('closed', () => siteWindows.delete(w.webContents));
+  w.webContents.on('will-navigate', (e) => e.preventDefault());
+  w.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  w.loadFile(path.join(__dirname, 'site.html'), { query: { url, title: title || '' } });
+}
+app.on('web-contents-created', (_e, contents) => {
+  contents.on('will-attach-webview', (ev, wp, params) => {
+    const fromAdonis = win && contents === win.webContents && sameOrigin(contents.getURL());
+    if (!(fromAdonis || siteWindows.has(contents)) || !isWeb(params.src)) { ev.preventDefault(); return; }
+    delete wp.preload; delete params.preload;
+    Object.assign(wp, { nodeIntegration: false, nodeIntegrationInSubFrames: false, contextIsolation: true, sandbox: true, webSecurity: true, allowRunningInsecureContent: false });
+    params.partition = 'persist:portaal';
+  });
+  if (contents.getType() === 'webview') {
+    // Pop-ups (bijv. "inloggen" in een nieuw tabblad) in hetzelfde venster openen.
+    contents.setWindowOpenHandler(({ url }) => { if (isWeb(url)) contents.loadURL(url); return { action: 'deny' }; });
+  }
+});
+ipcMain.handle('adonis:open-site', (e, url, title) => {
+  if (!win || e.sender !== win.webContents || !sameOrigin(e.senderFrame.url)) return;
+  openSiteWindow(String(url || ''), String(title || '').slice(0, 120));
+});
+ipcMain.handle('adonis:open-external', (e, url) => {
+  const ok = (win && e.sender === win.webContents && sameOrigin(e.senderFrame.url)) || siteWindows.has(e.sender);
+  if (ok && isWeb(String(url || ''))) shell.openExternal(String(url));
+});
 
 /* ---------------- terug / vooruit (de app heeft geen adresbalk met knoppen) ---------------- */
 function goHistory(dir) {
@@ -370,6 +412,8 @@ if (!app.requestSingleInstanceLock()) {
     session.defaultSession.setPermissionRequestHandler((wc, permission, callback, details) => {
       callback(sameOrigin(details.requestingUrl || wc.getURL()));
     });
+    // Websites uit het Portaal: geen camera, microfoon, locatie e.d.
+    session.fromPartition('persist:portaal').setPermissionRequestHandler((wc, permission, callback) => callback(false));
     buildMenu();
     updater.cleanup();
     createWindow();

@@ -1956,3 +1956,16 @@ html.in-window[data-theme="ice"] { --win-bg: #050a12; }
 
 /* Een verborgen melding blijft verborgen, ook als een thema .alert een eigen weergave geeft. */
 .alert[hidden], .flash[hidden] { display: none !important; }
+/* Bureaublad: website-venster (ADONIS-app) met eigen knoppen */
+.dw-site .dw-body { display: flex; flex-direction: column; }
+.dw-nav { display: flex; align-items: center; gap: 2px; padding: 4px 6px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+.dw-nb { height: 26px; min-width: 28px; padding: 0 8px; border: 0; border-radius: 5px; background: none; color: var(--text); font: inherit; cursor: pointer; }
+.dw-nb:hover:not(:disabled) { background: var(--hover); }
+.dw-nb:disabled { opacity: .35; }
+.dw-addr { flex: 1; min-width: 0; height: 26px; line-height: 26px; padding: 0 10px; border-radius: 13px; background: var(--input-bg); border: 1px solid var(--border); color: var(--muted); font-size: .85rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dw-site webview { flex: 1; width: 100%; background: #fff; }
+html.dt-busy .dw-body webview { pointer-events: none; }
+/* Bureaublad: meldingen boven de taakbalk, niet erachter */
+.desktop-shell .live-toasts { bottom: 54px; z-index: 9050; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .desktop-shell .live-toasts { bottom: 38px; }
+:root[data-theme="adonis"] .desktop-shell .live-toasts { bottom: 60px; }

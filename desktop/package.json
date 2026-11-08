@@ -2,7 +2,7 @@
   "name": "adonis-app",
   "productName": "ADONIS",
   "version": "1.0.0",
-  "description": "ADONIS Werkopdrachten \u2013 eigen venster voor de ADONIS-website",
+  "description": "ADONIS Werkopdrachten – eigen venster voor de ADONIS-website",
   "main": "main.js",
   "private": true,
   "author": "ADONIS",
@@ -24,7 +24,9 @@
       "offline.js",
       "update.html",
       "update.js",
-      "build/icon.png"
+      "build/icon.png",
+      "site.html",
+      "site.js"
     ],
     "directories": {
       "output": "dist"

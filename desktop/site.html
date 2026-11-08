@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+  <title>ADONIS – website</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; height: 100%; background: #14171c; color: #e6e8eb; font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    body { display: flex; flex-direction: column; }
+    .bar { display: flex; align-items: center; gap: 4px; padding: 6px 8px; background: #1a1d22; border-bottom: 1px solid #2e333b; }
+    button { height: 30px; min-width: 32px; padding: 0 10px; border: 1px solid transparent; border-radius: 6px; background: none; color: inherit; font: inherit; cursor: pointer; }
+    button:hover:not(:disabled) { background: #262a31; }
+    button:disabled { opacity: .35; cursor: default; }
+    .addr { flex: 1; min-width: 0; height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-radius: 15px; background: #111317; border: 1px solid #2e333b; color: #9aa1ab; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .addr b { color: #e6e8eb; font-weight: 600; }
+    .lock { color: #63c27d; }
+    .ext { border-color: #2e333b; }
+    webview { flex: 1; width: 100%; background: #fff; }
+    .loading .addr::after { content: ""; width: 10px; height: 10px; margin-left: auto; border: 2px solid #3d5be0; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; flex: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <button type="button" id="back" title="Terug (Alt+←)" aria-label="Terug" disabled>←</button>
+    <button type="button" id="fwd" title="Vooruit (Alt+→)" aria-label="Vooruit" disabled>→</button>
+    <button type="button" id="reload" title="Opnieuw laden (F5)" aria-label="Opnieuw laden">⟳</button>
+    <div class="addr" id="addr" title=""></div>
+    <button type="button" class="ext" id="ext" title="Deze pagina in de gewone browser openen">Openen in browser ↗</button>
+  </div>
+  <webview id="view" partition="persist:portaal"></webview>
+  <script src="site.js"></script>
+</body>
+</html>

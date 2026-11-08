@@ -594,3 +594,21 @@ document.addEventListener('click', async (e) => {
   addEventListener('pointerdown', () => { alone = false; }, true);
   addEventListener('keyup', (e) => { if (e.code === 'ControlLeft' && alone && Date.now() - at < 800) { alone = false; window.top.postMessage({ adonisStart: true }, location.origin); } }, true);
 })();
+// In de ADONIS-app: websites uit het Portaal (en "Opzoeken met …" bij een kenteken) binnen ADONIS openen.
+// In de bureaubladmodus als venster op het bureaublad, anders in een eigen ADONIS-venster. Shift+klik = gewone browser.
+(function () {
+  let appApi = null; let top = window;
+  try { top = window.top; appApi = top.adonisApp; } catch { /* ander adres */ }
+  if (!appApi || !appApi.openSite) return;
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a.portal-tile[href], a.plate-site[href], a[data-site]');
+    if (!a || e.defaultPrevented || e.shiftKey || e.button !== 0) return;
+    if (document.querySelector('.portal-page.is-editing')) return; // bewerken: niet openen
+    let u; try { u = new URL(a.href, location.href); } catch { return; }
+    if (!/^https?:$/.test(u.protocol) || u.origin === location.origin) return;
+    e.preventDefault();
+    const title = (a.title || a.textContent || '').split('\n')[0].trim().slice(0, 80);
+    if (top.adonisDesktop && top.adonisDesktop.openSite) top.adonisDesktop.openSite(u.href, title);
+    else appApi.openSite(u.href, title);
+  }, true);
+})();
