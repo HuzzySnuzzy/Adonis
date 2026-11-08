@@ -580,7 +580,8 @@ code { background: var(--code-bg); padding: .05rem .3rem; border-radius: 4px; }
 /* Het icoon volgt het actieve thema (ook na wisselen zonder herladen). */
 .theme-btn .ti { display: none; }
 :root:not([data-theme]) .theme-btn .ti-system, :root[data-theme="light"] .theme-btn .ti-light,
-:root[data-theme="dark"] .theme-btn .ti-dark, :root[data-theme="neon"] .theme-btn .ti-neon, :root[data-theme="ice"] .theme-btn .ti-ice { display: block; }
+:root[data-theme="dark"] .theme-btn .ti-dark, :root[data-theme="neon"] .theme-btn .ti-neon, :root[data-theme="ice"] .theme-btn .ti-ice,
+:root[data-theme="vcds"] .theme-btn .ti-vcds { display: block; }
 .theme-btn[aria-expanded="true"] { background: var(--topbar-hover); color: #fff; box-shadow: inset 0 0 0 1px var(--accent); }
 .theme-menu {
   position: absolute; right: 0; top: calc(100% + 12px); z-index: 40; width: min(300px, calc(100vw - 32px));
@@ -955,10 +956,10 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 @keyframes app-boot-shine { to { transform: translateX(120%); } }
 @keyframes app-boot-out { to { opacity: 0; transform: scale(1.06); visibility: hidden; } }
 /* De pagina komt omhoog zodra het logo wegvaagt (ook zonder boot.js: de animatie eindigt zichtbaar). */
-:root[data-boot]:not([data-theme="neon"]):not([data-theme="ice"]) :is(main, .order-toolbar, .sheet-scroll, .flash, .app-footer) {
+:root[data-boot]:not([data-theme="neon"]):not([data-theme="ice"]):not([data-theme="vcds"]) :is(main, .order-toolbar, .sheet-scroll, .flash, .app-footer) {
   animation: app-boot-rise .6s cubic-bezier(.2,.8,.2,1) .85s both;
 }
-:root[data-boot]:not([data-theme="neon"]):not([data-theme="ice"]) .topbar { animation: app-boot-drop .5s cubic-bezier(.2,.8,.2,1) .75s both; }
+:root[data-boot]:not([data-theme="neon"]):not([data-theme="ice"]):not([data-theme="vcds"]) .topbar { animation: app-boot-drop .5s cubic-bezier(.2,.8,.2,1) .75s both; }
 @keyframes app-boot-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 @keyframes app-boot-drop { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: none; } }
 /* OLED: het logo zweeft op uit het zwart, met een gloed eronder; de pagina "landt" daarna. */
@@ -1204,3 +1205,16 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 .backup-settings { max-width: 560px; }
 .restore-upload { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
 .apk-list .act-col .btn + .btn, .apk-list .act-col form + a { margin-left: .3rem; }
+
+/* VCDS: voorbeeldtegel en kleurstaal in het themamenu */
+.theme-preview-vcds { background: #3a6ea5; }
+.theme-preview-vcds .tp-bar { height: 12px; background: linear-gradient(90deg, #0a246a, #a6caf0); border-bottom: 0; }
+.theme-preview-vcds .tp-card { background: #d4d0c8; border-radius: 0; top: 18px; left: 8px; right: 8px;
+  box-shadow: inset -1px -1px 0 #404040, inset 1px 1px 0 #fff, inset -2px -2px 0 #808080; }
+.theme-preview-vcds .tp-card span { height: 8px; border-radius: 0; background: #d4d0c8; box-shadow: inset -1px -1px 0 #404040, inset 1px 1px 0 #fff; }
+.theme-preview-vcds .tp-card span:nth-child(3) { background: #fff; box-shadow: inset 1px 1px 0 #808080, inset -1px -1px 0 #fff; }
+.sw-vcds { border-radius: 0; background: linear-gradient(90deg, #0a246a, #a6caf0) 0 0 / 100% 7px no-repeat, #d4d0c8;
+  box-shadow: inset -1px -1px 0 #404040, inset 1px 1px 0 #fff; }
+.theme-name-vcds { font-family: Tahoma, "MS Sans Serif", Verdana, sans-serif; font-weight: 700; }
+/* Inloggen: het vinkje niet uitrekken over de hele breedte */
+.auth-card input[type=checkbox] { display: inline-block; width: auto; margin: 0; flex: 0 0 auto; }
