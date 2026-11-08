@@ -1,0 +1,9 @@
+<%- include('/partials/head') %>
+<main class="page narrow error-page" data-restart-wait>
+  <h1>Backup wordt teruggezet…</h1>
+  <p class="error-msg">De gegevens worden teruggezet naar de backup van <b><%= when %></b>. ADONIS start zo opnieuw op;
+    misschien moet u daarna opnieuw inloggen. Dit duurt meestal minder dan een halve minuut.</p>
+  <div class="busy"><div class="spinner"></div><div class="muted" data-restart-status>Bezig met herstarten…</div></div>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

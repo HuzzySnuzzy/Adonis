@@ -8,6 +8,7 @@
   if (user.can_invoice) tiles.push({ href: '/werkopdrachten?status=klaar', icon: 'euro', title: 'Facturatie', text: counts.klaar ? (counts.klaar === 1 ? '1 werkopdracht wacht op een factuur' : counts.klaar + ' werkopdrachten wachten op een factuur') : 'Er wacht niets op een factuur', badge: counts.klaar });
   tiles.push({ href: '/bandenhotel', icon: 'tyre', title: 'Bandenhotel', text: 'Banden van klanten in opslag' });
   tiles.push({ href: '/bandenhotel/wissellijst', icon: 'swap', title: 'Banden wisselen', text: swaps ? swaps + ' klant' + (swaps === 1 ? '' : 'en') + ' nog bellen voor ' + (swapTarget === 'winter' ? 'winter' : 'zomer') + 'banden' : 'Wie moet komen wisselen', badge: swaps });
+  tiles.push({ href: '/apk', icon: 'calendar', title: 'APK-lijst', text: apkSoon ? apkSoon + ' klant' + (apkSoon === 1 ? '' : 'en') + ' nog bellen voor de APK' : 'Wie moet binnenkort naar de APK', badge: apkSoon });
   tiles.push({ href: '/voorraad', icon: 'box', title: 'Voorraad', text: 'Onderdelen en banden op de zaak' });
   if (importOn) tiles.push({ href: '/importeren', icon: 'camera', title: 'Foto van een werkopdracht', text: 'Een papieren werkopdracht overnemen' });
   tiles.push({ href: '/hulp', icon: 'help', title: 'Hulp', text: 'Uitleg in eenvoudige stappen' });
@@ -18,6 +19,7 @@
     euro: '<path d="M17 6.5A6.5 6.5 0 1 0 17 17.5M5 10.5h9M5 13.5h9"/>',
     tyre: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5"/>',
     swap: '<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
+    calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14.5l2.5 2.5 5-5"/>',
     box: '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
     camera: '<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 4"/><circle cx="12" cy="17.5" r=".6" fill="currentColor"/>',

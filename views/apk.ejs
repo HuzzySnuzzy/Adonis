@@ -1,0 +1,51 @@
+<%- include('/partials/head') %>
+<%
+  const tabs = [['binnenkort', 'Komende 2 maanden (en net verlopen)'], ['verlopen', 'Al verlopen (alles)'], ['alles', 'Alle APK-datums']];
+  const called = list.filter((r) => r.called).length;
+%>
+<main class="page wide">
+  <div class="page-head">
+    <div>
+      <h1>APK-lijst</h1>
+      <p class="muted small">Klanten van wie de APK binnenkort verloopt (of al verlopen is), volgens de RDW. Bel ze en klik op
+        <b>Gebeld</b>; zo ziet iedereen wie al gebeld is. Nog niet gebelde klanten en de vroegste datums staan bovenaan.</p>
+    </div>
+    <div class="head-buttons"><button class="btn" type="button" data-print>Afdrukken</button></div>
+  </div>
+  <nav class="kind-tabs" aria-label="Lijst">
+    <% for (const [k, label] of tabs) { %><a href="/apk<%= k === 'binnenkort' ? '' : '?toon=' + k %>" class="<%= show === k ? 'active' : '' %>"><%= label %> <span class="count"><%= counts[k] %></span></a><% } %>
+  </nav>
+  <% if (waiting) { %><p class="muted small">Van <%= waiting %> klant<%= waiting === 1 ? '' : 'en' %> worden de RDW-gegevens nog op de achtergrond opgehaald; die komen er vanzelf bij.</p><% } %>
+  <div id="live-apk" data-live>
+  <% if (!list.length) { %>
+    <div class="empty"><p><%= show === 'verlopen' ? 'Er zijn geen verlopen APK\'s.' : 'Er verloopt de komende 2 maanden geen APK. 🎉' %></p></div>
+  <% } else { %>
+    <p class="muted"><%= list.length %> klant<%= list.length === 1 ? '' : 'en' %><%= called ? ', waarvan ' + called + ' al gebeld' : '' %></p>
+    <div class="table-wrap">
+    <table class="list clickable swap-list apk-list">
+      <thead><tr><th>Kenteken</th><th>Klant</th><th>Telefoon</th><th>APK verloopt</th><th>Laatste bezoek</th><th class="act-col">Actie</th></tr></thead>
+      <tbody>
+      <% for (const r of list) { const a = apkStatus(r.apk_vervaldatum); const tel = r.tel_prive || r.tel_zaak; %>
+        <tr data-href="/klant/<%= r.id %>" class="<%= r.called ? 'is-called' : '' %>">
+          <td><%- include('/partials/plate', { kenteken: r.kenteken }) %></td>
+          <td><a href="/klant/<%= r.id %>"><%= r.naam || 'klant' %></a><% if (r.merk_type) { %><br><span class="muted small"><%= r.merk_type %></span><% } %></td>
+          <td class="nowrap"><% if (tel) { %><a href="tel:<%= tel.replace(/[^\d+]/g, '') %>"><%= tel %></a><% } else { %><span class="muted small">geen nummer</span><% } %></td>
+          <td class="nowrap"><span class="apk-pill apk-<%= a.cls %>"><%= fmtDate(r.apk_vervaldatum) %></span><br><span class="muted small"><%= a.rel %></span></td>
+          <td class="nowrap"><%= r.laatste ? fmtDate(r.laatste) : '' %></td>
+          <td class="act-col">
+            <form method="post" action="/apk/<%= r.id %>/gebeld" class="inline call-form">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn btn-small <%= r.called ? 'btn-ok' : '' %>" type="submit" title="<%= r.called ? 'Gebeld op ' + fmtDate(r.called) + ' (klik om te wissen)' : 'Markeer als gebeld' %>"><%= r.called ? '✓ ' + fmtDate(r.called) : 'Gebeld' %></button>
+            </form>
+            <a class="btn btn-small btn-primary" href="/werkopdracht/nieuw?klant=<%= r.id %>" title="Nieuwe werkopdracht (APK) voor deze klant">+ Werkopdracht</a>
+          </td>
+        </tr>
+      <% } %>
+      </tbody>
+    </table>
+    </div>
+  <% } %>
+  </div>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

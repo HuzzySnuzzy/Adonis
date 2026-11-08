@@ -12,6 +12,107 @@
   <h1>Systeem</h1>
   <p class="muted">Alleen zichtbaar voor de ADONIS-beheerder.</p>
 
+  <%
+    const c = bk.c;
+    const mb = (n) => (n / 1024 / 1024).toFixed(1).replace('.', ',') + ' MB';
+    const when = (iso) => iso ? new Intl.DateTimeFormat('nl-NL', { timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)) : '';
+    const fileWhen = (name) => { const m = /(\d{4})-(\d{2})-(\d{2})_(\d{2})(\d{2})/.exec(name); return m ? `${m[3]}-${m[2]}-${m[1]} ${m[4]}:${m[5]}` : name; };
+    const HEALTH = { ok: ['In orde', 'ok'], mislukt: ['Laatste backup mislukt', 'bad'], 'te-oud': ['Laatste backup is te oud', 'busy'], nooit: ['Nog geen backup', 'busy'] };
+    const [hLabel, hCls] = HEALTH[bk.health];
+  %>
+  <section class="card backup-card" id="backup">
+    <div class="sys-head">
+      <h2>Backups</h2>
+      <span class="status-pill status-<%= hCls %>"><%= hLabel %></span>
+    </div>
+    <p class="muted">Elke dag maakt ADONIS automatisch een backup: één bestand met alle klanten, werkopdrachten, het bandenhotel,
+      de voorraad en alle foto's. Stond de computer op het afgesproken tijdstip uit, dan gebeurt het zodra ADONIS weer draait.</p>
+    <% if (bk.restored) { %><p class="muted small">Laatst teruggezet: <%= when(bk.restored.at) %><%= bk.restored.manifest ? ' (backup van ' + when(bk.restored.manifest.gemaakt) + ')' : '' %>. De gegevens van daarvoor staan in <code><%= bk.restored.aside %></code>.</p><% } %>
+
+    <dl class="facts sys-facts">
+      <dt>Laatste backup</dt>
+      <dd><% if (c.last) { %><%= when(c.last.at) %> · <%= c.last.ok ? '✓ gelukt' : '✗ ' + (c.last.error || 'mislukt') %><%= c.last.size ? ' · ' + mb(c.last.size) : '' %><% } else { %>nog nooit<% } %></dd>
+      <% if (c.lastOk && (!c.last || !c.last.ok)) { %><dt>Laatste geslaagde</dt><dd><%= when(c.lastOk) %></dd><% } %>
+    </dl>
+    <div class="sys-actions">
+      <form method="post" action="/systeem/backup/nu" class="inline">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn btn-primary" type="submit">Nu een backup maken</button>
+      </form>
+      <a class="btn" href="/systeem/backup/download">Backup downloaden</a>
+    </div>
+
+    <h3>Waar worden de backups bewaard?</h3>
+    <p class="muted small">Kies één of meer mappen. Het veiligst is een plek <b>buiten deze computer</b>: een USB-schijf, een netwerkschijf (NAS),
+      of de map van <b>OneDrive, Google Drive of Dropbox</b> op deze computer – die zet de backup dan zelf in de cloud.</p>
+    <ul class="backup-folders">
+      <% for (const f of bk.folders) { %>
+      <li>
+        <div class="bf-head">
+          <code><%= f.path %></code>
+          <% if (f.result) { %><span class="status-pill status-<%= f.result.ok ? 'ok' : 'bad' %>"><%= f.result.ok ? 'laatste keer gelukt' : 'laatste keer mislukt' %></span><% } %>
+          <% if (f.path === bk.defaultDir) { %><span class="muted small">(op deze computer zelf – bij een kapotte schijf ben je deze ook kwijt)</span><% } %>
+          <form method="post" action="/systeem/backup/map/verwijderen" class="inline" data-confirm="Deze map niet meer gebruiken voor backups? (De backups die er al staan, blijven staan.)">
+            <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="i" value="<%= f.i %>">
+            <button class="linkbtn" type="submit">niet meer gebruiken</button>
+          </form>
+        </div>
+        <% if (f.result && !f.result.ok) { %><p class="alert small"><%= f.result.error %></p><% } %>
+        <% if (f.files.length) { %>
+        <details class="bf-files">
+          <summary class="muted small"><%= f.files.length %> backup<%= f.files.length === 1 ? '' : 's' %> in deze map – bekijken of terugzetten</summary>
+          <table class="list compact">
+            <thead><tr><th>Gemaakt</th><th class="num">Grootte</th><th></th></tr></thead>
+            <tbody>
+            <% for (const b of f.files.slice(0, 40)) { %>
+              <tr>
+                <td><%= fileWhen(b.name) %><%= /voor-terugzetten/.test(b.name) ? ' (veiligheidsbackup)' : '' %></td>
+                <td class="num"><%= mb(b.size) %></td>
+                <td class="nowrap">
+                  <a href="/systeem/backup/bestand?map=<%= f.i %>&naam=<%= encodeURIComponent(b.name) %>">downloaden</a> ·
+                  <form method="post" action="/systeem/backup/terugzetten" class="inline" data-confirm="Alle gegevens terugzetten naar de backup van <%= fileWhen(b.name) %>?&#10;&#10;Alles wat daarna is ingevoerd, verdwijnt uit ADONIS. Er wordt eerst een veiligheidsbackup van de huidige situatie gemaakt, dus dit is terug te draaien. ADONIS start daarna opnieuw op en iedereen moet opnieuw inloggen.">
+                    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="map" value="<%= f.i %>"><input type="hidden" name="naam" value="<%= b.name %>">
+                    <button class="linkbtn" type="submit">terugzetten</button>
+                  </form>
+                </td>
+              </tr>
+            <% } %>
+            </tbody>
+          </table>
+        </details>
+        <% } %>
+      </li>
+      <% } %>
+      <% if (!bk.folders.length) { %><li class="alert">Er is geen map ingesteld: er worden geen automatische backups bewaard.</li><% } %>
+    </ul>
+    <form method="post" action="/systeem/backup/map" class="inline-form backup-add">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <input name="folder" placeholder="<%= bk.isWindows ? 'bijv. D:\\ADONIS-backups of C:\\Users\\Naam\\OneDrive\\ADONIS-backups' : 'bijv. /mnt/usb/adonis-backups' %>" autocomplete="off" required>
+      <button class="btn" type="submit">Map toevoegen</button>
+    </form>
+
+    <h3>Wanneer en hoe lang?</h3>
+    <form method="post" action="/systeem/backup/instellingen" class="grid-form backup-settings">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label>Elke dag om<input type="time" name="time" value="<%= c.time %>"></label>
+      <label>Backups bewaren
+        <select name="keepDays">
+          <% for (const d of [7, 14, 30, 60, 90, 365]) { %><option value="<%= d %>" <%= c.keepDays === d ? 'selected' : '' %>><%= d === 365 ? '1 jaar' : d + ' dagen' %></option><% } %>
+        </select>
+      </label>
+      <button class="btn" type="submit">Opslaan</button>
+    </form>
+    <p class="muted small">Kies een tijdstip waarop de computer meestal aan staat. Van de oudere backups blijven er altijd minstens 3 bewaard.</p>
+
+    <h3>Terugzetten uit een bestand</h3>
+    <p class="muted small">Heb je een backupbestand (adonis-backup-….zip), bijvoorbeeld van een andere computer of uit de cloud? Kies het hier.
+      Er wordt eerst een veiligheidsbackup gemaakt; daarna start ADONIS opnieuw op met de gegevens uit het bestand.</p>
+    <div class="restore-upload" data-csrf="<%= csrf %>">
+      <label class="btn"><input type="file" accept=".zip,application/zip" id="restoreFile" hidden> Backupbestand kiezen…</label>
+      <span class="muted small" id="restoreMsg" aria-live="polite"></span>
+    </div>
+  </section>
+
   <section class="card">
     <div class="sys-head">
       <h2>Online bereikbaar (Cloudflare)</h2>

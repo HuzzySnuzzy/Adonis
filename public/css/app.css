@@ -1186,3 +1186,21 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 .part-sample figcaption a { color: inherit; }
 .part-search { flex: 1 1 260px; }
 .part-search p { margin: 0 0 .5rem; }
+
+/* Backups */
+.backup-warn { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; box-sizing: border-box; width: min(1180px, calc(100% - 1.5rem)); margin: 1rem auto 0; padding: .7rem 1rem;
+  border-radius: 8px; background: var(--err-bg); color: var(--err-text); border: 1px solid var(--danger-border); }
+.backup-warn span { flex: 1 1 300px; }
+.backup-card h3 { margin: 1.4rem 0 .4rem; font-size: 1rem; }
+.backup-folders { list-style: none; padding: 0; margin: .4rem 0 .8rem; display: grid; gap: .6rem; }
+.backup-folders > li { border: 1px solid var(--border-soft); border-radius: 8px; padding: .6rem .8rem; }
+.bf-head { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; }
+.bf-head code { font-size: .9rem; word-break: break-all; }
+.bf-files { margin-top: .4rem; }
+.bf-files > summary { cursor: pointer; }
+.bf-files table { margin-top: .4rem; }
+.backup-add { flex-wrap: wrap; }
+.backup-add input { flex: 1 1 320px; }
+.backup-settings { max-width: 560px; }
+.restore-upload { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.apk-list .act-col .btn + .btn, .apk-list .act-col form + a { margin-left: .3rem; }

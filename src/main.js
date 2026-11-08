@@ -164,6 +164,12 @@ function openBrowser(url) {
 function startServer() {
   let app;
   let auth;
+  // Een klaargezette backup terugzetten, vóórdat de database wordt geopend.
+  try {
+    require('./restore-apply').applyPendingRestore(cfg.dataDir);
+  } catch (err) {
+    console.log('  Terugzetten van de backup is mislukt: ' + err.message + '. De huidige gegevens worden gebruikt.');
+  }
   try {
     app = require('./server');
     auth = require('./auth');
@@ -184,6 +190,8 @@ function startServer() {
 
   server.on('listening', () => {
     require('./update').startStatusChecks(cfg.updateRepo);
+    require('./backup').startSchedule();
+    require('./rdw').startBackgroundFill();
     // Cloudflare-tunnel weer starten als die is ingesteld.
     const cfSettings = require('./settings').get('cloudflare', null);
     if (cfSettings && cfSettings.enabled && cfSettings.token) {
@@ -217,6 +225,21 @@ function startServer() {
       openBrowser(auth.userCount() === 0 ? local + '/setup' : local);
     }
   });
+
+  // Herstarten (na het terugzetten van een backup): server en database netjes sluiten, dan opnieuw starten.
+  global.adonisRestart = () => {
+    console.log('  ADONIS wordt opnieuw gestart...');
+    try { rl.close(); } catch { /* geen console */ } // de nieuwe start leest de console
+    try { require('./tunnel').stop(); } catch { /* geen tunnel */ }
+    server.close(() => {
+      try { require('./db').db.close(); } catch { /* al dicht */ }
+      const args = config.isSea() ? process.argv.slice(2) : process.argv.slice(1);
+      const child = spawn(process.execPath, args, { stdio: 'inherit', env: process.env });
+      for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { child.kill(sig); } catch { /* al gestopt */ } });
+      child.on('exit', (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
+    });
+    server.closeAllConnections?.();
+  };
 
   let stopping = false;
   function stop() {

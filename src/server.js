@@ -23,6 +23,7 @@ const rdw = require('./rdw');
 const inv = require('./inventory');
 const plates = require('./plates');
 const carimage = require('./carimage');
+const backup = require('./backup');
 const registerInventory = require('./inventory-routes');
 
 const app = express();
@@ -268,6 +269,15 @@ app.post('/logout', (req, res) => {
 /* ---------- alles hieronder vereist inloggen ---------- */
 app.use(auth.requireLogin);
 
+// Backup-waarschuwing voor de ADONIS-beheerder (mislukt, te oud of nog nooit gemaakt).
+app.use((req, res, next) => {
+  if (req.user && req.user.is_owner && !req.path.startsWith('/systeem')) {
+    const h = backup.health();
+    if (h.state !== 'ok') res.locals.backupWarn = { state: h.state, lastOk: h.c.lastOk, error: h.c.last && h.c.last.error };
+  }
+  next();
+});
+
 // Teller "Facturatie" in het menu voor wie mag factureren.
 app.use((req, res, next) => {
   if (req.user && req.user.can_invoice) res.locals.invoiceCount = orders.statusCounts().klaar;
@@ -316,14 +326,51 @@ app.get('/start', (req, res) => {
   let swaps = 0;
   try { swaps = inv.swapList(inv.swapTarget()).wisselen.filter((i) => !i.match.uitgenodigd_at).length; } catch { /* geen bandenhotel */ }
   const hour = Number(new Intl.DateTimeFormat('nl-NL', { hour: 'numeric', hour12: false, timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam' }).format(new Date()));
+  const apkSoon = apkRows().filter((r) => r.days <= 60 && r.days >= -90 && !r.called).length;
   res.render('start', {
-    title: 'Start', counts, recent, swaps, swapTarget: inv.swapTarget(),
+    title: 'Start', counts, recent, swaps, swapTarget: inv.swapTarget(), apkSoon,
     greeting: hour < 6 ? 'Goedenacht' : hour < 12 ? 'Goedemorgen' : hour < 18 ? 'Goedemiddag' : 'Goedenavond',
     today: new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam' }).format(new Date()),
     importOn: importer.isConfigured(),
   });
 });
 app.get('/hulp', (req, res) => res.render('help', { title: 'Hulp' }));
+
+/* APK-lijst: wie moet binnenkort (of al) naar de APK? Met telefoonnummer en "Gebeld". */
+function apkRows() {
+  const today = orders.todayISO();
+  const rows = db.prepare(
+    `SELECT c.*, MAX(o.datum_invoer) AS laatste FROM customers c LEFT JOIN orders o ON o.customer_id = c.id
+     WHERE c.apk_vervaldatum IS NOT NULL AND c.apk_vervaldatum <> '' GROUP BY c.id`
+  ).all();
+  return rows.map((c) => {
+    const days = Math.round((new Date(c.apk_vervaldatum + 'T00:00:00Z') - new Date(today + 'T00:00:00Z')) / 864e5);
+    return { ...c, days, called: c.apk_gebeld_voor === c.apk_vervaldatum ? c.apk_gebeld : null };
+  });
+}
+app.get('/apk', (req, res) => {
+  const show = ['verlopen', 'binnenkort', 'alles'].includes(req.query.toon) ? req.query.toon : 'binnenkort';
+  const all = apkRows();
+  const pick = { verlopen: (r) => r.days < 0, binnenkort: (r) => r.days <= 60 && r.days >= -90, alles: () => true }[show];
+  const list = all.filter(pick).sort((a, b) => (a.called ? 1 : 0) - (b.called ? 1 : 0) || a.days - b.days);
+  const waiting = db.prepare('SELECT kenteken FROM customers WHERE rdw_at IS NULL').all().filter((c) => plates.rdwApplicable(c.kenteken)).length;
+  res.render('apk', {
+    title: 'APK-lijst', show, list, waiting,
+    counts: { verlopen: all.filter((r) => r.days < 0).length, binnenkort: all.filter((r) => r.days <= 60 && r.days >= -90).length, alles: all.length },
+  });
+});
+app.post('/apk/:id/gebeld', (req, res) => {
+  const c = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+  let at = null;
+  if (c) {
+    const already = c.apk_gebeld_voor === c.apk_vervaldatum && c.apk_gebeld;
+    at = already ? null : orders.todayISO();
+    db.prepare('UPDATE customers SET apk_gebeld = ?, apk_gebeld_voor = ? WHERE id = ?').run(at, at ? c.apk_vervaldatum : null, c.id);
+    events.broadcast({ type: 'data', area: 'apk', by: req.user.name, byId: req.user.id });
+  }
+  if ((req.get('accept') || '').includes('application/json')) return res.json({ ok: true, uitgenodigd_at: at });
+  res.redirect('/apk');
+});
 
 /* Eén klant met alle werkopdrachten */
 app.get('/klant/:id', wrap(async (req, res) => {
@@ -788,15 +835,101 @@ app.post('/account/wachtwoord', wrap(async (req, res) => {
 }));
 
 /* ---------- systeem (alleen ADONIS-beheerder): online bereikbaar via Cloudflare ---------- */
-function renderSystem(res, { error = null, status = 200, values = {} } = {}) {
+async function renderSystem(res, { error = null, status = 200, values = {} } = {}) {
+  const bk = await backupView();
   const cf = settings.get('cloudflare', null);
   res.status(status).render('system', {
     title: 'Systeem', error, values, cf, tunnelState: tunnel.getState(),
     port: Number(process.env.APP_PORT) || null, supported: Boolean(tunnel.assetName()),
     permissionsHelp: cloudflare.PERMISSIONS_HELP,
+    bk,
   });
 }
-app.get('/systeem', auth.requireOwner, (req, res) => renderSystem(res));
+async function backupView() {
+  const c = backup.config();
+  const folders = await Promise.all(c.folders.map(async (f, i) => ({ i, path: f, files: await backup.listBackups(f), result: c.last && (c.last.results || []).find((r) => r.folder === f) })));
+  let restored = null;
+  try { restored = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'laatst-teruggezet.json'), 'utf8')); } catch { /* nooit */ }
+  return { c, folders, health: backup.health().state, defaultDir: backup.DEFAULT_DIR, restored, isWindows: process.platform === 'win32' };
+}
+app.get('/systeem', auth.requireOwner, wrap((req, res) => renderSystem(res)));
+
+/* ---------- backups (alleen ADONIS-beheerder) ---------- */
+app.post('/systeem/backup/nu', auth.requireOwner, wrap(async (req, res) => {
+  const r = await backup.runBackup({ reason: 'handmatig' });
+  flash(req, r.ok ? 'ok' : 'err', r.ok
+    ? `Backup gemaakt (${(r.size / 1024 / 1024).toFixed(1).replace('.', ',')} MB) en bewaard in ${r.results.length === 1 ? 'de map' : r.results.length + ' mappen'}.`
+    : 'De backup is (deels) mislukt: ' + r.error + ' ' + (r.results || []).filter((x) => !x.ok).map((x) => x.error).join(' '));
+  res.redirect('/systeem#backup');
+}));
+app.get('/systeem/backup/download', auth.requireOwner, wrap(async (req, res) => {
+  const z = await backup.createZip('-download');
+  res.download(z.file, path.basename(z.file).replace('-download', ''), () => fs.rmSync(z.file, { force: true }));
+}));
+app.post('/systeem/backup/instellingen', auth.requireOwner, (req, res) => {
+  const keepDays = parseInt(req.body.keepDays, 10);
+  backup.saveConfig({
+    time: /^\d{2}:\d{2}$/.test(req.body.time || '') ? req.body.time : undefined,
+    keepDays: [7, 14, 30, 60, 90, 365].includes(keepDays) ? keepDays : undefined,
+  });
+  flash(req, 'ok', 'Backup-instellingen opgeslagen.');
+  res.redirect('/systeem#backup');
+});
+app.post('/systeem/backup/map', auth.requireOwner, wrap(async (req, res) => {
+  try {
+    const dir = await backup.checkFolder(req.body.folder);
+    const c = backup.config();
+    if (!c.folders.map((f) => path.resolve(f)).includes(dir)) backup.saveConfig({ folders: [...c.folders, dir] });
+    flash(req, 'ok', `Map toegevoegd: ${dir}. Vanaf nu komt elke backup ook daar te staan.`);
+  } catch (err) {
+    if (!(err instanceof backup.BackupError)) console.error(err);
+    flash(req, 'err', err.message);
+  }
+  res.redirect('/systeem#backup');
+}));
+app.post('/systeem/backup/map/verwijderen', auth.requireOwner, (req, res) => {
+  const c = backup.config();
+  const i = parseInt(req.body.i, 10);
+  if (c.folders[i] !== undefined) {
+    backup.saveConfig({ folders: c.folders.filter((_, k) => k !== i) });
+    flash(req, 'ok', 'Map verwijderd uit de lijst. De backups die daar al staan, blijven staan.');
+  }
+  res.redirect('/systeem#backup');
+});
+app.get('/systeem/backup/bestand', auth.requireOwner, wrap(async (req, res) => {
+  const c = backup.config();
+  const file = await backup.backupPath(c.folders[parseInt(req.query.map, 10)] || '', String(req.query.naam || ''));
+  if (!file) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze backup bestaat niet (meer), of de map is niet bereikbaar.' });
+  res.download(file);
+}));
+// Terugzetten: uit een map (map + naam) of een geüpload bestand. Daarna herstart ADONIS.
+app.post('/systeem/backup/terugzetten', auth.requireOwner, express.raw({ type: 'application/octet-stream', limit: '1gb' }), wrap(async (req, res) => {
+  const json = !Buffer.isBuffer(req.body) ? false : true;
+  try {
+    let buffer;
+    if (json) {
+      buffer = req.body;
+    } else {
+      const c = backup.config();
+      const file = await backup.backupPath(c.folders[parseInt(req.body.map, 10)] || '', String(req.body.naam || ''));
+      if (!file) throw new backup.BackupError('Deze backup bestaat niet (meer), of de map is niet bereikbaar.');
+      buffer = await fs.promises.readFile(file);
+    }
+    const manifest = await backup.stageRestore(buffer);
+    const when = new Date(manifest.gemaakt).toLocaleString('nl-NL', { timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam' });
+    console.log(`  Backup van ${when} wordt teruggezet (door ${req.user.name}).`);
+    setTimeout(() => (global.adonisRestart ? global.adonisRestart() : process.exit(0)), 600);
+    if (json) return res.json({ ok: true, when });
+    res.render('restoring', { title: 'Backup terugzetten', when });
+  } catch (err) {
+    if (!(err instanceof backup.BackupError)) console.error(err);
+    if (json) return res.status(400).json({ error: err.message });
+    flash(req, 'err', err.message);
+    res.redirect('/systeem#backup');
+  }
+}));
+// Even kijken of ADONIS weer draait (na het terugzetten), zonder in te loggen.
+app.get('/status', (req, res) => res.json({ ok: true }));
 
 app.post('/systeem/cloudflare/installeren', auth.requireOwner, wrap(async (req, res) => {
   const port = Number(process.env.APP_PORT) || 3000;
@@ -817,7 +950,7 @@ app.post('/systeem/cloudflare/installeren', auth.requireOwner, wrap(async (req, 
     res.redirect('/systeem');
   } catch (err) {
     if (!(err instanceof cloudflare.CloudflareError)) console.error(err);
-    renderSystem(res, { error: err.message, status: 400, values: { hostname } });
+    return renderSystem(res, { error: err.message, status: 400, values: { hostname } });
   }
 }));
 

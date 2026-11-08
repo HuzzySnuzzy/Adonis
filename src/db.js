@@ -66,6 +66,11 @@ if (!db.prepare('PRAGMA table_info(customers)').all().some((c) => c.name === 'be
   db.exec('ALTER TABLE customers ADD COLUMN bewerkt_at TEXT');
 }
 
+// APK-lijst: wanneer de klant is gebeld, en voor welke APK-datum (bij een nieuwe datum begint het opnieuw).
+for (const col of ['apk_gebeld', 'apk_gebeld_voor']) {
+  if (!db.prepare('PRAGMA table_info(customers)').all().some((c) => c.name === col)) db.exec(`ALTER TABLE customers ADD COLUMN ${col} TEXT`);
+}
+
 function plateKey(kenteken) {
   return String(kenteken || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 }

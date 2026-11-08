@@ -11,7 +11,9 @@
     <a href="#klaar">Een werkopdracht afmaken</a>
     <% if (user.can_invoice) { %><a href="#facturatie">Factureren</a><% } %>
     <a href="#banden">Banden wisselen</a>
+    <a href="#apk">APK-lijst</a>
     <a href="#fout">Iets fout gedaan?</a>
+    <% if (user.is_owner) { %><a href="#backup">Backups</a><% } %>
     <a href="#groter">Alles groter maken</a>
   </nav>
 
@@ -66,6 +68,16 @@
     </ol>
   </section>
 
+  <section class="card help-sec" id="apk">
+    <h2>APK-lijst: wie moet naar de APK?</h2>
+    <ol class="help-steps">
+      <li>Klik bij <%- B('Klanten') %> op <%- B('APK-lijst') %> (of op het startscherm). U ziet wie de komende 2 maanden naar de APK moet, of al te laat is.</li>
+      <li>Bel de klant en klik op <%- B('Gebeld') %>.</li>
+      <li>Komt de klant? Klik op <%- B('+ Werkopdracht') %>: naam en auto staan dan al ingevuld.</li>
+    </ol>
+    <p class="help-tip">De APK-datums komen van de RDW en worden vanzelf bijgewerkt.</p>
+  </section>
+
   <section class="card help-sec" id="fout">
     <h2>Iets fout gedaan?</h2>
     <ul class="help-list">
@@ -75,8 +87,26 @@
       <li><b>Uitgelogd?</b> Log opnieuw in met uw naam en wachtwoord. Laat <i>Ingelogd blijven</i> aangevinkt staan.</li>
       <li><b>Een melding die u niet begrijpt?</b> Klik op <%- B('Naar het begin') %> of vraag het aan de beheerder.
         Er gaat niets verloren.</li>
+      <li><b>Computer kapot of gegevens kwijt?</b> ADONIS maakt elke dag vanzelf een backup. De beheerder kan die
+        terugzetten<% if (user.is_owner) { %> (zie <a href="#backup">Backups</a>)<% } %>.</li>
     </ul>
   </section>
+<% if (user.is_owner) { %>
+  <section class="card help-sec" id="backup">
+    <h2>Backups (alleen beheerder)</h2>
+    <ol class="help-steps">
+      <li>Klik op <%- B('Systeem') %>. Onder <b>Backups</b> ziet u of de laatste backup gelukt is.</li>
+      <li>Zet de backup ook <b>buiten deze computer</b>: vul bij <i>Waar worden de backups bewaard?</i> een map in op een
+        USB-schijf (bijv. <code>E:\ADONIS-backups</code>), een netwerkschijf, of in de map van OneDrive, Google Drive of
+        Dropbox, en klik op <%- B('Map toevoegen') %>. Die laatste zetten de backup vanzelf in de cloud.</li>
+      <li>Liever zelf bewaren? Klik op <%- B('Backup downloaden') %>.</li>
+      <li>Terugzetten: open bij een map de lijst met backups en klik op <%- B('terugzetten') %>, of kies een
+        backupbestand met <%- B('Backupbestand kiezen…') %>. Er wordt eerst nog een backup van nu gemaakt, dus ook dit is
+        terug te draaien.</li>
+    </ol>
+    <p class="help-tip">Gaat een backup mis (bijvoorbeeld omdat de USB-schijf er niet in zit), dan ziet u bovenaan elke pagina een rode melding.</p>
+  </section>
+<% } %>
 
   <section class="card help-sec" id="groter">
     <h2>Alles groter maken</h2>

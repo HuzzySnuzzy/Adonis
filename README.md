@@ -82,6 +82,21 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   opgezocht, nooit het kenteken of de klant. De foto wordt één keer opgehaald en daarna lokaal bewaard (map `autofotos`). Er wordt alleen een foto getoond als het
   Wikipedia-artikel echt over dat model gaat (typecodes zoals W639 helpen de juiste generatie te kiezen); klopt een foto
   toch niet, dan verbergt *Verkeerde auto? Verbergen* hem voor dat model.
+- **APK-lijst** (*Klanten → APK-lijst*, ook op het startscherm): wie de komende 2 maanden naar de APK moet of net te
+  laat is, met telefoonnummer, **Gebeld** (per APK-datum; iedereen ziet het meteen) en **+ Werkopdracht** met de klant
+  al ingevuld. Nog niet gebelde klanten en de vroegste datums staan bovenaan; afdrukken kan ook. De APK-datums komen
+  van de RDW; voor klanten zonder RDW-gegevens (bijv. uit het bandenhotel) worden ze rustig op de achtergrond
+  opgehaald (één kenteken per 3 seconden, elke 30 dagen ververst).
+- **Automatische backups** (*Systeem → Backups*, alleen beheerders): elke dag op een vast tijdstip (standaard 12:30;
+  stond de computer uit, dan zodra ADONIS weer draait) één bestand `adonis-backup-JJJJ-MM-DD_UUMM.zip` met de hele
+  database en alle foto's. **Kies zelf waar:** één of meer mappen, bijvoorbeeld een USB-schijf, een netwerkschijf (NAS)
+  of de map van OneDrive / Google Drive / Dropbox (die zetten het dan in de cloud), plus **Backup downloaden** in de
+  browser. Oude backups worden na 7–365 dagen opgeruimd (instelbaar; altijd minstens de 3 nieuwste). Mislukt een
+  backup of is de laatste te oud, dan staat er voor de beheerder een rode melding bovenaan elke pagina.
+  **Terugzetten** kan uit de lijst of door een backupbestand te kiezen: ADONIS controleert het bestand, maakt eerst een
+  veiligheidsbackup, start opnieuw op en zet de huidige gegevens opzij in `voor-terugzetten-<tijd>` in de datamap
+  (er wordt nooit iets weggegooid; de 3 nieuwste worden bewaard). Een onbereikbare map (schijf los, NAS uit) laat
+  ADONIS nooit hangen.
 - **Persoonlijke instellingen** (menu → tandwiel): thema *Systeem / Licht / Donker / OLED* (puur zwart; panelen zweven met een zachte gloed eronder) en, met de voorkeur **Geheime thema's**, ook *Neon / Black Ice* (Neon: dezelfde stijl als het 2049-thema van DiscordLinked; **Black Ice** (ICE·XVIII): zwart, superionisch ijs – een kristalrooster als vloer, ionensporen die erdoorheen schieten, de gloeiende kern onderin, rijp in de hoeken en een glinstering onder de muis; beide met eigen opstartreeks). Elk thema heeft een korte opstartanimatie (eenmaal per tabblad, overslaan met een klik); *Effecten: Rustig* zet die en andere bewegingen uit, **weergave op telefoon** (Groot 100% / Normaal 90% / Compact 80% / Klein 70% / Heel klein 60%, alleen op telefoons en tablets; niet op de computer en niet in de ADONIS-app), handschrift of gewone letters
   in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
   apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.

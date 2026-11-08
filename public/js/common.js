@@ -217,3 +217,51 @@ document.addEventListener('click', async (e) => {
   } catch { /* volgende keer */ }
   fig.hidden = true;
 });
+// Terugzetten van een backup: wachten tot ADONIS weer draait en dan naar het inlogscherm.
+(function () {
+  const wait = document.querySelector('[data-restart-wait]');
+  if (wait) {
+    const status = wait.querySelector('[data-restart-status]');
+    const started = Date.now();
+    let wentDown = false;
+    const poll = async () => {
+      try {
+        const r = await fetch('/status', { cache: 'no-store' });
+        if (r.ok && (wentDown || Date.now() - started > 8000)) { status.textContent = 'Klaar! U wordt doorgestuurd…'; location.href = '/login'; return; }
+      } catch { wentDown = true; status.textContent = 'ADONIS start opnieuw op…'; }
+      if (Date.now() - started > 120000) { status.textContent = 'Dit duurt lang. Ververs de pagina, of start ADONIS opnieuw op de computer.'; return; }
+      setTimeout(poll, 1500);
+    };
+    setTimeout(poll, 1500);
+  }
+  // Backup uit een bestand terugzetten (Systeem)
+  const box = document.querySelector('.restore-upload');
+  const input = document.getElementById('restoreFile');
+  if (!box || !input) return;
+  const msg = document.getElementById('restoreMsg');
+  input.addEventListener('change', async () => {
+    const file = input.files[0];
+    input.value = '';
+    if (!file) return;
+    if (!window.confirm(`Alle gegevens terugzetten naar de backup "${file.name}"?\n\nAlles wat daarna is ingevoerd, verdwijnt uit ADONIS. Er wordt eerst een veiligheidsbackup van de huidige situatie gemaakt, dus dit is terug te draaien. ADONIS start daarna opnieuw op.`)) return;
+    msg.textContent = 'Bezig met uploaden en controleren…';
+    try {
+      const res = await fetch('/systeem/backup/terugzetten', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/octet-stream', 'X-CSRF-Token': box.dataset.csrf },
+        body: file,
+      });
+      const r = await res.json().catch(() => ({ error: 'Onverwacht antwoord van de server.' }));
+      if (!res.ok) throw new Error(r.error || 'Terugzetten mislukt.');
+      document.querySelector('main').innerHTML = '';
+      const h = document.createElement('h1'); h.textContent = 'Backup wordt teruggezet…';
+      const p = document.createElement('p'); p.textContent = `Backup van ${r.when}. ADONIS start zo opnieuw op; daarna wordt u naar het inlogscherm gestuurd.`;
+      document.querySelector('main').append(h, p);
+      setTimeout(function again() {
+        fetch('/status', { cache: 'no-store' }).then((x) => { if (x.ok) location.href = '/login'; else setTimeout(again, 1500); }).catch(() => setTimeout(again, 1500));
+      }, 6000);
+    } catch (e) {
+      msg.textContent = e.message;
+    }
+  });
+})();

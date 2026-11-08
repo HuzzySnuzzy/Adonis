@@ -125,9 +125,35 @@ function refreshInBackground(kenteken) {
   if (c) forCustomer(c).catch(() => {});
 }
 
+/**
+ * Op de achtergrond RDW-gegevens aanvullen voor klanten die ze nog niet hebben (bijv. uit het bandenhotel)
+ * of waarvan ze ouder zijn dan 30 dagen, zodat de APK-lijst compleet is. Rustig: één kenteken per 3 seconden.
+ */
+let filling = false;
+function startBackgroundFill() {
+  const plates = require('./plates');
+  const run = async () => {
+    if (filling) return;
+    filling = true;
+    try {
+      const rows = db.prepare(
+        `SELECT * FROM customers WHERE rdw_at IS NULL OR rdw_at < datetime('now', '-30 days')
+         ORDER BY rdw_at IS NOT NULL, rdw_at LIMIT 300`
+      ).all().filter((c) => plates.rdwApplicable(c.kenteken));
+      for (const c of rows) {
+        const r = await forCustomer(c, { force: true });
+        if (r.error) break; // RDW niet bereikbaar: later opnieuw
+        await new Promise((ok) => setTimeout(ok, 3000));
+      }
+    } catch { /* volgende keer */ } finally { filling = false; }
+  };
+  setTimeout(run, 60 * 1000).unref();
+  setInterval(run, 6 * 3600 * 1000).unref();
+}
+
 /** Link naar de officiële RDW-pagina met alle gegevens van dit kenteken. */
 function rdwUrl(kenteken) {
   return `https://ovi.rdw.nl/default.aspx?kenteken=${encodeURIComponent(plateKey(kenteken))}`;
 }
 
-module.exports = { lookup, merkType, forCustomer, refreshInBackground, rdwUrl };
+module.exports = { lookup, merkType, forCustomer, refreshInBackground, rdwUrl, startBackgroundFill };
