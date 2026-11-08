@@ -24,13 +24,19 @@
     start.addEventListener('click', async () => {
       if (!file) return;
       const withClaude = claude && claude.checked && !claude.disabled;
+      // Eerst kiezen hoeveel moeite Claude mag doen (met kostenschatting).
+      let effort = '';
+      if (withClaude && window.adonisAi) {
+        effort = await window.adonisAi.choose({ taak: 'excel', params: { bytes: file.size }, title: 'Excel-lijst laten beoordelen' });
+        if (!effort) return;
+      }
       start.disabled = true;
       busy.hidden = false;
       showError('');
       document.getElementById('excelBusyText').textContent = withClaude ? 'Claude bekijkt het bestand…' : 'Bezig met inlezen…';
       document.getElementById('excelBusySub').textContent = withClaude ? 'Dit duurt meestal 30 seconden tot 2 minuten. Laat deze pagina open.' : 'Laat deze pagina open.';
       try {
-        const res = await fetch('/importeren/excel' + (withClaude ? '' : '?claude=0'), {
+        const res = await fetch('/importeren/excel' + (withClaude ? '?effort=' + encodeURIComponent(effort) : '?claude=0'), {
           method: 'POST', credentials: 'same-origin',
           headers: { 'Content-Type': 'application/octet-stream', 'X-CSRF-Token': card.dataset.csrf, 'X-Filename': encodeURIComponent(file.name) },
           body: file,

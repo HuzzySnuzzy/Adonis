@@ -68,6 +68,7 @@
     field('title').value = tile.dataset.title;
     field('url').value = tile.dataset.url;
     field('folder').value = tile.dataset.folder;
+    field('zoek').value = tile.dataset.zoek || '';
     field('icoon').checked = false;
     dlg.showModal();
     field('title').focus();

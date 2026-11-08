@@ -1,0 +1,56 @@
+<%# Aandachtspunten van Claude voor deze auto. Verwacht: bl (forCustomer), aiOn, customer, compact (op de werkopdracht) %>
+<% const L = { laag: 'Snel', normaal: 'Normaal', hoog: 'Grondig' };
+   const compactView = locals.compact; %>
+<% if (bl.open.length || bl.analysis || (aiOn && !compactView)) { %>
+<section class="rdw-card bulletins<%= bl.open.some((b) => b.ernst === 'hoog') ? ' has-high' : '' %><%= compactView ? ' bulletins-compact no-print' : '' %>" id="aandachtspunten" aria-label="Aandachtspunten">
+  <div class="rdw-head">
+    <h2>Aandachtspunten <% if (bl.open.length) { %><span class="nav-count"><%= bl.open.length %></span><% } %></h2>
+    <div class="rdw-links">
+      <% if (compactView) { %><a href="/klant/<%= customer.id %>#aandachtspunten">Bij de klant bekijken</a>
+      <% } else if (aiOn) { %>
+      <button class="btn btn-small<%= !bl.analysis || bl.stale ? ' btn-primary' : '' %>" type="button" data-ai-task="klant" data-ai-id="<%= customer.id %>"
+        data-ai-action="/klant/<%= customer.id %>/aandachtspunten" data-ai-title="Werkopdrachten laten doorlezen door Claude">✨ <%= bl.analysis ? 'Opnieuw analyseren' : 'Analyseren met Claude' %></button>
+      <% } %>
+    </div>
+  </div>
+  <% if (!compactView) { %>
+  <p class="muted small bl-meta">
+    <% if (bl.analysis) { %>Door Claude uit <%= bl.analysis.n_orders %> werkopdracht<%= bl.analysis.n_orders === 1 ? '' : 'en' %> gehaald op <%= fmtDateTime(bl.analysis.analyzed_at) %>
+      (<%= L[bl.analysis.effort] || bl.analysis.effort %><%= bl.analysis.by_name ? ', ' + bl.analysis.by_name : '' %>).
+      <% if (bl.stale) { %><b class="bl-stale">Er zijn werkopdrachten bijgekomen of gewijzigd sinds de analyse.</b><% } %>
+    <% } else { %>Claude leest alle werkopdrachten van deze auto en zet hier alleen wat de monteurs echt moeten weten bij een volgend bezoek
+      (tijdelijke oplossingen, geadviseerd maar niet gedaan, slijtage, gewijzigde codering…). U ziet vooraf wat het kost.<% } %>
+  </p>
+  <% } %>
+  <% if (bl.open.length) { %>
+  <ul class="bl-list">
+    <% for (const b of bl.open) { %>
+    <li class="bl-item bl-<%= b.ernst %>">
+      <div class="bl-main">
+        <b class="bl-title"><%= b.titel %></b>
+        <% if (b.tekst) { %><span class="bl-text"><%= b.tekst %></span><% } %>
+        <% if (b.actie) { %><span class="bl-action"><b>Doen:</b> <%= b.actie %></span><% } %>
+        <span class="muted small"><% if (b.order_nummer) { %>Werkopdracht <%= b.order_nummer %><% } %><%= b.order_nummer && b.datum ? ' · ' : '' %><%= b.datum ? fmtDate(b.datum) : '' %></span>
+      </div>
+      <form method="post" action="/aandachtspunt/<%= b.id %>/afgehandeld" class="inline">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn btn-small" type="submit" title="Gecontroleerd of opgelost: van de lijst halen">✓ Afgehandeld</button>
+      </form>
+    </li>
+    <% } %>
+  </ul>
+  <% } else if (bl.analysis && !compactView) { %>
+  <p class="bl-none">Niets dat extra aandacht nodig heeft. 👍</p>
+  <% } %>
+  <% if (bl.done.length && !compactView) { %>
+  <details class="bl-done"><summary class="muted small">Afgehandeld (<%= bl.done.length %>)</summary>
+    <ul class="bl-list">
+      <% for (const b of bl.done) { %>
+      <li class="bl-item is-done"><div class="bl-main"><span class="bl-title"><%= b.titel %></span><span class="muted small">afgehandeld <%= fmtDate(b.done_at.slice(0, 10)) %></span></div>
+        <form method="post" action="/aandachtspunt/<%= b.id %>/afgehandeld" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-small btn-ghost" type="submit">Terugzetten</button></form></li>
+      <% } %>
+    </ul>
+  </details>
+  <% } %>
+</section>
+<% } %>

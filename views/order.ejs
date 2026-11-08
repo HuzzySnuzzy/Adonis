@@ -100,6 +100,8 @@
 
 <% if (error) { %><div class="alert alert-wide no-print"><%= error %></div><% } %>
 
+<% if (locals.plateLinks && plateLinks.length) { %><div class="order-plate-sites"><%- include('/partials/plate-sites', { plateLinks, kenteken: data.kenteken }) %></div><% } %>
+<% if (locals.orderBulletins) { %><div class="order-bulletins"><%- include('/partials/bulletins', { bl: orderBulletins.bl, aiOn: false, customer: orderBulletins.customer, compact: true }) %></div><% } %>
 <% if (order) { %><span hidden id="live-order" data-id="<%= order.id %>"></span><% } %>
 <form id="orderForm" method="post" action="<%= draft ? '/importeren/' + draft.id + '/bevestigen' : order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off">
   <input type="hidden" name="_csrf" value="<%= csrf %>">

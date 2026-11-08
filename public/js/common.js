@@ -77,6 +77,10 @@ document.querySelectorAll('form[action="/login"]').forEach((f) => f.addEventList
     }
   });
 })();
+// Pictogram van een portaal-website kan niet geladen worden: weglaten (het portaal zelf toont dan een letter).
+document.addEventListener('error', (e) => {
+  if (e.target instanceof HTMLImageElement && e.target.matches('.plate-site img[data-portal-icon]')) e.target.remove();
+}, true);
 // Klikbare tabelrijen
 document.addEventListener('click', (e) => {
   const row = e.target.closest('tr[data-href]');

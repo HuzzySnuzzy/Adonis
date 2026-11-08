@@ -8,9 +8,18 @@
       <button class="btn" type="submit">Zoeken</button>
       <% if (q) { %><a class="btn btn-ghost" href="/werkopdrachten">Wissen</a><% } %>
     </form>
+    <div class="head-buttons">
+      <a class="btn btn-ghost" href="/zoekwoorden" title="Woorden die hetzelfde betekenen (bijv. lampen = verlichting)">Zoekwoorden</a>
+      <% if (user.is_admin && aiConfigured) { %>
+      <button class="btn" type="button" data-ai-task="alle" data-ai-action="/aandachtspunten/alles" data-ai-bulk
+        data-ai-title="Aandachtspunten voor alle klanten">✨ Aandachtspunten voor alle klanten</button>
+      <% } %>
+    </div>
   </div>
+  <div class="ai-job" data-ai-job hidden></div>
   <% const qs = (st) => '/werkopdrachten' + ((st || q) ? '?' + [st ? 'status=' + st : '', q ? 'q=' + encodeURIComponent(q) : ''].filter(Boolean).join('&') : ''); %>
   <div id="live-orders" data-live>
+  <%- include("/partials/search-hint") %>
   <nav class="status-tabs" aria-label="Filter op status">
     <a href="<%= qs('') %>" class="<%= !status ? 'active' : '' %>">Alle</a>
     <% for (const [k, label] of Object.entries(STATUSES)) { %>
@@ -26,4 +35,5 @@
   </div>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/ai.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

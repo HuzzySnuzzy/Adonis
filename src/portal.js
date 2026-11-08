@@ -35,6 +35,11 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS portal_links_folder ON portal_links(folder_id, sort);
 `);
+// Zoekadres met kenteken, bijv. https://site.nl/zoek?licensePlate={kenteken-klein}
+if (!db.prepare('PRAGMA table_info(portal_links)').all().some((c) => c.name === 'search_url')) {
+  db.exec("ALTER TABLE portal_links ADD COLUMN search_url TEXT NOT NULL DEFAULT ''");
+}
+const plates = require('./plates');
 
 class PortalError extends Error {}
 
@@ -296,7 +301,59 @@ function repairMissing() {
   return [...missing, ...todo];
 }
 
+/* ---------- zoeken met het kenteken van de klant ---------- */
+const PLACEHOLDERS = ['{kenteken}', '{kenteken-klein}', '{kenteken-streepjes}', '{kenteken-streepjes-klein}'];
+/**
+ * Van een voorbeeldadres (een zoekresultaat op die website voor een willekeurig kenteken) een sjabloon maken:
+ * het kenteken in het adres wordt vervangen door {kenteken…}, in dezelfde schrijfwijze (hoofd/klein, met/zonder streepjes).
+ * Een adres waar al {kenteken} in staat, wordt zo overgenomen.
+ */
+function plateTemplate(input) {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  if (PLACEHOLDERS.some((p) => raw.includes(p))) return normalizeUrl(raw.replace(/\{/g, '%7B').replace(/\}/g, '%7D')).replace(/%7B/gi, '{').replace(/%7D/gi, '}');
+  const href = normalizeUrl(raw);
+  let decoded = href;
+  try { decoded = decodeURI(href); } catch { /* laat staan */ }
+  const u = new URL(href);
+  const hostLen = u.origin.length;
+  // Kandidaten: stukjes van 6–8 tekens met letters en cijfers (en eventueel streepjes), na de domeinnaam.
+  let best = null;
+  for (const m of decoded.matchAll(/[A-Za-z0-9]{1,3}-?[A-Za-z0-9]{1,3}-?[A-Za-z0-9]{1,3}/g)) {
+    const t = m[0];
+    if (m.index < hostLen || t.replace(/-/g, '').length !== 6 || !/\d/.test(t) || !/[a-z]/i.test(t)) continue;
+    const before = decoded[m.index - 1] || ''; const after = decoded[m.index + t.length] || '';
+    if (/[A-Za-z0-9]/.test(before) || /[A-Za-z0-9]/.test(after)) continue; // midden in een langer woord
+    const info = plates.plateInfo(t);
+    if (info.country !== 'NL') continue;
+    best = { t, index: m.index, dashes: t.includes('-'), lower: t === t.toLowerCase() };
+  }
+  if (!best) throw new PortalError('In dit adres staat geen (Nederlands) kenteken. Zoek op die website eerst een kenteken op en kopieer dan het adres uit de adresbalk.');
+  const ph = `{kenteken${best.dashes ? '-streepjes' : ''}${best.lower ? '-klein' : ''}}`;
+  return decoded.slice(0, best.index) + ph + decoded.slice(best.index + best.t.length);
+}
+/** Het sjabloon invullen met een kenteken. */
+function fillPlate(template, kenteken) {
+  const info = plates.plateInfo(kenteken);
+  const key = info.key || String(kenteken || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  const text = info.country === 'NL' ? info.text : key;
+  const v = { '{kenteken}': key, '{kenteken-klein}': key.toLowerCase(), '{kenteken-streepjes}': text, '{kenteken-streepjes-klein}': text.toLowerCase() };
+  return template.replace(/\{kenteken(-streepjes)?(-klein)?\}/g, (m) => encodeURIComponent(v[m] || key));
+}
+function setSearchUrl(id, input) {
+  const tpl = plateTemplate(input);
+  db.prepare("UPDATE portal_links SET search_url = ?, updated_at = datetime('now') WHERE id = ?").run(tpl, id);
+  return tpl;
+}
+/** Websites waarop met een kenteken kan worden gezocht, ingevuld voor dit kenteken. */
+function plateLinks(kenteken) {
+  if (!kenteken) return [];
+  return db.prepare("SELECT l.*, f.name AS folder FROM portal_links l JOIN portal_folders f ON f.id = l.folder_id WHERE l.search_url <> '' ORDER BY f.sort, l.sort, l.id").all()
+    .map((l) => ({ id: l.id, title: l.title || hostTitle(l.url), icon: l.icon_status === 'ok' ? l.id : null, updated_at: l.updated_at, color: colorIndex(l.url), href: fillPlate(l.search_url, kenteken) }));
+}
+
 module.exports = {
+  plateTemplate, fillPlate, setSearchUrl, plateLinks,
   PortalError, ICON_DIR, normalizeUrl, hostTitle, colorIndex, listAll, getLink, getFolder,
   addFolder, findOrAddFolder, renameFolder, deleteFolder, moveFolder,
   addLink, updateLink, deleteLink, reorder, fetchMeta, enqueue, iconPath, repairMissing, imageType,

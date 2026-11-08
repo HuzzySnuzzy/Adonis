@@ -1359,3 +1359,65 @@ form[role="search"].is-searching input[name="q"] {
 .start-results:empty { display: none; }
 .start-results { margin: -1rem 0 1.6rem; }
 .start-results > .muted { margin: 0 0 .4rem; }
+
+/* ---------- Aandachtspunten (Claude) ---------- */
+.bulletins .rdw-head h2 { display: flex; align-items: center; gap: .4rem; }
+.bulletins.has-high { border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.bl-meta { margin: -.2rem 0 .6rem; }
+.bl-stale { color: var(--warn-text); font-weight: 600; }
+.bl-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.bl-item { display: flex; gap: .8rem; align-items: flex-start; justify-content: space-between; padding: .6rem .8rem; border-radius: 8px;
+  border: 1px solid var(--border-soft); border-left: 4px solid var(--accent); background: var(--surface); }
+.bl-item.bl-hoog { border-left-color: var(--danger); background: color-mix(in srgb, var(--err-bg) 55%, var(--surface)); }
+.bl-item.is-done { border-left-color: var(--border); opacity: .75; }
+.bl-main { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.bl-title { font-size: 1rem; }
+.bl-text, .bl-action { font-size: .92rem; }
+.bl-none { margin: .2rem 0 0; }
+.bl-done { margin-top: .6rem; }
+.bl-done summary { cursor: pointer; }
+.order-bulletins { max-width: 1440px; margin: .6rem auto 0; padding: 0 1rem; }
+.order-bulletins .rdw-card { margin-top: 0; }
+.bulletins-compact .bl-item form { display: none; }
+@media (max-width: 760px) { .bl-item { flex-direction: column; } }
+
+/* ---------- Claude: inspanning kiezen ---------- */
+.ai-dialog .ai-level b { margin-right: .5rem; }
+.ai-price { font-weight: 700; color: var(--text); white-space: nowrap; }
+.ai-dialog .alert { margin: .6rem 0 0; }
+.ai-busy { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: rgba(10, 12, 16, .55); }
+.ai-busy[hidden] { display: none; }
+.ai-busy-card { width: min(380px, calc(100vw - 32px)); padding: 1.4rem; border-radius: 12px; background: var(--surface); color: var(--text); text-align: center; box-shadow: var(--shadow); }
+.ai-busy-card .spinner { margin: 0 auto .8rem; }
+.ai-job { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .6rem .8rem; margin: 0 0 1rem; border-radius: 8px;
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border)); }
+.ai-job[hidden] { display: none; }
+.ai-job > div:first-child { flex: 1 1 320px; }
+.ai-job-bar { flex: 1 1 100%; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.ai-job-bar i { display: block; height: 100%; background: var(--primary); transition: width .4s; }
+.ai-job p { flex: 1 1 100%; margin: 0; }
+
+/* ---------- Zoekwoorden ---------- */
+.search-hint { margin: -.2rem 0 .7rem; }
+.synonyms-page { max-width: 900px; }
+.syn-test input, .syn-form input, .syn-form textarea, .syn-group input, .syn-group textarea { display: block; width: 100%; box-sizing: border-box; margin-top: .3rem;
+  padding: .5rem .65rem; font: inherit; color: var(--text); background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; }
+.syn-form label { margin-bottom: .6rem; }
+.syn-list { display: grid; gap: .8rem; }
+.syn-group { padding: .7rem .8rem; border: 1px solid var(--border-soft); border-radius: 8px; }
+.syn-head { display: flex; align-items: center; gap: .5rem; }
+.syn-head input { margin-top: 0; font-weight: 600; max-width: 320px; }
+.syn-actions { display: flex; gap: .4rem; margin-top: .4rem; }
+
+/* ---------- Opzoeken met het kenteken (portaal-websites) ---------- */
+.plate-sites { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .5rem; margin: 1rem 0 0; }
+.plate-sites-label { color: var(--muted); font-size: .9rem; margin-right: .2rem; }
+.plate-site { display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .65rem .3rem .4rem; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text); text-decoration: none; font-size: .92rem; }
+.plate-site:hover { border-color: var(--primary); background: var(--hover); }
+.plate-site img, .plate-site .pt-letter { width: 20px; height: 20px; border-radius: 5px; font-size: .75rem; object-fit: contain; }
+.plate-site .ext { color: var(--muted); font-size: .8rem; }
+.order-plate-sites { max-width: 1440px; margin: .5rem auto 0; padding: 0 1rem; }
+.order-plate-sites .plate-sites { margin: 0; }
+.pt-plate { font-size: .65rem; text-transform: uppercase; letter-spacing: .04em; padding: 0 .35rem; border-radius: 4px; background: var(--plate, #f7c600); color: #111; }
+.portal-zoek-help { display: block; margin-top: .3rem; }

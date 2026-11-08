@@ -60,6 +60,8 @@
   </form>
   <% } %>
 
+  <%- include('/partials/plate-sites', { plateLinks, kenteken: customer.kenteken }) %>
+  <div id="live-bulletins" data-live><%- include('/partials/bulletins', { bl: bulletinData, aiOn: aiConfigured, customer }) %></div>
 
   <% const ri = rdwData && rdwData.info; %>
   <section class="rdw-card" aria-label="RDW-gegevens">
@@ -174,6 +176,7 @@
     </form>
   </div>
   <div id="live-customer-orders" data-live>
+  <%- include("/partials/search-hint") %>
   <% if (orders.length === 0) { %>
     <div class="empty"><p>Geen werkopdrachten gevonden<%= q ? ' voor “' + q + '”' : '' %>.</p></div>
   <% } else { %>
@@ -182,5 +185,6 @@
   </div>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/ai.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

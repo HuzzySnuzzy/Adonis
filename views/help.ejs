@@ -13,6 +13,7 @@
     <a href="#banden">Banden wisselen</a>
     <a href="#apk">APK-lijst</a>
     <a href="#portaal">Portaal (websites)</a>
+    <a href="#aandachtspunten">Aandachtspunten (Claude)</a>
     <a href="#fout">Iets fout gedaan?</a>
     <% if (user.is_owner) { %><a href="#backup">Backups</a><% } %>
     <a href="#groter">Alles groter maken</a>
@@ -92,6 +93,22 @@
       <li>Klaar met bewerken? Klik op <%- B('✓ Klaar') %>.</li>
     </ol>
     <p class="help-tip">Typ in het zoekvak een deel van de naam en druk op Enter: de eerste website die past gaat open.</p>
+    <p class="help-tip"><b>Meteen zoeken met het kenteken:</b> zoek op die website één keer een kenteken op, kopieer het adres uit de
+      adresbalk en plak het bij de website (✎) onder <i>Zoeken op kenteken</i>. Op elke klantpagina en werkopdracht staat de website dan
+      bij <i>Opzoeken met …</i> en opent hij met het kenteken van die auto al ingevuld.</p>
+  </section>
+
+  <section class="card help-sec" id="aandachtspunten">
+    <h2>Aandachtspunten van Claude</h2>
+    <ol class="help-steps">
+      <li>Open een klant en klik bij <b>Aandachtspunten</b> op <%- B('✨ Analyseren met Claude') %>.</li>
+      <li>Kies hoeveel moeite Claude mag doen. U ziet vooraf ongeveer wat het kost. <b>Normaal</b> is meestal goed.</li>
+      <li>Claude leest alle werkopdrachten van die auto en zet hier alleen wat belangrijk is voor een volgend bezoek
+        (bijv. een gebruikte accu, iets wat de klant nog niet wilde laten doen, gewijzigde codering).</li>
+      <li>Gecontroleerd of opgelost? Klik op <%- B('✓ Afgehandeld') %>. De punten staan ook bovenaan de werkopdrachten van die auto.</li>
+    </ol>
+    <p class="help-tip">Zoeken in werkopdrachten vindt ook woorden die hetzelfde betekenen: <i>lampen</i> vindt ook <i>dagrijverlichting</i>.
+      Bij <a href="/zoekwoorden">Zoekwoorden</a> kunt u zelf woorden toevoegen.</p>
   </section>
 
   <section class="card help-sec" id="fout">

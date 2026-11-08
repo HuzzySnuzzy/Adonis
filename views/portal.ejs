@@ -47,13 +47,14 @@
       <div class="portal-grid" data-folder-grid="<%= f.id %>">
         <% for (const l of f.links) { const name = l.title || hostTitle(l.url); %>
         <a class="portal-tile" id="link-<%= l.id %>" href="<%= l.url %>" target="_blank" rel="noopener noreferrer" title="<%= name %>&#10;<%= l.url %>"
-           data-id="<%= l.id %>" data-title="<%= l.title %>" data-url="<%= l.url %>" data-folder="<%= f.id %>">
+           data-id="<%= l.id %>" data-title="<%= l.title %>" data-url="<%= l.url %>" data-folder="<%= f.id %>" data-zoek="<%= l.search_url %>">
           <span class="pt-icon">
             <% if (l.icon_status === 'ok') { %><img src="/portaal/icoon/<%= l.id %>?v=<%= encodeURIComponent(l.updated_at) %>" alt="" data-portal-icon><% } %>
             <span class="pt-letter pl-c<%= colorIndex(l.url) %>"<%- l.icon_status === 'ok' ? ' hidden' : '' %>><%= name.trim().charAt(0).toUpperCase() || '?' %></span>
             <% if (!l.icon_status) { %><span class="pt-loading" title="Pictogram wordt opgehaald"></span><% } %>
           </span>
           <span class="pt-title"><%= name %></span>
+          <% if (l.search_url) { %><span class="pt-plate" title="Zoekt met het kenteken van de klant (op de klantpagina)">kenteken</span><% } %>
           <span class="pt-edit when-edit"><button type="button" class="pt-btn" data-portal-editlink title="Wijzigen" aria-label="<%= name %> wijzigen">✎</button></span>
         </a>
         <% } %>
@@ -77,6 +78,10 @@
       <h1>Website wijzigen</h1>
       <label>Naam<input name="title" maxlength="80" placeholder="Laat leeg: de naam van de website"></label>
       <label>Internetadres<input name="url" required spellcheck="false" inputmode="url"></label>
+      <label>Zoeken op kenteken <span class="muted small">(optioneel)</span>
+        <input name="zoek" spellcheck="false" inputmode="url" placeholder="Plak hier het adres van een zoekresultaat">
+        <span class="muted small portal-zoek-help">Zoek op die website een (willekeurig) kenteken op, kopieer het adres uit de adresbalk en plak het hier,
+          bijv. <code>…/select?licensePlate=19slvl</code>. Dan staat deze website op elke klantpagina en opent hij meteen met het kenteken van die klant. Leeg = uit.</span></label>
       <label>Map<select name="folder"><% for (const f of folders) { %><option value="<%= f.id %>"><%= f.name %></option><% } %></select></label>
       <label class="check"><input type="checkbox" name="icoon" value="1"> Pictogram opnieuw ophalen</label>
       <div class="swap-actions">

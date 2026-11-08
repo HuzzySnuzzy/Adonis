@@ -82,13 +82,19 @@
 
   startBtn.addEventListener('click', async () => {
     showError('');
+    // Eerst kiezen hoeveel moeite Claude mag doen (met kostenschatting).
+    let effort = 'hoog';
+    if (window.adonisAi) {
+      effort = await window.adonisAi.choose({ taak: 'foto', params: { n: images.length }, title: 'Werkopdracht uitlezen' });
+      if (!effort) return;
+    }
     startBtn.disabled = true;
     busy.hidden = false;
     try {
       const res = await fetch('/importeren', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': card.dataset.csrf },
-        body: JSON.stringify({ images }),
+        body: JSON.stringify({ images, effort }),
       });
       let body = {};
       try { body = await res.json(); } catch { /* geen JSON */ }

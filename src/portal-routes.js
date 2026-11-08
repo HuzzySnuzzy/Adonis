@@ -64,6 +64,8 @@ module.exports = function register(app, { flash, wrap }) {
   app.post('/portaal/link/:id', wrap(async (req, res) => {
     try {
       const r = portal.updateLink(req.params.id, { title: req.body.title, url: req.body.url, folderId: req.body.folder });
+      // Zoeken met het kenteken van de klant (leeg = uit).
+      if (req.body.zoek !== undefined) portal.setSearchUrl(Number(req.params.id), req.body.zoek);
       if (r.urlChanged || req.body.icoon === '1') await settle(portal.fetchMeta(Number(req.params.id), { force: true }));
       announce(req);
       if (wantsJson(req)) return res.json({ ok: true });

@@ -16,6 +16,8 @@ const importer = require('./import');
 const buildinfo = require('./buildinfo');
 const updater = require('./update');
 const events = require('./events');
+const synonyms = require('./synonyms');
+const bulletins = require('./bulletins');
 const settings = require('./settings');
 const tunnel = require('./tunnel');
 const cloudflare = require('./cloudflare');
@@ -409,15 +411,19 @@ app.get('/klant/:id', wrap(async (req, res) => {
   const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
   if (!customer) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze klant bestaat niet.' });
   const q = String(req.query.q || '').trim();
+  // Zoeken met zoekwoorden: "lampen" vindt ook "dagrijverlichting".
+  const sq = q ? synonyms.sqlFor('search_text', q, likeTerm) : null;
   const rows = q
     ? db.prepare(
-        `SELECT * FROM orders WHERE customer_id = ? AND search_text LIKE ? ESCAPE '\\' ORDER BY datum_invoer DESC, nummer DESC`
-      ).all(customer.id, likeTerm(q))
+        `SELECT * FROM orders WHERE customer_id = ? AND (${sq.where}) ORDER BY datum_invoer DESC, nummer DESC`
+      ).all(customer.id, ...sq.params)
     : db.prepare('SELECT * FROM orders WHERE customer_id = ? ORDER BY datum_invoer DESC, nummer DESC').all(customer.id);
   // Alleen Nederlandse kentekens staan bij de RDW (niet bijv. een Duits kenteken).
   const rdwData = plates.rdwApplicable(customer.kenteken) ? await rdw.forCustomer(customer) : { foreign: true, country: plates.plateInfo(customer.kenteken).country };
   res.render('customer', {
-    title: customer.kenteken, customer, q, orders: rows.map(withSummary), rdwData, tyres: inv.tyresForPlate(customer.plate_key), fotos: require('./photos').firstPhotos('tyre'),
+    title: customer.kenteken, customer, q, searchParts: sq ? sq.parts : [], orders: rows.map(withSummary), rdwData,
+    bulletinData: bulletins.forCustomer(customer.id), aiConfigured: importer.isConfigured(),
+    plateLinks: require('./portal').plateLinks(customer.kenteken), tyres: inv.tyresForPlate(customer.plate_key), fotos: require('./photos').firstPhotos('tyre'),
     ...carPhoto(req, customer, rdwData),
     editing: req.query.bewerken === '1', editError: null, editValues: null, swapTarget: inv.swapTarget(),
   });
@@ -523,9 +529,12 @@ app.get('/werkopdrachten', (req, res) => {
   const status = orders.STATUSES[req.query.status] ? req.query.status : '';
   const where = [];
   const params = [];
+  let sq = null;
   if (q) {
-    where.push(`(o.search_text LIKE ? ESCAPE '\\' OR c.plate_key LIKE ? ESCAPE '\\')`);
-    params.push(likeTerm(q), likeTerm(plateKey(q) || q));
+    // Elk woord moet voorkomen; voor elk woord tellen ook woorden uit dezelfde zoekwoordengroep.
+    sq = synonyms.sqlFor('o.search_text', q, likeTerm);
+    where.push(`((${sq.where}) OR c.plate_key LIKE ? ESCAPE '\\')`);
+    params.push(...sq.params, likeTerm(plateKey(q) || q));
   }
   if (status) { where.push('o.status = ?'); params.push(status); }
   // Te factureren: oudste eerst (wie het langst wacht, staat bovenaan).
@@ -536,7 +545,7 @@ app.get('/werkopdrachten', (req, res) => {
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY ${order} LIMIT ${q || status ? 500 : 200}`
   ).all(...params);
   res.render('orders', {
-    title: status === 'klaar' ? 'Facturatie' : 'Werkopdrachten', q, status, counts: orders.statusCounts(),
+    title: status === 'klaar' ? 'Facturatie' : 'Werkopdrachten', q, status, counts: orders.statusCounts(), searchParts: sq ? sq.parts : [], aiConfigured: importer.isConfigured(),
     STATUSES: orders.STATUSES, orders: rows.map(withSummary),
   });
 });
@@ -558,6 +567,16 @@ function renderOrder(res, { order, data, nummer, error, status, draft, datumInvo
     transitions: orders.allowedTransitions(user, order || { status: 'open' }),
     history: order ? orders.history(order.id) : [],
     datumInvoer: draft ? (datumInvoer || '') : datumInvoer || (order ? order.datum_invoer : orders.todayISO()),
+    // Aandachtspunten van deze auto bovenaan de werkopdracht (zodat de monteur ze ziet tijdens het werk).
+    orderBulletins: (() => {
+      const cust = order && order.customer_id ? db.prepare('SELECT id, kenteken FROM customers WHERE id = ?').get(order.customer_id)
+        : data && data.kenteken && plateKey(data.kenteken) ? db.prepare('SELECT id, kenteken FROM customers WHERE plate_key = ?').get(plateKey(data.kenteken)) : null;
+      if (!cust) return null;
+      const bl = bulletins.forCustomer(cust.id);
+      return bl.open.length ? { bl, customer: cust } : null;
+    })(),
+    // Portaal-websites die met het kenteken zoeken (bijv. onderdelen of olie opzoeken tijdens het werk).
+    plateLinks: data && data.kenteken ? require('./portal').plateLinks(data.kenteken) : [],
   });
 }
 
@@ -700,6 +719,7 @@ app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
 // Vóór de foto-import: anders vangt /importeren/:id ook /importeren/excel af.
 registerInventory(app, { flash, wrap });
 require('./portal-routes')(app, { flash, wrap });
+require('./ai-routes')(app, { flash, wrap });
 
 /* ---------- foto-import ---------- */
 app.get('/importeren', (req, res) => {

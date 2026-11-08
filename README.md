@@ -109,6 +109,25 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   uit Chrome/Edge/Firefox: de mappen komen mee. *Bewerken*: mappen maken, hernoemen, verplaatsen en verwijderen,
   tegels verslepen (ook naar een andere map), naam/adres wijzigen. Zoekvak + Enter opent de eerste website die past.
   In de ADONIS-app openen websites in de gewone browser.
+- **Opzoeken met het kenteken:** een website in het Portaal kan een *zoekadres* krijgen: plak het adres van een
+  zoekresultaat (bijv. `https://smeermiddelen.totalenergies.nl/product-advice/select?licensePlate=19slvl`) en ADONIS
+  herkent het kenteken erin (ook de schrijfwijze: klein/hoofdletters, met/zonder streepjes) en maakt er een sjabloon van
+  (`…?licensePlate={kenteken-klein}`). Op elke klantpagina en werkopdracht staan die websites dan bij *Opzoeken met …*,
+  met het kenteken van die auto ingevuld. Zelf schrijven kan ook: `{kenteken}`, `{kenteken-klein}`, `{kenteken-streepjes}`,
+  `{kenteken-streepjes-klein}`.
+- **Aandachtspunten van Claude** (klantpagina, en voor beheerders *Werkopdrachten → Aandachtspunten voor alle klanten*):
+  Claude leest alle werkopdrachten van een auto en zet alleen wat ertoe doet voor een volgend bezoek op de klantpagina
+  (en bovenaan elke werkopdracht van die auto): tijdelijke oplossingen, geadviseerd maar niet gedaan, slijtage, gewijzigde
+  codering, terugkerende storingen, met werkopdrachtnummer en datum. Monteurs vinken punten af (*Afgehandeld*); die komen
+  niet terug. Namen, adressen, telefoonnummers, alarmcodes en prijzen gaan niet naar Claude. Bij nieuwe werkopdrachten
+  meldt de klantpagina dat de analyse verouderd is.
+- **Inspanning kiezen met kostenschatting:** voor elke Claude-taak (foto-import, Excel-import, aandachtspunten) kiest de
+  gebruiker eerst *Snel / Normaal / Grondig* (API-effort low/medium/high) en ziet vooraf een schatting in euro's en de
+  duur. De werkelijke kosten staan daarna in de melding en bij Systeem. Aandachtspunten tellen niet mee voor de daglimiet
+  van de foto-import (ze worden vooraf met kosten bevestigd).
+- **Zoekwoorden** (*Werkopdrachten → Zoekwoorden*): woorden die hetzelfde betekenen (garagetermen, Nederlands en Engels):
+  zoeken op *light* of *lampen* vindt ook *dagrijverlichting*. Elk woord moet voorkomen; per woord tellen ook de woorden uit
+  dezelfde groep. Aanvullen en eigen groepen maken kan op die pagina; "aanhalingstekens" zoekt precies één woord.
 - **Snel zoeken:** de lijsten (Klanten, Werkopdrachten, Bandenhotel, Voorraad) worden al bijgewerkt terwijl je typt.
   Een volledig kenteken + Enter opent meteen die klant. De toets `/` springt naar het zoekvak. Lange lijsten tonen eerst
   100 regels, met *Meer tonen* / *Alles tonen*. Op een laptop past de menubalk op één rij (naam en uitloggen als pictogram;

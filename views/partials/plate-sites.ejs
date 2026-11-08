@@ -1,0 +1,12 @@
+<%# Portaal-websites die met het kenteken van deze klant zoeken. Verwacht: plateLinks, kenteken %>
+<% if (locals.plateLinks && plateLinks.length) { %>
+<nav class="plate-sites no-print" aria-label="Opzoeken op websites">
+  <span class="plate-sites-label">Opzoeken met <b><%= kenteken %></b>:</span>
+  <% for (const l of plateLinks) { %>
+  <a class="plate-site" href="<%= l.href %>" target="_blank" rel="noopener noreferrer" title="<%= l.title %> openen met kenteken <%= kenteken %>">
+    <% if (l.icon) { %><img src="/portaal/icoon/<%= l.id %>?v=<%= encodeURIComponent(l.updated_at) %>" alt="" data-portal-icon><% } else { %><span class="pt-letter pl-c<%= l.color %>"><%= l.title.charAt(0).toUpperCase() %></span><% } %>
+    <span><%= l.title %></span><span class="ext" aria-hidden="true">↗</span>
+  </a>
+  <% } %>
+</nav>
+<% } %>

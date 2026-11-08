@@ -1,0 +1,52 @@
+<%- include('/partials/head') %>
+<main class="page synonyms-page">
+  <p class="crumbs"><a href="/werkopdrachten">← Werkopdrachten</a></p>
+  <h1>Zoekwoorden</h1>
+  <p class="muted">Woorden die hetzelfde betekenen. Zoekt iemand naar één ervan, dan vindt ADONIS ook werkopdrachten met de andere
+    (bijv. <i>light</i> of <i>lampen</i> vindt ook <i>dagrijverlichting</i>). Zoeken gebeurt op “bevat”: <i>licht</i> vindt ook <i>achterlicht</i>.
+    Wilt u precies één woord zoeken, zet het dan tussen "aanhalingstekens".</p>
+
+  <section class="card syn-test">
+    <h2>Uitproberen</h2>
+    <input type="search" placeholder="Typ een zoekwoord, bijv. lampen" data-syn-test autocomplete="off" spellcheck="false" aria-label="Zoekwoord uitproberen">
+    <p class="muted small" data-syn-result>Hier ziet u op welke woorden ADONIS dan ook zoekt.</p>
+  </section>
+
+  <section class="card">
+    <h2>Nieuwe groep</h2>
+    <form method="post" action="/zoekwoorden" class="syn-form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label>Naam<input name="name" placeholder="bijv. Navigatie" maxlength="60"></label>
+      <label>Woorden die hetzelfde betekenen (gescheiden door komma's)<textarea name="words" rows="2" placeholder="navigatie, navi, gps, kaartupdate" required></textarea></label>
+      <button class="btn btn-primary" type="submit">Toevoegen</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Alle groepen <span class="muted small"><%= groups.length %></span></h2>
+    <p class="muted small">Voeg gerust woorden toe die in deze garage gebruikt worden (ook afkortingen of verkeerd gespelde varianten).</p>
+    <div class="syn-list">
+    <% for (const g of groups) { %>
+      <form method="post" action="/zoekwoorden/<%= g.id %>" class="syn-group" id="groep-<%= g.id %>">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="syn-head">
+          <input name="name" value="<%= g.name %>" maxlength="60" aria-label="Naam van de groep">
+          <% if (g.builtin) { %><span class="secret-tag" title="Hoort bij ADONIS">standaard</span><% } %>
+        </div>
+        <textarea name="words" rows="2" aria-label="Woorden in <%= g.name %>"><%= g.words %></textarea>
+        <div class="syn-actions">
+          <button class="btn btn-small" type="submit">Opslaan</button>
+          <% if (g.builtin) { %>
+            <button class="btn btn-small btn-ghost" type="submit" formaction="/zoekwoorden/<%= g.id %>/standaard" title="De woorden van ADONIS terugzetten">Standaard terugzetten</button>
+          <% } else { %>
+            <button class="btn btn-small btn-ghost" type="submit" formaction="/zoekwoorden/<%= g.id %>/verwijderen" data-confirm-click="Groep &quot;<%= g.name %>&quot; verwijderen?">Verwijderen</button>
+          <% } %>
+        </div>
+      </form>
+    <% } %>
+    </div>
+  </section>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/ai.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

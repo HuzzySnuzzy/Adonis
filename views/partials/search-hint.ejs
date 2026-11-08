@@ -1,0 +1,6 @@
+<%# Welke zoekwoorden er ook zijn meegenomen (zodat het niet als toverij voelt). Verwacht: searchParts %>
+<% const hits = (locals.searchParts || []).filter((p) => p.group); if (hits.length) { %>
+<p class="muted small search-hint">Ook gezocht op
+  <% hits.forEach((p, i) => { const extra = p.alts.filter((a) => a !== p.term).slice(0, 7); %><%= i ? ' · ' : '' %>“<%= p.term %>”: <%= extra.join(', ') %><%= p.alts.length - 1 > 7 ? '…' : '' %><% }) %>.
+  <a href="/zoekwoorden">Zoekwoorden aanpassen</a></p>
+<% } %>
