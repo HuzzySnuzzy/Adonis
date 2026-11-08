@@ -17,11 +17,20 @@
     || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   // Opstartanimatie: eenmaal per tabblad, bij elk thema (Neon/Black Ice hebben een eigen reeks).
   var fxTheme = d.getAttribute('data-theme') || 'system';
+  // Net ingelogd: de eerste pagina daarna speelt hem (opnieuw) af, ook als het inlogscherm hem al liet zien.
+  // Bij een fout wachtwoord (terug op /login) niet nog eens.
+  var afterLogin = false;
+  try {
+    if (sessionStorage.getItem('adonis-boot-after-login') && location.pathname !== '/login') {
+      sessionStorage.removeItem('adonis-boot-after-login');
+      afterLogin = true;
+    }
+  } catch (e) { /* opslag geblokkeerd */ }
   if (!still) {
     var seen = '1';
     var bootKey = 'adonis-' + fxTheme + '-boot';
     try { seen = sessionStorage.getItem(bootKey); } catch (e) { /* opslag geblokkeerd */ }
-    if (!seen) {
+    if (!seen || afterLogin) {
       try { sessionStorage.setItem(bootKey, '1'); } catch (e) { /* opslag geblokkeerd */ }
       d.setAttribute('data-boot', '1');
     }

@@ -109,7 +109,7 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Serveradres op het inlogscherm:** onderaan staat met welke server dit apparaat verbonden is (vervaagd tot je erop
   wijst of tikt). In de ADONIS-app staat ernaast **Wijzigen** (opent het scherm om een ander adres te kiezen; in oudere
   app-versies: `Ctrl + ,`).
-- **Opstartanimatie** speelt één keer per venster (of bij het starten van de app). Speelt hij niet, dan zegt
+- **Opstartanimatie** speelt na het inloggen en één keer per venster (of bij het starten van de app). Speelt hij niet, dan zegt
   *Instellingen → Effecten* waarom (Rustig, Eenvoudige weergave, of Windows vraagt om minder beweging) en kun je hem
   daar opnieuw bekijken.
 

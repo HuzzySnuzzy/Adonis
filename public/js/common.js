@@ -17,6 +17,10 @@ document.querySelectorAll('[data-server-url]').forEach((el) => { el.textContent 
     location.reload();
   });
 })();
+// Inloggen: de opstartanimatie hoort bij het binnenkomen, dus de eerste pagina na het inloggen speelt hem af.
+document.querySelectorAll('form[action="/login"]').forEach((f) => f.addEventListener('submit', () => {
+  try { sessionStorage.setItem('adonis-boot-after-login', '1'); } catch { /* geen opslag */ }
+}));
 // Klikbare tabelrijen
 document.addEventListener('click', (e) => {
   const row = e.target.closest('tr[data-href]');
