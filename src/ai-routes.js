@@ -9,6 +9,7 @@ const events = require('./events');
 const importer = require('./import');
 const bulletins = require('./bulletins');
 const synonyms = require('./synonyms');
+const modelBulletins = require('./model-bulletins');
 
 module.exports = function register(app, { flash, wrap }) {
   const wantsJson = (req) => (req.get('accept') || '').includes('application/json');
@@ -37,6 +38,15 @@ module.exports = function register(app, { flash, wrap }) {
       if (!n) return res.status(400).json({ error: 'Deze klant heeft nog geen werkopdrachten.' });
       levels = bulletins.estimateFor([c]);
       detail = `Alle ${n} werkopdracht${n === 1 ? '' : 'en'} van ${c.kenteken} laten doorlezen voor aandachtspunten.`;
+    } else if (taak === 'model') {
+      const c = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.query.id);
+      if (!c) return res.status(404).json({ error: 'Deze klant bestaat niet (meer).' });
+      const m = modelBulletins.modelOf(c);
+      if (!m) return res.status(400).json({ error: 'Het merk en model van deze auto zijn niet bekend. Vul Merk/Type in of haal de RDW-gegevens op.' });
+      levels = modelBulletins.estimate();
+      const n = modelBulletins.customersWith(m.key);
+      detail = `Bekende zwakke plekken en APK-afkeurpunten van de ${m.label} opzoeken op internet, met bronnen.`
+        + (n > 1 ? ` Het resultaat geldt voor alle ${n} klanten met deze auto.` : ' Het resultaat geldt ook voor latere klanten met dezelfde auto.');
     } else if (taak === 'alle') {
       const todo = bulletins.staleCustomers();
       if (!todo.length) return res.status(400).json({ error: 'Alle klanten met werkopdrachten zijn al geanalyseerd en er is niets nieuws.' });
@@ -67,6 +77,26 @@ module.exports = function register(app, { flash, wrap }) {
       if (wantsJson(req)) return res.status(400).json({ error: msg });
       flash(req, 'err', msg);
       res.redirect(`/klant/${req.params.id}#aandachtspunten`);
+    }
+  }));
+  // APK-aandachtspunten voor het model van deze auto (gedeeld met alle klanten met dezelfde auto).
+  app.post('/klant/:id/apk-model', wrap(async (req, res) => {
+    const c = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+    try {
+      if (!c) throw new modelBulletins.ModelBulletinError('Deze klant bestaat niet (meer).');
+      const r = await modelBulletins.analyze(c, { effort: req.body.effort, userId: req.user.id });
+      events.broadcast({ type: 'data', area: 'klanten', by: req.user.name, byId: req.user.id });
+      const msg = `${r.count} APK-aandachtspunt${r.count === 1 ? '' : 'en'} voor de ${r.label} gevonden${r.web ? '' : ' (zonder internetbronnen: web search staat niet aan voor deze API-sleutel)'} – kosten ${ai.formatEur(r.eur)}.`;
+      flash(req, 'ok', msg);
+      if (wantsJson(req)) return res.json({ ok: true, message: msg, ...r });
+      res.redirect(`/klant/${req.params.id}#apk-model`);
+    } catch (err) {
+      const known = err instanceof modelBulletins.ModelBulletinError || err instanceof importer.ImportError;
+      if (!known) console.error(err);
+      const msg = known ? err.message : 'Er ging iets mis bij het opzoeken.';
+      if (wantsJson(req)) return res.status(400).json({ error: msg });
+      flash(req, 'err', msg);
+      res.redirect(`/klant/${req.params.id}#apk-model`);
     }
   }));
   app.post('/aandachtspunt/:id/afgehandeld', (req, res) => {

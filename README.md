@@ -121,6 +121,12 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   codering, terugkerende storingen, met werkopdrachtnummer en datum. Monteurs vinken punten af (*Afgehandeld*); die komen
   niet terug. Namen, adressen, telefoonnummers, alarmcodes en prijzen gaan niet naar Claude. Bij nieuwe werkopdrachten
   meldt de klantpagina dat de analyse verouderd is.
+- **APK-aandachtspunten per model** (klantpagina): Claude zoekt met *web search* de bekende zwakke plekken en
+  APK-afkeurpunten van dat model en bouwjaar op (roestplekken, gordels, ophanging…), met bronnen; alleen bronnen die echt
+  in de zoekresultaten stonden worden getoond. Opgeslagen per merk + model + bouwjaar (RDW-gegevens, anders Merk/Type),
+  dus gedeeld door alle klanten met die auto. Staat web search niet aan voor de API-sleutel, dan zonder bronnen (met
+  melding). Zoekkosten ($10 per 1000 zoekopdrachten) tellen mee in de schatting en het verbruik.
+  Aandachtspunten en APK-punten staan in **inklapbare vakken** (open/dicht wordt onthouden).
 - **Inspanning kiezen met kostenschatting:** voor elke Claude-taak (foto-import, Excel-import, aandachtspunten) kiest de
   gebruiker eerst *Snel / Normaal / Grondig* (API-effort low/medium/high) en ziet vooraf een schatting in euro's en de
   duur. De werkelijke kosten staan daarna in de melding en bij Systeem. Aandachtspunten tellen niet mee voor de daglimiet

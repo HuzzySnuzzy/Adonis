@@ -1,0 +1,52 @@
+<%# APK-aandachtspunten voor het model van deze auto (gedeeld per model + bouwjaar). Verwacht: modelApk ({model, data}), aiOn, customer, compact %>
+<% const M = locals.modelApk && modelApk.model; const D = locals.modelApk && modelApk.data; const compactView = locals.compact;
+   const L = { laag: 'Snel', normaal: 'Normaal', hoog: 'Grondig' };
+   const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } }; %>
+<% if (M && (D || (aiOn && !compactView))) { const items = D ? D.items : []; const high = items.filter((p) => p.ernst === 'hoog').length; %>
+<details class="card bl-box apk-box-model<%= compactView ? ' no-print' : '' %>" id="apk-model" data-remember="bl-model">
+  <summary class="bl-summary">
+    <span class="bl-sum-title">APK-aandachtspunten <span class="muted">· <%= M.label %></span></span>
+    <% if (items.length) { %><span class="nav-count<%= high ? ' is-high' : '' %>"><%= items.length %></span><% } %>
+    <span class="bl-sum-preview muted small">
+      <% if (items.length) { %><%= items.slice(0, 2).map((p) => p.onderdeel).join(', ') %><%= items.length > 2 ? '…' : '' %>
+      <% } else if (D) { %>geen bijzonderheden gevonden<% } else { %>nog niet opgezocht<% } %>
+    </span>
+  </summary>
+  <div class="bl-body">
+    <div class="bl-toolbar">
+      <p class="muted small bl-meta">
+        <% if (D) { %>Bekende zwakke plekken van dit model, opgezocht door Claude op <%= fmtDateTime(D.analyzed_at) %>
+          (<%= L[D.effort] || D.effort %><%= D.by_name ? ', ' + D.by_name : '' %>)<%= D.web ? ', met bronnen van internet' : ' – zonder internetbronnen' %>.
+          Geldt voor elke <%= M.label %>.
+        <% } else { %>Claude zoekt op internet welke zwakke plekken en APK-afkeurpunten bij de <%= M.label %> bekend zijn
+          (bijv. waar hij roest, gordels, ophanging), met bronnen. Eén keer per model en bouwjaar: andere klanten met dezelfde auto zien het ook.<% } %>
+      </p>
+      <% if (aiOn && !compactView) { %>
+      <button class="btn btn-small<%= D ? '' : ' btn-primary' %>" type="button" data-ai-task="model" data-ai-id="<%= customer.id %>"
+        data-ai-action="/klant/<%= customer.id %>/apk-model" data-ai-anchor="apk-model" data-ai-busy="Claude zoekt bekende zwakke plekken van de <%= M.label %> op…"
+        data-ai-title="APK-aandachtspunten voor de <%= M.label %>">✨ <%= D ? 'Opnieuw opzoeken' : 'Opzoeken met Claude' %></button>
+      <% } else if (compactView) { %><a class="small" href="/klant/<%= customer.id %>#apk-model">Bij de klant bekijken</a><% } %>
+    </div>
+    <% if (items.length) { %>
+    <div class="bl-list">
+      <% for (const p of items) { %>
+      <details class="bl-item bl-<%= p.ernst %>">
+        <summary><span class="bl-dot" aria-hidden="true"></span><b class="bl-title"><%= p.onderdeel %></b>
+          <% if (p.categorie && p.categorie !== 'overig') { %><span class="bl-cat"><%= p.categorie %></span><% } %></summary>
+        <div class="bl-detail">
+          <% if (p.waar) { %><p><b>Waar kijken:</b> <%= p.waar %></p><% } %>
+          <% if (p.tekst) { %><p><%= p.tekst %></p><% } %>
+          <% if (p.bronnen && p.bronnen.length) { %><p class="muted small">Bron: <% p.bronnen.forEach((u, i) => { %><%= i ? ', ' : '' %><a href="<%= u %>" target="_blank" rel="noopener noreferrer"><%= host(u) %></a><% }) %></p><% } %>
+        </div>
+      </details>
+      <% } %>
+    </div>
+    <% } %>
+    <% if (D && D.sources && D.sources.length && !compactView) { %>
+    <details class="bl-done"><summary class="muted small">Gebruikte bronnen (<%= D.sources.length %>)</summary>
+      <ul class="bl-sources"><% for (const s of D.sources) { %><li><a href="<%= s.url %>" target="_blank" rel="noopener noreferrer"><%= s.title || host(s.url) %></a> <span class="muted small"><%= host(s.url) %></span></li><% } %></ul>
+    </details>
+    <% } %>
+  </div>
+</details>
+<% } %>

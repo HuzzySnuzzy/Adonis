@@ -61,7 +61,10 @@
   <% } %>
 
   <%- include('/partials/plate-sites', { plateLinks, kenteken: customer.kenteken }) %>
-  <div id="live-bulletins" data-live><%- include('/partials/bulletins', { bl: bulletinData, aiOn: aiConfigured, customer }) %></div>
+  <div id="live-bulletins" class="bl-boxes" data-live>
+    <%- include('/partials/bulletins', { bl: bulletinData, aiOn: aiConfigured, customer }) %>
+    <%- include('/partials/model-apk', { modelApk, aiOn: aiConfigured, customer }) %>
+  </div>
 
   <% const ri = rdwData && rdwData.info; %>
   <section class="rdw-card" aria-label="RDW-gegevens">

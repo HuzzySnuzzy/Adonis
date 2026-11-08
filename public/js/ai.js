@@ -114,19 +114,34 @@
       pollJob();
       return;
     }
-    const overlay = busy('Claude leest de werkopdrachten…');
+    const overlay = busy(btn.dataset.aiBusy || 'Claude leest de werkopdrachten…');
     try {
       const res = await fetch(btn.dataset.aiAction, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json', 'X-CSRF-Token': csrf }, body: new URLSearchParams({ effort }) });
       const r = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(r.error || 'Er ging iets mis.');
       window.adonisLeaving = true;
-      location.hash = 'aandachtspunten';
+      try { localStorage.setItem('adonis-open-' + (btn.closest('[data-remember]') || {}).dataset?.remember, '1'); } catch { /* geen opslag */ }
+      location.hash = btn.dataset.aiAnchor || 'aandachtspunten';
       location.reload();
     } catch (err) {
       overlay.hidden = true;
       alert(err.message);
     }
   });
+
+  /* ----- inklapbare vakken: open/dicht onthouden; via een #-link altijd open ----- */
+  function restoreBoxes() {
+    document.querySelectorAll('details[data-remember]').forEach((d) => {
+      let v = null;
+      try { v = localStorage.getItem('adonis-open-' + d.dataset.remember); } catch { /* geen opslag */ }
+      if (location.hash === '#' + d.id || v === '1') d.open = true;
+      if (d.dataset.bound) return;
+      d.dataset.bound = '1';
+      d.addEventListener('toggle', () => { try { localStorage.setItem('adonis-open-' + d.dataset.remember, d.open ? '1' : '0'); } catch { /* geen opslag */ } });
+    });
+  }
+  restoreBoxes();
+  document.addEventListener('adonis:swapped', restoreBoxes);
 
   /* ----- voortgang "alle klanten" ----- */
   const jobBox = document.querySelector('[data-ai-job]');

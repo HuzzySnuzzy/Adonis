@@ -423,7 +423,8 @@ app.get('/klant/:id', wrap(async (req, res) => {
   res.render('customer', {
     title: customer.kenteken, customer, q, searchParts: sq ? sq.parts : [], orders: rows.map(withSummary), rdwData,
     bulletinData: bulletins.forCustomer(customer.id), aiConfigured: importer.isConfigured(),
-    plateLinks: require('./portal').plateLinks(customer.kenteken), tyres: inv.tyresForPlate(customer.plate_key), fotos: require('./photos').firstPhotos('tyre'),
+    plateLinks: require('./portal').plateLinks(customer.kenteken),
+    modelApk: require('./model-bulletins').get(customer), tyres: inv.tyresForPlate(customer.plate_key), fotos: require('./photos').firstPhotos('tyre'),
     ...carPhoto(req, customer, rdwData),
     editing: req.query.bewerken === '1', editError: null, editValues: null, swapTarget: inv.swapTarget(),
   });
@@ -569,11 +570,12 @@ function renderOrder(res, { order, data, nummer, error, status, draft, datumInvo
     datumInvoer: draft ? (datumInvoer || '') : datumInvoer || (order ? order.datum_invoer : orders.todayISO()),
     // Aandachtspunten van deze auto bovenaan de werkopdracht (zodat de monteur ze ziet tijdens het werk).
     orderBulletins: (() => {
-      const cust = order && order.customer_id ? db.prepare('SELECT id, kenteken FROM customers WHERE id = ?').get(order.customer_id)
-        : data && data.kenteken && plateKey(data.kenteken) ? db.prepare('SELECT id, kenteken FROM customers WHERE plate_key = ?').get(plateKey(data.kenteken)) : null;
+      const cust = order && order.customer_id ? db.prepare('SELECT * FROM customers WHERE id = ?').get(order.customer_id)
+        : data && data.kenteken && plateKey(data.kenteken) ? db.prepare('SELECT * FROM customers WHERE plate_key = ?').get(plateKey(data.kenteken)) : null;
       if (!cust) return null;
       const bl = bulletins.forCustomer(cust.id);
-      return bl.open.length ? { bl, customer: cust } : null;
+      const modelApk = require('./model-bulletins').get(cust);
+      return bl.open.length || (modelApk.data && modelApk.data.items.length) ? { bl, customer: cust, modelApk } : null;
     })(),
     // Portaal-websites die met het kenteken zoeken (bijv. onderdelen of olie opzoeken tijdens het werk).
     plateLinks: data && data.kenteken ? require('./portal').plateLinks(data.kenteken) : [],

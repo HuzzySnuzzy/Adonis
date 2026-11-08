@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.28.0', date: '2026-11-08', title: 'APK-aandachtspunten per automodel en inklapbare vakken',
+    items: [
+      'Nieuw op de klantpagina: APK-aandachtspunten voor het model van de auto. Claude zoekt op internet de bekende zwakke plekken op (bijv. waar het model roest, gordels, ophanging), met bronnen.',
+      'Eén keer opzoeken per model en bouwjaar: alle klanten met dezelfde auto zien het resultaat, zonder extra kosten.',
+      'Aandachtspunten zijn nu inklapbare vakken: één regel met het aantal en een voorproefje; klik om te openen. Elk punt klapt ook apart open. ADONIS onthoudt welke vakken u open heeft.',
+      'De werkopdracht toont dezelfde vakken (ingeklapt) voor die auto.',
+    ],
+  },
+  {
     version: '1.27.1', date: '2026-11-08', title: 'Wat is er nieuw',
     items: [
       'Bij Instellingen staat nu een overzicht van alle versies en wat er per versie is veranderd. Klik op het versienummer onderaan een pagina om er direct naartoe te gaan.',

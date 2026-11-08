@@ -40,6 +40,8 @@ CREATE INDEX IF NOT EXISTS import_log_day ON import_log(day);
   const cols = db.prepare('PRAGMA table_info(import_log)').all().map((c) => c.name);
   if (!cols.includes('kind')) db.exec("ALTER TABLE import_log ADD COLUMN kind TEXT NOT NULL DEFAULT ''");
   if (!cols.includes('effort')) db.exec("ALTER TABLE import_log ADD COLUMN effort TEXT NOT NULL DEFAULT ''");
+  // Kosten buiten de tokens om (bijv. zoekopdrachten op internet), in USD.
+  if (!cols.includes('extra_usd')) db.exec('ALTER TABLE import_log ADD COLUMN extra_usd REAL NOT NULL DEFAULT 0');
 }
 const ai = require('./ai');
 // Alleen foto- en Excel-imports tellen mee voor de daglimiet (aandachtspunten worden vooraf met kosten bevestigd).
@@ -58,7 +60,7 @@ function dailyLimit() {
 }
 
 function estimateUsd(row) {
-  return ai.usdOf(row.model, row.input_tokens, row.output_tokens);
+  return ai.usdOf(row.model, row.input_tokens, row.output_tokens) + (row.extra_usd || 0);
 }
 
 /** Verbruik vandaag en deze maand. */
@@ -66,7 +68,7 @@ function usage() {
   const today = orders.todayISO();
   const month = today.slice(0, 7);
   const todayCount = db.prepare(`SELECT COUNT(*) AS n FROM import_log WHERE day = ? AND ${LIMITED}`).get(today).n;
-  const rows = db.prepare("SELECT model, input_tokens, output_tokens FROM import_log WHERE day LIKE ?").all(month + '%');
+  const rows = db.prepare("SELECT model, input_tokens, output_tokens, extra_usd FROM import_log WHERE day LIKE ?").all(month + '%');
   const monthUsd = rows.reduce((sum, r) => sum + estimateUsd(r), 0);
   const limit = dailyLimit();
   return {
@@ -389,17 +391,17 @@ async function metered(userId, fn, { kind = 'foto', effort = '', limited = true 
   } catch (err) {
     if (err.usage) {
       // Wel betaald: meetellen.
-      db.prepare("UPDATE import_log SET status = 'mislukt', model = ?, input_tokens = ?, output_tokens = ? WHERE id = ?")
-        .run(err.usage.model, err.usage.input, err.usage.output, logId);
+      db.prepare("UPDATE import_log SET status = 'mislukt', model = ?, input_tokens = ?, output_tokens = ?, extra_usd = ? WHERE id = ?")
+        .run(err.usage.model, err.usage.input, err.usage.output, err.usage.extraUsd || 0, logId);
     } else {
       // Geen antwoord van de API (dus niet betaald): telt niet mee voor de limiet.
       db.prepare('DELETE FROM import_log WHERE id = ?').run(logId);
     }
     throw err;
   }
-  db.prepare("UPDATE import_log SET status = 'ok', model = ?, input_tokens = ?, output_tokens = ? WHERE id = ?")
-    .run(result.usage.model, result.usage.input, result.usage.output, logId);
-  result.usage.eur = ai.eur(ai.usdOf(result.usage.model, result.usage.input, result.usage.output));
+  db.prepare("UPDATE import_log SET status = 'ok', model = ?, input_tokens = ?, output_tokens = ?, extra_usd = ? WHERE id = ?")
+    .run(result.usage.model, result.usage.input, result.usage.output, result.usage.extraUsd || 0, logId);
+  result.usage.eur = ai.eur(ai.usdOf(result.usage.model, result.usage.input, result.usage.output) + (result.usage.extraUsd || 0));
   return result;
 }
 
