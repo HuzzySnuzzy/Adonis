@@ -230,7 +230,8 @@ let timer = null;
 function startSchedule() {
   if (timer) return;
   carryOverAfterRestore();
-  const tick = () => { if (isDue()) runBackup({ reason: 'automatisch' }).catch(() => {}); };
+  // Nooit de hele server laten vallen om een automatische backup (bijv. database al gesloten tijdens een herstart).
+  const tick = () => { try { if (isDue()) runBackup({ reason: 'automatisch' }).catch(() => {}); } catch (err) { console.log('  Automatische backup overgeslagen: ' + err.message); } };
   setTimeout(tick, 90 * 1000).unref(); // even na het starten
   timer = setInterval(tick, 10 * 60 * 1000);
   timer.unref();
@@ -292,8 +293,9 @@ async function backupPath(folder, name) {
 }
 
 function isRunning() { return !!running; }
+function stopSchedule() { if (timer) clearInterval(timer); timer = null; }
 
 module.exports = {
-  isRunning, BackupError, DEFAULT_DIR, config, saveConfig, checkFolder, createZip, runBackup, listBackups, startSchedule, health,
+  isRunning, stopSchedule, BackupError, DEFAULT_DIR, config, saveConfig, checkFolder, createZip, runBackup, listBackups, startSchedule, health,
   readBackup, stageRestore, backupPath, isDue,
 };

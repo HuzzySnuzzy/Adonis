@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.36.1', date: '2026-11-08', title: 'Beter leesbaar, en de server crasht niet meer na een update',
+    items: [
+      'Knoppen en labels die in sommige thema\'s slecht leesbaar waren, zijn opgelost: o.a. "Nieuwe werkopdracht" op het startscherm in Neon en Black Ice (nu donkere tekst op de lichte kleur), rode tellers in Donker/OLED, de voettekst en tellers in Aero, ADONIS, Licht en OLED, en de APK-datums in Neon/Black Ice. Alles is per thema nagemeten.',
+      'Server: na een live update kon de oude versie een kwartier later vastlopen (automatische backup op een gesloten database), waarna Pterodactyl de server herstartte. Opgelost: een kleine bewaker start ADONIS, opent zelf nooit de database en start na een update gewoon de nieuwe versie.',
+      'Server: het kijken naar updates gebruikt niet meer de GitHub-API (max. 60 vragen per uur, gedeeld met andere servers op hetzelfde adres), maar de gewone releasepagina. "GitHub-limiet bereikt" hoort daarmee bij het verleden.',
+    ],
+  },
+  {
     version: '1.36.0', date: '2026-11-08', title: 'Geheim thema Aero, en de app werkt zichzelf bij terwijl hij draait',
     items: [
       'Nieuw geheim thema: Aero. Doorschijnend, wazig glas in de menubalk en rond de vensters, een blauwe hemel met lichtlinten, glanzende knoppen die blauw oplichten en selecties zoals in de Verkenner, in de stijl van Windows 7. Met een eigen "Welkom" bij het opstarten.',

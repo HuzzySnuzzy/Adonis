@@ -189,10 +189,11 @@ function startServer() {
     }
   });
 
+  let liveUpdates = null;
   server.on('listening', () => {
     if (cfg.autoUpdate && cfg.updateCheckSeconds > 0 && config.isSea()) {
       // Live bijwerken: de nieuwe versie wordt gedownload terwijl deze gewoon draait; daarna kort herstarten.
-      require('./update').startLiveUpdates({ repo: cfg.updateRepo, seconds: cfg.updateCheckSeconds, log: console.log, onReady: restartForUpdate });
+      liveUpdates = require('./update').startLiveUpdates({ repo: cfg.updateRepo, seconds: cfg.updateCheckSeconds, log: console.log, onReady: restartForUpdate });
     } else {
       require('./update').startStatusChecks(cfg.updateRepo);
     }
@@ -243,6 +244,9 @@ function startServer() {
     process.removeListener('SIGTERM', stop);
     try { rl.close(); } catch { /* geen console */ } // de nieuwe start leest de console
     try { require('./tunnel').stop(); } catch { /* geen tunnel */ }
+    // Alles wat nog op de achtergrond loopt stilzetten, voordat de database dichtgaat.
+    try { require('./backup').stopSchedule(); } catch { /* geen backups */ }
+    try { if (liveUpdates) liveUpdates.stop(); } catch { /* geen updates */ }
     server.close(() => {
       try { require('./db').db.close(); } catch { /* al dicht */ }
       respawn(extraEnv);
@@ -342,7 +346,7 @@ function startServer() {
     }
     return;
   }
-  if (cfg.autoUpdate && config.isSea() && !process.env.WERKOPDRACHTEN_JUST_UPDATED) {
+  if (cfg.autoUpdate && config.isSea() && !process.env.WERKOPDRACHTEN_JUST_UPDATED && !process.env.ADONIS_SUPERVISED) {
     try {
       console.log(`  Werkopdrachten v${VERSION} – zoeken naar updates...`);
       const r = await require('./update').checkAndInstall({ repo: cfg.updateRepo, log: console.log });
@@ -352,6 +356,9 @@ function startServer() {
       console.log(`  Bijwerken overgeslagen: ${err.message}. De huidige versie wordt gestart.`);
     }
   }
+  // Het losse programma draait altijd onder een kleine "bewaker": die opent zelf geen database en heeft geen
+  // timers, en start ADONIS (opnieuw) na een update of het terugzetten van een backup.
+  if (config.isSea() && !process.env.ADONIS_SUPERVISED && !process.env.ADONIS_NO_SUPERVISOR) return supervise({});
   startServer();
 })();
 

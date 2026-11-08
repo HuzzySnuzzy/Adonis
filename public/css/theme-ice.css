@@ -15,6 +15,7 @@
 @property --ice-r { syntax: "<length>"; inherits: false; initial-value: 0px; }
 
 :root[data-theme="ice"] {
+  --on-primary: var(--accent-text); --on-danger: #1a0505;
   color-scheme: dark;
   --bg: #02040a;
   --surface: #0a0f19; --surface-2: #0e1522; --hover: rgba(127, 232, 255, .06);
@@ -450,3 +451,9 @@
 
 /* Effecten mogen nooit buiten het scherm uitsteken (anders een horizontale schuifbalk). */
 :root[data-theme="ice"], :root[data-theme="ice"] body { overflow-x: clip; }
+
+/* "Nieuwe werkopdracht" op het startscherm: donkere tekst op het lichte ijsblauw (goed leesbaar). */
+:root[data-theme="ice"] a.start-new, :root[data-theme="ice"] a.start-new:hover { color: var(--accent-text); }
+:root[data-theme="ice"] :is(.status-badge, .apk-pill) { font-size: 12.5px; }
+:root[data-theme="ice"] .apk-pill.apk-expired { color: #ffa8c4; }
+:root[data-theme="ice"] .status-open { color: #c4d6ec; }

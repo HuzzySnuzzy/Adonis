@@ -75,6 +75,38 @@ async function latestRelease(repo) {
   return body;
 }
 
+/*
+ * De nieuwste versie opvragen ZONDER de GitHub-API: github.com/<repo>/releases/latest stuurt door naar
+ * .../releases/tag/vX.Y.Z. Daar geldt de API-limiet van 60 per uur niet (die op een gedeeld serveradres,
+ * zoals bij Pterodactyl, snel vol zit). Het downloadadres van een bestand ligt vast:
+ * github.com/<repo>/releases/download/vX.Y.Z/<bestand>. Lukt de doorverwijzing niet, dan alsnog de API.
+ */
+async function latestTag(repo) {
+  const res = await fetch(`https://github.com/${repo}/releases/latest`, {
+    method: 'HEAD', redirect: 'manual', headers: { 'User-Agent': 'werkopdrachten-updater' }, signal: AbortSignal.timeout(8000),
+  });
+  if (res.status === 429) {
+    const wait = (parseInt(res.headers.get('retry-after'), 10) || 300) * 1000;
+    throw Object.assign(new RateLimited('GitHub vraagt even te wachten'), { until: Date.now() + wait });
+  }
+  const m = /\/releases\/tag\/v?(\d+\.\d+\.\d+)\b/.exec(res.headers.get('location') || '');
+  if (!m) throw new Error(`GitHub gaf geen versie terug (${res.status})`);
+  return m[1];
+}
+async function getLatest(repo) {
+  if (process.env.WERKOPDRACHTEN_UPDATE_API) return latestRelease(repo); // tests
+  let version;
+  try { version = await latestTag(repo); } catch (err) {
+    if (err instanceof RateLimited) throw err;
+    return latestRelease(repo); // terugval: de API
+  }
+  const name = assetName();
+  return {
+    tag_name: 'v' + version, published_at: null,
+    assets: name ? [{ name, size: 0, browser_download_url: `https://github.com/${repo}/releases/download/v${version}/${name}` }] : [],
+  };
+}
+
 /**
  * Zoek naar een update en installeer die.
  * @returns {Promise<{updated: boolean, version?: string, message: string}>}
@@ -85,7 +117,7 @@ async function checkAndInstall({ repo = DEFAULT_REPO, log = () => {} } = {}) {
   if (!name) return { updated: false, message: `Geen updates beschikbaar voor ${process.platform}-${process.arch}.` };
   cleanupOld();
 
-  const release = await latestRelease(repo);
+  const release = await getLatest(repo);
   return installRelease(release, { log });
 }
 
@@ -107,12 +139,16 @@ async function installRelease(release, { log = () => {} } = {}) {
     headers: { 'User-Agent': 'werkopdrachten-updater' },
     signal: AbortSignal.timeout(10 * 60 * 1000),
   });
+  // Net uitgebracht en het bestand staat er nog niet: gewoon de volgende keer opnieuw (geen fout).
+  if (res.status === 404) return { updated: false, waiting: true, message: `v${latest} wordt nog geüpload.` };
   if (!res.ok || !res.body) throw new Error(`download mislukt (${res.status})`);
+  const expected = asset.size || Number(res.headers.get('content-length')) || 0;
   await pipeline(Readable.fromWeb(res.body), fs.createWriteStream(tmp, { mode: 0o755 }));
 
   try {
     const size = fs.statSync(tmp).size;
-    if (asset.size && size !== asset.size) throw new Error(`onvolledige download (${size} van ${asset.size} bytes)`);
+    if (expected && size !== expected) throw new Error(`onvolledige download (${size} van ${expected} bytes)`);
+    if (size < 10 * 1024 * 1024 && !process.env.WERKOPDRACHTEN_UPDATE_API) throw new Error(`download te klein (${size} bytes)`);
     fs.chmodSync(tmp, 0o755);
     // Controleren dat het nieuwe programma echt start en de verwachte versie is.
     const reported = execFileSync(tmp, ['--version'], {
@@ -147,10 +183,10 @@ const status = { state: 'onbekend', latest: null, latestDate: null, checkedAt: n
 /** Alleen kijken of er een nieuwere versie is (niets downloaden). */
 async function checkStatus(repo = DEFAULT_REPO) {
   try {
-    const release = await latestRelease(repo);
+    const release = await getLatest(repo);
     const latest = String(release.tag_name || '').replace(/^v/, '');
     status.latest = latest || null;
-    status.latestDate = release.published_at ? String(release.published_at).slice(0, 10) : null;
+    status.latestDate = release.published_at ? String(release.published_at).slice(0, 10) : status.latestDate;
     status.state = latest && compareVersions(latest, VERSION) > 0 ? 'update' : 'actueel';
   } catch {
     status.state = 'offline';
@@ -184,10 +220,10 @@ function startLiveUpdates({ repo = DEFAULT_REPO, seconds = 15, log = console.log
     busy = true;
     let wait = every;
     try {
-      const release = await latestRelease(repo);
+      const release = await getLatest(repo);
       const latest = String(release.tag_name || '').replace(/^v/, '');
       status.latest = latest || null;
-      status.latestDate = release.published_at ? String(release.published_at).slice(0, 10) : null;
+      status.latestDate = release.published_at ? String(release.published_at).slice(0, 10) : status.latestDate;
       status.state = latest && compareVersions(latest, VERSION) > 0 ? 'update' : 'actueel';
       status.checkedAt = new Date();
       lastError = '';
@@ -223,4 +259,4 @@ function getStatus() {
   return status;
 }
 
-module.exports = { checkAndInstall, installRelease, compareVersions, assetName, DEFAULT_REPO, checkStatus, startStatusChecks, startLiveUpdates, getStatus };
+module.exports = { checkAndInstall, installRelease, getLatest, compareVersions, assetName, DEFAULT_REPO, checkStatus, startStatusChecks, startLiveUpdates, getStatus };

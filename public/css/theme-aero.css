@@ -103,7 +103,8 @@
 :root[data-theme="aero"] .mainnav a.active { color: #000; border-color: rgba(30, 60, 100, .45); background: linear-gradient(180deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, .3) 50%, rgba(220, 240, 255, .2) 51%, rgba(255, 255, 255, .45)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7), 0 0 12px rgba(255, 255, 255, .5); }
 :root[data-theme="aero"] .iconbtn, :root[data-theme="aero"] :is(.usernav .username, .topbar .linkbtn, .help-link) { color: #0b1f3a; }
 :root[data-theme="aero"] .iconbtn:hover { color: #000; background: rgba(255, 255, 255, .4); }
-:root[data-theme="aero"] .nav-count { background: #3399ff; color: #fff; box-shadow: 0 0 6px rgba(51, 153, 255, .8); }
+:root[data-theme="aero"] .nav-count { background: #0b5cb8; color: #fff; box-shadow: 0 0 6px rgba(51, 153, 255, .8); }
+:root[data-theme="aero"] .nav-count.is-high { background: #b3261e; }
 
 /* ---------- Vensters (kaarten, lijsten, dialogen) ---------- */
 :root[data-theme="aero"] :where(.card, .rdw-card, .customer-head, .table-wrap, .empty, .auth-card, .apk-box, .review-block, .bl-box, .va-specs > div, .start-stat, .start-page .start-tile) {
@@ -170,7 +171,7 @@
 /* ---------- Startscherm ---------- */
 :root[data-theme="aero"] .start-new {
   border-radius: 6px; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .4);
-  background: var(--gloss), linear-gradient(120deg, #2b85dc, #1f6fc5 60%, #155aa6);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .22) 0%, rgba(255, 255, 255, .06) 49%, rgba(255, 255, 255, 0) 50%), linear-gradient(120deg, #1d6fc2, #1a5fae 60%, #134c8f);
   border: 1px solid #0b4b8f; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45), 0 0 0 6px rgba(185, 215, 245, .5), 0 12px 30px rgba(0, 30, 80, .4);
 }
 :root[data-theme="aero"] .start-new:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6), 0 0 0 6px rgba(200, 228, 255, .7), 0 0 26px rgba(120, 190, 255, .9); }
@@ -182,8 +183,8 @@
 :root[data-theme="aero"] :is(.order-toolbar, .review-bar) { -webkit-backdrop-filter: blur(12px) saturate(1.5); backdrop-filter: blur(12px) saturate(1.5); border-bottom: 1px solid var(--glass-edge); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); }
 
 /* ---------- Voettekst: glazen taakbalk ---------- */
-:root[data-theme="aero"] .app-footer { color: #fff; text-shadow: 0 0 6px rgba(0, 20, 50, .8); }
-:root[data-theme="aero"] .app-footer a { color: #fff; }
+:root[data-theme="aero"] .app-footer { color: #0b1f3a; text-shadow: 0 0 8px #fff, 0 0 3px #fff, 0 0 1px #fff; }
+:root[data-theme="aero"] .app-footer a { color: #0b1f3a; }
 
 /* ---------- Themamenu ---------- */
 :root[data-theme="aero"] :is(.theme-item, .theme-fx-item) { border-radius: 3px; border: 1px solid transparent; }
