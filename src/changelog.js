@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.28.1', date: '2026-11-08', title: 'APK-aandachtspunten vanaf de APK-lijst',
+    items: [
+      'Op de APK-lijst staat een knop om de APK-aandachtspunten op te zoeken voor alle automodellen in de getoonde lijst (beheerders). Modellen die al zijn opgezocht worden overgeslagen; u ziet vooraf wat het kost en daarna de voortgang.',
+      'In de APK-lijst staat bij een klant hoeveel APK-punten er voor dat model bekend zijn, met een link naar de klant.',
+    ],
+  },
+  {
     version: '1.28.0', date: '2026-11-08', title: 'APK-aandachtspunten per automodel en inklapbare vakken',
     items: [
       'Nieuw op de klantpagina: APK-aandachtspunten voor het model van de auto. Claude zoekt op internet de bekende zwakke plekken op (bijv. waar het model roest, gordels, ophanging), met bronnen.',

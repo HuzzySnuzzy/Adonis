@@ -47,6 +47,12 @@ module.exports = function register(app, { flash, wrap }) {
       const n = modelBulletins.customersWith(m.key);
       detail = `Bekende zwakke plekken en APK-afkeurpunten van de ${m.label} opzoeken op internet, met bronnen.`
         + (n > 1 ? ` Het resultaat geldt voor alle ${n} klanten met deze auto.` : ' Het resultaat geldt ook voor latere klanten met dezelfde auto.');
+    } else if (taak === 'apk-modellen') {
+      const todo = modelBulletins.missingModels(apkCustomers(req));
+      if (!todo.length) return res.status(400).json({ error: 'Alle automodellen in deze lijst zijn al opgezocht.' });
+      levels = modelBulletins.estimate().map((l) => ({ ...l, eurMin: l.eurMin * todo.length, eurMax: l.eurMax * todo.length, seconds: Math.round(l.seconds * todo.length / 2) }));
+      detail = `Voor ${todo.length} automodel${todo.length === 1 ? '' : 'len'} uit deze lijst de bekende zwakke plekken en APK-afkeurpunten opzoeken op internet. `
+        + 'Modellen die al zijn opgezocht, worden overgeslagen. Het resultaat geldt voor alle klanten met die auto.';
     } else if (taak === 'alle') {
       const todo = bulletins.staleCustomers();
       if (!todo.length) return res.status(400).json({ error: 'Alle klanten met werkopdrachten zijn al geanalyseerd en er is niets nieuws.' });
@@ -59,6 +65,30 @@ module.exports = function register(app, { flash, wrap }) {
       detail, aanbevolen,
       levels: levels.map((l) => ({ ...l, prijs: '≈ ' + ai.formatRange(l.eurMin, l.eurMax), tijd: l.seconds < 90 ? `± ${Math.max(5, Math.round(l.seconds / 5) * 5)} seconden` : `± ${Math.round(l.seconds / 60)} minuten` })),
     });
+  });
+
+  // Klanten in de getoonde APK-lijst (zelfde tabbladen als op /apk).
+  function apkCustomers(req) {
+    const rows = req.app.get('apkRows')();
+    const toon = ['verlopen', 'binnenkort', 'alles'].includes(req.query.toon || req.body.toon) ? (req.query.toon || req.body.toon) : 'binnenkort';
+    const pick = { verlopen: (r) => r.days < 0, binnenkort: (r) => r.days <= 60 && r.days >= -7, alles: () => true }[toon];
+    return rows.filter(pick);
+  }
+  app.post('/apk/modelpunten', auth.requireAdmin, (req, res) => {
+    try {
+      const st = modelBulletins.startAll(apkCustomers(req), {
+        effort: req.body.effort, userId: req.user.id,
+        onProgress: (job) => { if (!job.running) events.broadcast({ type: 'data', area: 'apk' }); },
+      });
+      res.json({ ok: true, job: st });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  app.post('/apk/modelpunten/stoppen', auth.requireAdmin, (req, res) => { modelBulletins.stopAll(); res.json({ ok: true }); });
+  app.get('/apk/modelpunten/taak', (req, res) => {
+    const job = modelBulletins.jobStatus();
+    res.json({ job: job && { ...job, eurText: ai.formatEur(job.eur) } });
   });
 
   /* ================= aandachtspunten ================= */

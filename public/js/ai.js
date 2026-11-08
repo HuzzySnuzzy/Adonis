@@ -105,10 +105,11 @@
     if (!btn) return;
     e.preventDefault();
     const taak = btn.dataset.aiTask;
-    const effort = await choose({ taak, params: btn.dataset.aiId ? { id: btn.dataset.aiId } : {}, title: btn.dataset.aiTitle || 'Claude' });
+    const extra = Object.fromEntries(new URLSearchParams(btn.dataset.aiParams || ''));
+    const effort = await choose({ taak, params: { ...(btn.dataset.aiId ? { id: btn.dataset.aiId } : {}), ...extra }, title: btn.dataset.aiTitle || 'Claude' });
     if (!effort) return;
     if (btn.hasAttribute('data-ai-bulk')) {
-      const res = await fetch(btn.dataset.aiAction, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json', 'X-CSRF-Token': csrf }, body: new URLSearchParams({ effort }) });
+      const res = await fetch(btn.dataset.aiAction, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json', 'X-CSRF-Token': csrf }, body: new URLSearchParams({ effort, ...extra }) });
       const r = await res.json().catch(() => ({}));
       if (!res.ok) { alert(r.error || 'Starten lukte niet.'); return; }
       pollJob();
@@ -151,7 +152,9 @@
     polling = true;
     try {
       for (;;) {
-        const r = await (await fetch('/aandachtspunten/taak', { credentials: 'same-origin' })).json();
+        const base = jobBox.dataset.aiJobUrl || '/aandachtspunten';
+        const what = jobBox.dataset.aiJobWhat || 'klanten';
+        const r = await (await fetch(base + '/taak', { credentials: 'same-origin' })).json();
         const j = r.job;
         if (!j) { jobBox.hidden = true; break; }
         jobBox.hidden = false;
@@ -159,15 +162,15 @@
         jobBox.replaceChildren();
         const t = document.createElement('div');
         t.textContent = j.running
-          ? `✨ Claude analyseert klanten: ${j.done} van ${j.total} (${j.points} aandachtspunten, tot nu toe ${j.eurText}).`
-          : `✨ Klaar: ${j.done} klant${j.done === 1 ? '' : 'en'} geanalyseerd, ${j.points} aandachtspunten gevonden (kosten ${j.eurText})${j.failed ? `, ${j.failed} mislukt` : ''}${j.stop && j.done < j.total ? ' – gestopt' : ''}.`;
+          ? `✨ Claude is bezig: ${j.done} van ${j.total} ${what} (${j.points} aandachtspunten, tot nu toe ${j.eurText}).`
+          : `✨ Klaar: ${j.done} ${what} gedaan, ${j.points} aandachtspunten gevonden (kosten ${j.eurText})${j.failed ? `, ${j.failed} mislukt` : ''}${j.stop && j.done < j.total ? ' – gestopt' : ''}${j.web === false ? ' – zonder internetbronnen (web search staat niet aan)' : ''}.`;
         const bar = document.createElement('div'); bar.className = 'ai-job-bar';
         const fill = document.createElement('i'); fill.style.width = pct + '%'; bar.append(fill);
         jobBox.append(t, bar);
         if (j.running) {
           const stop = document.createElement('button');
           stop.className = 'btn btn-small'; stop.type = 'button'; stop.textContent = 'Stoppen';
-          stop.addEventListener('click', () => fetch('/aandachtspunten/stoppen', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': csrf } }));
+          stop.addEventListener('click', () => fetch(base + '/stoppen', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': csrf } }));
           jobBox.append(stop);
         } else if (j.errors && j.errors.length) {
           const p = document.createElement('p'); p.className = 'muted small'; p.textContent = 'Laatste fout: ' + j.errors[j.errors.length - 1]; jobBox.append(p);

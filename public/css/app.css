@@ -1470,3 +1470,7 @@ details.bl-item[open] > summary::after { content: "▴"; }
 .bl-sources li { margin: .15rem 0; }
 .order-bulletins.bl-boxes { margin-top: .6rem; }
 @media (max-width: 760px) { .bl-summary { padding: .65rem .8rem; } .bl-body { padding: .6rem .8rem .8rem; } .bl-sum-preview { flex-basis: 100%; white-space: normal; } }
+
+.apk-model-chip { display: inline-block; margin-top: .2rem; font-size: .78rem; padding: .05rem .45rem; border-radius: 4px; text-decoration: none;
+  background: var(--warn-bg); color: var(--warn-text); border: 1px solid var(--warn-border); }
+.apk-model-chip:hover { text-decoration: underline; }

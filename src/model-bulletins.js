@@ -195,4 +195,47 @@ function customersWith(key) {
   return db.prepare('SELECT id, kenteken, merk_type, rdw_json FROM customers').all().filter((c) => { const m = modelOf(c); return m && m.key === key; }).length;
 }
 
-module.exports = { ModelBulletinError, modelOf, get, estimate, analyze, customersWith, SEARCHES };
+/** Unieke modellen van deze klanten die nog niet zijn opgezocht (één klant per model om het mee op te zoeken). */
+function missingModels(customers) {
+  const out = new Map();
+  for (const c of customers) {
+    const m = modelOf(c);
+    if (!m || out.has(m.key)) continue;
+    if (db.prepare('SELECT 1 FROM model_bulletins WHERE key = ?').get(m.key)) continue;
+    out.set(m.key, c);
+  }
+  return [...out.values()];
+}
+
+/* ---------- alle modellen van een lijst (op de achtergrond) ---------- */
+let job = null;
+function jobStatus() { return job ? { ...job, errors: job.errors.slice(-5) } : null; }
+function startAll(customers, { effort = 'normaal', userId = null, onProgress = () => {} } = {}) {
+  if (job && job.running) throw new ModelBulletinError('Er worden al APK-aandachtspunten opgezocht.');
+  if (!importer.isConfigured()) throw new ModelBulletinError('Claude is niet ingesteld: vul anthropic-api-key in config.properties in.');
+  const todo = missingModels(customers);
+  if (!todo.length) throw new ModelBulletinError('Alle modellen in deze lijst zijn al opgezocht.');
+  job = { running: true, total: todo.length, done: 0, failed: 0, points: 0, eur: 0, effort: ai.level(effort), startedAt: new Date().toISOString(), errors: [], stop: false, web: true };
+  const current = job;
+  const worker = async () => {
+    while (todo.length && !current.stop) {
+      const c = todo.shift();
+      try {
+        const r = await analyze(c, { effort: current.effort, userId });
+        current.points += r.count; current.eur += r.eur; if (!r.web) current.web = false;
+      } catch (err) {
+        current.failed++;
+        current.errors.push(`${(modelOf(c) || {}).label || c.kenteken}: ${err.message}`);
+        if (err.usage) current.eur += ai.eur(ai.usdOf(err.usage.model, err.usage.input, err.usage.output) + (err.usage.extraUsd || 0));
+        if (/API-sleutel|tegoed/i.test(err.message)) current.stop = true;
+      }
+      current.done++;
+      onProgress(current);
+    }
+  };
+  Promise.all([worker(), worker()]).finally(() => { current.running = false; onProgress(current); });
+  return jobStatus();
+}
+function stopAll() { if (job && job.running) job.stop = true; }
+
+module.exports = { ModelBulletinError, modelOf, get, estimate, analyze, customersWith, missingModels, startAll, stopAll, jobStatus, SEARCHES };

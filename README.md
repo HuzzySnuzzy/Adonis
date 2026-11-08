@@ -127,6 +127,8 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   dus gedeeld door alle klanten met die auto. Staat web search niet aan voor de API-sleutel, dan zonder bronnen (met
   melding). Zoekkosten ($10 per 1000 zoekopdrachten) tellen mee in de schatting en het verbruik.
   Aandachtspunten en APK-punten staan in **inklapbare vakken** (open/dicht wordt onthouden).
+  Op de **APK-lijst** zoekt een knop (beheerders) de punten op voor alle modellen in het getoonde tabblad die nog niet
+  zijn opgezocht; per klant staat dan "n APK-punten voor dit model".
 - **Inspanning kiezen met kostenschatting:** voor elke Claude-taak (foto-import, Excel-import, aandachtspunten) kiest de
   gebruiker eerst *Snel / Normaal / Grondig* (API-effort low/medium/high) en ziet vooraf een schatting in euro's en de
   duur. De werkelijke kosten staan daarna in de melding en bij Systeem. Aandachtspunten tellen niet mee voor de daglimiet

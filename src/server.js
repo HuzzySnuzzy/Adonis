@@ -382,6 +382,7 @@ function apkRows() {
     return { ...c, days, called: c.apk_gebeld_voor === c.apk_vervaldatum ? c.apk_gebeld : null };
   });
 }
+app.set('apkRows', apkRows); // ook voor "APK-aandachtspunten opzoeken" (ai-routes)
 app.get('/apk', (req, res) => {
   const show = ['verlopen', 'binnenkort', 'alles'].includes(req.query.toon) ? req.query.toon : 'binnenkort';
   const all = apkRows();
@@ -389,7 +390,9 @@ app.get('/apk', (req, res) => {
   const list = all.filter(pick).sort((a, b) => (a.called ? 1 : 0) - (b.called ? 1 : 0) || a.days - b.days);
   const waiting = db.prepare('SELECT kenteken FROM customers WHERE rdw_at IS NULL').all().filter((c) => plates.rdwApplicable(c.kenteken)).length;
   res.render('apk', {
-    title: 'APK-lijst', show, list, waiting,
+    title: 'APK-lijst', show, list, waiting, aiConfigured: importer.isConfigured(),
+    // Per klant: zijn de APK-aandachtspunten van dit model al opgezocht?
+    modelPoints: Object.fromEntries(list.map((r) => { const g = require('./model-bulletins').get(r); return [r.id, g.data ? g.data.items : null]; })),
     counts: { verlopen: all.filter((r) => r.days < 0).length, binnenkort: all.filter((r) => r.days <= 60 && r.days >= -7).length, alles: all.length },
   });
 });

@@ -10,11 +10,18 @@
       <p class="muted small">Klanten van wie de APK binnenkort verloopt (of al verlopen is), volgens de RDW. Bel ze en klik op
         <b>Gebeld</b>; zo ziet iedereen wie al gebeld is. Nog niet gebelde klanten en de vroegste datums staan bovenaan.</p>
     </div>
-    <div class="head-buttons"><button class="btn" type="button" data-print>Afdrukken</button></div>
+    <div class="head-buttons">
+      <% if (user.is_admin && aiConfigured) { %>
+      <button class="btn" type="button" data-ai-task="apk-modellen" data-ai-params="toon=<%= show %>" data-ai-action="/apk/modelpunten" data-ai-bulk
+        data-ai-title="APK-aandachtspunten voor de automodellen in deze lijst">✨ APK-aandachtspunten opzoeken (Claude)</button>
+      <% } %>
+      <button class="btn" type="button" data-print>Afdrukken</button>
+    </div>
   </div>
   <nav class="kind-tabs" aria-label="Lijst">
     <% for (const [k, label] of tabs) { %><a href="/apk<%= k === 'binnenkort' ? '' : '?toon=' + k %>" class="<%= show === k ? 'active' : '' %>"><%= label %> <span class="count"><%= counts[k] %></span></a><% } %>
   </nav>
+  <div class="ai-job no-print" data-ai-job data-ai-job-url="/apk/modelpunten" data-ai-job-what="automodellen" hidden></div>
   <% if (waiting) { %><p class="muted small">Van <%= waiting %> klant<%= waiting === 1 ? '' : 'en' %> worden de RDW-gegevens nog op de achtergrond opgehaald; die komen er vanzelf bij.</p><% } %>
   <div id="live-apk" data-live>
   <% if (!list.length) { %>
@@ -28,7 +35,8 @@
       <% for (const r of list) { const a = apkStatus(r.apk_vervaldatum); const tel = r.tel_prive || r.tel_zaak; %>
         <tr data-href="/klant/<%= r.id %>" class="<%= r.called ? 'is-called' : '' %>">
           <td><%- include('/partials/plate', { kenteken: r.kenteken }) %></td>
-          <td><a href="/klant/<%= r.id %>"><%= r.naam || 'klant' %></a><% if (r.merk_type) { %><br><span class="muted small"><%= r.merk_type %></span><% } %></td>
+          <td><a href="/klant/<%= r.id %>"><%= r.naam || 'klant' %></a><% if (r.merk_type) { %><br><span class="muted small"><%= r.merk_type %></span><% } %>
+            <% const mp = modelPoints[r.id]; if (mp && mp.length) { %><br><a class="apk-model-chip" href="/klant/<%= r.id %>#apk-model" title="Bekende zwakke plekken van dit model: <%= mp.map((p) => p.onderdeel).join(', ') %>"><%= mp.length %> APK-punt<%= mp.length === 1 ? '' : 'en' %> voor dit model</a><% } %></td>
           <td class="nowrap"><% if (tel) { %><a href="tel:<%= tel.replace(/[^\d+]/g, '') %>"><%= tel %></a><% } else { %><span class="muted small">geen nummer</span><% } %></td>
           <td class="nowrap"><span class="apk-pill apk-<%= a.cls %>"><%= fmtDate(r.apk_vervaldatum) %></span><br><span class="muted small"><%= a.rel %></span></td>
           <td class="nowrap"><%= r.laatste ? fmtDate(r.laatste) : '' %></td>
@@ -48,4 +56,5 @@
   </div>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/ai.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>
