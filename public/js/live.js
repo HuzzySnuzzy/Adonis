@@ -63,6 +63,7 @@
             el.classList.add('live-flash');
           }
         });
+        document.dispatchEvent(new Event('adonis:swapped'));
       } catch { /* volgende keer beter */ }
     }, 300);
   }

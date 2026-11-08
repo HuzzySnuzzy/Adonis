@@ -136,6 +136,8 @@ app.use((req, res, next) => {
   // De ADONIS-app (Windows) zet "ADONIS-app/<versie>" in de user-agent.
   res.locals.inApp = /ADONIS-app\//.test(req.get('user-agent') || '');
   res.locals.url = req.originalUrl;
+  // Lange lijsten: eerst PAGE regels, met "Meer tonen" (?n=...).
+  res.locals.shownLimit = Math.min(Math.max(parseInt(req.query.n, 10) || PAGE, PAGE), 10000);
   res.locals.appInfo = {
     ...buildinfo,
     update: updater.getStatus(),
@@ -181,6 +183,13 @@ function apkStatus(iso) {
       : `over ${(days / 365).toFixed(1).replace('.', ',')} jaar`;
   return { cls: days < 0 ? 'expired' : days <= 60 ? 'soon' : 'ok', days, rel };
 }
+const PAGE = 100;
+/** Link naar dezelfde lijst met meer regels (n). */
+app.locals.moreUrl = (url, n) => {
+  const u = new URL(url, 'http://x');
+  u.searchParams.set('n', String(n));
+  return u.pathname + u.search;
+};
 app.locals.apkStatus = apkStatus;
 app.locals.rdwUrl = rdw.rdwUrl;
 app.locals.rdwMerkType = rdw.merkType;
@@ -312,6 +321,11 @@ app.get('/', (req, res) => {
     ).all(pkey, likeTerm(pkey), term, term, term, term, term);
   } else {
     rows = db.prepare(`${base} GROUP BY c.id ORDER BY c.plate_key LIMIT 2000`).all();
+  }
+  // Precies één klant met dit kenteken? Dan meteen naar die klant (niet bij live zoeken tijdens het typen).
+  if (q && !req.get('X-Live-Refresh')) {
+    const exact = rows.filter((c) => c.plate_key && c.plate_key === plateKey(q));
+    if (exact.length === 1) return res.redirect(`/klant/${exact[0].id}`);
   }
   res.render('customers', { title: 'Klanten', q, customers: rows });
 });

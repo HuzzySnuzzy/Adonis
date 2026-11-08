@@ -186,7 +186,7 @@ module.exports = function register(app, { flash, wrap }) {
       // Voorbeeldfoto per soort onderdeel: al bekend (meteen tonen), "zoeken" (de pagina haalt hem op) of niets.
       partSamples: soort === 'onderdeel' && req.user.prefs.partimg !== 'off' ? (() => {
         const out = {};
-        for (const t of new Set(items.map((i) => i.type).filter(Boolean))) {
+        for (const t of new Set(items.slice(0, res.locals.shownLimit).map((i) => i.type).filter(Boolean))) {
           const hit = carimage.cachedPart(t);
           out[t] = hit ? hit : carimage.partTarget(t) ? 'zoeken' : null;
         }

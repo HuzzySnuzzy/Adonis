@@ -1218,3 +1218,38 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 .theme-name-vcds { font-family: Tahoma, "MS Sans Serif", Verdana, sans-serif; font-weight: 700; }
 /* Inloggen: het vinkje niet uitrekken over de hele breedte */
 .auth-card input[type=checkbox] { display: inline-block; width: auto; margin: 0; flex: 0 0 auto; }
+
+/* ---------- Laptop (tot 1500 px breed): menubalk op één rij ----------
+   Naam en "Uitloggen" worden pictogrammen (met uitleg bij aanwijzen), de knop heet "+ Nieuw". */
+@media (min-width: 761px) and (max-width: 1499px) {
+  .topbar { gap: .6rem; padding-left: .8rem; padding-right: .8rem; }
+  .mainnav { gap: .1rem; }
+  .mainnav a { padding: .4rem .55rem; }
+  .usernav { gap: .65rem; }
+  .usernav .uname { display: none; }
+  .nw-long, .lo-text { display: none; }
+  .nw-short { display: inline; }
+  .lo-icon { display: block; }
+  .logout-btn { display: inline-flex; align-items: center; padding: 4px; text-decoration: none; }
+  .new-order-btn { padding-left: .8rem; padding-right: .8rem; }
+}
+@media (min-width: 761px) and (max-width: 1180px) {
+  .logo-sub { display: none; }
+}
+/* Eenvoudige weergave: minder menu-items, dus woorden in plaats van pictogrammen. */
+@media (min-width: 761px) and (max-width: 1499px) {
+  :root[data-simple="on"] .usernav .uname, :root[data-simple="on"] .lo-text, :root[data-simple="on"] .nw-long { display: inline; }
+  :root[data-simple="on"] .lo-icon, :root[data-simple="on"] .nw-short { display: none; }
+  :root[data-simple="on"] .logout-btn { text-decoration: underline; }
+}
+
+/* ---------- Lange lijsten: "Meer tonen" ---------- */
+.more-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .6rem 1rem; margin: 1rem 0 .4rem; }
+/* Zoeken tijdens typen: kort zichtbaar dat de lijst wordt bijgewerkt */
+form[role="search"].is-searching input[name="q"] {
+  background-image: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 25%, transparent), transparent);
+  background-size: 40% 2px; background-repeat: no-repeat; background-position: -40% 100%;
+  animation: search-busy .8s linear infinite;
+}
+@keyframes search-busy { to { background-position: 140% 100%; } }
+@media (prefers-reduced-motion: reduce) { form[role="search"].is-searching input[name="q"] { animation: none; } }

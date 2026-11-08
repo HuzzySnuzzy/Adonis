@@ -19,8 +19,63 @@ document.addEventListener('change', (e) => {
 // dat meteen het toetsenbord (en de wachtwoordbalk) openen.
 if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
   const el = document.querySelector('[data-autofocus]');
-  if (el) el.focus();
+  if (el) {
+    el.focus();
+    try { el.setSelectionRange(el.value.length, el.value.length); } catch { /* geen tekstveld */ }
+  }
 }
+// Zoeken terwijl je typt: de lijst eronder wordt meteen bijgewerkt (Enter of "Zoeken" werkt ook nog).
+// Alleen de delen met data-live worden vervangen; het zoekveld zelf blijft staan, met de cursor erin.
+(function () {
+  document.querySelectorAll('form[role="search"]').forEach((form) => {
+    const input = form.querySelector('input[name="q"]');
+    if (!input || !document.querySelector('[data-live]')) return;
+    let timer = null;
+    let ctrl = null;
+    let last = input.value.trim();
+    const run = async () => {
+      const q = input.value.trim();
+      if (q === last) return;
+      last = q;
+      const params = new URLSearchParams(new FormData(form));
+      if (!q) params.delete('q');
+      const url = form.getAttribute('action') + (params.toString() ? '?' + params : '');
+      if (ctrl) ctrl.abort();
+      ctrl = new AbortController();
+      form.classList.add('is-searching');
+      try {
+        const res = await fetch(url, { headers: { 'X-Live-Refresh': '1' }, credentials: 'same-origin', signal: ctrl.signal });
+        if (!res.ok || res.redirected) return;
+        const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+        document.querySelectorAll('[data-live]').forEach((el) => {
+          const fresh = doc.getElementById(el.id);
+          if (fresh) el.innerHTML = fresh.innerHTML;
+        });
+        // "Wissen"-knop en andere delen van het zoekformulier gelijk houden
+        const freshForm = doc.querySelector('form[role="search"]');
+        const wipe = form.querySelector('a.btn-ghost');
+        const freshWipe = freshForm && freshForm.querySelector('a.btn-ghost');
+        if (wipe && !freshWipe) wipe.remove();
+        else if (!wipe && freshWipe) form.append(freshWipe);
+        history.replaceState(history.state, '', url);
+        window.dispatchEvent(new Event('resize')); // schaduw bij brede tabellen opnieuw bepalen
+        document.dispatchEvent(new Event('adonis:swapped'));
+      } catch { /* afgebroken of geen verbinding: Enter werkt nog steeds */ }
+      finally { form.classList.remove('is-searching'); }
+    };
+    input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 250); });
+  });
+})();
+// Toets "/" springt naar het zoekveld (als je niet al aan het typen bent).
+document.addEventListener('keydown', (e) => {
+  if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;
+  const box = document.querySelector('form[role="search"] input[name="q"], .start-search input');
+  if (!box) return;
+  e.preventDefault();
+  box.focus();
+  box.select();
+});
 // Telefoon: het actieve menu-item in beeld schuiven (het menu is daar één rij om door te vegen).
 (function () {
   const nav = document.querySelector('.mainnav');
@@ -163,9 +218,8 @@ document.addEventListener('click', async (e) => {
 });
 // Voorraad: voorbeeldfoto per soort onderdeel ophalen (Wikipedia, via de eigen server). Elke soort maar één keer.
 (function () {
-  const cells = [...document.querySelectorAll('td[data-parttype]')];
   const fig = document.querySelector('figure.part-sample[data-fetch]');
-  if ((!cells.length && !fig) || !window.fetch) return;
+  if (!window.fetch) return;
   const cache = new Map();
   const get = (type) => {
     if (!cache.has(type)) {
@@ -185,6 +239,12 @@ document.addEventListener('click', async (e) => {
         if (r.fileUrl) fig.querySelector('[data-sample-file]').href = r.fileUrl;
       }
     }
+    await fillList();
+  })();
+  // Ook na zoeken-tijdens-typen of een live verversing (nieuwe rijen).
+  document.addEventListener('adonis:swapped', () => fillList());
+  async function fillList() {
+    const cells = [...document.querySelectorAll('td[data-parttype]')].filter((td) => !td.querySelector('img'));
     // Lijst: soorten één voor één (vriendelijk voor Wikipedia), met de meest voorkomende eerst.
     const counts = new Map();
     cells.forEach((td) => counts.set(td.dataset.parttype, (counts.get(td.dataset.parttype) || 0) + 1));
@@ -202,7 +262,7 @@ document.addEventListener('click', async (e) => {
         td.append(span);
       });
     }
-  })();
+  }
 })();
 // Voorbeeldfoto van een onderdeel klopt niet: voor deze soort niet meer tonen.
 document.addEventListener('click', async (e) => {

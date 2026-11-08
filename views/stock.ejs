@@ -69,7 +69,7 @@
         <th>Locatie</th>
       </tr></thead>
       <tbody>
-      <% for (const i of items) { %>
+      <% for (const i of items.slice(0, shownLimit)) { %>
         <tr data-href="/voorraad/<%= i.id %>" class="<%= !i.beschikbaar || i.aantal === 0 ? 'is-out' : '' %>">
           <% const ph = fotos.get(i.id); const sample = !ph && i.type ? partSamples[i.type] : null; %>
           <td class="ph-col"<%- sample === 'zoeken' ? ` data-parttype="${esc(i.type)}"` : '' %>><% if (ph) { %><a href="/fotos/<%= ph.id %>/full" data-photo-open class="ph-thumb"><img src="/fotos/<%= ph.id %>/thumb" alt="" loading="lazy"><% if (ph.n > 1) { %><span class="ph-n"><%= ph.n %></span><% } %></a><% } else if (sample && sample.ok) { %><span class="ph-thumb ph-sample" title="Voorbeeld: <%= sample.title %> (Wikipedia)"><img src="<%= sample.img %>" alt="" loading="lazy"></span><% } %></td>
@@ -93,6 +93,7 @@
       </tbody>
     </table>
     </div>
+    <%- include('/partials/more', { shown: Math.min(shownLimit, items.length), total: items.length }) %>
   <% } %>
   </div>
 </main>

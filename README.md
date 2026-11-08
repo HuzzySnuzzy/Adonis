@@ -101,6 +101,11 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   in het formulier, startpagina na inloggen en wachtwoord wijzigen. Elke gebruiker heeft eigen instellingen, op elk
   apparaat. Met de knop naast *Nieuwe werkopdracht* wissel je snel van thema. Afdrukken is altijd licht.
 
+- **Snel zoeken:** de lijsten (Klanten, Werkopdrachten, Bandenhotel, Voorraad) worden al bijgewerkt terwijl je typt.
+  Een volledig kenteken + Enter opent meteen die klant. De toets `/` springt naar het zoekvak. Lange lijsten tonen eerst
+  100 regels, met *Meer tonen* / *Alles tonen*. Op een laptop past de menubalk op één rij (naam en uitloggen als pictogram;
+  in de eenvoudige weergave blijven het woorden).
+
 Sneltoetsen in het formulier: `Ctrl+S` slaat op, `Enter` springt naar het volgende vak.
 
 ## Installeren – één bestand

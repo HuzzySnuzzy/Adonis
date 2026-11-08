@@ -30,7 +30,7 @@
     <table class="list clickable">
       <thead><tr><th>Kenteken</th><th>Naam</th><th>Merk/Type</th><th>Plaats</th><th>APK</th><th>Banden</th><th class="num">Opdrachten</th><th>Laatste bezoek</th></tr></thead>
       <tbody>
-      <% for (const c of customers) { %>
+      <% for (const c of customers.slice(0, shownLimit)) { %>
         <tr data-href="/klant/<%= c.id %>">
           <td><a href="/klant/<%= c.id %>"><%- include('/partials/plate', { kenteken: c.kenteken }) %></a></td>
           <td><%= c.naam %></td>
@@ -45,6 +45,7 @@
       </tbody>
     </table>
     </div>
+    <%- include('/partials/more', { shown: Math.min(shownLimit, customers.length), total: customers.length }) %>
   <% } %>
   </div>
 </main>

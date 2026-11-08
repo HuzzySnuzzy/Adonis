@@ -1,0 +1,8 @@
+<%# "Meer tonen" onder een lange lijst. Verwacht: shown, total. %>
+<% if (total > shown) { %>
+<div class="more-row no-print">
+  <span class="muted"><%= shown %> van de <%= total %> getoond</span>
+  <a class="btn" href="<%= moreUrl(url, shown + 200) %>">Meer tonen</a>
+  <a class="btn btn-ghost" href="<%= moreUrl(url, 10000) %>">Alles tonen (<%= total %>)</a>
+</div>
+<% } %>

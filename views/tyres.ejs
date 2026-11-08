@@ -69,7 +69,8 @@
   <% } else { %>
     <p class="muted"><%= tyres.length %> set<%= tyres.length === 1 ? '' : 's' %><%= q || seizoen || locatie ? ' gevonden' : '' %>
       <span class="tread-legend">· profiel: <span class="tread tread-ok">ok</span> <span class="tread tread-warn">bijna op</span> <span class="tread tread-bad">te weinig</span></span></p>
-    <%- include('/partials/tyrelist', { tyres, showPlate: true, showStatus: status !== 'opgeslagen' }) %>
+    <%- include('/partials/tyrelist', { tyres: tyres.slice(0, shownLimit), showPlate: true, showStatus: status !== 'opgeslagen' }) %>
+    <%- include('/partials/more', { shown: Math.min(shownLimit, tyres.length), total: tyres.length }) %>
   <% } %>
   </div>
 </main>
