@@ -49,7 +49,8 @@ function estimate({ input, answer = [300, 1500], calls = 1 }) {
 /** "€ 0,03" (kleine bedragen met twee decimalen, "< € 0,01" als het minder is). */
 function formatEur(n) {
   if (n < 0.005) return '< € 0,01';
-  return '€ ' + n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: n < 10 ? 2 : 0 });
+  const d = n < 10 ? 2 : 0; // vanaf € 10 hele euro's (min mag nooit groter zijn dan max)
+  return '€ ' + n.toLocaleString('nl-NL', { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 function formatRange(a, b) {
   const x = formatEur(a); const y = formatEur(b);

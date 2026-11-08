@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.32.1', date: '2026-11-08', title: 'Kostenschatting bij grote lijsten',
+    items: [
+      'De kostenschatting voor Claude gaf een foutmelding ("maximumFractionDigits") als het bedrag € 10 of meer was, bijvoorbeeld bij APK-aandachtspunten voor alle APK-datums. Opgelost: grote bedragen staan nu in hele euro\'s.',
+    ],
+  },
+  {
     version: '1.32.0', date: '2026-11-08', title: 'Het thema ADONIS',
     items: [
       'Nieuw thema: ADONIS, het thema der thema\'s. Griekse schoonheid: wit marmer met gouden aders, bladgoud, Egeïsch blauw, een Griekse sleutelrand onder de menubalk en klassieke letters.',
