@@ -296,3 +296,12 @@
 :root[data-theme="vcds"] .start-page ~ .app-footer { max-width: 1000px; }
 :root[data-theme="vcds"] .start-tile-primary .start-tile-text { color: var(--muted); }
 :root[data-theme="vcds"] .start-tile-primary svg { color: var(--title-a); }
+/* Startscherm (vernieuwd) in VCDS-stijl */
+:root[data-theme="vcds"] :is(.start-stat, .start-new) { border: 0; border-radius: 0; background: var(--face); color: #000; box-shadow: var(--raised); transform: none !important; }
+:root[data-theme="vcds"] .start-stat::after { display: none; }
+:root[data-theme="vcds"] .start-new { box-shadow: 0 0 0 1px #000, var(--raised); }
+:root[data-theme="vcds"] .start-new-icon { background: var(--title-a); color: #fff; border-radius: 0; }
+:root[data-theme="vcds"] :is(.start-stat-icon, .start-tile-icon) { border-radius: 0; }
+:root[data-theme="vcds"] .start-search-row input[type=search] { border-radius: 0 !important; box-shadow: var(--sunken) !important; border: 0 !important; background: #fff !important; }
+:root[data-theme="vcds"] .start-search-row .btn-big { border-radius: 0; }
+:root[data-theme="vcds"] .start-page ~ .app-footer { max-width: 1080px; }

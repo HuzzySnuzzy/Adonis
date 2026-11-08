@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.29.0', date: '2026-11-08', title: 'Nieuw startscherm',
+    items: [
+      'Het startscherm is opnieuw ontworpen: een rustige kop met de datum, één grote zoekbalk en "Nieuwe werkopdracht" als duidelijke hoofdknop.',
+      'Onder "Vandaag" staat met grote getallen wat er te doen is: klanten bellen voor de bandenwissel en de APK, en wat klaar is om te factureren.',
+      'Onder "Snel naar" heeft elk onderdeel een eigen kleur en past alles op één regel. Op de telefoon staan de getallen naast elkaar.',
+    ],
+  },
+  {
     version: '1.28.1', date: '2026-11-08', title: 'APK-aandachtspunten vanaf de APK-lijst',
     items: [
       'Op de APK-lijst staat een knop om de APK-aandachtspunten op te zoeken voor alle automodellen in de getoonde lijst (beheerders). Modellen die al zijn opgezocht worden overgeslagen; u ziet vooraf wat het kost en daarna de voortgang.',
