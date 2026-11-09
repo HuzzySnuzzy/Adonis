@@ -13,6 +13,7 @@ const FEATURES = [
   { key: 'voorraad', name: 'Voorraad', help: 'Onderdelen en losse banden op voorraad.' },
   { key: 'apk', name: 'APK-lijst', help: 'Wie moet binnenkort naar de APK, met "Gebeld" en een dagelijkse herinnering.' },
   { key: 'portaal', name: 'Portaal', help: 'Websites en leveranciers op één pagina, en "Opzoeken met …" bij een kenteken.' },
+  { key: 'rekenhulp', name: 'Rekenhulp', help: 'Band omrekenen, last-/snelheidsindex, DOT-leeftijd, bar/psi, Nm, kW/pk, verbruik, BTW en meer.' },
   { key: 'ai', name: 'AI (Claude)', help: 'AI-analyse van een auto, aandachtspunten en APK-aandachtspunten per model.' },
 ];
 const KEYS = FEATURES.map((f) => f.key);
@@ -40,6 +41,7 @@ function required(p) {
   if (/^\/apk\/modelpunten(\/|$)/.test(p) || /^\/klant\/[^/]+\/apk-model$/.test(p)) return ['ai'];
   if (/^\/apk(\/|$)/.test(p)) return ['apk'];
   if (/^\/portaal(\/|$)/.test(p)) return ['portaal'];
+  if (/^\/rekenhulp(\/|$)/.test(p)) return ['rekenhulp'];
   if (/^\/(ai-analyse|ai|aandachtspunt|aandachtspunten)(\/|$)/.test(p) || /^\/klant\/[^/]+\/aandachtspunten$/.test(p)) return ['ai'];
   return null;
 }

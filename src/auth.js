@@ -20,7 +20,7 @@ const PREF_OPTIONS = {
   theme: ['system', 'light', 'dark', 'oled', 'vcds', 'neon', 'ice', 'adonis', 'aero', 'w98'],
   fx: ['full', 'calm'],
   ink: ['hand', 'plain'],
-  start: ['/start', '/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw', '/bandenhotel', '/voorraad', '/portaal'],
+  start: ['/start', '/', '/werkopdrachten', '/importeren', '/werkopdracht/nieuw', '/bandenhotel', '/voorraad', '/portaal', '/rekenhulp'],
   secret: ['off', 'on'],
   mscale: ['100', '90', '80', '70', '60'], // weergave op telefoon (procent)
   simple: ['off', 'on'], // eenvoudige weergave: grote knoppen, alleen het belangrijkste in het menu

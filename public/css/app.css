@@ -2011,3 +2011,29 @@ body:has(> .page.narrow) { --page-w: 560px; }
 :root[data-theme="oled"] .dt-taskbar { background: rgba(0, 0, 0, .9); border-top-color: rgba(255, 255, 255, .08); }
 :root[data-theme="oled"] .dt-task { border-radius: 999px; }
 :root[data-theme="oled"] .dt-menu { background: #0c0c0f; }
+
+/* ---------- Rekenhulp ---------- */
+.calc-page { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 0 1.2rem; align-items: start; }
+.calc-page > .page-head, .calc-page > p, .calc-page > .calc-toc, .calc-page > .calc-wide { grid-column: 1 / -1; }
+.calc-toc { display: flex; flex-wrap: wrap; gap: .35rem; margin: .2rem 0 .4rem; }
+.calc-toc a { padding: .2rem .6rem; border: 1px solid var(--border); border-radius: 999px; text-decoration: none; color: var(--text); font-size: .88rem; background: var(--surface); }
+.calc-toc a:hover { border-color: var(--primary); }
+.calc-card h2 { margin: 0 0 .4rem; font-size: 1.1rem; }
+.calc-card { scroll-margin-top: 70px; }
+.calc-sync, .calc-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .6rem; }
+.calc-field { display: grid; gap: .2rem; font-size: .88rem; color: var(--muted); }
+.calc-field input { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.calc-field input[readonly] { background: var(--surface-2, var(--hover)); }
+.calc-out { margin-top: .7rem; }
+.calc-out p { margin: .4rem 0; }
+.calc-dl { display: grid; grid-template-columns: auto 1fr; gap: .2rem 1rem; margin: .3rem 0; }
+.calc-dl dt { color: var(--muted); }
+.calc-dl dd { margin: 0; }
+.calc-table td, .calc-table th { font-variant-numeric: tabular-nums; }
+.calc-ok, .calc-warn, .calc-bad { padding: .45rem .7rem; border-radius: var(--radius); border-left: 4px solid; }
+.calc-ok { background: var(--ok-bg); color: var(--ok-text); border-color: var(--hue-green); }
+.calc-warn { background: color-mix(in srgb, var(--hue-amber) 16%, var(--surface)); color: var(--text); border-color: var(--hue-amber); }
+.calc-bad { background: var(--err-bg); color: var(--err-text, var(--danger)); border-color: var(--danger); }
+.calc-alt { margin-top: .6rem; }
+.calc-alt summary { cursor: pointer; font-weight: 600; }
+.calc-pick { font-variant-numeric: tabular-nums; }

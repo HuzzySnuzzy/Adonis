@@ -1,0 +1,110 @@
+<%- include('/partials/head') %>
+<%
+  const sync = (id, title, help, units) => `
+  <section class="card calc-card" id="${id}">
+    <h2>${title}</h2>${help ? `<p class="muted small">${help}</p>` : ''}
+    <div class="calc-sync" data-sync>
+      ${units.map(([label, f, extra]) => `<label class="calc-field"><span>${label}</span><input inputmode="decimal" autocomplete="off" data-f="${f}"${extra || ''}></label>`).join('')}
+    </div>
+  </section>`;
+%>
+<main class="page wide calc-page">
+  <div class="page-head">
+    <h1>Rekenhulp</h1>
+  </div>
+  <p class="muted">Handige omrekeningen voor in de werkplaats. Typ in een vak en de rest rekent mee. Komma of punt mag allebei.</p>
+  <nav class="calc-toc" aria-label="Rekenhulpen">
+    <a href="#banden">Band omrekenen</a><a href="#index">Last-/snelheidsindex</a><a href="#dot">DOT-code</a><a href="#druk">Bandenspanning</a>
+    <a href="#koppel">Aanhaalmoment</a><a href="#vermogen">Vermogen</a><a href="#verbruik">Verbruik</a><a href="#arbeid">Arbeidsloon</a>
+    <a href="#btw">BTW</a><a href="#lengte">Lengte</a><a href="#afstand">Afstand</a><a href="#snelheid">Snelheid</a><a href="#inhoud">Inhoud</a><a href="#temp">Temperatuur</a><a href="#meng">Mengsmering</a>
+  </nav>
+
+  <section class="card calc-card calc-wide" id="banden">
+    <h2>Band omrekenen</h2>
+    <p class="muted small">Vergelijk twee bandenmaten: diameter, omtrek en wat de kilometerteller dan aangeeft. Als richtlijn mag de
+      diameter niet meer dan ongeveer 1,5% (naar beneden) tot 3% afwijken; kijk altijd ook naar het kentekenbewijs/CoC, last- en snelheidsindex.</p>
+    <div class="calc-row">
+      <label class="calc-field"><span>Huidige maat</span><input id="tyreA" value="205/55R16" autocomplete="off" spellcheck="false" placeholder="205/55R16"></label>
+      <label class="calc-field"><span>Nieuwe maat</span><input id="tyreB" value="225/45R17" autocomplete="off" spellcheck="false" placeholder="225/45R17"></label>
+      <label class="calc-field"><span>Snelheid op de teller (km/h)</span><input id="tyreSpeed" value="100" inputmode="decimal" autocomplete="off"></label>
+    </div>
+    <div id="tyreOut" class="calc-out" aria-live="polite"></div>
+    <details class="calc-alt">
+      <summary>Andere maten met (bijna) dezelfde diameter als de huidige maat</summary>
+      <div id="tyreAlt"></div>
+    </details>
+  </section>
+
+  <section class="card calc-card" id="index">
+    <h2>Last- en snelheidsindex</h2>
+    <p class="muted small">Bijvoorbeeld <b>91V</b> of <b>94 W</b>, zoals achter de maat op de band.</p>
+    <label class="calc-field"><span>Index</span><input id="liIn" value="91V" autocomplete="off" spellcheck="false"></label>
+    <div id="liOut" class="calc-out" aria-live="polite"></div>
+  </section>
+
+  <section class="card calc-card" id="dot">
+    <h2>DOT-code (leeftijd band)</h2>
+    <p class="muted small">De laatste 4 cijfers: week en jaar. <b>2321</b> = week 23 van 2021.</p>
+    <label class="calc-field"><span>DOT</span><input id="dotIn" inputmode="numeric" autocomplete="off" placeholder="2321"></label>
+    <div id="dotOut" class="calc-out" aria-live="polite"></div>
+  </section>
+
+  <%- sync('druk', 'Bandenspanning', '', [['bar', 1, ' value="2,2"'], ['psi', 0.0689476], ['kPa', 0.01]]) %>
+  <%- sync('koppel', 'Aanhaalmoment', '', [['Nm', 1, ' value="110"'], ['lbf·ft', 1.35582], ['lbf·in', 0.112985], ['kgf·m', 9.80665]]) %>
+  <%- sync('vermogen', 'Vermogen', 'pk = metrische pk (DIN), hp = Engelse horsepower.', [['kW', 1, ' value="85"'], ['pk', 0.73549875], ['hp', 0.745699872]]) %>
+
+  <section class="card calc-card" id="verbruik">
+    <h2>Verbruik</h2>
+    <div class="calc-sync" data-fuel>
+      <label class="calc-field"><span>l/100 km</span><input inputmode="decimal" autocomplete="off" data-fuel="l100" value="6,5"></label>
+      <label class="calc-field"><span>km/l (1 op …)</span><input inputmode="decimal" autocomplete="off" data-fuel="kml"></label>
+      <label class="calc-field"><span>mpg (UK)</span><input inputmode="decimal" autocomplete="off" data-fuel="mpguk"></label>
+      <label class="calc-field"><span>mpg (US)</span><input inputmode="decimal" autocomplete="off" data-fuel="mpgus"></label>
+    </div>
+  </section>
+
+  <section class="card calc-card" id="arbeid">
+    <h2>Arbeidsloon</h2>
+    <p class="muted small">Tijd als <b>1:45</b> (uren:minuten) of <b>1,75</b> uur.</p>
+    <div class="calc-row">
+      <label class="calc-field"><span>Tijd</span><input id="labTime" value="1:30" autocomplete="off"></label>
+      <label class="calc-field"><span>Uurtarief (excl. BTW)</span><input id="labRate" inputmode="decimal" autocomplete="off" value="<%= locals.tarief || '' %>" placeholder="bijv. 65"></label>
+    </div>
+    <div id="labOut" class="calc-out" aria-live="polite"></div>
+  </section>
+
+  <section class="card calc-card" id="btw">
+    <h2>BTW</h2>
+    <div class="calc-sync" data-vat>
+      <label class="calc-field"><span>BTW %</span><input inputmode="decimal" autocomplete="off" data-vat="pct" value="21"></label>
+      <label class="calc-field"><span>Excl. BTW</span><input inputmode="decimal" autocomplete="off" data-vat="ex" value="100"></label>
+      <label class="calc-field"><span>BTW</span><input inputmode="decimal" autocomplete="off" data-vat="tax" readonly tabindex="-1"></label>
+      <label class="calc-field"><span>Incl. BTW</span><input inputmode="decimal" autocomplete="off" data-vat="inc"></label>
+    </div>
+  </section>
+
+  <%- sync('lengte', 'Lengte', '', [['mm', 1, ' value="25,4"'], ['inch', 25.4], ['cm', 10]]) %>
+  <%- sync('afstand', 'Afstand', '', [['km', 1, ' value="100"'], ['mijl', 1.609344]]) %>
+  <%- sync('snelheid', 'Snelheid', '', [['km/h', 1, ' value="100"'], ['mph', 1.609344], ['m/s', 3.6]]) %>
+  <%- sync('inhoud', 'Inhoud', 'Handig bij olie in quarts of gallons.', [['liter', 1, ' value="5"'], ['quart (US)', 0.946353], ['gallon (US)', 3.785411784], ['gallon (UK)', 4.54609], ['cc / ml', 0.001]]) %>
+
+  <section class="card calc-card" id="temp">
+    <h2>Temperatuur</h2>
+    <div class="calc-sync" data-temp>
+      <label class="calc-field"><span>°C</span><input inputmode="decimal" autocomplete="off" data-temp="c" value="90"></label>
+      <label class="calc-field"><span>°F</span><input inputmode="decimal" autocomplete="off" data-temp="f"></label>
+    </div>
+  </section>
+
+  <section class="card calc-card" id="meng">
+    <h2>Mengsmering (2-takt)</h2>
+    <div class="calc-row">
+      <label class="calc-field"><span>Benzine (liter)</span><input id="mixL" inputmode="decimal" value="5" autocomplete="off"></label>
+      <label class="calc-field"><span>Verhouding 1 op</span><input id="mixR" inputmode="decimal" value="50" autocomplete="off"></label>
+    </div>
+    <div id="mixOut" class="calc-out" aria-live="polite"></div>
+  </section>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/calc.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

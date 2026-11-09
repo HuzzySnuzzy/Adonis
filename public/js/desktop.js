@@ -18,7 +18,7 @@
   const svgs = {};
   document.getElementById('dt-icon-svgs').content.querySelectorAll('[data-k]').forEach((s) => { svgs[s.dataset.k] = s.innerHTML; });
   const ICON_FOR = [[/^\/werkopdrachten\?status=klaar/, 'euro'], [/^\/werkopdracht\/nieuw/, 'plus'], [/^\/werkopdracht/, 'list'], [/^\/(instellingen|systeem)/, 'gear'], [/^\/gebruikers/, 'people'], [/^\/zoekwoorden/, 'list'], [/^\/klant/, 'people'], [/^\/apk/, 'calendar'], [/^\/bandenhotel\/wissellijst/, 'swap'],
-    [/^\/bandenhotel/, 'tyre'], [/^\/voorraad/, 'box'], [/^\/portaal/, 'grid'], [/^\/ai-analyse/, 'ai'], [/^\/importeren/, 'camera'], [/^\/hulp/, 'help'], [/^\/$/, 'people']];
+    [/^\/bandenhotel/, 'tyre'], [/^\/voorraad/, 'box'], [/^\/portaal/, 'grid'], [/^\/rekenhulp/, 'calc'], [/^\/ai-analyse/, 'ai'], [/^\/importeren/, 'camera'], [/^\/hulp/, 'help'], [/^\/$/, 'people']];
   const iconFor = (url) => (/^https?:/.test(url) ? 'globe' : (ICON_FOR.find(([re]) => re.test(url)) || [null, 'grid'])[1]);
   const localPath = (u) => typeof u === 'string' && u.startsWith('/') && !u.startsWith('//'); // alleen eigen pagina's in een venster
 

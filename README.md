@@ -5,6 +5,11 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 
 ## Wat kan het?
 
+- **Rekenhulp.** Band omrekenen (diameter, tellerafwijking, alternatieve maten), last-/snelheidsindex, DOT-leeftijd,
+  bar/psi, Nm/lbf·ft, kW/pk, verbruik, arbeidsloon, BTW en meer.
+- **Slim invullen.** Kenteken van een bekende klant vult de klantgegevens in en toont vorige werkopdracht, km-stand,
+  olie en banden; suggesties voor onderdelen (eerdere werkopdrachten + voorraad, met prijs), werkzaamheden en banden;
+  waarschuwingen bij een lagere km-stand, verlopen APK of oude banden.
 - **Onderdelen aan/uit.** Bij *Systeem → Onderdelen* zet de beheerder werkopdrachten, bandenhotel, voorraad,
   APK-lijst, portaal en AI los aan of uit. Zo is ADONIS bijv. alleen een bandenhotel of alleen een voorraadbeheer.
   Uitgezette onderdelen verdwijnen uit menu's en zijn niet te openen; er wordt niets verwijderd. Klanten staan altijd aan.

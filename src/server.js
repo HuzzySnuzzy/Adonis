@@ -28,6 +28,7 @@ const carimage = require('./carimage');
 const backup = require('./backup');
 const registerInventory = require('./inventory-routes');
 const features = require('./features');
+const assist = require('./order-assist');
 
 const app = express();
 // Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
@@ -391,6 +392,7 @@ app.get('/start', (req, res) => {
   });
 });
 app.get('/hulp', (req, res) => res.render('help', { title: 'Hulp' }));
+app.get('/rekenhulp', (req, res) => res.render('calc', { title: 'Rekenhulp', tarief: assist.lastTarief() }));
 // Bureaubladmodus: pagina's als vensters die je kunt verslepen (zie public/js/desktop.js).
 app.get('/bureaublad', (req, res) => res.render('desktop', { title: 'Bureaublad', desktopShell: true, importOn: importer.isConfigured(), aiOn: importer.isConfigured() }));
 // Herinneringen (één keer per dag, zie live.js): wie moet er gebeld worden?
@@ -628,9 +630,21 @@ function renderOrder(res, { order, data, nummer, error, status, draft, datumInvo
   });
 }
 
+/* Hulp bij het invullen (JSON): wat weten we al van dit kenteken, en suggesties tijdens het typen. */
+app.get('/werkopdracht/hulp', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json(assist.vehicle(String(req.query.kenteken || ''), { exceptOrderId: Number(req.query.id) || null, tyres: res.locals.feat.bandenhotel }));
+});
+app.get('/werkopdracht/suggesties', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const kind = ['onderdeel', 'werk', 'bandmaat', 'bandmerk'].includes(req.query.soort) ? req.query.soort : null;
+  res.json({ items: kind ? assist.suggest(kind, String(req.query.q || ''), { stock: res.locals.feat.voorraad }) : [] });
+});
+
 app.get('/werkopdracht/nieuw', (req, res) => {
   const data = orders.emptyOrderData();
   data.monteur = req.user.name;
+  data.tarief = assist.lastTarief(); // zelfde uurtarief als de laatste werkopdracht
   if (req.query.klant) {
     const c = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.query.klant);
     if (c) for (const f of orders.CUSTOMER_FIELDS) data[f] = c[f];

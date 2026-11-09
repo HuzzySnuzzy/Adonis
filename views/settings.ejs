@@ -21,9 +21,10 @@
     { value: '/bandenhotel', label: 'Bandenhotel' },
     { value: '/voorraad', label: 'Voorraad' },
     { value: '/portaal', label: 'Portaal (websites)' },
+    { value: '/rekenhulp', label: 'Rekenhulp' },
     { value: '/importeren', label: 'Importeren' },
   ].filter((s) => s.value === '/start' || s.value === '/' || require_ok(s.value));
-  function require_ok(v) { const F = locals.feat || {}; return v.startsWith('/werkopdracht') || v === '/importeren' ? F.werkopdrachten : v === '/bandenhotel' ? F.bandenhotel : v === '/voorraad' ? F.voorraad : v === '/portaal' ? F.portaal : true; }
+  function require_ok(v) { const F = locals.feat || {}; return v.startsWith('/werkopdracht') || v === '/importeren' ? F.werkopdrachten : v === '/bandenhotel' ? F.bandenhotel : v === '/voorraad' ? F.voorraad : v === '/portaal' ? F.portaal : v === '/rekenhulp' ? F.rekenhulp : true; }
   const KIND_FEATURE = { werkopdrachten: 'werkopdrachten', banden: 'bandenhotel', voorraad: 'voorraad' };
 %>
 <main class="page settings-page">

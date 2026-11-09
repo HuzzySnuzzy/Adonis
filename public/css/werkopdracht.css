@@ -252,3 +252,22 @@ td.tread-warn { background: var(--tread-warn); }
 
 /* Verplicht veld leeg gelaten na een poging tot opslaan: blijft rood omrand, ook nadat de browsermelding weg is */
 .sheet .ink:user-invalid, .nr-input:user-invalid { box-shadow: inset 0 0 0 2px var(--red); background: color-mix(in srgb, var(--red) 8%, var(--paper)); }
+
+/* Hulp bij invullen: wat we al weten van deze auto, en suggesties tijdens het typen */
+.order-assist { max-width: 1440px; margin: .6rem auto 0; padding: .55rem 1rem; display: grid; gap: .45rem;
+  border: 1px solid var(--border-soft, var(--border)); border-left: 4px solid var(--primary); border-radius: var(--radius); background: var(--surface); font-size: .9rem; }
+.order-assist[hidden] { display: none; }
+.oa-chips, .oa-actions { display: flex; flex-wrap: wrap; gap: .35rem .5rem; align-items: center; }
+.oa-chip { padding: .15rem .55rem; border-radius: 999px; background: var(--surface-2, var(--hover)); color: var(--text); }
+.oa-chip a { color: var(--link, var(--primary)); }
+.oa-warns { margin: 0; padding: 0; list-style: none; display: grid; gap: .2rem; color: var(--warn-text, #8a5a00); font-weight: 600; }
+.oa-pop { position: absolute; z-index: 70; margin: 0; padding: 4px; list-style: none; max-width: 420px; max-height: 320px; overflow-y: auto;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); font: 14px/1.3 system-ui, sans-serif; }
+.oa-pop[hidden] { display: none; }
+.oa-pop li[data-i] { display: flex; justify-content: space-between; gap: .8rem; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+.oa-pop li[data-i]:hover, .oa-pop li.is-sel { background: color-mix(in srgb, var(--primary) 16%, transparent); }
+.oa-main { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oa-price { color: var(--muted); }
+.oa-note { flex: 0 0 auto; color: var(--muted); font-size: 12px; }
+.oa-foot { padding: 4px 8px 2px; color: var(--muted); font-size: 11px; border-top: 1px solid var(--border-soft, var(--border)); margin-top: 2px; }
+@media (max-width: 760px) { .order-assist { margin: .5rem .5rem 0; } }

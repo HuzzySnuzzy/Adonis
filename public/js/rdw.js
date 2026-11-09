@@ -6,6 +6,7 @@
   if (!btn || !plate) return;
   const merk = document.querySelector('[name="d[merk_type]"]');
   const apk = document.querySelector('[name="d[apk_datum]"]');
+  const deel1 = document.querySelector('[name="d[datum_deel1]"]');
   let pop = null;
 
   const fmt = (iso) => (iso ? iso.split('-').reverse().join('-') : '');
@@ -63,11 +64,11 @@
       </dl>
       ${i.terugroepactie ? '<div class="rdw-warn">⚠ Openstaande terugroepactie</div>' : ''}
       <div class="actions">
-        ${merk && !merk.disabled ? '<button type="button" class="btn btn-small btn-primary" data-fill>Merk/type en APK-datum invullen</button>' : ''}
+        ${merk && !merk.disabled ? '<button type="button" class="btn btn-small btn-primary" data-fill>Merk/type, APK-datum en datum deel I invullen</button>' : ''}
         <a href="${esc(r.url)}" target="_blank" rel="noopener">Alles op rdw.nl ↗</a>
       </div>`);
     const fill = pop.querySelector('[data-fill]');
-    if (fill) fill.addEventListener('click', () => { setField(merk, r.merkType); setField(apk, i.apk); closePop(); });
+    if (fill) fill.addEventListener('click', () => { setField(merk, r.merkType); setField(apk, i.apk); if (deel1 && !deel1.value) setField(deel1, i.eersteToelating); closePop(); });
   });
 
   document.addEventListener('click', (e) => {
@@ -77,12 +78,13 @@
 
   // Nieuw kenteken ingevuld en Merk/Type of APK-datum nog leeg: automatisch aanvullen.
   plate.addEventListener('change', async () => {
-    if (plate.disabled || ((merk && merk.value.trim()) && (apk && apk.value))) return;
+    if (plate.disabled || ((merk && merk.value.trim()) && (apk && apk.value) && (!deel1 || deel1.value))) return;
     try {
       const r = await fetchRdw();
       if (r && r.ok && r.info.found) {
         if (merk && !merk.value.trim()) setField(merk, r.merkType);
         if (apk && !apk.value) setField(apk, r.info.apk);
+        if (deel1 && !deel1.value) setField(deel1, r.info.eersteToelating);
       }
     } catch { /* RDW niet bereikbaar: niets doen */ }
   });

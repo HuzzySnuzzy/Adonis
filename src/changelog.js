@@ -5,6 +5,18 @@
  */
 module.exports = [
   {
+    version: '1.42.0', date: '2026-11-09', title: 'Rekenhulp en een slimmere werkopdracht',
+    items: [
+      'Nieuw: Rekenhulp in het menu. Band omrekenen (diameter, omtrek, wat de teller aangeeft en andere maten met dezelfde diameter), last- en snelheidsindex, leeftijd van een band uit de DOT-code, bar/psi/kPa, Nm/lbf·ft, kW/pk, verbruik (l/100 km, km/l, mpg), arbeidsloon, BTW, lengte, afstand, snelheid, inhoud, temperatuur en mengsmering.',
+      'Werkopdracht: typ het kenteken van een bekende klant en naam, adres, telefoon, merk/type en APK-datum worden ingevuld (alleen lege vakken, geel = even nakijken). Bovenaan staat wat we al weten: vorige werkopdracht, laatste km-stand, servicebeurt, olie van vorige keer en banden in het bandenhotel.',
+      'Tijdens het typen verschijnen suggesties: onderdelen uit eerdere werkopdrachten (met prijs) en uit de voorraad, werkzaamheden die vaker voorkomen, bandenmaat en -merk. Kies met de pijltjes en Enter.',
+      'Knoppen "Olie van vorige keer invullen" en "Bandenmaten invullen". Een gekozen bandenmaat komt ook op het andere wiel van dezelfde as.',
+      'Waarschuwingen: km-stand lager dan vorige keer, km uit lager dan km in, APK verlopen of bijna verlopen, banden ouder dan 6 jaar (DOT) en een servicebeurt die lang geleden is.',
+      'RDW vult nu ook "Datum deel I" in (datum eerste toelating), en het uurtarief van de vorige werkopdracht staat al klaar.',
+      'Rekenhulp kan bij Systeem → Onderdelen worden uitgezet.',
+    ],
+  },
+  {
     version: '1.41.0', date: '2026-11-09', title: 'Onderdelen aan- of uitzetten',
     items: [
       'Bij Systeem → Onderdelen zet de beheerder Werkopdrachten, Bandenhotel, Voorraad, APK-lijst, Portaal en AI (Claude) los aan of uit. Zo kunt u ADONIS bijvoorbeeld alleen als bandenhotel of alleen voor de voorraad gebruiken.',

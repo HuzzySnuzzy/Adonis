@@ -524,5 +524,5 @@ module.exports = {
   TYRE_STATUSES, VELGEN, SEASONS, SOORTEN,
   normalizeTyre, saveTyre, getTyre, searchTyres, tyresForPlate, tyreCounts, setTyreStatus, deleteTyre,
   normalizeStock, saveStock, getStock, searchStock, stockCounts, adjustStock, deleteStock,
-  distinct, parseExtra, parseMm, fmtMm, treadClass, normalizeSize, normalizeSeason, numberKey, clean,
+  distinct, parseExtra, parseMm, fmtMm, treadClass, normalizeSize, normalizeSeason, numberKey, sizeKey, clean,
 };
