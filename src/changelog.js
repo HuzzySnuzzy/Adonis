@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.46.2', date: '2026-11-09', title: 'Foutmelding bij sluiten van een websitevenster opgelost',
+    items: [
+      'ADONIS-app: bij het sluiten van een apart websitevenster (uit het Portaal) verscheen soms "A JavaScript error occurred in the main process – Object has been destroyed". Dat gebeurt niet meer.',
+    ],
+  },
+  {
     version: '1.46.1', date: '2026-11-09', title: 'Zijbalk in elk thema',
     items: [
       'De zijbalk (Instellingen → Indeling → Zijbalk links) werkt nu bij elk thema, ook ADONIS, Aero, Windows 98, OLED, VCDS, Neon en Black Ice. Eerst deed de instelling bij die thema\'s niets.',

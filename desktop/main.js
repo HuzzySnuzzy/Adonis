@@ -183,8 +183,11 @@ function openSiteWindow(url, title) {
     width: 1280, height: 860, minWidth: 600, minHeight: 400, title: title || 'ADONIS – website', icon: ICON, backgroundColor: '#14171c', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, webviewTag: true },
   });
-  siteWindows.add(w.webContents);
-  w.on('closed', () => siteWindows.delete(w.webContents));
+  // Onthouden vóór het sluiten: na 'closed' is het venster vernietigd en geeft w.webContents een fout
+  // ("Object has been destroyed" – de app liet dan een foutmelding zien bij het sluiten van een websitevenster).
+  const siteWc = w.webContents;
+  siteWindows.add(siteWc);
+  w.on('closed', () => siteWindows.delete(siteWc));
   w.webContents.on('will-navigate', (e) => e.preventDefault());
   w.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   w.loadFile(path.join(__dirname, 'site.html'), { query: { url, title: title || '' } });
