@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.46.1', date: '2026-11-09', title: 'Zijbalk in elk thema',
+    items: [
+      'De zijbalk (Instellingen → Indeling → Zijbalk links) werkt nu bij elk thema, ook ADONIS, Aero, Windows 98, OLED, VCDS, Neon en Black Ice. Eerst deed de instelling bij die thema\'s niets.',
+    ],
+  },
+  {
     version: '1.46.0', date: '2026-11-09', title: 'Zakelijke indeling met zijbalk en statusbalk',
     items: [
       'Nieuwe indeling (op een computer, bij Systeem/Licht/Donker): het menu staat als vaste zijbalk links, met pictogrammen en de groepen Werkplaats, Hulpmiddelen en Beheer. Bovenin de knop voor nieuw, onderin uw naam, het thema en de meldingen.',

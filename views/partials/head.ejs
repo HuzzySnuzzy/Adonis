@@ -4,7 +4,7 @@
   const THEME_LABEL = { system: 'Systeem', light: 'Licht', dark: 'Donker', oled: 'OLED', vcds: 'VCDS', neon: 'Neon', ice: 'Black Ice', adonis: 'ADONIS', aero: 'Aero', w98: 'Windows 98' };
   %>
 <!doctype html>
-<html lang="nl"<%- themeAttr %><%- locals.user && !locals.desktopShell && (prefs.layout || 'zijbalk') === 'zijbalk' && ['system', 'light', 'dark'].includes(prefs.theme) ? ' data-layout="side"' : '' %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>"<%- prefs.simple === 'on' ? ' data-simple="on"' : '' %><%- locals.inApp ? ' data-app' : '' %>>
+<html lang="nl"<%- themeAttr %><%- locals.user && !locals.desktopShell && (prefs.layout || 'zijbalk') === 'zijbalk' ? ' data-layout="side"' : '' %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>"<%- prefs.simple === 'on' ? ' data-simple="on"' : '' %><%- locals.inApp ? ' data-app' : '' %>>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

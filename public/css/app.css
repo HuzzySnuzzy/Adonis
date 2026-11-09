@@ -2272,3 +2272,6 @@ a:hover { text-decoration: underline; }
   :root[data-layout="side"].side-narrow .user-menu { flex: 0 0 auto; }
   :root[data-layout="side"].side-narrow .user-btn { width: auto; padding: 3px; border-radius: 50%; }
 }
+@media (min-width: 1000px) {
+  :root[data-layout="side"] .topbar .new-order-btn { white-space: normal; text-align: center; line-height: 1.2; font-size: .9rem; letter-spacing: normal; }
+}
