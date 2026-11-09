@@ -21,6 +21,8 @@
   try { inWin = window.top !== window && window.top.location.origin === location.origin; } catch (e) { /* ander adres */ }
   if (inWin) {
     d.classList.add('in-window');
+    // Geen zijbalk-indeling in een venster (er is daar geen menu); anders schuiven o.a. de notitieknop en de letters mee.
+    d.removeAttribute('data-layout');
     d.setAttribute('data-fx', 'calm');
     // Grootte van de vensterinhoud (Personaliseren) meteen toepassen, niet pas als alles geladen is.
     try { var sc = window.top.adonisDesktopScale; if (sc && sc !== 100) d.style.zoom = String(sc / 100); } catch (e) { /* geen bureaublad */ }

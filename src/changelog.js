@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.46.4', date: '2026-11-09', title: 'Notitieknop in bureaubladvensters op de juiste plek',
+    items: [
+      'In een venster op het bureaublad stond de knop voor plaknotities midden in de inhoud (hij schoof mee met de breedte van de zijbalk, die er in een venster niet is). Nu staat hij weer linksonder in het venster, ook bij een kleinere vensterinhoud.',
+    ],
+  },
+  {
     version: '1.46.3', date: '2026-11-09', title: 'Grootte van de vensterinhoud werkt in de app',
     items: [
       'Bureaublad → Personaliseren → "Grootte van de vensterinhoud" deed in de ADONIS-app niets voor de ADONIS-vensters (alleen in een gewone browser). Nu worden de vensters echt kleiner of groter.',
