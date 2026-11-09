@@ -5,6 +5,11 @@
   const checked = u.checkedAt ? new Intl.DateTimeFormat('nl-NL', { timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(u.checkedAt) : '';
 %>
 <footer class="app-footer no-print">
+  <span class="sb-item sb-user" title="Ingelogd"><%= user.name %> · <%= user.is_owner ? 'eigenaar' : user.is_admin ? 'beheerder' : 'monteur' %></span>
+  <span class="sb-item sb-conn" data-sb-conn title="Live verbinding met de server">Verbonden</span>
+  <span class="sb-item sb-keys" title="Sneltoetsen">Alt+1–5 menu · F2 nieuw · F3 zoeken</span>
+  <span class="sb-item sb-clock" data-sb-clock></span>
+  <span class="sb-spacer"></span>
   <a href="/instellingen#nieuw" class="footer-ver" title="Wat is er nieuw in deze versie">ADONIS v<%= a.version %></a>
   <% if (a.date) { %><span class="sep">·</span><span title="Releasedatum">uitgebracht <%= nlDate(a.date) %></span><% } %>
   <span class="sep">·</span>

@@ -12,6 +12,8 @@
     if (document.referrer && new URL(document.referrer).origin === location.origin) d.classList.add('nav-internal');
   } catch (e) { /* geen verwijzer */ }
   document.addEventListener('visibilitychange', function () { d.toggleAttribute('data-hidden', document.hidden); });
+  // Zijbalk smal (alleen pictogrammen), zoals de vorige keer gekozen.
+  try { if (localStorage.getItem('adonis-side-narrow') === '1') d.classList.add('side-narrow'); } catch (e) { /* geen opslag */ }
 
   // In een venster van de bureaubladmodus: geen menubalk/voettekst (zie app.css) en geen zware effecten
   // (elk venster is een eigen pagina; anders draaien de achtergronden van het thema tien keer tegelijk).

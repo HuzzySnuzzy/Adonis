@@ -5,6 +5,17 @@
  */
 module.exports = [
   {
+    version: '1.46.0', date: '2026-11-09', title: 'Zakelijke indeling met zijbalk en statusbalk',
+    items: [
+      'Nieuwe indeling (op een computer, bij Systeem/Licht/Donker): het menu staat als vaste zijbalk links, met pictogrammen en de groepen Werkplaats, Hulpmiddelen en Beheer. Bovenin de knop voor nieuw, onderin uw naam, het thema en de meldingen.',
+      'Met het pijltje onderin de zijbalk maakt u hem smal (alleen pictogrammen); dat wordt onthouden.',
+      'Statusbalk onderaan: wie er is ingelogd, of de live verbinding met de server werkt, de sneltoetsen, datum en tijd, en de versie.',
+      'Sneltoetsen: Alt+1 t/m Alt+5 voor Klanten, Werkopdrachten, APK, Bandenhotel en Voorraad, F2 voor nieuw (werkopdracht, banden of onderdeel) en F3 om te zoeken.',
+      'Compacter: iets kleinere letters en strakkere hoeken in deze indeling, zodat er meer op het scherm past.',
+      'Liever de menubalk bovenaan? Kies dat bij Instellingen → Indeling. Op telefoon en tablet en bij de geheime thema\'s blijft de menubalk bovenaan.',
+    ],
+  },
+  {
     version: '1.45.0', date: '2026-11-09', title: 'Professioneler en rustiger',
     items: [
       'Menubalk opgeruimd: Klanten, Werkopdrachten, APK, Bandenhotel en Voorraad staan vooraan; Portaal, Rekenhulp, Foto\'s, AI-analyse en Importeren onder "Meer"; Gebruikers, Prullenbak, Zoekwoorden en Systeem onder "Beheer". Instellingen, Hulp en Uitloggen zitten onder uw naam rechtsboven.',

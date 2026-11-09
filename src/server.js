@@ -971,6 +971,7 @@ app.post('/instellingen', (req, res) => {
     carimg: [].concat(req.body.carimg || []).includes('on') ? 'on' : 'off',
     partimg: [].concat(req.body.partimg || []).includes('on') ? 'on' : 'off',
     desktop: [].concat(req.body.desktop || []).includes('on') ? 'on' : 'off',
+    layout: req.body.layout,
     ...Object.fromEntries(auth.NOTIFY_KINDS.map(([k]) => ['n_' + k, [].concat(req.body['n_' + k] || []).includes('on') ? 'on' : 'off'])),
   });
   setThemeCookie(res, prefs.theme);

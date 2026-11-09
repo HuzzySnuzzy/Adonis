@@ -77,6 +77,19 @@
       <% } %>
     </section>
 
+    <section class="card" id="indeling">
+      <h2>Indeling</h2>
+      <p class="muted small">Waar het menu staat (op een computerscherm, bij de thema's Systeem, Licht en Donker). De zijbalk is links vast in beeld,
+        met onderaan een statusbalk; met het pijltje onderin maakt u hem smal (alleen pictogrammen). Sneltoetsen: <b>Alt+1</b> t/m <b>Alt+5</b> voor
+        Klanten, Werkopdrachten, APK, Bandenhotel en Voorraad, <b>F2</b> voor nieuw en <b>F3</b> om te zoeken.</p>
+      <div class="choice-grid two">
+        <label class="choice"><input type="radio" name="layout" value="zijbalk" <%= (p.layout || 'zijbalk') === 'zijbalk' ? 'checked' : '' %>>
+          <span class="choice-body"><span class="choice-label">Zijbalk links</span><span class="choice-help">Zakelijk: alle onderdelen in één kolom, statusbalk onderaan</span></span></label>
+        <label class="choice"><input type="radio" name="layout" value="boven" <%= p.layout === 'boven' ? 'checked' : '' %>>
+          <span class="choice-body"><span class="choice-label">Menubalk bovenaan</span><span class="choice-help">Zoals vroeger: menu bovenaan, meer ruimte in de breedte</span></span></label>
+      </div>
+    </section>
+
     <section class="card" id="bureaublad">
       <h2>Bureaubladmodus</h2>
       <label class="check big-check">

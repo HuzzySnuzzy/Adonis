@@ -2192,3 +2192,83 @@ a:hover { text-decoration: underline; }
 :root:is([data-theme="w98"], [data-theme="vcds"]) .nav-pop a:hover, :root:is([data-theme="w98"], [data-theme="vcds"]) .nav-pop button:hover { background: var(--sel); color: #fff; border-radius: 0; }
 :root .nav-pop :is(a, button) { color: var(--text) !important; }
 :root:is([data-theme="w98"], [data-theme="vcds"]) .nav-pop :is(a, button):hover { color: #fff !important; }
+
+/* =====================================================================
+   Zakelijke indeling (1.46): menu als zijbalk links, statusbalk onderaan
+   (alleen bij Systeem/Licht/Donker en op een scherm vanaf 1000px; anders de menubalk bovenaan)
+   ===================================================================== */
+.nav-ico, .nav-section, .nav-group, .side-collapse { display: none; }
+.usertools { display: flex; align-items: center; gap: .9rem; }
+.app-footer .sb-item, .app-footer .sb-spacer { display: none; }
+@media print { :root[data-layout="side"] body { padding: 0 !important; } }
+
+@media (min-width: 1000px) {
+  :root[data-layout="side"] { --side-w: 228px; --radius: 5px; --radius-lg: 7px; font-size: 15px; }
+  :root[data-layout="side"].side-narrow { --side-w: 64px; }
+  :root[data-layout="side"]:not(.in-window) body { padding-left: var(--side-w); padding-bottom: 30px; }
+  :root[data-layout="side"] .topbar {
+    position: fixed; inset: 0 auto 0 0; width: var(--side-w); z-index: 30;
+    flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: .2rem;
+    padding: .75rem .6rem .6rem; border-bottom: 0; border-right: 1px solid rgba(255, 255, 255, .07);
+    overflow-y: auto; overflow-x: hidden; scrollbar-width: thin;
+  }
+  :root[data-layout="side"] .topbar .brand { padding: .15rem .35rem .55rem; }
+  :root[data-layout="side"] .topbar .app-back { align-self: flex-start; }
+  :root[data-layout="side"] .usernav { display: contents; }
+  :root[data-layout="side"] .new-order-btn { order: 2; justify-content: center; margin: .1rem 0 .6rem; padding: .5rem .7rem; }
+  :root[data-layout="side"] .new-order-btn .nw-long { display: inline; } :root[data-layout="side"] .new-order-btn .nw-short { display: none; }
+  :root[data-layout="side"] .mainnav { order: 3; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 1px; width: 100%; overflow: visible; mask-image: none; }
+  :root[data-layout="side"] .mainnav > details.nav-menu { display: none; }
+  :root[data-layout="side"] .nav-group { display: flex; flex-direction: column; gap: 1px; }
+  :root[data-layout="side"] .nav-section { display: block; margin: .9rem .6rem .3rem; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--topbar-text); opacity: .55; }
+  :root[data-layout="side"] .mainnav > .nav-section:first-child { margin-top: .1rem; }
+  :root[data-layout="side"] .mainnav a { display: flex; align-items: center; gap: .7rem; padding: .48rem .65rem; border-radius: 5px; font-size: .95rem; white-space: nowrap; }
+  :root[data-layout="side"] .mainnav a.active { background: var(--topbar-active); color: #fff; box-shadow: inset 3px 0 0 var(--accent); }
+  :root[data-layout="side"] .nav-ico { display: block; flex: 0 0 18px; opacity: .9; }
+  :root[data-layout="side"] .mainnav .nav-count { margin-left: auto; }
+  :root[data-layout="side"] .usertools { order: 4; margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; padding-top: .6rem; border-top: 1px solid rgba(255, 255, 255, .08); }
+  :root[data-layout="side"] .user-menu { order: -1; flex: 1 1 100%; }
+  :root[data-layout="side"] .user-btn { width: 100%; border-radius: 6px; padding: .35rem .4rem; }
+  :root[data-layout="side"] .user-btn .uname { display: inline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  :root[data-layout="side"] .side-collapse { display: inline-flex; margin-left: auto; }
+  /* Menu's onderin de zijbalk openen naast de zijbalk (anders vallen ze buiten beeld of worden ze afgeknipt). */
+  :root[data-layout="side"] .usertools :is(.nav-pop, .theme-menu) { position: fixed; left: calc(var(--side-w) + 8px); right: auto; top: auto; bottom: 38px; }
+  /* Smalle zijbalk: alleen pictogrammen */
+  :root[data-layout="side"].side-narrow .topbar { padding-left: .45rem; padding-right: .45rem; }
+  :root[data-layout="side"].side-narrow :is(.logo-text, .mainnav a > span:not(.nav-ico):not([data-live]), .nav-section, .user-btn .uname, .new-order-btn .nw-long) { display: none; }
+  :root[data-layout="side"].side-narrow .new-order-btn .nw-short { display: none; }
+  :root[data-layout="side"].side-narrow .mainnav a { justify-content: center; padding: .55rem 0; }
+  :root[data-layout="side"].side-narrow .mainnav .nav-group { border-top: 1px solid rgba(255, 255, 255, .08); margin-top: .5rem; padding-top: .5rem; }
+  :root[data-layout="side"].side-narrow .usertools { flex-direction: column; }
+  :root[data-layout="side"].side-narrow .side-collapse { margin: 0; transform: rotate(180deg); }
+  /* Statusbalk onderaan */
+  :root[data-layout="side"]:not(.in-window) .app-footer {
+    position: fixed; left: var(--side-w); right: 0; bottom: 0; z-index: 25; height: 30px; padding: 0 1rem;
+    display: flex; flex-wrap: nowrap; justify-content: flex-start; align-items: center; gap: 1.1rem;
+    background: var(--surface); border-top: 1px solid var(--border); font-size: .74rem; color: var(--muted); white-space: nowrap; overflow: hidden;
+  }
+  :root[data-layout="side"] .app-footer :is(.sb-item) { display: inline-flex; align-items: center; gap: .4rem; }
+  :root[data-layout="side"] .app-footer .sb-spacer { display: block; flex: 1; }
+  :root[data-layout="side"] .app-footer .sb-user { color: var(--text); font-weight: 600; }
+  :root[data-layout="side"] .sb-conn::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--hue-green); }
+  :root[data-layout="side"][data-live="off"] .sb-conn { font-size: 0; }
+  :root[data-layout="side"][data-live="off"] .sb-conn::before { background: var(--danger); }
+  :root[data-layout="side"][data-live="off"] .sb-conn::after { content: "Geen verbinding"; font-size: .74rem; color: var(--danger); }
+  /* Wat onderaan of bovenaan vastzat, schuift mee met de zijbalk en statusbalk */
+  :root[data-layout="side"] .order-toolbar { top: 0; }
+  :root[data-layout="side"] .live-toasts { bottom: 42px; }
+  :root[data-layout="side"] .note-dock { bottom: 42px; left: var(--side-w); }
+  :root[data-layout="side"] .page-head h1 { font-size: 1.35rem; }
+}
+@media (min-width: 1000px) and (max-width: 1280px) { :root[data-layout="side"] .app-footer .sb-keys { display: none; } }
+@media (min-width: 1000px) {
+  :root[data-layout="side"] .topbar { z-index: 58; } /* boven de notitieknop, zodat de menu's onderin er niet achter vallen */
+  :root[data-layout="side"] .mainnav a { color: var(--topbar-text); text-decoration: none; }
+  :root[data-layout="side"] .mainnav a:hover { background: var(--topbar-hover); color: #fff; text-decoration: none; }
+  :root[data-layout="side"] .mainnav a.active { color: #fff; }
+}
+@media (min-width: 1000px) {
+  :root[data-layout="side"].side-narrow .usertools { flex-direction: column; flex-wrap: nowrap; align-items: center; }
+  :root[data-layout="side"].side-narrow .user-menu { flex: 0 0 auto; }
+  :root[data-layout="side"].side-narrow .user-btn { width: auto; padding: 3px; border-radius: 50%; }
+}

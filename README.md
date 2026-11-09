@@ -5,6 +5,8 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 
 ## Wat kan het?
 
+- **Zakelijke indeling.** Zijbalk met pictogrammen (smal te maken), statusbalk met verbinding en klok, sneltoetsen
+  Alt+1–5, F2 (nieuw) en F3 (zoeken); de menubalk bovenaan blijft te kiezen bij Instellingen.
 - **Rustige, zakelijke weergave.** Vijf hoofdonderdelen in de menubalk, de rest onder "Meer" en "Beheer"; herinneringen
   onder de bel; één datumnotatie, kilometerstanden met punten en compacte tabellen. Labels opschonen in het bandenhotel.
 - **Prullenbak en Verkenner.** Verwijderde werkopdrachten, bandensets en voorraaditems blijven 30 dagen terug te zetten;

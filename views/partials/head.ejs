@@ -4,7 +4,7 @@
   const THEME_LABEL = { system: 'Systeem', light: 'Licht', dark: 'Donker', oled: 'OLED', vcds: 'VCDS', neon: 'Neon', ice: 'Black Ice', adonis: 'ADONIS', aero: 'Aero', w98: 'Windows 98' };
   %>
 <!doctype html>
-<html lang="nl"<%- themeAttr %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>"<%- prefs.simple === 'on' ? ' data-simple="on"' : '' %><%- locals.inApp ? ' data-app' : '' %>>
+<html lang="nl"<%- themeAttr %><%- locals.user && !locals.desktopShell && (prefs.layout || 'zijbalk') === 'zijbalk' && ['system', 'light', 'dark'].includes(prefs.theme) ? ' data-layout="side"' : '' %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>"<%- prefs.simple === 'on' ? ' data-simple="on"' : '' %><%- locals.inApp ? ' data-app' : '' %>>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -78,24 +78,46 @@
     ].filter(Boolean);
     const inList = (list) => list.some(([h]) => path === h.split('?')[0] || path.startsWith(h.split('?')[0] + '/'));
   %>
+  <%
+    const NAV_ICON = {
+      start: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
+      klanten: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.6.2 4.6 1.9 5.3 4.9"/>',
+      werkopdrachten: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+      apk: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14.5l2.5 2.5 5-5"/>',
+      bandenhotel: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5"/>',
+      voorraad: '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
+      '/portaal': '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+      '/rekenhulp': '<rect x="5" y="2.5" width="14" height="19" rx="2"/><rect x="8" y="5.5" width="8" height="4" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>',
+      '/verkenner': '<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>',
+      '/ai-analyse': '<path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/><rect x="5.5" y="5.5" width="13" height="13" rx="3"/>',
+      import: '<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+      '/gebruikers': '<circle cx="12" cy="8" r="4"/><path d="M4 20c1-4 4-6 8-6s7 2 8 6"/>',
+      '/prullenbak': '<path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13"/>',
+      '/zoekwoorden': '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
+      '/systeem': '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
+    };
+    const ico = (k) => `<svg class="nav-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${NAV_ICON[k] || NAV_ICON[k && k.startsWith('/importeren') ? 'import' : 'start']}</svg>`;
+    const KEY = { klanten: 'Alt+1', werkopdrachten: 'Alt+2', apk: 'Alt+3', bandenhotel: 'Alt+4', voorraad: 'Alt+5' };
+    const tip = (k) => KEY[k] ? ` title="${KEY[k]}" data-key="${KEY[k].slice(-1)}"` : '';
+  %>
   <nav class="mainnav" aria-label="Hoofdmenu">
-    <% if (simple) { %><a href="/start" class="<%= on(path === '/start') %>">Start</a><% } %>
-    <a href="/" class="<%= on(path === '/' || path.startsWith('/klant')) %>">Klanten</a>
-    <% if (F.werkopdrachten) { %><a href="/werkopdrachten" class="<%= on(isOrders) %>">Werkopdrachten<% if (user.can_invoice) { %><span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span><% } %></a><% } %>
-    <% if (F.apk) { %><a href="/apk" class="<%= on(path === '/apk') %>">APK</a><% } %>
-    <% if (F.bandenhotel) { %><a href="/bandenhotel" class="<%= on(path.startsWith('/bandenhotel')) %>">Bandenhotel</a><% } %>
-    <% if (F.voorraad) { %><a href="/voorraad" class="<%= on(path.startsWith('/voorraad')) %>">Voorraad</a><% } %>
-    <% if (MORE.length) { %>
+    <span class="nav-section">Werkplaats</span>
+    <% if (simple) { %><a href="/start" class="<%= on(path === '/start') %>"><%- ico('start') %><span>Start</span></a><% } %>
+    <a href="/" class="<%= on(path === '/' || path.startsWith('/klant')) %>"<%- tip('klanten') %>><%- ico('klanten') %><span>Klanten</span></a>
+    <% if (F.werkopdrachten) { %><a href="/werkopdrachten" class="<%= on(isOrders) %>"<%- tip('werkopdrachten') %>><%- ico('werkopdrachten') %><span>Werkopdrachten</span><% if (user.can_invoice) { %><span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span><% } %></a><% } %>
+    <% if (F.apk) { %><a href="/apk" class="<%= on(path === '/apk') %>"<%- tip('apk') %>><%- ico('apk') %><span>APK</span></a><% } %>
+    <% if (F.bandenhotel) { %><a href="/bandenhotel" class="<%= on(path.startsWith('/bandenhotel')) %>"<%- tip('bandenhotel') %>><%- ico('bandenhotel') %><span>Bandenhotel</span></a><% } %>
+    <% if (F.voorraad) { %><a href="/voorraad" class="<%= on(path.startsWith('/voorraad')) %>"<%- tip('voorraad') %>><%- ico('voorraad') %><span>Voorraad</span></a><% } %>
+    <% for (const [label, list] of [['Meer', MORE], ['Beheer', ADMIN]]) { if (!list.length) continue; %>
+    <%# Menubalk bovenaan: uitklapmenu. Zijbalk: een vaste groep met kopje (de andere vorm is dan verborgen). %>
     <details class="nav-menu" data-nav-menu>
-      <summary class="<%= on(inList(MORE)) %>">Meer</summary>
-      <div class="nav-pop" role="menu"><% for (const [h, t] of MORE) { %><a role="menuitem" href="<%= h %>" class="<%= on(path === h.split('?')[0] || path.startsWith(h.split('?')[0] + '/')) %>"><%= t %></a><% } %></div>
+      <summary class="<%= on(inList(list)) %>"><%= label %></summary>
+      <div class="nav-pop" role="menu"><% for (const [h, t] of list) { %><a role="menuitem" href="<%= h %>" class="<%= on(path === h.split('?')[0] || path.startsWith(h.split('?')[0] + '/')) %>"><%= t %></a><% } %></div>
     </details>
-    <% } %>
-    <% if (ADMIN.length) { %>
-    <details class="nav-menu" data-nav-menu>
-      <summary class="<%= on(inList(ADMIN)) %>">Beheer</summary>
-      <div class="nav-pop" role="menu"><% for (const [h, t] of ADMIN) { %><a role="menuitem" href="<%= h %>" class="<%= on(path === h) %>"><%= t %></a><% } %></div>
-    </details>
+    <div class="nav-group" role="group" aria-label="<%= label === 'Meer' ? 'Hulpmiddelen' : label %>">
+      <span class="nav-section"><%= label === 'Meer' ? 'Hulpmiddelen' : label %></span>
+      <% for (const [h, t] of list) { %><a href="<%= h %>" class="<%= on(path === h.split('?')[0] || path.startsWith(h.split('?')[0] + '/')) %>"><%- ico(h) %><span><%= t %></span></a><% } %>
+    </div>
     <% } %>
   </nav>
   <div class="usernav">
@@ -117,6 +139,7 @@
       const SECRET = ['adonis', 'aero', 'w98', 'oled', 'vcds', 'neon', 'ice'];
       const secretOn = prefs.secret === 'on' || SECRET.includes(prefs.theme);
     %>
+    <div class="usertools">
     <div class="theme-wrap"<%- prefs.simple === 'on' ? ' hidden' : '' %>>
       <%# Zonder JavaScript wisselt de knop gewoon naar het volgende thema (formulier). %>
       <form method="post" action="/instellingen/thema" class="inline" id="themeForm">
@@ -172,6 +195,8 @@
         </form>
       </div>
     </details>
+    <button type="button" class="iconbtn side-collapse" data-side-collapse title="Zijbalk smaller/breder" aria-label="Zijbalk smaller of breder"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+    </div>
   </div>
 </header>
 <% } %>

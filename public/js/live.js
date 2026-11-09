@@ -184,8 +184,9 @@
       handle(data);
       if (channel) channel.postMessage(data);
     };
-    es.onerror = () => { wasDown = true; if (es.readyState === EventSource.CLOSED) close(); }; // definitief dicht (bijv. uitgelogd): loslaten
+    es.onerror = () => { wasDown = true; document.documentElement.dataset.live = 'off'; if (es.readyState === EventSource.CLOSED) close(); }; // definitief dicht (bijv. uitgelogd): loslaten
     es.onopen = () => {
+      document.documentElement.dataset.live = 'on';
       // Na een onderbreking (herstart/update) alles één keer bijwerken.
       if (wasDown) {
         wasDown = false;

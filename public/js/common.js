@@ -653,3 +653,37 @@ document.addEventListener('input', (e) => {
   const row = e.target.closest('table.label-fix tr');
   if (row) { const c = row.querySelector('input[type=checkbox]'); if (c) c.checked = true; }
 });
+
+/* Zijbalk smal/breed, klok in de statusbalk, en sneltoetsen (zoals in een garageprogramma):
+ * Alt+1..5 = Klanten, Werkopdrachten, APK, Bandenhotel, Voorraad · F2 = nieuw (werkopdracht/banden/onderdeel) · F3 = zoeken */
+(function () {
+  const d = document.documentElement;
+  const btn = document.querySelector('[data-side-collapse]');
+  if (btn) btn.addEventListener('click', () => {
+    const narrow = d.classList.toggle('side-narrow');
+    try { localStorage.setItem('adonis-side-narrow', narrow ? '1' : '0'); } catch { /* geen opslag */ }
+  });
+  const clock = document.querySelector('[data-sb-clock]');
+  if (clock) {
+    const tick = () => { const n = new Date(); clock.textContent = n.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + n.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }); };
+    tick(); setInterval(tick, 20000);
+  }
+  if (d.classList.contains('in-window')) return; // in een bureaubladvenster heeft het bureaublad zelf de sneltoetsen
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey) return;
+    if (e.altKey && !e.shiftKey && /^Digit[1-5]$/.test(e.code)) {
+      const a = document.querySelector(`.mainnav a[data-key="${e.code.slice(-1)}"]`);
+      if (a) { e.preventDefault(); location.href = a.href; }
+      return;
+    }
+    if (e.altKey || e.shiftKey) return;
+    if (e.key === 'F2') {
+      const n = document.querySelector('.new-order-btn');
+      if (n) { e.preventDefault(); location.href = n.href; }
+    } else if (e.key === 'F3') {
+      const q = document.querySelector('main input[type=search], main input[name=q]');
+      e.preventDefault();
+      if (q) { q.focus(); q.select(); } else location.href = '/';
+    }
+  });
+})();
