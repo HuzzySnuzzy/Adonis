@@ -22,7 +22,9 @@
     { value: '/voorraad', label: 'Voorraad' },
     { value: '/portaal', label: 'Portaal (websites)' },
     { value: '/importeren', label: 'Importeren' },
-  ];
+  ].filter((s) => s.value === '/start' || s.value === '/' || require_ok(s.value));
+  function require_ok(v) { const F = locals.feat || {}; return v.startsWith('/werkopdracht') || v === '/importeren' ? F.werkopdrachten : v === '/bandenhotel' ? F.bandenhotel : v === '/voorraad' ? F.voorraad : v === '/portaal' ? F.portaal : true; }
+  const KIND_FEATURE = { werkopdrachten: 'werkopdrachten', banden: 'bandenhotel', voorraad: 'voorraad' };
 %>
 <main class="page settings-page">
   <h1>Instellingen</h1>
@@ -70,7 +72,7 @@
       </label>
       <% if (p.simple === 'on' && user.is_admin) { %>
       <p class="muted small">Beheer (staat in deze weergave niet in het menu):
-        <a href="/importeren">Importeren</a> · <a href="/gebruikers">Gebruikers</a><% if (user.is_owner) { %> · <a href="/systeem">Systeem</a><% } %></p>
+        <% if (feat.werkopdrachten) { %><a href="/importeren">Importeren</a> · <% } else if (feat.bandenhotel || feat.voorraad) { %><a href="/importeren/excel">Importeren</a> · <% } %><a href="/gebruikers">Gebruikers</a><% if (user.is_owner) { %> · <a href="/systeem">Systeem</a><% } %></p>
       <% } %>
     </section>
 
@@ -93,7 +95,7 @@
       <p class="muted small">Rechtsonder verschijnt een melding als een collega iets doet. Ze blijven 15 seconden staan
         (langer zolang de muis erop staat) en met een klik gaat u ernaartoe. Uw eigen wijzigingen ziet u niet als melding.</p>
       <div class="notify-grid">
-      <% for (const [k, label, help] of NOTIFY_KINDS) { %>
+      <% for (const [k, label, help] of NOTIFY_KINDS) { if (KIND_FEATURE[k] && locals.feat && !feat[KIND_FEATURE[k]]) continue; %>
         <label class="check big-check">
           <input type="hidden" name="n_<%= k %>" value="off">
           <input type="checkbox" name="n_<%= k %>" value="on" <%= p['n_' + k] !== 'off' ? 'checked' : '' %>>

@@ -16,26 +16,24 @@
     grid: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 4"/><circle cx="12" cy="17.5" r=".6" fill="currentColor"/>',
   };
-  const apps = [
-    { href: '/', icon: 'people', title: 'Klanten' },
-    { href: '/werkopdrachten', icon: 'list', title: 'Werkopdrachten' },
-  ];
-  if (user.can_invoice) apps.push({ href: '/werkopdrachten?status=klaar', icon: 'euro', title: 'Facturatie' });
-  apps.push(
-    { href: '/apk', icon: 'calendar', title: 'APK-lijst' },
-    { href: '/bandenhotel', icon: 'tyre', title: 'Bandenhotel' },
-    { href: '/bandenhotel/wissellijst', icon: 'swap', title: 'Wissellijst' },
-    { href: '/voorraad', icon: 'box', title: 'Voorraad' },
-    { href: '/portaal', icon: 'grid', title: 'Portaal' },
-  );
-  if (aiOn) apps.push({ href: '/ai-analyse', icon: 'ai', title: 'AI-analyse' });
-  if (importOn) apps.push({ href: '/importeren', icon: 'camera', title: 'Importeren' });
+  const F = locals.feat || {};
+  const NEW_ICON = { '/werkopdracht/nieuw': 'plus', '/bandenhotel/nieuw': 'tyre', '/voorraad/nieuw': 'box' };
+  const apps = [{ href: '/', icon: 'people', title: 'Klanten' }];
+  if (F.werkopdrachten) apps.push({ href: '/werkopdrachten', icon: 'list', title: 'Werkopdrachten' });
+  if (user.can_invoice && F.werkopdrachten) apps.push({ href: '/werkopdrachten?status=klaar', icon: 'euro', title: 'Facturatie' });
+  if (F.apk) apps.push({ href: '/apk', icon: 'calendar', title: 'APK-lijst' });
+  if (F.bandenhotel) apps.push({ href: '/bandenhotel', icon: 'tyre', title: 'Bandenhotel' }, { href: '/bandenhotel/wissellijst', icon: 'swap', title: 'Wissellijst' });
+  if (F.voorraad) apps.push({ href: '/voorraad', icon: 'box', title: 'Voorraad' });
+  if (F.portaal) apps.push({ href: '/portaal', icon: 'grid', title: 'Portaal' });
+  if (aiOn && F.ai) apps.push({ href: '/ai-analyse', icon: 'ai', title: 'AI-analyse' });
+  if (importOn && F.werkopdrachten) apps.push({ href: '/importeren', icon: 'camera', title: 'Importeren' });
+  else if (user.is_admin && (F.bandenhotel || F.voorraad)) apps.push({ href: '/importeren/excel', icon: 'camera', title: 'Importeren' });
   apps.push({ href: '/start', icon: 'grid', title: 'Startscherm' }, { href: '/hulp', icon: 'help', title: 'Hulp' });
   const svg = (k, s = 30) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ICONS.grid}</svg>`;
 %>
 <main class="dt" data-desktop data-user="<%= user.id %>" aria-label="Bureaublad">
   <ul class="dt-icons" role="list">
-    <li><button type="button" class="dt-icon dt-icon-new" data-open="/werkopdracht/nieuw" data-icon="plus"><span class="dt-icon-img"><%- svg('plus') %></span><span class="dt-icon-name">Nieuwe werkopdracht</span></button></li>
+    <% if (locals.newAction) { %><li><button type="button" class="dt-icon dt-icon-new" data-open="<%= newAction.href %>" data-icon="<%= NEW_ICON[newAction.href] %>"><span class="dt-icon-img"><%- svg(NEW_ICON[newAction.href]) %></span><span class="dt-icon-name"><%= newAction.long %></span></button></li><% } %>
     <% for (const a of apps) { %>
     <li><button type="button" class="dt-icon" data-open="<%= a.href %>" data-icon="<%= a.icon %>"><span class="dt-icon-img"><%- svg(a.icon) %></span><span class="dt-icon-name"><%= a.title %></span></button></li>
     <% } %>
@@ -52,7 +50,7 @@
 </nav>
 <div class="dt-menu no-print" data-menu role="menu" hidden>
   <div class="dt-menu-head"><b><%= user.name %></b><span class="muted small">ADONIS v<%= locals.appInfo ? appInfo.version : '' %></span></div>
-  <button type="button" role="menuitem" class="dt-menu-item dt-menu-new" data-open="/werkopdracht/nieuw" data-icon="plus"><%- svg('plus', 18) %> Nieuwe werkopdracht</button>
+  <% if (locals.newAction) { %><button type="button" role="menuitem" class="dt-menu-item dt-menu-new" data-open="<%= newAction.href %>" data-icon="<%= NEW_ICON[newAction.href] %>"><%- svg(NEW_ICON[newAction.href], 18) %> <%= newAction.long %></button><% } %>
   <% for (const a of apps) { %><button type="button" role="menuitem" class="dt-menu-item" data-open="<%= a.href %>" data-icon="<%= a.icon %>"><%- svg(a.icon, 18) %> <%= a.title %></button><% } %>
   <div class="dt-menu-sep"></div>
   <button type="button" role="menuitem" class="dt-menu-item" data-open="/instellingen" data-icon="gear"><%- svg('gear', 18) %> Instellingen</button>

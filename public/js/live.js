@@ -106,6 +106,13 @@
     if (el.matches('textarea, input:not([type=checkbox], [type=radio], [type=button], [type=submit])')) return el.value !== el.defaultValue;
     return false;
   }
+  // Iets aan het doen dat verloren zou gaan bij herladen?
+  function busyHere() {
+    return (window.adonisOrderDirty && window.adonisOrderDirty()) || (window.adonisFormDirty && window.adonisFormDirty())
+      || (window.adonisDesktopDirty && window.adonisDesktopDirty())
+      || document.querySelector('dialog[open], .ai-busy:not([hidden])')
+      || typing();
+  }
   function afterReconnect() {
     refreshLists();
     if (!updatingTo) return;
@@ -113,15 +120,18 @@
     if (inWindow) return; // het bureaublad herlaadt zichzelf (en daarmee alle vensters)
     // In de ADONIS-app: meteen kijken of de app zelf ook bijgewerkt moet worden.
     try { if (window.adonisApp && window.adonisApp.checkUpdate) window.adonisApp.checkUpdate(); } catch { /* gewone browser */ }
-    const busy = (window.adonisOrderDirty && window.adonisOrderDirty()) || (window.adonisFormDirty && window.adonisFormDirty())
-      || (window.adonisDesktopDirty && window.adonisDesktopDirty())
-      || document.querySelector('dialog[open], .ai-busy:not([hidden])')
-      || typing();
-    if (!busy) { window.adonisLeaving = true; location.reload(); return; }
+    if (!busyHere()) { window.adonisLeaving = true; location.reload(); return; }
     toast(`ADONIS is bijgewerkt naar v${v}. Vernieuw de pagina (F5) als u klaar bent.`);
   }
   function handle(ev) {
     if (ev.type === 'server-update') { updatingTo = ev.version; toast(`ADONIS wordt bijgewerkt naar v${ev.version} – een paar seconden geduld…`); return; }
+    // De beheerder zette een onderdeel aan of uit: menu's kloppen niet meer, dus opnieuw laden (als dat kan).
+    if (ev.type === 'features') {
+      if (String(ev.byId) === String(me) || inWindow) return;
+      if (!busyHere()) { window.adonisLeaving = true; location.reload(); return; }
+      toast('De beheerder heeft onderdelen van ADONIS aan- of uitgezet. Vernieuw de pagina (F5) als u klaar bent.');
+      return;
+    }
     if (ev.type === 'notes') { if (String(ev.byId) !== String(me)) { document.dispatchEvent(new CustomEvent('adonis:notes', { detail: ev })); notice(ev); } return; }
     // Bandenhotel/voorraad gewijzigd door een collega: lijsten op dit scherm bijwerken (en eventueel een melding).
     if (ev.type === 'data') {

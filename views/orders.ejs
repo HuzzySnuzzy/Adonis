@@ -10,7 +10,7 @@
     </form>
     <div class="head-buttons">
       <a class="btn btn-ghost" href="/zoekwoorden" title="Woorden die hetzelfde betekenen (bijv. lampen = verlichting)">Zoekwoorden</a>
-      <% if (user.is_admin && aiConfigured) { %>
+      <% if (user.is_admin && aiConfigured && feat.ai) { %>
       <button class="btn" type="button" data-ai-task="alle" data-ai-action="/aandachtspunten/alles" data-ai-bulk
         data-ai-title="Aandachtspunten voor alle klanten"><%- include('/partials/ai-icon') %> Aandachtspunten voor alle klanten</button>
       <% } %>

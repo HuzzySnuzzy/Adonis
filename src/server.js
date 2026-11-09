@@ -27,6 +27,7 @@ const plates = require('./plates');
 const carimage = require('./carimage');
 const backup = require('./backup');
 const registerInventory = require('./inventory-routes');
+const features = require('./features');
 
 const app = express();
 // Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
@@ -299,6 +300,23 @@ app.get('/app-versie', (req, res) => {
 app.get('/status', (req, res) => { res.set('Cache-Control', 'no-store'); res.json({ ok: true }); });
 app.use(auth.requireLogin);
 
+/* Onderdelen die de beheerder heeft uitgezet (Systeem → Onderdelen): weg uit menu's en niet te openen. */
+app.use((req, res, next) => {
+  const on = features.state();
+  res.locals.feat = on;
+  res.locals.newAction = features.newAction(on);
+  if (features.allowed(req.path, on)) return next();
+  // Importeren zonder werkopdrachten: meteen naar de Excel-import (bandenhotel/voorraad), als die er is.
+  if (req.method === 'GET' && req.path === '/importeren' && req.user.is_admin && features.allowed('/importeren/excel', on)) return res.redirect('/importeren/excel');
+  const msg = 'Dit onderdeel van ADONIS staat uit.';
+  if (req.method !== 'GET' || req.xhr || (req.get('accept') || '').includes('application/json')) return res.status(404).json({ error: msg });
+  res.status(404).render('error', {
+    title: 'Onderdeel staat uit',
+    message: msg + (req.user.is_owner ? ' U kunt het weer aanzetten bij Systeem → Onderdelen.' : ' De beheerder kan het weer aanzetten.'),
+    action: req.user.is_owner ? { href: '/systeem#onderdelen', label: 'Naar Onderdelen' } : null,
+  });
+});
+
 // Backup-waarschuwing voor de ADONIS-beheerder (mislukt, te oud of nog nooit gemaakt).
 app.use((req, res, next) => {
   if (req.user && req.user.is_owner && !req.path.startsWith('/systeem')) {
@@ -310,7 +328,7 @@ app.use((req, res, next) => {
 
 // Teller "Facturatie" in het menu voor wie mag factureren.
 app.use((req, res, next) => {
-  if (req.user && req.user.can_invoice) res.locals.invoiceCount = orders.statusCounts().klaar;
+  if (req.user && req.user.can_invoice && res.locals.feat.werkopdrachten) res.locals.invoiceCount = orders.statusCounts().klaar;
   next();
 });
 
@@ -328,7 +346,7 @@ app.get('/', (req, res) => {
   const q = String(req.query.q || '').trim();
   // ADONIS (de app of de browser) wordt geopend: naar de gekozen startpagina.
   if (req.firstPage && !q && req.user.prefs.desktop === 'on') return res.redirect('/bureaublad');
-  if (req.firstPage && !q && req.user.prefs.start && req.user.prefs.start !== '/') return res.redirect(req.user.prefs.start);
+  if (req.firstPage && !q && req.user.prefs.start && req.user.prefs.start !== '/' && features.allowed(req.user.prefs.start, res.locals.feat)) return res.redirect(req.user.prefs.start);
   let rows;
   const base = `
     SELECT c.*, COUNT(o.id) AS aantal, MAX(o.datum_invoer) AS laatste,
@@ -378,13 +396,14 @@ app.get('/bureaublad', (req, res) => res.render('desktop', { title: 'Bureaublad'
 // Herinneringen (één keer per dag, zie live.js): wie moet er gebeld worden?
 app.get('/meldingen/herinneringen', (req, res) => {
   const items = [];
-  try {
+  const on = res.locals.feat;
+  if (on.apk) try {
     const rows = apkRows().filter((r) => !r.called);
     const soon = rows.filter((r) => r.days >= 0 && r.days <= 14).length;
     const late = rows.filter((r) => r.days < 0 && r.days >= -7).length;
     if (soon || late) items.push({ text: `APK: ${[soon ? `${soon} klant${soon === 1 ? '' : 'en'} binnen 2 weken` : '', late ? `${late} net verlopen` : ''].filter(Boolean).join(' en ')} – nog niet gebeld.`, href: '/apk' });
   } catch { /* geen APK-gegevens */ }
-  try {
+  if (on.bandenhotel) try {
     const target = inv.swapTarget();
     const n = inv.swapList(target).wisselen.filter((i) => !i.match.uitgenodigd_at).length;
     if (n) items.push({ text: `Bandenwissel: ${n} klant${n === 1 ? '' : 'en'} met ${target === 'winter' ? 'winter' : 'zomer'}banden in het bandenhotel nog bellen.`, href: '/bandenhotel/wissellijst' });
@@ -938,7 +957,7 @@ async function renderSystem(res, { error = null, status = 200, values = {} } = {
     title: 'Systeem', error, values, cf, tunnelState: tunnel.getState(),
     port: Number(process.env.APP_PORT) || null, supported: Boolean(tunnel.assetName()),
     permissionsHelp: cloudflare.PERMISSIONS_HELP,
-    bk,
+    bk, FEATURES: features.FEATURES,
   });
 }
 async function backupView() {
@@ -949,6 +968,16 @@ async function backupView() {
   return { c, folders, health: backup.health().state, defaultDir: backup.DEFAULT_DIR, restored, isWindows: process.platform === 'win32' };
 }
 app.get('/systeem', auth.requireOwner, wrap((req, res) => renderSystem(res)));
+
+/* Onderdelen aan/uit (alleen ADONIS-beheerder). Er wordt niets verwijderd. */
+app.post('/systeem/onderdelen', auth.requireOwner, (req, res) => {
+  const on = Object.fromEntries(features.KEYS.map((k) => [k, req.body['f_' + k] === 'on']));
+  features.save(on);
+  const off = features.FEATURES.filter((f) => !on[f.key]).map((f) => f.name);
+  flash(req, 'ok', off.length ? `Opgeslagen. Uit: ${off.join(', ')}.` : 'Opgeslagen. Alle onderdelen staan aan.');
+  events.broadcast({ type: 'features', byId: req.user.id });
+  res.redirect('/systeem#onderdelen');
+});
 
 /* ---------- backups (alleen ADONIS-beheerder) ---------- */
 app.post('/systeem/backup/nu', auth.requireOwner, wrap(async (req, res) => {

@@ -49,7 +49,7 @@
       <noscript><button class="btn btn-small" type="submit">Filter</button></noscript>
     </form>
   </div>
-  <% if (opslagMatches) { %><p class="opslag-hint">Ook <a href="/bandenhotel?soort=opslag&q=<%= encodeURIComponent(q) %>"><strong><%= opslagMatches %></strong> set<%= opslagMatches === 1 ? '' : 's' %> in de overige bandenopslag (noodbanden)</a> voor “<%= q %>”.</p><% } %>
+  <% if (opslagMatches && feat.bandenhotel) { %><p class="opslag-hint">Ook <a href="/bandenhotel?soort=opslag&q=<%= encodeURIComponent(q) %>"><strong><%= opslagMatches %></strong> set<%= opslagMatches === 1 ? '' : 's' %> in de overige bandenopslag (noodbanden)</a> voor “<%= q %>”.</p><% } %>
   <% if (items.length === 0) { %>
     <div class="empty">
       <% if (!counts[soort]) { %>

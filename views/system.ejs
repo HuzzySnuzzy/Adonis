@@ -20,6 +20,25 @@
     const HEALTH = { ok: ['In orde', 'ok'], mislukt: ['Laatste backup mislukt', 'bad'], 'te-oud': ['Laatste backup is te oud', 'busy'], nooit: ['Nog geen backup', 'busy'] };
     const [hLabel, hCls] = HEALTH[bk.health];
   %>
+  <section class="card" id="onderdelen">
+    <h2>Onderdelen</h2>
+    <p class="muted small">Zet uit wat u niet gebruikt, bijvoorbeeld alleen het bandenhotel of alleen de voorraad. Een onderdeel dat uit staat
+      verdwijnt voor iedereen uit het menu, het startscherm en het bureaublad, en de pagina's ervan zijn niet meer te openen.
+      Er wordt niets verwijderd: zet u het weer aan, dan is alles terug. Klanten staan altijd aan.</p>
+    <form method="post" action="/systeem/onderdelen" class="stack">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="notify-grid">
+      <% for (const f of FEATURES) { %>
+        <label class="check big-check">
+          <input type="checkbox" name="f_<%= f.key %>" value="on" <%= feat[f.key] ? 'checked' : '' %>>
+          <span><b><%= f.name %></b><br><span class="muted small"><%= f.help %></span></span>
+        </label>
+      <% } %>
+      </div>
+      <p><button class="btn btn-primary" type="submit">Onderdelen opslaan</button></p>
+    </form>
+  </section>
+
   <section class="card backup-card" id="backup">
     <div class="sys-head">
       <h2>Backups</h2>

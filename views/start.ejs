@@ -1,20 +1,22 @@
 <%- include('/partials/head') %>
 <%
   // Vandaag: wat er te doen is, met een groot getal (zodat je het in één oogopslag ziet).
+  const F = locals.feat || {};
   const todo = [];
-  todo.push({ href: '/bandenhotel/wissellijst', icon: 'swap', hue: 'amber', n: swaps, label: swaps === 1 ? 'klant bellen' : 'klanten bellen', sub: 'voor ' + (swapTarget === 'winter' ? 'winter' : 'zomer') + 'banden' });
-  todo.push({ href: '/apk', icon: 'calendar', hue: 'green', n: apkSoon, label: apkSoon === 1 ? 'klant bellen' : 'klanten bellen', sub: 'voor de APK' });
-  if (user.can_invoice) todo.push({ href: '/werkopdrachten?status=klaar', icon: 'euro', hue: 'violet', n: counts.klaar, label: counts.klaar === 1 ? 'werkopdracht' : 'werkopdrachten', sub: 'klaar om te factureren' });
+  if (F.bandenhotel) todo.push({ href: '/bandenhotel/wissellijst', icon: 'swap', hue: 'amber', n: swaps, label: swaps === 1 ? 'klant bellen' : 'klanten bellen', sub: 'voor ' + (swapTarget === 'winter' ? 'winter' : 'zomer') + 'banden' });
+  if (F.apk) todo.push({ href: '/apk', icon: 'calendar', hue: 'green', n: apkSoon, label: apkSoon === 1 ? 'klant bellen' : 'klanten bellen', sub: 'voor de APK' });
+  if (user.can_invoice && F.werkopdrachten) todo.push({ href: '/werkopdrachten?status=klaar', icon: 'euro', hue: 'violet', n: counts.klaar, label: counts.klaar === 1 ? 'werkopdracht' : 'werkopdrachten', sub: 'klaar om te factureren' });
   // Snel naar: één regel per onderdeel, elk met een eigen kleur.
   const tiles = [
     { href: '/', icon: 'people', hue: 'blue', title: 'Klanten', text: 'Op kenteken of naam' },
-    { href: '/werkopdrachten', icon: 'list', hue: 'slate', title: 'Werkopdrachten', text: 'Alle werkopdrachten' },
-    { href: '/bandenhotel', icon: 'tyre', hue: 'amber', title: 'Bandenhotel', text: 'Banden in opslag' },
-    { href: '/voorraad', icon: 'box', hue: 'teal', title: 'Voorraad', text: 'Onderdelen en banden' },
-    { href: '/portaal', icon: 'grid', hue: 'violet', title: 'Portaal', text: 'Websites en leveranciers' },
-  ];
-  if (importOn) tiles.push({ href: '/importeren', icon: 'camera', hue: 'rose', title: 'Foto importeren', text: 'Papier overnemen' });
-  tiles.push({ href: '/ai-analyse', icon: 'ai', hue: 'rose', title: 'AI-analyse', text: 'Röntgenfoto van een auto' });
+    F.werkopdrachten && { href: '/werkopdrachten', icon: 'list', hue: 'slate', title: 'Werkopdrachten', text: 'Alle werkopdrachten' },
+    F.bandenhotel && { href: '/bandenhotel', icon: 'tyre', hue: 'amber', title: 'Bandenhotel', text: 'Banden in opslag' },
+    F.apk && !F.werkopdrachten && { href: '/apk', icon: 'calendar', hue: 'green', title: 'APK-lijst', text: 'Wie moet er binnenkort naar de APK' },
+    F.voorraad && { href: '/voorraad', icon: 'box', hue: 'teal', title: 'Voorraad', text: 'Onderdelen en banden' },
+    F.portaal && { href: '/portaal', icon: 'grid', hue: 'violet', title: 'Portaal', text: 'Websites en leveranciers' },
+  ].filter(Boolean);
+  if (importOn && F.werkopdrachten) tiles.push({ href: '/importeren', icon: 'camera', hue: 'rose', title: 'Foto importeren', text: 'Papier overnemen' });
+  if (F.ai) tiles.push({ href: '/ai-analyse', icon: 'ai', hue: 'rose', title: 'AI-analyse', text: 'Röntgenfoto van een auto' });
   tiles.push({ href: '/hulp', icon: 'help', hue: 'slate', title: 'Hulp', text: 'Uitleg in stappen' });
   const ICONS = {
     ai: '<path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/><rect x="5.5" y="5.5" width="13" height="13" rx="3"/><path d="M8.6 15.2 10.4 9h.4l1.8 6.2M9.2 13.4h2.6M15 9v6.2"/>',
@@ -48,12 +50,15 @@
     <div id="live-customers" class="start-results" data-live data-live-remote></div>
   </header>
 
-  <a class="start-new" href="/werkopdracht/nieuw">
+  <% if (locals.newAction) { %>
+  <a class="start-new" href="<%= newAction.href %>">
     <span class="start-new-icon"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
-    <span class="start-new-text"><b>Nieuwe werkopdracht</b><span>Een nieuwe klus invullen</span></span>
+    <span class="start-new-text"><b><%= newAction.long %></b><span><%= newAction.sub %></span></span>
     <svg class="start-new-arrow" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
   </a>
+  <% } %>
 
+  <% if (todo.length) { %>
   <h2 class="start-label">Vandaag</h2>
   <nav class="start-stats" aria-label="Vandaag te doen">
     <% for (const t of todo) { %>
@@ -64,6 +69,7 @@
     </a>
     <% } %>
   </nav>
+  <% } %>
 
   <h2 class="start-label">Snel naar</h2>
   <nav class="start-tiles" aria-label="Onderdelen">
@@ -76,7 +82,7 @@
     <% } %>
   </nav>
 
-  <% if (recent.length) { %>
+  <% if (recent.length && F.werkopdrachten) { %>
   <section class="start-recent">
     <h2 class="start-label">Laatst bijgewerkt</h2>
     <%- include('/partials/orderlist', { orders: recent, showPlate: true }) %>

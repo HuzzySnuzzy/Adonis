@@ -40,7 +40,7 @@
   <script src="/static/js/ice.js?v=<%= assetVersion %>" defer></script>
   <% } %>
 </head>
-<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>" data-desktop-mode="<%= prefs.desktop === 'on' ? 'on' : 'off' %>" data-notify="<%= ['werkopdrachten', 'banden', 'voorraad', 'klanten', 'notities', 'herinneringen'].filter((k) => prefs['n_' + k] !== 'off').join(' ') %>"<%- user.can_invoice ? ' data-can-invoice="1"' : '' %><% } %>>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>" data-desktop-mode="<%= prefs.desktop === 'on' ? 'on' : 'off' %>" data-notify="<%= ['werkopdrachten', 'banden', 'voorraad', 'klanten', 'notities', 'herinneringen'].filter((k) => prefs['n_' + k] !== 'off' && (!locals.feat || feat[{ werkopdrachten: 'werkopdrachten', banden: 'bandenhotel', voorraad: 'voorraad' }[k]] !== false)).join(' ') %>"<%- user.can_invoice ? ' data-can-invoice="1"' : '' %><% } %>>
 <% if (prefs.theme === 'ice') { %>
 <div class="ice-field no-print" aria-hidden="true"><i class="ice-aurora"></i><i class="ice-aurora"></i><i class="ice-aurora"></i><i class="ice-core"></i><i class="ice-glint"></i></div>
 <% } %>
@@ -56,25 +56,25 @@
 <% } %>
 <% if (locals.user && !locals.desktopShell) { %>
 <header class="topbar no-print">
-  <% const simple = prefs.simple === 'on'; %>
+  <% const simple = prefs.simple === 'on'; const F = locals.feat || {}; const importHref = F.werkopdrachten ? '/importeren' : (user.is_admin && (F.bandenhotel || F.voorraad)) ? '/importeren/excel' : null; %>
   <% if (locals.inApp) { %><button class="iconbtn app-back" type="button" data-history-back title="Terug naar de vorige pagina (Alt + ←)" aria-label="Terug"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><% } %>
   <a class="brand" href="<%= simple ? '/start' : '/' %>" title="ADONIS – naar het begin"><%- include('/partials/logo') %></a>
   <nav class="mainnav">
     <% if (simple) { %><a href="/start" class="<%= path === '/start' ? 'active' : '' %>">Start</a><% } %>
     <a href="/" class="<%= path === '/' || path.startsWith('/klant') ? 'active' : '' %>">Klanten</a>
-    <a href="/werkopdrachten" class="<%= (path === '/werkopdrachten' && !(locals.url || '').includes('status=klaar')) || path.startsWith('/werkopdracht/') ? 'active' : '' %>">Werkopdrachten</a>
-    <% if (user.can_invoice) { %><a href="/werkopdrachten?status=klaar" class="<%= path === '/werkopdrachten' && locals.url && locals.url.includes('status=klaar') ? 'active' : '' %>">Facturatie<span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span></a><% } %>
-    <a href="/bandenhotel" class="<%= path.startsWith('/bandenhotel') ? 'active' : '' %>">Bandenhotel</a>
-    <a href="/voorraad" class="<%= path.startsWith('/voorraad') ? 'active' : '' %>">Voorraad</a>
-    <a href="/portaal" class="<%= path.startsWith('/portaal') ? 'active' : '' %>">Portaal</a>
+    <% if (F.werkopdrachten) { %><a href="/werkopdrachten" class="<%= (path === '/werkopdrachten' && !(locals.url || '').includes('status=klaar')) || path.startsWith('/werkopdracht/') ? 'active' : '' %>">Werkopdrachten</a><% } %>
+    <% if (user.can_invoice && F.werkopdrachten) { %><a href="/werkopdrachten?status=klaar" class="<%= path === '/werkopdrachten' && locals.url && locals.url.includes('status=klaar') ? 'active' : '' %>">Facturatie<span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span></a><% } %>
+    <% if (F.bandenhotel) { %><a href="/bandenhotel" class="<%= path.startsWith('/bandenhotel') ? 'active' : '' %>">Bandenhotel</a><% } %>
+    <% if (F.voorraad) { %><a href="/voorraad" class="<%= path.startsWith('/voorraad') ? 'active' : '' %>">Voorraad</a><% } %>
+    <% if (F.portaal) { %><a href="/portaal" class="<%= path.startsWith('/portaal') ? 'active' : '' %>">Portaal</a><% } %>
     <% if (!simple) { %>
-    <a href="/importeren" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Importeren</a>
+    <% if (importHref) { %><a href="<%= importHref %>" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Importeren</a><% } %>
     <% if (user.is_admin) { %><a href="/gebruikers" class="<%= path === '/gebruikers' ? 'active' : '' %>">Gebruikers</a><% } %>
     <% if (user.is_owner) { %><a href="/systeem" class="<%= path === '/systeem' ? 'active' : '' %>">Systeem</a><% } %>
     <% } %>
   </nav>
   <div class="usernav">
-    <a class="btn btn-primary new-order-btn" href="/werkopdracht/nieuw" title="Nieuwe werkopdracht">+<span class="nw-long"> Nieuwe werkopdracht</span><span class="nw-short"> Nieuw</span></a>
+    <% if (locals.newAction) { %><a class="btn btn-primary new-order-btn" href="<%= newAction.href %>" title="<%= newAction.long %>">+<span class="nw-long"> <%= newAction.long %></span><span class="nw-short"> Nieuw</span></a><% } %>
     <%
       const THEMES_MENU = [
         { v: 'system', name: 'Systeem', sub: 'Volgt de instelling van je apparaat' },

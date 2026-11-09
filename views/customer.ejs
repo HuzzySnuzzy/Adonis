@@ -25,7 +25,8 @@
       <% for (const [k, v] of facts) { if (v) { %><dt><%= k %></dt><dd><%= v %></dd><% } } %>
     </dl>
     <div class="head-actions">
-      <a class="btn btn-primary" href="/werkopdracht/nieuw?klant=<%= customer.id %>">+ Nieuwe werkopdracht voor <%= customer.kenteken %></a>
+      <% if (feat.werkopdrachten) { %><a class="btn btn-primary" href="/werkopdracht/nieuw?klant=<%= customer.id %>">+ Nieuwe werkopdracht voor <%= customer.kenteken %></a>
+      <% } else if (feat.bandenhotel) { %><a class="btn btn-primary" href="/bandenhotel/nieuw?klant=<%= customer.id %>">+ Banden inslaan voor <%= customer.kenteken %></a><% } %>
       <a class="btn" href="/klant/<%= customer.id %>?bewerken=1#gegevens">
         <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.95l-3.75-3.75L3 17.25zm17.7-10.2a1 1 0 0 0 0-1.4l-2.35-2.35a1 1 0 0 0-1.4 0l-1.85 1.85 3.75 3.75 1.85-1.85z"/></svg>
         Gegevens wijzigen
@@ -60,12 +61,14 @@
   </form>
   <% } %>
 
-  <%- include('/partials/plate-sites', { plateLinks, kenteken: customer.kenteken }) %>
+  <% if (feat.portaal) { %><%- include('/partials/plate-sites', { plateLinks, kenteken: customer.kenteken }) %><% } %>
+  <% if (feat.ai) { %>
   <p class="va-link no-print"><a class="btn btn-small" href="/ai-analyse?kenteken=<%= encodeURIComponent(customer.kenteken) %>"><%- include('/partials/ai-icon') %> AI-analyse van deze auto (röntgenbeeld)</a></p>
   <div id="live-bulletins" class="bl-boxes" data-live>
-    <%- include('/partials/bulletins', { bl: bulletinData, aiOn: aiConfigured, customer }) %>
+    <% if (feat.werkopdrachten) { %><%- include('/partials/bulletins', { bl: bulletinData, aiOn: aiConfigured, customer }) %><% } %>
     <%- include('/partials/model-apk', { modelApk, aiOn: aiConfigured, customer }) %>
   </div>
+  <% } %>
 
   <% const ri = rdwData && rdwData.info; %>
   <section class="rdw-card" aria-label="RDW-gegevens">
@@ -119,6 +122,7 @@
     const match = stored.find((t) => t.soort !== 'opslag' && seasonClass(t.seizoen) === swapTarget);
     const needsSwap = match && carCls !== swapTarget && carCls !== 'all';
   %>
+  <% if (feat.bandenhotel) { %>
   <section class="rdw-card tyre-card" aria-label="Banden" id="banden">
     <div class="rdw-head">
       <h2>Banden</h2>
@@ -170,7 +174,9 @@
     <% } %>
     </div>
   </section>
+  <% } %>
 
+  <% if (feat.werkopdrachten) { %>
   <div class="page-head">
     <h2>Werkopdrachten</h2>
     <form class="search" method="get" role="search" autocomplete="off">
@@ -187,6 +193,7 @@
     <%- include('/partials/orderlist', { orders, showPlate: false }) %>
   <% } %>
   </div>
+  <% } %>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/ai.js?v=<%= assetVersion %>"></script>

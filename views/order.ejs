@@ -100,10 +100,10 @@
 
 <% if (error) { %><div class="alert alert-wide no-print"><%= error %></div><% } %>
 
-<% if (locals.plateLinks && plateLinks.length) { %><div class="order-plate-sites"><%- include('/partials/plate-sites', { plateLinks, kenteken: data.kenteken }) %></div><% } %>
+<% if (locals.plateLinks && plateLinks.length && feat.portaal) { %><div class="order-plate-sites"><%- include('/partials/plate-sites', { plateLinks, kenteken: data.kenteken }) %></div><% } %>
 <% if (locals.orderBulletins) { %><div class="order-bulletins bl-boxes">
-  <% if (orderBulletins.bl.open.length) { %><%- include('/partials/bulletins', { bl: orderBulletins.bl, aiOn: false, customer: orderBulletins.customer, compact: true }) %><% } %>
-  <%- include('/partials/model-apk', { modelApk: orderBulletins.modelApk, aiOn: false, customer: orderBulletins.customer, compact: true }) %>
+  <% if (orderBulletins.bl.open.length && feat.ai) { %><%- include('/partials/bulletins', { bl: orderBulletins.bl, aiOn: false, customer: orderBulletins.customer, compact: true }) %><% } %>
+  <% if (feat.ai) { %><%- include('/partials/model-apk', { modelApk: orderBulletins.modelApk, aiOn: false, customer: orderBulletins.customer, compact: true }) %><% } %>
 </div><% } %>
 <% if (order) { %><span hidden id="live-order" data-id="<%= order.id %>"></span><% } %>
 <form id="orderForm" method="post" action="<%= draft ? '/importeren/' + draft.id + '/bevestigen' : order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off">

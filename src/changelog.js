@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.41.0', date: '2026-11-09', title: 'Onderdelen aan- of uitzetten',
+    items: [
+      'Bij Systeem → Onderdelen zet de beheerder Werkopdrachten, Bandenhotel, Voorraad, APK-lijst, Portaal en AI (Claude) los aan of uit. Zo kunt u ADONIS bijvoorbeeld alleen als bandenhotel of alleen voor de voorraad gebruiken.',
+      'Een onderdeel dat uit staat verdwijnt voor iedereen uit het menu, het startscherm, het bureaublad, de klantpagina en de meldingen, en de pagina\'s ervan zijn niet meer te openen. Open schermen van collega\'s laden vanzelf opnieuw.',
+      'De knop "+ Nieuw" past zich aan: zonder werkopdrachten wordt het "Banden inslaan" of "Nieuw onderdeel".',
+      'Er wordt niets verwijderd: zet u een onderdeel weer aan, dan staat alles er nog. Klanten staan altijd aan.',
+    ],
+  },
+  {
     version: '1.40.0', date: '2026-11-09', title: 'Opgepoetst: tientallen kleine verbeteringen',
     items: [
       'Toetsenbord en leesbaarheid: overal dezelfde zichtbare rand bij Tab (ook op links en uitklapkopjes), dezelfde pijltjes bij alle uitklapbare onderdelen, en "Uitloggen" in de menubalk ziet er net zo uit als de knoppen ernaast.',

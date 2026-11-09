@@ -5,6 +5,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 
 ## Wat kan het?
 
+- **Onderdelen aan/uit.** Bij *Systeem → Onderdelen* zet de beheerder werkopdrachten, bandenhotel, voorraad,
+  APK-lijst, portaal en AI los aan of uit. Zo is ADONIS bijv. alleen een bandenhotel of alleen een voorraadbeheer.
+  Uitgezette onderdelen verdwijnen uit menu's en zijn niet te openen; er wordt niets verwijderd. Klanten staan altijd aan.
 - **Inloggen verplicht.** Elke monteur krijgt een eigen account. Wachtwoorden worden versleuteld (bcrypt) opgeslagen.
 - **Klantenoverzicht op kenteken.** Klanten worden automatisch aangemaakt zodra een werkopdracht met een kenteken wordt opgeslagen.
   Zoeken op kenteken (met of zonder streepjes), naam, merk, plaats, klantnummer of chassisnummer.

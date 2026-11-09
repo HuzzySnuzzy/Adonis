@@ -11,7 +11,7 @@
         <b>Gebeld</b>; zo ziet iedereen wie al gebeld is. Nog niet gebelde klanten en de vroegste datums staan bovenaan.</p>
     </div>
     <div class="head-buttons">
-      <% if (user.is_admin && aiConfigured) { %>
+      <% if (user.is_admin && aiConfigured && feat.ai) { %>
       <button class="btn" type="button" data-ai-task="apk-modellen" data-ai-params="toon=<%= show %>" data-ai-action="/apk/modelpunten" data-ai-bulk
         data-ai-title="APK-aandachtspunten voor de automodellen in deze lijst"><%- include('/partials/ai-icon') %> APK-aandachtspunten opzoeken (Claude)</button>
       <% } %>
@@ -45,7 +45,7 @@
               <input type="hidden" name="_csrf" value="<%= csrf %>">
               <button class="btn btn-small <%= r.called ? 'btn-ok' : '' %>" type="submit" title="<%= r.called ? 'Gebeld op ' + fmtDate(r.called) + ' (klik om te wissen)' : 'Markeer als gebeld' %>"><%= r.called ? '✓ ' + fmtDate(r.called) : 'Gebeld' %></button>
             </form>
-            <a class="btn btn-small btn-primary" href="/werkopdracht/nieuw?klant=<%= r.id %>" title="Nieuwe werkopdracht (APK) voor deze klant">+ Werkopdracht</a>
+            <% if (feat.werkopdrachten) { %><a class="btn btn-small btn-primary" href="/werkopdracht/nieuw?klant=<%= r.id %>" title="Nieuwe werkopdracht (APK) voor deze klant">+ Werkopdracht</a><% } %>
           </td>
         </tr>
       <% } %>
