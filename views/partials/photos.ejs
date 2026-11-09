@@ -17,7 +17,7 @@
     <% } %>
   </div>
   <% if (!photoOwner) { %>
-    <p class="muted small">Na het opslaan kun je hier foto's toevoegen (bijvoorbeeld van de banden, het label of de velgen).</p>
+    <p class="muted small"><%= locals.photoHint || "Na het opslaan kun je hier foto's toevoegen (bijvoorbeeld van de banden, het label of de velgen)." %></p>
   <% } else { %>
     <div class="photo-grid" data-photo-grid>
       <% for (const p of photoList) { %>

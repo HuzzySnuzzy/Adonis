@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.43.0', date: '2026-11-09', title: 'Foto\'s en extra bladen bij een werkopdracht',
+    items: [
+      'Foto\'s bij een werkopdracht: onderaan de werkopdracht "Foto maken" of "Foto\'s kiezen" (bijvoorbeeld schade, een onderdeel, het dashboard of de km-stand). Bij een nieuwe werkopdracht kan dat na het opslaan.',
+      'Extra bladen: onder de achterkant "Blad toevoegen" met een vervolgblad voorkant (22 extra onderdelen en meer werkzaamheden), een vervolgblad achterkant (APK/afkeurpunten, aandachtspunten, notities) of een leeg blad met een titel. Onderdelen op een vervolgblad tellen mee in het totaal, de bladen worden mee afgedrukt en u kunt erin zoeken.',
+      'Op de telefoon staat de rechterhelft van de werkopdracht (klant, auto, werkzaamheden) nu bovenaan, daarna de onderdelen.',
+    ],
+  },
+  {
     version: '1.42.1', date: '2026-11-09', title: 'Suggesties op de telefoon',
     items: [
       'Op de telefoon viel de lijst met suggesties over het vak waarin u typte. Nu staat hij er altijd direct onder, of erboven als het toetsenbord in de weg zit, en hij schuift mee als het scherm verspringt.',

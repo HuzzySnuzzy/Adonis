@@ -301,10 +301,11 @@ module.exports = function register(app, { flash, wrap }) {
   // Vóór de upload-route: anders vangt /fotos/:type/:id ook /fotos/12/verwijderen af.
   app.post('/fotos/:id/verwijderen', (req, res) => {
     const p = photos.remove(req.params.id);
-    if (p) announce(req, p.owner_type === 'tyre' ? 'bandenhotel' : 'voorraad', { id: p.owner_id });
+    if (p && p.owner_type !== 'order') announce(req, p.owner_type === 'tyre' ? 'bandenhotel' : 'voorraad', { id: p.owner_id });
     if (wantsJson(req)) return res.json({ ok: Boolean(p) });
     flash(req, 'ok', 'Foto verwijderd.');
-    res.redirect(p ? (p.owner_type === 'tyre' ? `/bandenhotel/${p.owner_id}` : `/voorraad/${p.owner_id}`) : '/');
+    const back = { tyre: '/bandenhotel/', stock: '/voorraad/', order: '/werkopdracht/' };
+    res.redirect(p ? `${back[p.owner_type] || '/'}${p.owner_id}${p.owner_type === 'order' ? '#fotos' : ''}` : '/');
   });
 
   // Uploaden: de browser verkleint de foto en stuurt een grote en een kleine versie (JSON met data-URL's).
@@ -314,7 +315,7 @@ module.exports = function register(app, { flash, wrap }) {
     try {
       const b = req.body || {};
       const r = photos.add({ type, id, full: b.full, thumb: b.thumb, name: b.name, ref: b.ref, width: b.width, height: b.height, userId: req.user.id });
-      if (!r.existed) announce(req, type === 'tyre' ? 'bandenhotel' : 'voorraad', { id, foto: r.id });
+      if (!r.existed && type !== 'order') announce(req, type === 'tyre' ? 'bandenhotel' : 'voorraad', { id, foto: r.id });
       res.json({ ok: true, id: r.id, existed: r.existed });
     } catch (err) {
       if (!(err instanceof photos.PhotoError)) console.error(err);

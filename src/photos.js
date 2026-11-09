@@ -14,7 +14,7 @@ fs.mkdirSync(DIR, { recursive: true });
 const MAX_FULL = 8 * 1024 * 1024;
 const MAX_THUMB = 1024 * 1024;
 const MAX_PER_RECORD = 40;
-const OWNERS = { tyre: 'tyre_storage', stock: 'stock_items' };
+const OWNERS = { tyre: 'tyre_storage', stock: 'stock_items', order: 'orders' };
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS photos (

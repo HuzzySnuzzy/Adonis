@@ -72,6 +72,25 @@ function emptyOrderData() {
   };
 }
 
+/* Extra bladen achter de werkopdracht: een vervolgblad voorkant (onderdelen + werkzaamheden),
+ * een vervolgblad achterkant (APK/afkeurpunten, aandachtspunten, notities) of een leeg blad. */
+const PAGE_TYPES = {
+  voor: { label: 'Voorkant', template: () => ({
+    onderdelen: Array.from({ length: PART_ROWS }, () => ({ nr: '', omschrijving: '', aantal: '', prijs: '' })),
+    werk_check: '', werk_omschrijving: '', werk_code: '', werk_tijd: '',
+  }) },
+  achter: { label: 'Achterkant', template: () => ({ apk: '', aandachtspunten: '', notities: '' }) },
+  blanco: { label: 'Leeg blad', template: () => ({ titel: '', tekst: '' }) },
+};
+const MAX_PAGES = 12;
+function emptyPage(soort) { return { soort, ...PAGE_TYPES[soort].template() }; }
+function normalizePages(input) {
+  const list = Array.isArray(input) ? input
+    : input && typeof input === 'object' ? Object.keys(input).sort((a, b) => Number(a) - Number(b)).map((k) => input[k]) : [];
+  return list.filter((p) => p && PAGE_TYPES[p.soort]).slice(0, MAX_PAGES)
+    .map((p) => ({ soort: p.soort, ...shape(PAGE_TYPES[p.soort].template(), p) }));
+}
+
 /** Copy `input` into the shape of `template`, keeping only known keys and coercing types. */
 function shape(template, input) {
   if (Array.isArray(template)) {
@@ -97,6 +116,7 @@ function normalizeOrderData(input) {
   data.kenteken = data.kenteken.toUpperCase().trim();
   if (!['ja', 'nee'].includes(data.alle_reparaties)) data.alle_reparaties = '';
   for (const f of ['datum_gereed', 'datum_deel1', 'apk_datum']) data[f] = parseDate(data[f]);
+  data.paginas = normalizePages(input && input.paginas);
   return data;
 }
 
@@ -104,7 +124,9 @@ function normalizeOrderData(input) {
 function parseOrderData(json) {
   let raw = {};
   try { raw = JSON.parse(json); } catch { /* keep empty */ }
-  return shape(emptyOrderData(), raw);
+  const data = shape(emptyOrderData(), raw);
+  data.paginas = normalizePages(raw && raw.paginas);
+  return data;
 }
 
 function flattenText(value, out = []) {
@@ -356,7 +378,7 @@ function deleteOrder(id) {
 }
 
 module.exports = {
-  PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS,
+  PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage,
   emptyOrderData, normalizeOrderData, parseOrderData,
   nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate, updateCustomer,
   STATUSES, canEdit, allowedTransitions, setStatus, logAction, history, statusCounts,

@@ -234,8 +234,8 @@
 
   function kindOf(el) {
     if (!el.name || el.disabled || el.readOnly) return null;
-    if (/^d\[onderdelen\]\[\d+\]\[(nr|omschrijving)\]$/.test(el.name)) return 'onderdeel';
-    if (el.name === 'd[werk_omschrijving]') return 'werk';
+    if (/^d(\[paginas\]\[\d+\])?\[onderdelen\]\[\d+\]\[(nr|omschrijving)\]$/.test(el.name)) return 'onderdeel';
+    if (/^d(\[paginas\]\[\d+\])?\[werk_omschrijving\]$/.test(el.name)) return 'werk';
     if (/\[banden\]\[\w+\]\[maat\]$/.test(el.name)) return 'bandmaat';
     if (/\[banden\]\[\w+\]\[merk\]$/.test(el.name)) return 'bandmerk';
     return null;

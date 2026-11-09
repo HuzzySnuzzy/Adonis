@@ -321,8 +321,31 @@
   </section>
   </div>
 
+  <%# Extra bladen (vervolgblad voorkant/achterkant of een leeg blad) %>
+  <div data-pages>
+  <% (d.paginas || []).forEach((pg, i) => { %><%- include('/partials/order-page', { pg, i, nummer, editable }) %><% }) %>
+  </div>
+  <% if (editable) { %>
+  <div class="page-add no-print" data-page-add data-max="<%= MAX_PAGES %>">
+    <span class="muted">Blad toevoegen:</span>
+    <button type="button" class="btn btn-small" data-add-page="voor">+ Voorkant</button>
+    <button type="button" class="btn btn-small" data-add-page="achter">+ Achterkant</button>
+    <button type="button" class="btn btn-small" data-add-page="blanco">+ Leeg blad</button>
+  </div>
+  <% } %>
+
   </fieldset>
 </form>
+<% if (editable) { for (const t of Object.keys(PAGE_TYPES)) { %>
+<template data-page-tpl="<%= t %>"><%- include('/partials/order-page', { pg: emptyPage(t), i: '__I__', nummer, editable }) %></template>
+<% } } %>
+
+<%# Foto's bij de werkopdracht (buiten het formulier: de verwijderknoppen zijn eigen formulieren) %>
+<% if (!draft) { %>
+<div class="order-photos no-print">
+  <%- include('/partials/photos', { photoList, photoOwner: order ? { type: 'order', id: order.id } : null, photoHint: 'Na het opslaan kunt u hier foto\'s toevoegen (schade, onderdelen, het dashboard of de km-stand).' }) %>
+</div>
+<% } %>
   <div class="form-actions no-print">
     <% if (draft) { %>
       <button class="btn btn-danger" type="submit" form="cancelImportForm">Annuleren</button>
@@ -355,4 +378,5 @@
 <script src="/static/js/order.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/rdw.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/order-assist.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

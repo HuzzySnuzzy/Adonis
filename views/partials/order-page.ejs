@@ -1,0 +1,77 @@
+<%# Eén extra blad van een werkopdracht. Verwacht: pg (blad), i (nummer in de lijst of '__I__' voor het sjabloon), nummer, editable %>
+<%
+  const base = `paginas.${i}`;
+  const ta = (field, rows, extra = '') => `<textarea class="ink lined" name="d[paginas][${i}][${field}]" rows="${rows}" spellcheck="false" ${extra}>${esc(pg[field])}</textarea>`;
+  const LABEL = { voor: 'Vervolgblad voorkant', achter: 'Vervolgblad achterkant', blanco: 'Leeg blad' };
+%>
+<div class="extra-page" data-page data-page-type="<%= pg.soort %>">
+  <h2 class="side-title no-print extra-title"><span><%= LABEL[pg.soort] %></span>
+    <% if (editable) { %><button type="button" class="btn btn-small btn-ghost" data-page-remove>Blad verwijderen</button><% } %></h2>
+  <div class="sheet-scroll">
+  <section class="sheet extra extra-<%= pg.soort %>" aria-label="<%= LABEL[pg.soort] %>">
+    <input type="hidden" name="d[paginas][<%= i %>][soort]" value="<%= pg.soort %>">
+    <% if (pg.soort === 'voor') { %>
+    <div class="panel panel-left">
+      <div class="back-head"><span class="wo-title small-title">Onderdelen (vervolg)</span><span class="red-nr mirror-nr"><%= nummer %></span></div>
+      <table class="grid parts">
+        <colgroup><col class="c-rownum"><col class="c-partnr"><col><col class="c-qty"><col class="c-price"></colgroup>
+        <thead><tr><th colspan="2">Onderdeelnummer</th><th>Omschrijving</th><th class="center">Aantal</th><th class="center">Prijs p.eenh.</th></tr></thead>
+        <tbody>
+        <% pg.onderdelen.forEach((p, r) => { %>
+          <tr data-line>
+            <td class="rownum"><%= r + 1 %></td>
+            <td><%- inp(`${base}.onderdelen.${r}.nr`, p.nr) %></td>
+            <td><%- inp(`${base}.onderdelen.${r}.omschrijving`, p.omschrijving) %></td>
+            <td><%- inp(`${base}.onderdelen.${r}.aantal`, p.aantal, 'class="ink center" data-qty') %></td>
+            <td><%- inp(`${base}.onderdelen.${r}.prijs`, p.prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel panel-right">
+      <div class="back-head"><span class="wo-title small-title">Werkzaamheden (vervolg)</span></div>
+      <div class="work">
+        <div class="work-row work-head">
+          <div class="w-check">✓</div><div class="w-oms">Omschrijving werkzaamheden</div><div class="w-code">Code</div><div class="w-tijd">Tijd</div>
+        </div>
+        <div class="work-lines" data-sync>
+          <div class="w-check"><%- ta('werk_check', WORK_LINES + 3, 'aria-label="Afgevinkt"') %></div>
+          <div class="w-oms"><%- ta('werk_omschrijving', WORK_LINES + 3, 'aria-label="Omschrijving werkzaamheden"') %></div>
+          <div class="w-code"><%- ta('werk_code', WORK_LINES + 3, 'aria-label="Code"') %></div>
+          <div class="w-tijd"><%- ta('werk_tijd', WORK_LINES + 3, 'aria-label="Tijd"') %></div>
+        </div>
+      </div>
+    </div>
+    <% } else if (pg.soort === 'achter') { %>
+    <div class="panel panel-left">
+      <div class="back-head"><span class="wo-title small-title">Vervolgblad</span><span class="red-nr mirror-nr"><%= nummer %></span></div>
+      <div class="back-block">
+        <div class="block-head">A.p.k. / Afkeurpunten</div>
+        <div class="block-lines"><%- ta('apk', 18) %></div>
+      </div>
+    </div>
+    <div class="panel panel-right">
+      <div class="back-block">
+        <div class="block-head">Aandachtspunten</div>
+        <div class="block-lines"><%- ta('aandachtspunten', 9) %></div>
+      </div>
+      <div class="back-block">
+        <div class="block-head">Notities</div>
+        <div class="block-lines"><%- ta('notities', 8) %></div>
+      </div>
+    </div>
+    <% } else { %>
+    <div class="panel panel-blank">
+      <div class="back-head">
+        <input class="ink blank-title" name="d[paginas][<%= i %>][titel]" value="<%= pg.titel %>" placeholder="Titel (optioneel)" autocomplete="off" aria-label="Titel van dit blad">
+        <span class="red-nr mirror-nr"><%= nummer %></span>
+      </div>
+      <div class="back-block">
+        <div class="block-lines"><%- ta('tekst', 20, 'aria-label="Tekst"') %></div>
+      </div>
+    </div>
+    <% } %>
+  </section>
+  </div>
+</div>

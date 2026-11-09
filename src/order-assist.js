@@ -22,7 +22,8 @@ function index() {
   let tarief = ''; let tariefAt = '';
   for (const row of db.prepare('SELECT data, datum_invoer, updated_at FROM orders ORDER BY datum_invoer, id').iterate()) {
     let d; try { d = JSON.parse(row.data); } catch { continue; }
-    for (const p of d.onderdelen || []) {
+    const pages = (Array.isArray(d.paginas) ? d.paginas : []).filter((pg) => pg && pg.soort === 'voor');
+    for (const p of [...(d.onderdelen || []), ...pages.flatMap((pg) => pg.onderdelen || [])]) {
       const nr = txt(p.nr); const oms = txt(p.omschrijving);
       if (!nr && !oms) continue;
       const key = (inv.numberKey(nr) || '') + '|' + fold(oms);
@@ -30,7 +31,7 @@ function index() {
       e.n++; e.last = row.datum_invoer; if (txt(p.prijs)) e.prijs = txt(p.prijs);
       parts.set(key, e);
     }
-    for (const line of String(d.werk_omschrijving || '').split('\n')) {
+    for (const line of [d.werk_omschrijving, ...pages.map((pg) => pg.werk_omschrijving)].join('\n').split('\n')) {
       const l = txt(line); if (l.length < 3) continue;
       const k = fold(l); const e = work.get(k) || { text: l, n: 0 }; e.n++; e.text = l; work.set(k, e);
     }

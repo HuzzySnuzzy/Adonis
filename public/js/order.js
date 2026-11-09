@@ -13,13 +13,15 @@
     const lines = Math.max(minRows, Math.ceil((needed - 1) / row));
     textareas.forEach((t) => { t.style.height = ''; t.style.minHeight = lines * row + 'px'; });
   }
-  const workGroup = Array.from(document.querySelectorAll('[data-sync] textarea'));
+  // De vier kolommen van de werkzaamheden groeien samen (per blad: de voorkant en elk vervolgblad).
+  const fitGroup = (box) => { const ts = Array.from(box.querySelectorAll('textarea')); if (ts.length) fit(ts, parseInt(ts[0].getAttribute('rows'), 10)); };
   const fitAll = () => {
-    if (workGroup.length) fit(workGroup, parseInt(workGroup[0].getAttribute('rows'), 10));
-    document.querySelectorAll('.block-lines textarea').forEach((t) => fit([t], parseInt(t.getAttribute('rows'), 10)));
+    form.querySelectorAll('[data-sync]').forEach(fitGroup);
+    form.querySelectorAll('.block-lines textarea').forEach((t) => fit([t], parseInt(t.getAttribute('rows'), 10)));
   };
   form.addEventListener('input', (e) => {
-    if (e.target.matches('[data-sync] textarea')) fit(workGroup, parseInt(workGroup[0].getAttribute('rows'), 10));
+    const group = e.target.closest && e.target.closest('[data-sync]');
+    if (group) fitGroup(group);
     else if (e.target.matches('.block-lines textarea')) fit([e.target], parseInt(e.target.getAttribute('rows'), 10));
   });
   window.addEventListener('resize', fitAll);
@@ -37,8 +39,7 @@
 
   /* ---------- ordernummer ook links/achterkant tonen ---------- */
   const nrInput = form.querySelector('input[name="nummer"]');
-  const mirrors = document.querySelectorAll('.mirror-nr');
-  nrInput.addEventListener('input', () => mirrors.forEach((m) => { m.textContent = nrInput.value; }));
+  nrInput.addEventListener('input', () => document.querySelectorAll('.mirror-nr').forEach((m) => { m.textContent = nrInput.value; }));
 
   /* ---------- totaal materiaal (aantal × prijs) ---------- */
   function num(v) {
@@ -167,6 +168,42 @@
     form.addEventListener('change', () => { clearTimeout(timer); timer = setTimeout(store, 300); });
     // Bij opslaan: bewaren met een vlag; pas na de groene melding wordt het verwijderd.
     form.addEventListener('submit', () => { clearTimeout(timer); store({ submitted: true }); });
+  })();
+
+  /* ---------- extra bladen toevoegen / verwijderen ---------- */
+  (function pages() {
+    const box = form.querySelector('[data-pages]');
+    const add = form.querySelector('[data-page-add]');
+    if (!box || !add) return;
+    const max = Number(add.dataset.max) || 12;
+    const count = () => box.querySelectorAll('[data-page]').length;
+    const sync = () => add.querySelectorAll('button').forEach((b) => { b.disabled = count() >= max; });
+    let next = count(); // nieuwe nummers na de bestaande (gaten zijn geen probleem: de server nummert opnieuw)
+    add.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-add-page]');
+      if (!b || count() >= max) return;
+      const tpl = document.querySelector(`template[data-page-tpl="${b.dataset.addPage}"]`);
+      if (!tpl) return;
+      const holder = document.createElement('div');
+      holder.innerHTML = tpl.innerHTML.replace(/__I__/g, String(next++));
+      const page = holder.firstElementChild;
+      page.querySelectorAll('.mirror-nr').forEach((m) => { m.textContent = nrInput.value; });
+      box.append(page);
+      markDirty(); fitAll(); sync();
+      page.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const first = page.querySelector('input:not([type=hidden]), textarea');
+      if (first) setTimeout(() => first.focus({ preventScroll: true }), 300);
+    });
+    box.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-page-remove]');
+      if (!b) return;
+      const page = b.closest('[data-page]');
+      const filled = [...page.querySelectorAll('input:not([type=hidden]), textarea')].some((i) => i.value.trim());
+      if (filled && !window.confirm('Dit blad verwijderen? Wat erop staat gaat verloren (pas definitief na Opslaan).')) return;
+      page.remove();
+      markDirty(); updateTotals(); sync();
+    });
+    sync();
   })();
 
   /* ---------- Enter springt naar volgend veld i.p.v. opslaan ---------- */

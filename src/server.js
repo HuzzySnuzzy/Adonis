@@ -611,7 +611,8 @@ function renderOrder(res, { order, data, nummer, error, status, draft, datumInvo
   res.status(status || 200).render('order', {
     title: draft ? 'Import controleren' : order ? `Werkopdracht ${order.nummer}` : 'Nieuwe werkopdracht',
     order, data, nummer, error, draft: draft || null,
-    STATUSES: orders.STATUSES,
+    STATUSES: orders.STATUSES, PAGE_TYPES: orders.PAGE_TYPES, MAX_PAGES: orders.MAX_PAGES, emptyPage: orders.emptyPage,
+    photoList: order ? require('./photos').list('order', order.id) : [],
     editable: draft ? true : orders.canEdit(user, order),
     transitions: orders.allowedTransitions(user, order || { status: 'open' }),
     history: order ? orders.history(order.id) : [],
@@ -771,6 +772,7 @@ app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
   const order = loadOrder(req.params.id);
   if (!order) return res.redirect('/');
   const customerId = orders.deleteOrder(order.id);
+  try { require('./photos').removeFor('order', order.id); } catch (err) { console.error('Foto\'s van werkopdracht niet verwijderd:', err.message); }
   announce(req, 'deleted', { id: order.id, nummer: order.nummer, customerId });
   flash(req, 'ok', `Werkopdracht ${order.nummer} is verwijderd.`);
   const stillExists = db.prepare('SELECT 1 FROM customers WHERE id = ?').get(customerId);

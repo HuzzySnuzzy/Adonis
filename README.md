@@ -5,6 +5,8 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 
 ## Wat kan het?
 
+- **Foto's en extra bladen bij werkopdrachten.** Foto's (camera of bestand) onderaan de werkopdracht; extra
+  vervolgbladen (voorkant, achterkant of leeg) die meetellen in het totaal, mee worden afgedrukt en doorzoekbaar zijn.
 - **Rekenhulp.** Band omrekenen (diameter, tellerafwijking, alternatieve maten), last-/snelheidsindex, DOT-leeftijd,
   bar/psi, Nm/lbf·ft, kW/pk, verbruik, arbeidsloon, BTW en meer.
 - **Slim invullen.** Kenteken van een bekende klant vult de klantgegevens in en toont vorige werkopdracht, km-stand,
