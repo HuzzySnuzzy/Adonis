@@ -1166,7 +1166,8 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 .mscale-card { display: none; }
 @media (pointer: coarse) { .mscale-card { display: block; } }
 /* In de ADONIS-app (Windows) nooit de hele pagina schalen: in-/uitzoomen gaat daar met Ctrl + en Ctrl -. */
-:root[data-app] { zoom: 1 !important; }
+/* Behalve in een venster op het bureaublad: daar bepaalt "Grootte van de vensterinhoud" (Personaliseren) de schaal. */
+:root[data-app]:not(.in-window) { zoom: 1 !important; }
 .car-photo .car-wrong { align-self: flex-start; font-size: .75rem; color: var(--muted); margin-top: .1rem; }
 
 /* Voorbeeldfoto's van onderdelen */

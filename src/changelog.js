@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.46.3', date: '2026-11-09', title: 'Grootte van de vensterinhoud werkt in de app',
+    items: [
+      'Bureaublad → Personaliseren → "Grootte van de vensterinhoud" deed in de ADONIS-app niets voor de ADONIS-vensters (alleen in een gewone browser). Nu worden de vensters echt kleiner of groter.',
+    ],
+  },
+  {
     version: '1.46.2', date: '2026-11-09', title: 'Foutmelding bij sluiten van een websitevenster opgelost',
     items: [
       'ADONIS-app: bij het sluiten van een apart websitevenster (uit het Portaal) verscheen soms "A JavaScript error occurred in the main process – Object has been destroyed". Dat gebeurt niet meer.',
