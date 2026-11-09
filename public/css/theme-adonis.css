@@ -71,7 +71,7 @@
 :root[data-theme="adonis"] body { font: 17px/1.5 var(--f-body); font-variant-numeric: lining-nums tabular-nums; color: var(--text); }
 :root[data-theme="adonis"] :is(.page-head h1, main.page > h1, .start-hero h1, .page > header h1) {
   font: 600 1.85rem/1.2 var(--f-display); letter-spacing: .05em;
-  background: var(--gold-text) 0 0 / 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  background: var(--gold-text) 100% 0 / 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .7)) drop-shadow(0 6px 14px rgba(141, 100, 20, .18));
   animation: ad-shimmer 11s ease-in-out infinite; animation-delay: calc(var(--clock, 0) * -1s);
 }
@@ -79,7 +79,7 @@
 :root[data-theme="adonis"] :is(.page-head h1, main.page > h1, .start-hero h1) :is(svg, img) { color: var(--gold-deep); }
 @keyframes ad-shimmer { 0%, 62% { background-position: 100% 0; } 80%, 100% { background-position: 0 0; } }
 :root[data-theme="adonis"] .start-hero h1 { font-size: 2.5rem; letter-spacing: .04em; }
-:root[data-theme="adonis"] .customer-head h1 { font: 600 1.6rem/1.25 var(--f-display); letter-spacing: .04em; color: var(--lapis-deep); }
+:root[data-theme="adonis"] .customer-head h1 { font: 600 1.45rem/1.25 var(--f-display); letter-spacing: .02em; color: var(--lapis-deep); text-wrap: balance; }
 :root[data-theme="adonis"] h2 { font-family: var(--f-display); font-weight: 600; letter-spacing: .04em; color: #1b2a5e; }
 :root[data-theme="adonis"] h3 { font-family: var(--f-body); font-weight: 700; color: #1b2a5e; }
 :root[data-theme="adonis"] :where(table.list th, .facts dt, .rdw-facts dt, .start-label, .start-date, .theme-fx-label) {
@@ -163,7 +163,7 @@
 :root[data-theme="adonis"] .logo-mark rect:last-child { fill: #fffaf0; }
 :root[data-theme="adonis"] .logo-word {
   font: 700 1.12rem/1 var(--f-display); letter-spacing: .26em;
-  background: var(--gold-text) 0 0 / 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  background: var(--gold-text) 100% 0 / 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
   animation: ad-shimmer 11s ease-in-out infinite; animation-delay: calc(var(--clock, 0) * -1s - 3s);
 }
 :root[data-theme="adonis"] .logo-sub { font: italic 500 .74rem/1 var(--f-body); letter-spacing: .16em; text-transform: none; color: #e9dcb8; opacity: .85; }
@@ -214,8 +214,8 @@
 :root[data-theme="adonis"] .btn-ok:hover { border-color: #34491a; background: linear-gradient(180deg, #7b9c3c, #567527); }
 :root[data-theme="adonis"] .btn-danger { color: var(--danger); border-color: var(--danger-border); }
 :root[data-theme="adonis"] .btn-danger:hover { background: linear-gradient(180deg, #fffaf6, #f8e2d8); border-color: var(--danger); box-shadow: 0 0 0 3px rgba(166, 61, 36, .12); }
-:root[data-theme="adonis"] .btn-ghost { background: transparent; border-color: transparent; box-shadow: none; }
-:root[data-theme="adonis"] .btn-ghost:hover { background: rgba(212, 175, 79, .12); border-color: transparent; }
+:root[data-theme="adonis"] .btn-ghost { background: transparent; border-color: rgba(212, 175, 79, .45); box-shadow: none; }
+:root[data-theme="adonis"] .btn-ghost:hover { background: rgba(212, 175, 79, .12); border-color: rgba(212, 175, 79, .7); }
 :root[data-theme="adonis"] :is(.btn, .iconbtn, .start-tile, .start-new, .start-stat, a):focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 /* ---------- Invoervelden ---------- */
@@ -243,8 +243,7 @@
 :root[data-theme="adonis"] :is(.flash, .alert) { border-radius: 3px; border: 1px solid; border-left-width: 4px; box-shadow: var(--lift); }
 :root[data-theme="adonis"] .flash-ok { background: #eef2dd; color: #3d5a1c; border-color: #c4d29a #c4d29a #c4d29a #6b8a2e; }
 :root[data-theme="adonis"] :is(.flash-err, .alert) { background: #f9e7df; color: #8a2c17; border-color: #e7bfb0 #e7bfb0 #e7bfb0 #a63d24; }
-:root[data-theme="adonis"] .live-toast { border-radius: 3px; border: 1px solid #d9c9a0; background: #fffdf8; box-shadow: var(--frame), var(--shadow); }
-:root[data-theme="adonis"] .live-toast { border-left: 4px solid var(--gold); }
+:root[data-theme="adonis"] .live-toast { border-radius: 3px; border: 1px solid #d9c9a0; border-left: 4px solid var(--toast-accent, var(--gold)); background: #fffdf8; box-shadow: var(--frame), var(--shadow); }
 
 /* ---------- Startscherm ---------- */
 :root[data-theme="adonis"] .start-new {

@@ -190,9 +190,9 @@ async function ask(input, effortKey) {
     response = await request(true);
   } catch (err) {
     if (err && err.status === 400 && /grammar|schema|output_config|format/i.test(err.message || '')) {
-      try { response = await request(false); } catch (err2) { throw importer.apiError(err2, 'excel'); }
+      try { response = await request(false); } catch (err2) { throw importer.apiError(err2, 'claude'); }
     } else {
-      throw importer.apiError(err, 'excel');
+      throw importer.apiError(err, 'claude');
     }
   }
   const usage = importer.usageOf(response);
@@ -208,7 +208,15 @@ async function ask(input, effortKey) {
 }
 
 /** Eén klant analyseren. Vervangt de open punten; afgehandelde blijven bewaard. */
-async function analyze(customerId, { effort = 'normaal', userId = null } = {}) {
+const inFlight = new Map(); // customerId -> lopende analyse (twee klikken tegelijk = één Claude-aanroep)
+function analyze(customerId, opts = {}) {
+  const k = Number(customerId);
+  if (inFlight.has(k)) return inFlight.get(k);
+  const p = doAnalyze(k, opts).finally(() => inFlight.delete(k));
+  inFlight.set(k, p);
+  return p;
+}
+async function doAnalyze(customerId, { effort = 'normaal', userId = null } = {}) {
   if (!importer.isConfigured()) throw new BulletinError('Claude is niet ingesteld: vul anthropic-api-key in config.properties in.');
   const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(customerId);
   if (!customer) throw new BulletinError('Deze klant bestaat niet (meer).');

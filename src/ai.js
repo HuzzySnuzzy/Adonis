@@ -53,8 +53,11 @@ function formatEur(n) {
   return '€ ' + n.toLocaleString('nl-NL', { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 function formatRange(a, b) {
-  const x = formatEur(a); const y = formatEur(b);
-  return x === y ? x : `${x} – ${y.replace('€ ', '')}`;
+  if (b < 0.005) return formatEur(b);
+  const d = b < 10 ? 2 : 0; // dezelfde precisie links en rechts ("€ 9,80 – 12" wordt "€ 10 – 12")
+  const f = (n) => n.toLocaleString('nl-NL', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const x = f(Math.max(0, a)); const y = f(b);
+  return x === y ? '€ ' + x : `€ ${x} – ${y}`;
 }
 
 module.exports = { MODEL, PRICES, LEVELS, LEVEL_KEYS, level, tokensForText, usdOf, eur, estimate, formatEur, formatRange, EUR_PER_USD };

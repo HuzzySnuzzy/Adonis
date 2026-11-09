@@ -45,6 +45,7 @@
     let s = String(v || '').replace(/[^\d.,-]/g, '');
     if (!s) return NaN;
     if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+    else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ''); // "1.250" = duizend tweehonderdvijftig
     return parseFloat(s);
   }
   const euro = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' });
@@ -95,7 +96,8 @@
   if (dirty) toolbar.classList.add('dirty');
   window.addEventListener('beforeunload', (e) => { if (dirty && !window.adonisLeaving) { e.preventDefault(); e.returnValue = ''; } });
   // Opslaan of annuleren (na bevestiging) mag de pagina verlaten zonder waarschuwing.
-  document.addEventListener('submit', (e) => { if (!e.defaultPrevented) dirty = false; });
+  // (Een <form method="dialog"> – plaknotitie, Claude-venster – verlaat de pagina niet.)
+  document.addEventListener('submit', (e) => { if (!e.defaultPrevented && e.target.method !== 'dialog') dirty = false; });
 
   /* ---------- concept bewaren op dit apparaat ----------
    * Wat er wordt getypt, wordt elke seconde op dit apparaat bewaard. Sluit de pagina per ongeluk, is de

@@ -104,6 +104,7 @@ async function ask(facts, effortKey) {
     let messages = [user];
     let response;
     const content = [];
+    let searched = 0; // het beloofde maximum geldt voor de hele beurt, ook na een pauze (pause_turn)
     for (let i = 0; i < 5; i++) {
       response = await client.beta.messages.create({
         model: ai.MODEL,
@@ -112,12 +113,13 @@ async function ask(facts, effortKey) {
         fallbacks: 'default',
         system: SYSTEM,
         output_config: { effort: ai.LEVELS[lvl].effort },
-        ...(withWeb ? { tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: SEARCHES[lvl] }] } : {}),
+        ...(withWeb ? { tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: Math.max(1, SEARCHES[lvl] - searched) }] } : {}),
         messages,
       });
       const u = importer.usageOf(response);
       usage.model = u.model; usage.input += u.input; usage.output += u.output;
       usage.extraUsd += ((response.usage && response.usage.server_tool_use && response.usage.server_tool_use.web_search_requests) || 0) * SEARCH_USD;
+      searched += (response.usage && response.usage.server_tool_use && response.usage.server_tool_use.web_search_requests) || 0;
       content.push(...response.content);
       if (response.stop_reason !== 'pause_turn') break;
       messages = [user, { role: 'assistant', content: [...content] }];
@@ -130,9 +132,9 @@ async function ask(facts, effortKey) {
   } catch (err) {
     if (err && err.status === 400 && /web.?search|tool/i.test(err.message || '')) {
       web = false;
-      try { response = await run(false); } catch (err2) { throw importer.apiError(err2, 'excel'); }
+      try { response = await run(false); } catch (err2) { throw importer.apiError(err2, 'claude'); }
     } else {
-      throw importer.apiError(err, 'excel');
+      throw importer.apiError(err, 'claude');
     }
   }
   const billed = (msg) => Object.assign(new VehicleError(msg), { usage });

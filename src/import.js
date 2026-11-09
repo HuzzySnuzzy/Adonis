@@ -261,20 +261,21 @@ function parseImages(list) {
 }
 
 function apiError(err, kind = 'foto') {
-  const excel = kind === 'excel';
+  const excel = kind === 'excel'; const claude = kind === 'claude'; // 'claude': aandachtspunten, APK-punten, AI-analyse
   const status = err && err.status;
-  if (status === 401 || status === 403) return new ImportError('De API-sleutel voor het uitlezen is ongeldig. Controleer anthropic-api-key in config.properties.');
+  const dienst = claude ? 'Claude' : 'de uitleesdienst';
+  if (status === 401 || status === 403) return new ImportError(`De API-sleutel voor ${dienst} is ongeldig. Controleer anthropic-api-key in config.properties.`);
   if (status === 429) return new ImportError('Te veel verzoeken of tegoed op. Probeer het over een minuut opnieuw.');
-  if (status === 413) return new ImportError(excel ? 'Het bestand is te groot om te laten beoordelen. Importeer zonder Claude.' : 'De foto\'s zijn samen te groot. Probeer minder foto\'s tegelijk.');
+  if (status === 413) return new ImportError(claude ? 'Deze opdracht is te groot voor Claude.' : excel ? 'Het bestand is te groot om te laten beoordelen. Importeer zonder Claude.' : 'De foto\'s zijn samen te groot. Probeer minder foto\'s tegelijk.');
   if (status === 400) {
-    console.error(excel ? 'Excel-import' : 'Foto-import', ': API weigerde het verzoek:', err.message);
+    console.error(claude ? 'Claude' : excel ? 'Excel-import' : 'Foto-import', ': API weigerde het verzoek:', err.message);
     const credit = /credit|balance|billing/i.test(err.message || '');
     return new ImportError(credit
-      ? 'Het tegoed voor het uitlezen is op. Vul het tegoed aan in de Anthropic Console.'
-      : (excel ? 'Het bestand kon niet worden beoordeeld' : 'De foto kon niet worden verwerkt') + '. Probeer het opnieuw; blijft dit gebeuren, meld het dan aan de beheerder (details staan in de console).');
+      ? `Het tegoed voor ${dienst} is op. Vul het tegoed aan in de Anthropic Console.`
+      : (claude ? 'Claude kon dit verzoek niet verwerken' : excel ? 'Het bestand kon niet worden beoordeeld' : 'De foto kon niet worden verwerkt') + '. Probeer het opnieuw; blijft dit gebeuren, meld het dan aan de beheerder (details staan in de console).');
   }
-  if (status >= 500) return new ImportError('De uitleesdienst is tijdelijk niet beschikbaar. Probeer het later opnieuw.');
-  return new ImportError('Geen verbinding met de uitleesdienst (is er internet?). ' + (err && err.message ? `(${err.message})` : ''));
+  if (status >= 500) return new ImportError(`${claude ? 'Claude' : 'De uitleesdienst'} is tijdelijk niet beschikbaar. Probeer het later opnieuw.`);
+  return new ImportError(`Geen verbinding met ${dienst} (is er internet?). ` + (err && err.message ? `(${err.message})` : ''));
 }
 
 /** Verbruik van een (gelukte, dus betaalde) aanroep. */

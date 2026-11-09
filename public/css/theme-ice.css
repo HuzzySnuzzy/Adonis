@@ -325,7 +325,7 @@
 }
 :root[data-theme="ice"] .flash-ok { color: var(--ok-text); border-left-color: var(--ok-text); }
 :root[data-theme="ice"] :is(.flash-err, .alert) { color: var(--err-text); border-left-color: var(--danger); }
-:root[data-theme="ice"] .live-toast { border-radius: 2px; background: #050912; color: var(--text); border: 1px solid rgba(165, 139, 255, .5); border-left: 3px solid var(--uv); box-shadow: 0 0 20px rgba(165, 139, 255, .25); }
+:root[data-theme="ice"] .live-toast { border-radius: 2px; background: #050912; color: var(--text); border: 1px solid rgba(165, 139, 255, .5); border-left: 3px solid var(--toast-accent, var(--uv)); box-shadow: 0 0 20px rgba(165, 139, 255, .25); }
 :root[data-theme="ice"] :is(.flash, .live-banner, .live-toast) { animation: ice-condense .45s var(--ice-in) both; }
 :root[data-theme="ice"] .order-toolbar, :root[data-theme="ice"] .review-bar { background: #040811; border-color: var(--glass-border); }
 :root[data-theme="ice"] .tb-title strong { font-family: var(--f-display); font-weight: 400; letter-spacing: .08em; }
@@ -354,7 +354,7 @@
 @keyframes ice-reveal { from { background-position: 100% 0; opacity: 0; letter-spacing: .4em; } 40% { opacity: 1; } to { background-position: 0 0; letter-spacing: .14em; } }
 
 /* ---------- Opstarten (eerste pagina van een tabblad, ± 1,3 s, blokkeert nooit): het ijs ontdooit van binnen naar buiten ---------- */
-.ice-boot { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
+.ice-boot { position: fixed; inset: 0; z-index: 9990; pointer-events: none; }
 :root:not([data-theme="ice"]) .ice-boot, :root[data-theme="ice"]:not([data-boot]) .ice-boot { display: none; }
 .ice-boot::before {
   content: ""; position: absolute; inset: 0;
@@ -457,3 +457,26 @@
 :root[data-theme="ice"] :is(.status-badge, .apk-pill) { font-size: 12.5px; }
 :root[data-theme="ice"] .apk-pill.apk-expired { color: #ffa8c4; }
 :root[data-theme="ice"] .status-open { color: #c4d6ec; }
+
+/* ---- Bureaubladmodus en dialogen in Black Ice ---- */
+:root[data-theme="ice"] .dw { border-radius: 2px; border: 1px solid rgba(127, 232, 255, .3); box-shadow: 0 0 0 1px rgba(0, 0, 0, .6), 0 18px 40px rgba(0, 0, 0, .6), 0 0 18px rgba(127, 232, 255, .1); }
+:root[data-theme="ice"] .dw-bar { height: 32px; background: #070c15; border-bottom: 1px solid rgba(127, 232, 255, .25); }
+:root[data-theme="ice"] .dw.is-active .dw-bar { background: #0a1220; color: var(--accent); }
+:root[data-theme="ice"] .dw-title { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; font-weight: 400; }
+:root[data-theme="ice"] .dw-btn { border-radius: 1px; }
+:root[data-theme="ice"] .dw-close:hover { background: rgba(255, 90, 110, .8); color: #fff; }
+:root[data-theme="ice"] .dt-taskbar { background: rgba(4, 8, 14, .92); border-top: 1px solid rgba(127, 232, 255, .25); }
+:root[data-theme="ice"] .dt-task { border-radius: 1px; font-family: var(--f-display); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+:root[data-theme="ice"] .dt-task.is-active { background: rgba(127, 232, 255, .12); color: var(--accent); }
+:root[data-theme="ice"] :is(.dt-menu, .dt-ctx) { border-radius: 2px; border-color: rgba(127, 232, 255, .3); background: #060b14; }
+:root[data-theme="ice"] .dt-icon-img { border-radius: 2px; background: rgba(127, 232, 255, .07); border: 1px solid rgba(127, 232, 255, .25); color: var(--accent); }
+:root[data-theme="ice"] :is(.swap-dialog, .sn-menu, .rdw-pop, .ai-busy-card) { border-radius: 3px; border-color: rgba(127, 232, 255, .4); background: #060b14; box-shadow: 0 0 0 1px rgba(0, 0, 0, .6), 0 20px 50px rgba(0, 0, 0, .7), 0 0 30px rgba(127, 232, 255, .12); }
+:root[data-theme="ice"][data-fx="calm"] .ice-core { animation: none; opacity: .7; }
+
+/* Werkopdracht: de titel in het sierlettertype is breed; laat hem inkorten zodat het nummer niet buiten het blad valt */
+:root[data-theme="ice"] .head-grid .title-cell .wo-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; letter-spacing: .1em; }
+:root[data-theme="ice"] .head-grid .title-cell .nr-input { width: 4.5ch; min-width: 0; flex: 0 1 auto; letter-spacing: .04em; }
+/* Startpagina: het grote zoekveld heeft al een vergrootglas; geen tweede tekentje en ruimte voor de tekst */
+:root[data-theme="ice"] .start-search-row input[type=search] { padding-left: 3rem !important; background-image: none; }
+/* De lichte voorbeeldfoto van de auto iets dimmen op de donkere klantpagina */
+:root[data-theme="ice"] .car-photo img { filter: brightness(.85) saturate(.7) hue-rotate(-10deg); }

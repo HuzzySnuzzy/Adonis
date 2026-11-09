@@ -11,6 +11,8 @@
     calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14.5l2.5 2.5 5-5"/>',
     box: '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
     camera: '<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
     grid: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 4"/><circle cx="12" cy="17.5" r=".6" fill="currentColor"/>',
   };
@@ -45,7 +47,7 @@
 
 <nav class="dt-taskbar no-print" aria-label="Taakbalk">
   <button type="button" class="dt-start" data-start aria-haspopup="menu" aria-expanded="false"><%- include('/partials/logo') %></button>
-  <div class="dt-tasks" data-tasks role="list"></div>
+  <div class="dt-tasks" data-tasks role="toolbar" aria-label="Open vensters"></div>
   <span class="dt-clock" data-clock></span>
 </nav>
 <div class="dt-menu no-print" data-menu role="menu" hidden>
@@ -53,12 +55,12 @@
   <button type="button" role="menuitem" class="dt-menu-item dt-menu-new" data-open="/werkopdracht/nieuw" data-icon="plus"><%- svg('plus', 18) %> Nieuwe werkopdracht</button>
   <% for (const a of apps) { %><button type="button" role="menuitem" class="dt-menu-item" data-open="<%= a.href %>" data-icon="<%= a.icon %>"><%- svg(a.icon, 18) %> <%= a.title %></button><% } %>
   <div class="dt-menu-sep"></div>
-  <button type="button" role="menuitem" class="dt-menu-item" data-open="/instellingen" data-icon="grid">Instellingen</button>
-  <% if (user.is_admin) { %><button type="button" role="menuitem" class="dt-menu-item" data-open="/gebruikers" data-icon="people">Gebruikers</button><% } %>
-  <% if (user.is_owner) { %><button type="button" role="menuitem" class="dt-menu-item" data-open="/systeem" data-icon="grid">Systeem</button><% } %>
+  <button type="button" role="menuitem" class="dt-menu-item" data-open="/instellingen" data-icon="gear"><%- svg('gear', 18) %> Instellingen</button>
+  <% if (user.is_admin) { %><button type="button" role="menuitem" class="dt-menu-item" data-open="/gebruikers" data-icon="people"><%- svg('people', 18) %> Gebruikers</button><% } %>
+  <% if (user.is_owner) { %><button type="button" role="menuitem" class="dt-menu-item" data-open="/systeem" data-icon="gear"><%- svg('gear', 18) %> Systeem</button><% } %>
   <button type="button" role="menuitem" class="dt-menu-item" data-arrange>Vensters schikken</button>
   <button type="button" role="menuitem" class="dt-menu-item" data-closeall>Alle vensters sluiten</button>
-  <a role="menuitem" class="dt-menu-item" href="/start?klassiek=1">Gewone weergave (zonder vensters)</a>
+  <a role="menuitem" class="dt-menu-item" href="/start?klassiek=1" title="Terug naar de gewone weergave, zonder vensters">Gewone weergave</a>
   <form method="post" action="/logout" class="dt-menu-item-form"><input type="hidden" name="_csrf" value="<%= csrf %>"><button type="submit" role="menuitem" class="dt-menu-item">Uitloggen</button></form>
 </div>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>

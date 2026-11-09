@@ -7,7 +7,7 @@
     <figure class="car-photo" data-carimg-q="<%= carQ %>" data-csrf="<%= csrf %>" <%= ci && ci.ok ? '' : 'hidden' %>>
       <img src="<%= ci && ci.ok ? ci.img : '' %>" alt="Voorbeeldfoto van een <%= carQ.replace(/\s*\(.*\)$/, '') %>" <%= ci && ci.ok ? '' : 'hidden' %>>
       <figcaption>
-        <span>Voorbeeld: <a href="<%= ci && ci.ok ? ci.pageUrl : '#' %>" target="_blank" rel="noopener" data-carimg-title><%= ci && ci.ok ? ci.title : carQ.replace(/\s*\(.*\)$/, '') %></a></span>
+        <span>Voorbeeld: <a href="<%= ci && ci.ok ? ci.pageUrl : '#' %>" target="_blank" rel="noopener" data-carimg-title><%= ci && ci.ok && ci.title && !/intitle:|insource:/i.test(ci.title) ? ci.title : carQ.replace(/\s*\(.*\)$/, '') %></a></span>
         <span class="muted">Kan een andere uitvoering of kleur zijn<%= locals.carYear ? ' (deze auto: ' + carYear + ')' : '' %> ·
           foto <a href="<%= ci && ci.ok && ci.fileUrl ? ci.fileUrl : '#' %>" target="_blank" rel="noopener" data-carimg-file>Wikimedia Commons</a></span>
         <button type="button" class="linkbtn car-wrong" data-carimg-wrong>Verkeerde auto? Verbergen</button>
@@ -82,7 +82,7 @@
     <% if (rdwData && rdwData.foreign) { %>
       <p class="muted"><%= rdwData.country === 'D' ? 'Duits kenteken' : 'Geen Nederlands kenteken' %>: de RDW heeft alleen gegevens van Nederlandse kentekens.</p>
     <% } else if (!ri) { %>
-      <p class="muted">De RDW is op dit moment niet bereikbaar<%= rdwData && rdwData.error ? ' (' + rdwData.error + ')' : '' %>. Probeer later opnieuw.</p>
+      <p class="muted" title="<%= rdwData && rdwData.error ? 'Technische melding: ' + rdwData.error : '' %>">De RDW is op dit moment niet bereikbaar. Probeer later opnieuw.</p>
     <% } else if (!ri.found) { %>
       <p class="muted">Kenteken <strong><%= customer.kenteken %></strong> is niet gevonden bij de RDW. Klopt het kenteken?</p>
     <% } else { const apk = apkStatus(ri.apk); %>

@@ -203,20 +203,25 @@ module.exports = function register(app, { flash, wrap }) {
   app.post('/ai-analyse', wrap(async (req, res) => {
     const v = await vehicleFacts(req.body);
     if (!v.key) return res.status(400).json({ error: 'Vul een kenteken of een omschrijving van de auto in.' });
-    if (!running.has(v.key)) {
-      running.set(v.key, { error: null });
+    const cur = running.get(v.key);
+    if (!cur || cur.error) { // (een blijven staan foutmelding telt niet als "bezig")
+      const active = [...running.values()].filter((r) => !r.error).length;
+      if (active >= 3) return res.status(409).json({ error: 'Er lopen al 3 AI-analyses tegelijk. Wacht tot er een klaar is.' });
       const userId = req.user.id; const by = req.user.name;
+      running.set(v.key, { error: null, byId: userId });
       vehicle.analyze(v, { effort: req.body.effort, userId })
         .then((r) => {
           running.delete(v.key);
-          // Bericht voor wie het startte (bij de volgende pagina).
-          lastDone.set(v.key, `Analyse van ${r.label} klaar${r.web ? '' : ' (zonder internetbronnen: web search staat niet aan)'} – kosten ${ai.formatEur(r.eur)}.`);
+          // Bericht voor wie het startte (bij de volgende pagina); verloopt vanzelf als die het niet komt ophalen.
+          const k = `${userId}:${v.key}`;
+          lastDone.set(k, `Analyse van ${r.label} klaar${r.web ? '' : ' (zonder internetbronnen: web search staat niet aan)'} – kosten ${ai.formatEur(r.eur)}.`);
+          setTimeout(() => lastDone.delete(k), 10 * 60 * 1000).unref();
           events.broadcast({ type: 'data', area: 'ai-analyse', by, byId: userId });
         })
         .catch((err) => {
           if (!(err instanceof vehicle.VehicleError || err instanceof importer.ImportError)) console.error('AI-analyse:', err);
-          running.set(v.key, { error: err.message || 'Er ging iets mis.' });
-          setTimeout(() => running.delete(v.key), 10 * 60 * 1000).unref();
+          running.set(v.key, { error: err.message || 'Er ging iets mis.', byId: userId });
+          setTimeout(() => { const r = running.get(v.key); if (r && r.error) running.delete(v.key); }, 10 * 60 * 1000).unref();
         });
     }
     res.json({ ok: true, key: v.key });
@@ -225,9 +230,11 @@ module.exports = function register(app, { flash, wrap }) {
   app.get('/ai-analyse/status', (req, res) => {
     const key = String(req.query.key || '');
     const r = running.get(key);
-    if (r && r.error) { running.delete(key); return res.json({ done: true, error: r.error }); }
+    // Een fout ziet iedereen die kijkt; alleen wie de analyse startte ruimt hem op (anders blijft hij 10 minuten staan).
+    if (r && r.error) { if (r.byId === req.user.id) running.delete(key); return res.json({ done: true, error: r.error }); }
     if (r) return res.json({ done: false });
-    const msg = lastDone.get(key); lastDone.delete(key);
+    const k = `${req.user.id}:${key}`;
+    const msg = lastDone.get(k); lastDone.delete(k);
     if (msg) flash(req, 'ok', msg);
     res.json({ done: true });
   });

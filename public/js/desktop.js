@@ -17,9 +17,10 @@
   const KEY = 'adonis-desktop-' + desk.dataset.user;
   const svgs = {};
   document.getElementById('dt-icon-svgs').content.querySelectorAll('[data-k]').forEach((s) => { svgs[s.dataset.k] = s.innerHTML; });
-  const ICON_FOR = [[/^\/werkopdracht\/nieuw/, 'plus'], [/^\/werkopdracht/, 'list'], [/^\/klant/, 'people'], [/^\/apk/, 'calendar'], [/^\/bandenhotel\/wissellijst/, 'swap'],
+  const ICON_FOR = [[/^\/werkopdrachten\?status=klaar/, 'euro'], [/^\/werkopdracht\/nieuw/, 'plus'], [/^\/werkopdracht/, 'list'], [/^\/(instellingen|systeem)/, 'gear'], [/^\/gebruikers/, 'people'], [/^\/zoekwoorden/, 'list'], [/^\/klant/, 'people'], [/^\/apk/, 'calendar'], [/^\/bandenhotel\/wissellijst/, 'swap'],
     [/^\/bandenhotel/, 'tyre'], [/^\/voorraad/, 'box'], [/^\/portaal/, 'grid'], [/^\/ai-analyse/, 'ai'], [/^\/importeren/, 'camera'], [/^\/hulp/, 'help'], [/^\/$/, 'people']];
-  const iconFor = (url) => (/^https?:/.test(url) ? 'grid' : (ICON_FOR.find(([re]) => re.test(url)) || [null, 'grid'])[1]);
+  const iconFor = (url) => (/^https?:/.test(url) ? 'globe' : (ICON_FOR.find(([re]) => re.test(url)) || [null, 'grid'])[1]);
+  const localPath = (u) => typeof u === 'string' && u.startsWith('/') && !u.startsWith('//'); // alleen eigen pagina's in een venster
 
   const wins = new Map(); // id -> { el, frame, task, st }
   let topZ = 10; let seq = 0; let active = null;
@@ -46,6 +47,8 @@
       w: Math.min(1100, Math.round((a.width - 120) * 0.8)), h: Math.min(760, Math.round(a.height * 0.82)),
       x: 120 + (n % 6) * 34, y: 20 + (n % 6) * 30, max: false, min: false, z: ++topZ,
     }, opts);
+    for (const k of ['x', 'y', 'w', 'h']) st[k] = Number.isFinite(Number(st[k])) ? Number(st[k]) : 100; // bewaarde indeling kan oud/raar zijn
+    st.z = Number(st.z) || ++topZ; st.max = !!st.max; st.min = !!st.min;
     const el = document.createElement('section');
     el.className = 'dw';
     el.setAttribute('role', 'dialog');
@@ -59,15 +62,15 @@
     if (st.site) el.classList.add('dw-site');
     const frame = el.querySelector(st.site ? 'webview' : 'iframe');
     const task = document.createElement('button');
-    task.type = 'button'; task.className = 'dt-task'; task.setAttribute('role', 'listitem');
+    task.type = 'button'; task.className = 'dt-task';
     task.innerHTML = '<span class="dt-task-ico" aria-hidden="true"></span><span class="dt-task-title"></span>';
     tasks.append(task);
     layer.append(el);
     const w = { el, frame, task, st };
     wins.set(st.id, w);
     setTitle(w, st.title, st.url);
-    place(w);
-    if (st.site) siteView(w); else frame.addEventListener('load', () => onLoad(w));
+    place(w, true); maxLabel(w);
+    if (st.site) siteView(w); else { frame.name = st.id; frame.addEventListener('load', () => onLoad(w)); } // naam: eigen "terug"-spoor per venster
     frame.src = st.url;
     // Bediening
     el.querySelector('.dw-close').addEventListener('click', () => close(w));
@@ -132,12 +135,14 @@
     try { new MutationObserver(() => setTitle(w, doc.title, w.st.url)).observe(doc.querySelector('title'), { childList: true }); } catch { /* geen titel */ }
     save();
   }
-  function place(w) {
+  /* fit: het venster helemaal in beeld zetten (bij openen/terugzetten/ander scherm); tijdens slepen mag een rand buiten beeld. */
+  function place(w, fit) {
     const { el, st } = w;
     el.classList.toggle('is-max', st.max);
     if (st.max) { el.style.left = '0px'; el.style.top = '0px'; el.style.width = '100%'; el.style.height = '100%'; return; }
     const a = area();
     st.w = Math.max(320, Math.min(st.w, a.width)); st.h = Math.max(200, Math.min(st.h, a.height));
+    if (fit) { st.x = Math.min(st.x, Math.max(0, a.width - st.w)); st.y = Math.min(st.y, Math.max(0, a.height - st.h)); }
     st.x = Math.max(-st.w + 120, Math.min(st.x, a.width - 120)); st.y = Math.max(0, Math.min(st.y, a.height - 40));
     el.style.left = st.x + 'px'; el.style.top = st.y + 'px'; el.style.width = st.w + 'px'; el.style.height = st.h + 'px';
   }
@@ -160,9 +165,19 @@
     }
     save();
   }
-  function maximize(w, yes) { w.st.max = yes; place(w); focus(w); save(); }
+  function maxLabel(w) { const b = w.el.querySelector('.dw-max'); if (!b) return; b.title = w.st.max ? 'Herstellen' : 'Maximaliseren'; b.setAttribute('aria-label', b.title); }
+  function maximize(w, yes) { w.st.max = yes; place(w); maxLabel(w); focus(w); save(); }
   function dirty(w) {
     try { const cw = w.frame.contentWindow; return (cw.adonisOrderDirty && cw.adonisOrderDirty()) || (cw.adonisFormDirty && cw.adonisFormDirty()); } catch { return false; }
+  }
+  // Bezig in een venster (venster open, Claude aan het werk, aan het typen): dan niet zomaar alles herladen na een serverupdate.
+  function busyIn(w) {
+    try {
+      const d = w.frame.contentDocument; if (!d) return false;
+      if (d.querySelector('dialog[open], .ai-busy:not([hidden])')) return true;
+      const el = d.activeElement;
+      return !!(el && el.matches && el.matches('textarea, input:not([type=checkbox], [type=radio], [type=button], [type=submit])') && el.value !== el.defaultValue);
+    } catch { return false; }
   }
   function close(w, force) {
     if (!force && dirty(w) && !confirm(`"${w.st.title}" heeft wijzigingen die nog niet zijn opgeslagen. Venster toch sluiten?`)) return false;
@@ -187,16 +202,23 @@
       e.preventDefault();
       const a = area();
       let sx = e.clientX; let sy = e.clientY;
-      if (w.st.max) { // gemaximaliseerd venster lostrekken: het blijft onder de muis
-        const ratio = (e.clientX - a.left) / a.width;
-        w.st.max = false; w.st.x = Math.round(e.clientX - a.left - w.st.w * ratio); w.st.y = 0; place(w);
-      }
-      const ox = w.st.x; const oy = w.st.y;
-      track(e, (ev) => { w.st.x = ox + ev.clientX - sx; w.st.y = oy + ev.clientY - sy; place(w); },
-        save);
-      // Bovenrand = maximaliseren (zoals in Windows)
-      const snap = (ev) => { if (ev.clientY - a.top < 4) { w.st.y = 0; maximize(w, true); } removeEventListener('pointerup', snap); };
-      addEventListener('pointerup', snap);
+      let ox = w.st.x; let oy = w.st.y;
+      let tearing = w.st.max; // gemaximaliseerd: pas lostrekken als er echt gesleept wordt (een klik/dubbelklik laat het zo)
+      let lastY = null;
+      track(e, (ev) => {
+        lastY = ev.clientY;
+        if (tearing) {
+          if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
+          tearing = false;
+          const ratio = (sx - a.left) / a.width; // het venster blijft onder de muis
+          w.st.max = false; w.st.x = Math.round(ev.clientX - a.left - w.st.w * ratio); w.st.y = 0;
+          sx = ev.clientX; sy = ev.clientY; ox = w.st.x; oy = 0;
+        }
+        w.st.x = ox + ev.clientX - sx; w.st.y = oy + ev.clientY - sy; place(w);
+      }, () => {
+        // Tegen de bovenrand gesleept = maximaliseren (zoals in Windows)
+        if (lastY !== null && !tearing && lastY - a.top < 4) { w.st.y = 0; maximize(w, true); } else save();
+      });
     });
   }
   function resize(w) {
@@ -212,7 +234,7 @@
     const f = document.activeElement;
     if (f && (f.tagName === 'IFRAME' || f.tagName === 'WEBVIEW')) { const w = [...wins.values()].find((o) => o.frame === f); if (w) focus(w); }
   }, 0));
-  addEventListener('resize', () => wins.forEach(place));
+  addEventListener('resize', () => wins.forEach((w) => place(w, true)));
 
   /* ---------- pictogrammen, startmenu, taakbalk ---------- */
   function launch(url, newOne) {
@@ -242,7 +264,7 @@
     save();
   });
   // Vanuit een venster: Ctrl+klik of middelste muisknop -> nieuw venster.
-  addEventListener('message', (e) => { if (e.origin === location.origin && e.data && typeof e.data.adonisOpen === 'string' && e.data.adonisOpen.startsWith('/')) open(e.data.adonisOpen); });
+  addEventListener('message', (e) => { if (e.origin === location.origin && e.data && localPath(e.data.adonisOpen)) open(e.data.adonisOpen); });
   // Klok
   const clock = document.querySelector('[data-clock]');
   const tick = () => { const d = new Date(); clock.textContent = d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }); clock.title = d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); };
@@ -251,9 +273,12 @@
   /* ---------- terugzetten ---------- */
   let saved = [];
   try { saved = JSON.parse(localStorage.getItem(KEY)) || []; } catch { /* niets */ }
+  if (!Array.isArray(saved)) saved = [];
+  saved = saved.filter((st) => st && typeof st === 'object' && typeof st.url === 'string' && (st.site ? /^https?:\/\//.test(st.url) : localPath(st.url)));
   const params = new URLSearchParams(location.search);
   if (saved.length) saved.filter((st) => !st.site || (window.adonisApp && window.adonisApp.webview)).forEach((st) => open(st.url, { ...st, z: ++topZ }));
-  if (params.get('open')) launch(params.get('open'));
+  if (localPath(params.get('open'))) launch(params.get('open'));
+  if (params.has('open')) history.replaceState(null, '', '/bureaublad');
   if (!wins.size && !saved.length) document.querySelector('[data-hint]').hidden = false; else document.querySelector('[data-hint]').hidden = true;
   // Het bovenste venster actief maken
   const top = [...wins.values()].filter((w) => !w.st.min).sort((a, b) => b.st.z - a.st.z)[0];
@@ -272,16 +297,23 @@
   let pos = {};
   try { pos = JSON.parse(localStorage.getItem(ICON_KEY)) || {}; } catch { /* standaard */ }
   const rowsFit = () => Math.max(1, Math.floor((area().height - 20) / cell().h));
+  const ICON_X0 = 60; // linkerkantlijn: de notitieknop (42px) staat links daarvan
+  let shown = {}; // waar elk pictogram nú staat; kan tijdelijk afwijken van de bewaarde plek (bijv. in een klein venster) zonder die te overschrijven
   function layoutIcons(order) {
     const rows = rowsFit(); const taken = new Set();
-    // Eerst de pictogrammen met een vaste plek, daarna de rest in de eerste vrije plekken.
+    // Eerst de pictogrammen met een vaste plek die past, daarna de rest in de eerste vrije plekken.
     const list = order || icons.map((b) => b.dataset.open);
-    for (const href of list) { const p = pos[href]; if (p && !order) taken.add(p.c + ',' + p.r); }
-    let i = 0;
+    if (order) pos = {};
+    for (const href of list) { const p = pos[href]; if (p && p.r < rows) taken.add(p.c + ',' + p.r); }
+    let i = 0; shown = {};
     for (const href of list) {
-      let p = !order && pos[href];
-      if (!p || p.r >= rows) { while (taken.has(Math.floor(i / rows) + ',' + (i % rows))) i++; p = { c: Math.floor(i / rows), r: i % rows }; i++; }
-      pos[href] = p; taken.add(p.c + ',' + p.r);
+      let p = pos[href];
+      if (!p || p.r >= rows) {
+        while (taken.has(Math.floor(i / rows) + ',' + (i % rows))) i++;
+        p = { c: Math.floor(i / rows), r: i % rows }; i++;
+        if (!pos[href]) pos[href] = p; // nieuw pictogram: deze plek wordt zijn vaste plek
+      }
+      shown[href] = p; taken.add(p.c + ',' + p.r);
     }
     applyIcons();
   }
@@ -289,7 +321,7 @@
     const c = cell();
     iconList.classList.add('is-free');
     desk.dataset.iconSize = look.size;
-    for (const b of icons) { const p = pos[b.dataset.open]; const li = b.parentElement; li.style.left = (10 + p.c * (c.w + 6)) + 'px'; li.style.top = (14 + p.r * c.h) + 'px'; }
+    for (const b of icons) { const p = shown[b.dataset.open]; const li = b.parentElement; li.style.left = (ICON_X0 + p.c * (c.w + 6)) + 'px'; li.style.top = (14 + p.r * c.h) + 'px'; }
   }
   const saveIcons = () => { try { localStorage.setItem(ICON_KEY, JSON.stringify(pos)); } catch { /* geen opslag */ } };
   layoutIcons();
@@ -305,20 +337,20 @@
         li.style.left = (ox + ev.clientX - sx) + 'px'; li.style.top = (oy + ev.clientY - sy) + 'px';
       };
       const up = () => {
-        removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+        removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
         if (!moved) return;
         li.classList.remove('is-dragging'); document.documentElement.classList.remove('dt-busy');
         const c = cell();
-        const col = Math.max(0, Math.round((li.offsetLeft - 10) / (c.w + 6)));
+        const col = Math.max(0, Math.round((li.offsetLeft - ICON_X0) / (c.w + 6)));
         const row = Math.max(0, Math.min(rowsFit() - 1, Math.round((li.offsetTop - 14) / c.h)));
         // Bezet? Dan ruilen.
-        const other = Object.keys(pos).find((h) => h !== b.dataset.open && pos[h].c === col && pos[h].r === row);
-        if (other) pos[other] = pos[b.dataset.open];
+        const other = Object.keys(shown).find((h) => h !== b.dataset.open && shown[h].c === col && shown[h].r === row);
+        if (other) pos[other] = shown[b.dataset.open];
         pos[b.dataset.open] = { c: col, r: row };
-        applyIcons(); saveIcons();
+        layoutIcons(); saveIcons();
         b.dataset.justMoved = '1'; setTimeout(() => { delete b.dataset.justMoved; }, 400);
       };
-      addEventListener('pointermove', move); addEventListener('pointerup', up);
+      addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', up);
     });
   }
   function sortIcons(how) {
@@ -331,26 +363,38 @@
   /* ---------- rechtermuisknop op het bureaublad ---------- */
   const ctx = document.createElement('div');
   ctx.className = 'dt-menu dt-ctx no-print'; ctx.setAttribute('role', 'menu'); ctx.hidden = true;
-  ctx.innerHTML = `<button type="button" class="dt-menu-item" data-c="new">Nieuwe werkopdracht</button><div class="dt-menu-sep"></div>
-    <button type="button" class="dt-menu-item" data-c="naam">Pictogrammen sorteren op naam</button>
-    <button type="button" class="dt-menu-item" data-c="standaard">Pictogrammen in de standaardvolgorde</button>
-    <button type="button" class="dt-menu-item" data-c="schikken">Vensters schikken</button><div class="dt-menu-sep"></div>
-    <button type="button" class="dt-menu-item" data-c="size-s">Kleine pictogrammen</button>
-    <button type="button" class="dt-menu-item" data-c="size-m">Normale pictogrammen</button>
-    <button type="button" class="dt-menu-item" data-c="size-l">Grote pictogrammen</button><div class="dt-menu-sep"></div>
-    <button type="button" class="dt-menu-item" data-c="personal"><b>Personaliseren…</b></button>`;
+  ctx.innerHTML = `<button type="button" role="menuitem" class="dt-menu-item" data-c="new">Nieuwe werkopdracht</button><div class="dt-menu-sep" role="separator"></div>
+    <button type="button" role="menuitem" class="dt-menu-item" data-c="naam">Pictogrammen sorteren op naam</button>
+    <button type="button" role="menuitem" class="dt-menu-item" data-c="standaard">Pictogrammen in de standaardvolgorde</button>
+    <button type="button" role="menuitem" class="dt-menu-item" data-c="schikken">Vensters schikken</button><div class="dt-menu-sep" role="separator"></div>
+    <button type="button" role="menuitemradio" class="dt-menu-item" data-c="size-s">Kleine pictogrammen</button>
+    <button type="button" role="menuitemradio" class="dt-menu-item" data-c="size-m">Normale pictogrammen</button>
+    <button type="button" role="menuitemradio" class="dt-menu-item" data-c="size-l">Grote pictogrammen</button><div class="dt-menu-sep" role="separator"></div>
+    <button type="button" role="menuitem" class="dt-menu-item" data-c="personal"><b>Personaliseren…</b></button>`;
   document.body.append(ctx);
+  // Pijltjestoetsen, Home en End lopen door een menu heen (startmenu en rechtermuisknopmenu).
+  const menuKeys = (m) => m.addEventListener('keydown', (e) => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+    const items = [...m.querySelectorAll('.dt-menu-item')].filter((x) => !x.hidden && x.offsetParent !== null);
+    if (!items.length) return;
+    e.preventDefault();
+    const i = items.indexOf(document.activeElement);
+    items[e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : e.key === 'ArrowDown' ? (i + 1) % items.length : (i - 1 + items.length) % items.length].focus();
+  });
+  menuKeys(menu); menuKeys(ctx);
+  let ctxOpener = null;
   desk.addEventListener('contextmenu', (e) => {
     if (e.target.closest('.dw, .sticky-note')) return;
     e.preventDefault();
-    ctx.querySelectorAll('[data-c^="size-"]').forEach((b) => b.classList.toggle('is-on', b.dataset.c === 'size-' + look.size));
+    ctxOpener = document.activeElement;
+    ctx.querySelectorAll('[data-c^="size-"]').forEach((b) => { const on = b.dataset.c === 'size-' + look.size; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', String(on)); });
     ctx.hidden = false;
     const w = ctx.offsetWidth; const h = ctx.offsetHeight;
     ctx.style.left = Math.min(e.clientX, innerWidth - w - 6) + 'px'; ctx.style.top = Math.min(e.clientY, innerHeight - h - 50) + 'px';
     ctx.querySelector('button').focus();
   });
   document.addEventListener('pointerdown', (e) => { if (!ctx.hidden && !ctx.contains(e.target)) ctx.hidden = true; });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') ctx.hidden = true; });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ctx.hidden) { ctx.hidden = true; if (ctxOpener && ctxOpener.focus) ctxOpener.focus(); } });
   ctx.addEventListener('click', (e) => {
     const b = e.target.closest('[data-c]'); if (!b) return;
     ctx.hidden = true;
@@ -373,7 +417,8 @@
   };
   let img = null;
   try { img = localStorage.getItem(IMG_KEY); } catch { /* geen opslag */ }
-  function saveLook() { try { localStorage.setItem(LOOK_KEY, JSON.stringify(look)); } catch { /* geen opslag */ } applyLook(); }
+  function saveLook() { try { localStorage.setItem(LOOK_KEY, JSON.stringify(look)); } catch { /* geen opslag */ } window.adonisDesktopScale = look.scale || 100; applyLook(); }
+  window.adonisDesktopScale = look.scale || 100; // early.js in elk venster leest dit vóór de eerste tekening
   function applyLook() {
     const st = desk.style;
     st.background = ''; desk.classList.toggle('has-bg', look.bg !== 'theme');
@@ -398,7 +443,7 @@
             <button type="button" class="dt-bg dt-bg-theme" data-bg="theme" title="Van het thema">Thema</button>
             ${COLORS.map((c) => `<button type="button" class="dt-bg" data-bg="${c}" title="${c}"></button>`).join('')}
             ${Object.keys(GRADS).map((k) => `<button type="button" class="dt-bg" data-bg="grad:${k}" title="${k}"></button>`).join('')}
-            <label class="dt-bg dt-bg-img" title="Eigen foto"><input type="file" accept="image/*" hidden data-img>Eigen foto…</label>
+            <button type="button" class="dt-bg dt-bg-img" data-pick-img title="Eigen foto">Eigen foto…</button><input type="file" accept="image/*" hidden data-img>
           </div>
         </fieldset>
         <fieldset class="swap-step" data-fitbox><legend>Foto</legend>
@@ -424,6 +469,7 @@
       dlg.querySelectorAll('.dt-bg[data-bg]').forEach((b) => { const v = b.dataset.bg; if (v.startsWith('#')) b.style.background = v; else if (v.startsWith('grad:')) b.style.background = GRADS[v.slice(5)]; });
       dlg.addEventListener('click', (e) => {
         if (e.target === dlg) dlg.close();
+        if (e.target.closest('[data-pick-img]')) { dlg.querySelector('[data-img]').click(); return; }
         const b = e.target.closest('[data-bg]'); if (!b) return;
         look.bg = b.dataset.bg; saveLook(); mark();
       });
@@ -442,13 +488,19 @@
         try {
           // Verkleinen tot schermformaat (scheelt opslag), als JPEG.
           const bmp = await createImageBitmap(f);
-          const scale = Math.min(1, 2560 / bmp.width, 1600 / bmp.height);
-          const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * scale); cv.height = Math.round(bmp.height * scale);
-          cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
-          const data = cv.toDataURL('image/jpeg', 0.82);
-          localStorage.setItem(IMG_KEY, data); img = data;
+          // Verkleinen tot hij in de opslag van de browser past (die is ~5 MB voor alles samen): steeds kleiner tot < 900 kB.
+          let data = null;
+          for (const [maxW, maxH, q] of [[1920, 1200, 0.82], [1600, 1000, 0.75], [1280, 800, 0.7], [1024, 640, 0.6]]) {
+            const scale = Math.min(1, maxW / bmp.width, maxH / bmp.height);
+            const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * scale); cv.height = Math.round(bmp.height * scale);
+            cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+            data = cv.toDataURL('image/jpeg', q);
+            if (data.length < 900000) break;
+          }
+          try { localStorage.setItem(IMG_KEY, data); } catch { err.textContent = 'Niet genoeg opslagruimte in de browser voor deze foto. Probeer een kleinere foto, of kies een kleur of verloop.'; err.hidden = false; return; }
+          img = data;
           look.bg = 'image'; saveLook(); mark();
-        } catch { err.textContent = 'Deze foto kon niet worden gebruikt (te groot of geen afbeelding).'; err.hidden = false; }
+        } catch { err.textContent = 'Deze foto kon niet worden gebruikt (geen afbeelding, of te groot om te verwerken).'; err.hidden = false; }
         e.target.value = '';
       });
     }
@@ -470,6 +522,8 @@
   let ctrlAlone = false; let ctrlAt = 0;
   addEventListener('keydown', (e) => { if (e.code === 'ControlLeft' && !e.repeat) { ctrlAlone = true; ctrlAt = Date.now(); } else ctrlAlone = false; }, true);
   addEventListener('pointerdown', () => { ctrlAlone = false; }, true);
+  addEventListener('wheel', () => { ctrlAlone = false; }, { capture: true, passive: true });
+  addEventListener('blur', () => { ctrlAlone = false; });
   addEventListener('keyup', (e) => { if (e.code === 'ControlLeft' && ctrlAlone && Date.now() - ctrlAt < 800) { ctrlAlone = false; toggleMenu(menu.hidden); } }, true);
   addEventListener('message', (e) => { if (e.origin === location.origin && e.data && e.data.adonisStart) toggleMenu(menu.hidden); });
   // Websites uit het Portaal (common.js): in de ADONIS-app als venster op het bureaublad.
@@ -493,7 +547,7 @@
   // De tip alleen tonen als er geen vensters open zijn.
   const hint = document.querySelector('[data-hint]');
   new MutationObserver(() => { hint.hidden = wins.size > 0; }).observe(layer, { childList: true });
-  window.adonisDesktopDirty = () => [...wins.values()].some(dirty); // voor live.js (niet zomaar herladen na een update)
+  window.adonisDesktopDirty = () => [...wins.values()].some((w) => dirty(w) || busyIn(w)); // voor live.js (niet zomaar herladen na een update)
   // Bij herladen/weggaan: waarschuwen als een venster nog niet-opgeslagen wijzigingen heeft.
   addEventListener('beforeunload', (e) => { if (!window.adonisLeaving && [...wins.values()].some(dirty)) { e.preventDefault(); e.returnValue = ''; } });
 })();

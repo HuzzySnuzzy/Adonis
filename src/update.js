@@ -53,6 +53,11 @@ function cleanupOld() {
   for (const suffix of ['.old', '.download']) {
     try { fs.rmSync(process.execPath + suffix, { force: true }); } catch { /* nog in gebruik */ }
   }
+  // Opzijgezette oude versies van eerdere live updates (Windows): zie installRelease.
+  try {
+    const dir = path.dirname(process.execPath); const base = path.basename(process.execPath) + '.old-';
+    for (const f of fs.readdirSync(dir)) if (f.startsWith(base)) { try { fs.rmSync(path.join(dir, f), { force: true }); } catch { /* nog in gebruik */ } }
+  } catch { /* map niet leesbaar */ }
 }
 
 class RateLimited extends Error {}
@@ -162,8 +167,9 @@ async function installRelease(release, { log = () => {} } = {}) {
   }
 
   if (process.platform === 'win32') {
-    // Een draaiend .exe mag wel hernoemd worden, niet overschreven.
-    fs.rmSync(exe + '.old', { force: true });
+    // Een draaiend .exe mag wel hernoemd worden, niet overschreven of verwijderd. Na een eerdere live update draait de
+    // bewaker nog uit het .old-bestand: dat kan dan niet weg en gaat opzij (cleanupOld ruimt het bij de volgende start op).
+    try { fs.rmSync(exe + '.old', { force: true }); } catch { await renameRetry(exe + '.old', `${exe}.old-${Date.now()}`); }
     await renameRetry(exe, exe + '.old');
     try {
       await renameRetry(tmp, exe);

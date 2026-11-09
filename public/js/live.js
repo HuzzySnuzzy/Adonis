@@ -29,12 +29,13 @@
     el.addEventListener('mouseenter', () => { if (sticky) return; clearTimeout(timer); left = Math.max(2500, left - (Date.now() - started)); el.classList.add('is-paused'); });
     el.addEventListener('mouseleave', () => { el.classList.remove('is-paused'); run(); });
     x.addEventListener('click', () => { close(); if (onDismiss) onDismiss(); });
-    if (href && onDismiss) body.addEventListener('click', onDismiss);
+    if (href && onDismiss) body.addEventListener('click', () => { onDismiss(); if (sticky) close(); });
     if (!sticky) el.style.setProperty('--toast-ms', SHOW_MS + 'ms');
+    el._close = close;
     toasts.append(el);
-    // Niet te veel tegelijk: de oudste gaat weg.
+    // Niet te veel tegelijk: de oudste gewone melding gaat weg (herinneringen blijven, en gelden niet als "gesloten").
     const all = toasts.querySelectorAll('.live-toast:not(.hide)');
-    if (all.length > 5) all[0].querySelector('.live-toast-x').click();
+    if (all.length > 5) { const old = toasts.querySelector('.live-toast:not(.hide):not(.is-sticky)') || all[0]; if (old !== el && old._close) old._close(); }
     run();
   }
   window.adonisToast = toast;
@@ -173,7 +174,7 @@
       handle(data);
       if (channel) channel.postMessage(data);
     };
-    es.onerror = () => { wasDown = true; };
+    es.onerror = () => { wasDown = true; if (es.readyState === EventSource.CLOSED) close(); }; // definitief dicht (bijv. uitgelogd): loslaten
     es.onopen = () => {
       // Na een onderbreking (herstart/update) alles één keer bijwerken.
       if (wasDown) {
@@ -189,7 +190,13 @@
 
   if (channel && navigator.locks && navigator.locks.request) {
     // De lock wordt vrijgegeven als dit tabblad sluit of wegnavigeert; dan neemt een ander tabblad het over.
-    navigator.locks.request('adonis-live', () => new Promise((release) => { openStream(release); }));
+    // Valt de verbinding definitief weg (sessie verlopen), dan na een halve minuut opnieuw proberen.
+    let unloaded = false;
+    const connect = () => navigator.locks.request('adonis-live', () => new Promise((release) => { openStream(release); }))
+      .then(() => { if (!unloaded) setTimeout(connect, 30000); });
+    window.addEventListener('pagehide', () => { unloaded = true; });
+    window.addEventListener('pageshow', (e) => { if (e.persisted && unloaded) { unloaded = false; connect(); } });
+    connect();
   } else {
     // Oudere browsers: alleen verbinden zolang het tabblad zichtbaar is.
     let close = null;
@@ -218,15 +225,14 @@
       if (st.closed.includes(i)) return;
       toast(it.text, it.href, { sticky: true, kind: 'herinneringen', onDismiss: () => { if (!st.closed.includes(i)) st.closed.push(i); save(); } });
     });
-    if (st && st.date === today) return show();
-    st = { date: today, items: [], closed: [] };
-    save();
+    if (st && st.date === today && st.fetched) return show();
+    st = st && st.date === today ? st : { date: today, items: [], closed: [] };
     setTimeout(async () => {
       try {
         const r = await (await fetch('/meldingen/herinneringen', { credentials: 'same-origin' })).json();
-        st.items = r.items || []; save(); show();
+        st.items = r.items || []; st.fetched = true; save(); show();
       } catch { /* morgen weer */ }
-    }, 2500);
+    }, 800);
   })();
   // Instellingen: voorbeeldmelding
   document.addEventListener('click', (e) => {

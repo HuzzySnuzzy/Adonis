@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS sticky_notes (
 );`);
 // Een notitie hangt op het scherm (overal zichtbaar) of op één werkopdracht.
 if (!db.prepare('PRAGMA table_info(sticky_notes)').all().some((c) => c.name === 'order_id')) db.exec('ALTER TABLE sticky_notes ADD COLUMN order_id INTEGER');
+db.exec('CREATE INDEX IF NOT EXISTS sticky_notes_order ON sticky_notes(order_id)');
 
 const COLORS = ['geel', 'roze', 'blauw', 'groen', 'oranje', 'paars'];
 const MAX_TEXT = 4000;
@@ -40,15 +41,23 @@ function countOnOrder(user, orderId) {
   countQ = countQ || countStmt();
   return countQ.get(orderId, user.id).n;
 }
+// Voor een hele lijst in één keer: Map werkopdracht-id -> aantal notities (i.p.v. één query per rij).
+let countAllQ = null;
+function countOnOrders(user) {
+  if (!user) return new Map();
+  countAllQ = countAllQ || db.prepare('SELECT order_id, COUNT(*) AS n FROM sticky_notes WHERE order_id IS NOT NULL AND (user_id = ? OR shared = 1) GROUP BY order_id');
+  return new Map(countAllQ.all(user.id).map((r) => [r.order_id, r.n]));
+}
 
 module.exports = function register(app) {
   app.locals.notesOnOrder = countOnOrder;
+  app.locals.notesOnOrders = countOnOrders;
   const notify = (req, note) => events.broadcast({ type: 'notes', byId: req.user.id, id: note && note.id });
   app.get('/notities', (req, res) => res.json({ notes: visibleTo(req.user, orderOf(req.query.werkopdracht)), colors: COLORS }));
   app.post('/notities', (req, res) => {
     const color = COLORS.includes(req.body.color) ? req.body.color : 'geel';
     const shared = req.body.shared === '1' ? 1 : 0;
-    const text = String(req.body.text || '').slice(0, MAX_TEXT);
+    const text = typeof req.body.text === 'string' ? req.body.text.slice(0, MAX_TEXT) : '';
     const count = db.prepare('SELECT COUNT(*) AS n FROM sticky_notes WHERE user_id = ?').get(req.user.id).n;
     if (count >= 100) return res.status(400).json({ error: 'U heeft al 100 notities. Gooi er eerst een paar weg.' });
     const orderId = orderOf(req.body.werkopdracht);
@@ -63,7 +72,7 @@ module.exports = function register(app) {
     const n = db.prepare('SELECT * FROM sticky_notes WHERE id = ?').get(req.params.id);
     if (!canSee(n, req.user)) return res.status(404).json({ error: 'Deze notitie bestaat niet (meer).' });
     const sets = []; const vals = [];
-    if (req.body.text !== undefined) { sets.push('text = ?'); vals.push(String(req.body.text).slice(0, MAX_TEXT)); }
+    if (typeof req.body.text === 'string') { sets.push('text = ?'); vals.push(req.body.text.slice(0, MAX_TEXT)); }
     if (req.body.color !== undefined && COLORS.includes(req.body.color)) { sets.push('color = ?'); vals.push(req.body.color); }
     // Alleen de maker bepaalt wie de notitie ziet.
     if (req.body.shared !== undefined && n.user_id === req.user.id) { sets.push('shared = ?'); vals.push(req.body.shared === '1' ? 1 : 0); }

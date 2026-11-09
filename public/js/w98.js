@@ -2,7 +2,7 @@
 /* Thema Windows 98: een klok rechts in de taakbalk (de voettekst). */
 (function () {
   const bar = document.querySelector('.app-footer');
-  if (!bar) return;
+  if (!bar || document.body.classList.contains('desktop-shell')) return;
   const clock = document.createElement('span');
   clock.className = 'w98-clock';
   const tick = () => { clock.textContent = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }); };

@@ -239,3 +239,9 @@
   :root[data-theme="aero"] :is(.page-head h1, main.page > h1, .page-head h2) { text-shadow: none; }
   :root[data-theme="aero"] :is(.card, .rdw-card, .customer-head, .table-wrap, .empty, .bl-box) { box-shadow: none; }
 }
+
+/* ---- Na de visuele controle ---- */
+:root[data-theme="aero"] :is(.more-row, .order-history) .muted, :root[data-theme="aero"] :is(.more-row, .order-history summary) { color: #0b1f3a; text-shadow: 0 0 8px rgba(255, 255, 255, .95), 0 0 2px #fff; }
+:root[data-theme="aero"] .table-wrap { margin-top: 12px; } /* de glazen rand steekt 8px uit */
+:root[data-theme="aero"] .role-help { margin-bottom: 1rem; }
+:root[data-theme="aero"] .btn-ghost { border-color: rgba(30, 60, 100, .35); background: rgba(255, 255, 255, .35); box-shadow: none; }

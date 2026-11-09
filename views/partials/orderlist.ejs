@@ -5,9 +5,10 @@
     <th>Km-stand</th><th>Monteur</th><th>Werkzaamheden</th>
   </tr></thead>
   <tbody>
+  <% const noteCounts = locals.user ? notesOnOrders(user) : new Map(); %>
   <% for (const o of orders) { %>
     <tr data-href="/werkopdracht/<%= o.id %>">
-      <% const nNotes = locals.user ? notesOnOrder(user, o.id) : 0; %>
+      <% const nNotes = noteCounts.get(o.id) || 0; %>
       <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= o.nummer %></a><% if (nNotes) { %> <span class="note-flag" title="<%= nNotes %> plaknotitie<%= nNotes === 1 ? '' : 's' %> op deze werkopdracht" aria-label="<%= nNotes %> plaknotities"></span><% } %></td>
       <td><span class="status-badge status-<%= o.status %> in-list"><%= { open: 'Open', klaar: 'Facturatie', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>
       <td><%= fmtDate(o.datum_invoer) %></td>

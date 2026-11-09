@@ -206,12 +206,9 @@ function csrfProtection(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD') return next();
   const token = (req.body && req.body._csrf) || req.get('x-csrf-token');
   const expected = req.session.csrf;
-  if (
-    typeof token === 'string' && expected &&
-    token.length === expected.length &&
-    crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected))
-  ) {
-    return next();
+  if (typeof token === 'string' && expected) {
+    const a = Buffer.from(token); const b = Buffer.from(expected);
+    if (a.length === b.length && crypto.timingSafeEqual(a, b)) return next();
   }
   // Meestal: te lang niet gebruikt en daardoor uitgelogd. Leg het rustig uit; een werkopdracht die werd ingevuld
   // is op dit apparaat bewaard en wordt na het inloggen teruggezet (zie order.js).

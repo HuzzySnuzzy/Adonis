@@ -140,7 +140,7 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   `early.js` herkent een venster en verbergt menubalk/voettekst, zet effecten op rustig), met taakbalk, startmenu, klok,
   minimaliseren/maximaliseren/schikken, Ctrl+klik = nieuw venster (postMessage), en de indeling per pc in localStorage.
   `X-Frame-Options: SAMEORIGIN` en `frame-ancestors 'self'`: alleen ADONIS zelf mag zijn pagina's in een venster tonen.
-- **Plaknotities:** knop links op elk scherm. Kleur (standaard geel), zichtbaar voor alleen de maker of voor iedereen, en
+- **Plaknotities:** knop linksonder op elk scherm. Kleur (standaard geel), zichtbaar voor alleen de maker of voor iedereen, en
   op het scherm (elke pagina, `position: fixed`) of op een werkopdracht (scrolt mee, alleen daar zichtbaar; briefje-teken in
   de lijsten). Verslepen, inklappen, verbergen; plek per browser onthouden. Gedeelde notities live via SSE; alleen de maker
   (of een beheerder) gooit weg of wijzigt wie hem ziet.
@@ -305,7 +305,8 @@ Open schermen krijgen een melding en laden daarna vanzelf opnieuw, behalve als i
 - GitHub telt "niets veranderd"-antwoorden (ETag/304) niet mee voor de limiet van 60 vragen per uur, dus vaak kijken kan.
   Wordt de limiet toch bereikt, dan wacht hij tot GitHub weer antwoordt.
 - Het oorspronkelijke proces blijft als "bewaker" draaien en start elke nieuwe versie; er komen dus geen processen bij,
-  en Pterodactyl/Docker merken de herstart niet. *Stop* in het paneel stopt de server gewoon netjes.
+  en Pterodactyl/Docker merken de herstart niet. *Stop* in het paneel stopt de server gewoon netjes. De bewaker draait
+  ook bij `npm start` en in Docker (uitzetten: omgevingsvariabele `ADONIS_NO_SUPERVISOR=1`).
 - `update-check-seconds=0`: alleen bij het starten kijken (zoals vroeger).
 
 - Uitzetten: `auto-update=false` in `config.properties` (Pterodactyl: variabele *Automatisch bijwerken*).

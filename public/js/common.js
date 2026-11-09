@@ -85,7 +85,8 @@ document.addEventListener('error', (e) => {
 // ADONIS houdt per tabblad/venster bij welke pagina's u bekeek ("spoor"). De terug-links ("← …") en de terugknop in de app
 // gaan daardoor naar de pagina waar u echt vandaan kwam, niet naar een vaste plek.
 (function () {
-  const KEY = 'adonis-trail';
+  // In de bureaubladmodus heeft elk venster (iframe met een naam) zijn eigen spoor.
+  const KEY = 'adonis-trail' + (document.documentElement.classList.contains('in-window') && window.name ? ':' + window.name : '');
   const here = () => location.pathname + location.search;
   const read = () => { try { return JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch { return []; } };
   const write = (t) => { try { sessionStorage.setItem(KEY, JSON.stringify(t.slice(-40))); } catch { /* geen opslag */ } };
@@ -203,6 +204,7 @@ if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
       }
       if (ctrl) ctrl.abort();
       ctrl = new AbortController();
+      const mine = ctrl;
       form.classList.add('is-searching');
       try {
         const res = await fetch(url, { headers: { 'X-Live-Refresh': '1' }, credentials: 'same-origin', signal: ctrl.signal });
@@ -222,7 +224,7 @@ if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
         window.dispatchEvent(new Event('resize')); // schaduw bij brede tabellen opnieuw bepalen
         document.dispatchEvent(new Event('adonis:swapped'));
       } catch { /* afgebroken of geen verbinding: Enter werkt nog steeds */ }
-      finally { form.classList.remove('is-searching'); }
+      finally { if (ctrl === mine) form.classList.remove('is-searching'); } // een afgebroken (oudere) zoekopdracht laat de nieuwere met rust
     };
     input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 250); });
   });
@@ -342,7 +344,7 @@ document.addEventListener('click', (e) => {
     f.addEventListener('input', () => { dirty = true; });
     f.addEventListener('change', () => { dirty = true; });
   });
-  document.addEventListener('submit', (e) => { if (!e.defaultPrevented) leaving = true; });
+  document.addEventListener('submit', (e) => { if (!e.defaultPrevented && e.target.method !== 'dialog') leaving = true; });
   window.adonisFormDirty = () => dirty && !leaving; // voor live.js (na een update niet zomaar herladen)
   window.addEventListener('beforeunload', (e) => {
     if (dirty && !leaving && !window.adonisLeaving) { e.preventDefault(); e.returnValue = ''; }
@@ -540,6 +542,7 @@ document.addEventListener('click', async (e) => {
         th.classList.add('sort-th');
         th.tabIndex = 0;
         th.title = 'Sorteren op ' + th.textContent.trim().toLowerCase();
+        if (!th.hasAttribute('aria-sort')) th.setAttribute('aria-sort', 'none'); // ook vóór de eerste klik: dit is sorteerbaar
         const go = () => {
           const t = th.closest('table');
           let st = null; try { st = JSON.parse(sessionStorage.getItem(keyOf(t))); } catch { /* geen */ }
@@ -583,6 +586,13 @@ document.addEventListener('click', async (e) => {
 (function () {
   if (!document.documentElement.classList.contains('in-window') || location.pathname !== '/instellingen' || !document.querySelector('.flash-ok')) return;
   try { if (sessionStorage.getItem('adonis-dt-reloaded') === location.href + document.querySelector('.flash-ok').textContent) return; sessionStorage.setItem('adonis-dt-reloaded', location.href + document.querySelector('.flash-ok').textContent); } catch { /* geen opslag */ }
+  // Alleen als het uiterlijk is veranderd (thema, effecten, letters, meldingen); een nieuw wachtwoord hoeft niets te herladen.
+  try {
+    const a = window.top.document.documentElement.dataset; const b = document.documentElement.dataset;
+    const same = ['theme', 'fx', 'ink', 'mscale', 'simple'].every((k) => (a[k] || '') === (b[k] || '')) && window.top.document.body.dataset.notify === document.body.dataset.notify
+      && window.top.document.body.dataset.desktopMode === document.body.dataset.desktopMode;
+    if (same) return;
+  } catch { /* ander adres */ }
   window.top.location.reload();
 })();
 
@@ -592,6 +602,8 @@ document.addEventListener('click', async (e) => {
   let alone = false; let at = 0;
   addEventListener('keydown', (e) => { if (e.code === 'ControlLeft' && !e.repeat) { alone = true; at = Date.now(); } else alone = false; }, true);
   addEventListener('pointerdown', () => { alone = false; }, true);
+  addEventListener('wheel', () => { alone = false; }, { capture: true, passive: true }); // Ctrl + scrollen (zoomen) is geen "Ctrl alleen"
+  addEventListener('blur', () => { alone = false; });
   addEventListener('keyup', (e) => { if (e.code === 'ControlLeft' && alone && Date.now() - at < 800) { alone = false; window.top.postMessage({ adonisStart: true }, location.origin); } }, true);
 })();
 // In de ADONIS-app: websites uit het Portaal (en "Opzoeken met …" bij een kenteken) binnen ADONIS openen.

@@ -40,6 +40,7 @@ function modelOf(customer) {
     if (!mt) return null;
     [merk, ...model] = mt.split(' ');
     model = model.join(' ');
+    if (!model) return null; // alleen een merk ("Peugeot"): geen merkbrede punten opzoeken
   }
   const jaar = rdw && /^\d{4}/.test(rdw.eersteToelating || '') ? rdw.eersteToelating.slice(0, 4) : '';
   return {
@@ -115,6 +116,7 @@ Zoek de bekende zwakke plekken / APK-afkeurpunten van dit model en deze generati
     let messages = [user];
     let response;
     const content = []; // alles wat Claude in deze beurt heeft gedaan (ook vóór een pauze)
+    let searched = 0; // het beloofde maximum geldt voor de hele beurt, ook na een pauze (pause_turn)
     for (let i = 0; i < 4; i++) {
       response = await client.beta.messages.create({
         model: ai.MODEL,
@@ -123,10 +125,11 @@ Zoek de bekende zwakke plekken / APK-afkeurpunten van dit model en deze generati
         fallbacks: 'default',
         system: SYSTEM,
         output_config: { effort },
-        ...(withWeb ? { tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: SEARCHES[lvl] }] } : {}),
+        ...(withWeb ? { tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: Math.max(1, SEARCHES[lvl] - searched) }] } : {}),
         messages,
       });
       add(response);
+      searched += (response.usage && response.usage.server_tool_use && response.usage.server_tool_use.web_search_requests) || 0;
       content.push(...response.content);
       // Lange zoektocht gepauzeerd: alles tot nu toe terugsturen, dan gaat de server verder waar hij was.
       if (response.stop_reason !== 'pause_turn') break;
@@ -141,9 +144,9 @@ Zoek de bekende zwakke plekken / APK-afkeurpunten van dit model en deze generati
     // Web search niet ingeschakeld voor deze organisatie/sleutel: dan zonder internet (wordt duidelijk gemeld).
     if (err && err.status === 400 && /web.?search|tool/i.test(err.message || '')) {
       web = false;
-      try { response = await run(false); } catch (err2) { throw importer.apiError(err2, 'excel'); }
+      try { response = await run(false); } catch (err2) { throw importer.apiError(err2, 'claude'); }
     } else {
-      throw importer.apiError(err, 'excel');
+      throw importer.apiError(err, 'claude');
     }
   }
   const billed = (msg) => Object.assign(new ModelBulletinError(msg), { usage });
@@ -177,9 +180,17 @@ Zoek de bekende zwakke plekken / APK-afkeurpunten van dit model en deze generati
   return { usage, result: { items, sources, web } };
 }
 
-async function analyze(customer, { effort = 'normaal', userId = null } = {}) {
-  if (!importer.isConfigured()) throw new ModelBulletinError('Claude is niet ingesteld: vul anthropic-api-key in config.properties in.');
+const inFlight = new Map(); // modelkey -> lopende analyse (zelfde model tegelijk aangevraagd = één Claude-aanroep)
+function analyze(customer, opts = {}) {
   const m = modelOf(customer);
+  const k = m ? m.key : 'geen:' + (customer && customer.id);
+  if (inFlight.has(k)) return inFlight.get(k);
+  const p = doAnalyze(customer, m, opts).finally(() => inFlight.delete(k));
+  inFlight.set(k, p);
+  return p;
+}
+async function doAnalyze(customer, m, { effort = 'normaal', userId = null } = {}) {
+  if (!importer.isConfigured()) throw new ModelBulletinError('Claude is niet ingesteld: vul anthropic-api-key in config.properties in.');
   if (!m) throw new ModelBulletinError('Het merk en model van deze auto zijn niet bekend. Vul Merk/Type in of haal de RDW-gegevens op.');
   const lvl = ai.level(effort);
   const r = await importer.metered(userId, () => ask(m, lvl), { kind: 'apk-model', effort: lvl, limited: false });

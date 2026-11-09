@@ -10,10 +10,16 @@
   async function poll(key) {
     if (holo) holo.classList.add('is-scanning');
     if (status) status.hidden = false;
+    let failures = 0;
+    const giveUp = (msg) => { if (holo) holo.classList.remove('is-scanning'); if (status) { status.textContent = msg; status.classList.add('alert'); } };
     for (;;) {
       await new Promise((ok) => setTimeout(ok, 3000));
       let r;
-      try { r = await (await fetch('/ai-analyse/status?key=' + encodeURIComponent(key), { credentials: 'same-origin' })).json(); } catch { continue; }
+      try {
+        const res = await fetch('/ai-analyse/status?key=' + encodeURIComponent(key), { credentials: 'same-origin' });
+        if (res.redirected || res.status === 401) return giveUp('U bent uitgelogd. Log opnieuw in en open deze pagina nog eens.');
+        r = await res.json(); failures = 0;
+      } catch { if (++failures >= 10) return giveUp('Geen verbinding met de server. Vernieuw de pagina (F5) om te zien of de analyse klaar is.'); continue; }
       if (!r.done) continue;
       if (r.error) {
         if (holo) holo.classList.remove('is-scanning');

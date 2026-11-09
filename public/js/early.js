@@ -20,6 +20,8 @@
   if (inWin) {
     d.classList.add('in-window');
     d.setAttribute('data-fx', 'calm');
+    // Grootte van de vensterinhoud (Personaliseren) meteen toepassen, niet pas als alles geladen is.
+    try { var sc = window.top.adonisDesktopScale; if (sc && sc !== 100) d.style.zoom = String(sc / 100); } catch (e) { /* geen bureaublad */ }
     // Uitgelogd: het hele bureaublad naar het inlogscherm, niet alleen dit venster.
     if (location.pathname === '/login' || location.pathname === '/setup') { window.top.location.href = location.pathname; }
   }

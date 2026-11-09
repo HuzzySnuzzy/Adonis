@@ -5,6 +5,20 @@
  */
 module.exports = [
   {
+    version: '1.40.0', date: '2026-11-09', title: 'Opgepoetst: tientallen kleine verbeteringen',
+    items: [
+      'Toetsenbord en leesbaarheid: overal dezelfde zichtbare rand bij Tab (ook op links en uitklapkopjes), dezelfde pijltjes bij alle uitklapbare onderdelen, en "Uitloggen" in de menubalk ziet er net zo uit als de knoppen ernaast.',
+      'Thema\'s: witte tekst op lichte accentkleuren (Neon, Black Ice) is nu donker en leesbaar, de gouden titels in ADONIS vervagen niet meer aan het eind, grijze tekst op het Aero- en Windows 98-bureaublad is beter te lezen, uitgeschakelde knoppen zien er uitgeschakeld uit, en dialoogvensters, menu\'s en plaknotitiemenu\'s volgen de stijl van het thema (hoekig in Windows 98/VCDS, zwevend in OLED, eigen vensterstijl in Neon en Black Ice).',
+      'Meldingen: elke soort houdt zijn eigen kleurstreep in alle thema\'s, menu\'s en meldingen liggen altijd boven plaknotities, de dagelijkse herinnering komt één keer per dag, en de live-verbinding herstelt zich vanzelf na een onderbreking (ook als het tabblad lang verborgen was).',
+      'Plaknotities: de knop staat linksonder in plaats van over de lijst, nieuwe notities liggen trapsgewijs onder de kentekenregel, en een notitie bij een verwijderde werkopdracht blijft op het scherm bewaard.',
+      'Werkopdracht: de vraag "wijzigingen niet opgeslagen" verschijnt niet meer onterecht na een dialoogvenster, bedragen als 1.250 worden goed gelezen, verplichte velden die leeg bleven blijven rood omrand, en in Black Ice en Neon valt het nummer niet meer buiten het blad.',
+      'Bureaublad: het rechtsklikmenu is compact in alle thema\'s, het startmenu past op kleinere schermen, pictogrammen staan vrij van de notitieknop, vensters passen bij openen altijd in het scherm, een gemaximaliseerd venster laat zich pas slepen na een duidelijke beweging, de menu\'s zijn met de pijltjestoetsen te bedienen, en een te grote eigen foto wordt vanzelf verkleind.',
+      'Telefoon: de werkbalk van de werkopdracht in twee nette kolommen, de APK-tabbladen op één regel, geen zijwaarts scrollen meer op smalle schermen. Afdrukken van lijsten gebeurt zonder zoekbalk, filters en knoppen.',
+      'Server: de update-bewaker draait nu ook bij Docker en npm start, een herstart voor een update wacht tot backups en lopende AI-taken klaar zijn, AI-analyses en aandachtspunten worden niet dubbel gestart als twee collega\'s tegelijk klikken, en het Portaal haalt geen adressen van de server zelf (localhost) op.',
+      'Onder de motorkap: dubbele en ongebruikte stijlregels opgeruimd, kleuren, hoeken en maten als herbruikbare variabelen, en tientallen kleine verbeteringen in de code (foutafhandeling bij AI-taken, geen dubbele verzoeken, timers die netjes opruimen).',
+    ],
+  },
+  {
     version: '1.39.0', date: '2026-11-08', title: 'Websites uit het Portaal binnen ADONIS',
     items: [
       'In de ADONIS-app openen websites uit het Portaal (en "Opzoeken met …" bij een kenteken) nu binnen ADONIS: in een eigen venster met terug, vooruit, opnieuw laden, het adres en "Openen in browser". In de bureaubladmodus als venster op het bureaublad. Shift+klik opent toch de gewone browser.',

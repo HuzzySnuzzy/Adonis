@@ -344,7 +344,7 @@
 :root[data-theme="neon"] :is(.flash-err, .alert) { color: var(--err-text); border-left-color: var(--danger); }
 :root[data-theme="neon"] .live-toast {
   border-radius: 2px; background: #0c0704; color: var(--text);
-  border: 1px solid rgba(79, 227, 214, .5); border-left: 3px solid var(--holo); box-shadow: 0 0 18px rgba(79, 227, 214, .22);
+  border: 1px solid rgba(79, 227, 214, .5); border-left: 3px solid var(--toast-accent, var(--holo)); box-shadow: 0 0 18px rgba(79, 227, 214, .22);
   animation: hud-wipe-in .3s var(--hud-out) both;
 }
 :root[data-theme="neon"] :is(.flash, .live-banner) { animation: hud-wipe-in .3s var(--hud-out) both; }
@@ -415,7 +415,7 @@
 @keyframes hud-materialise { 0% { opacity: 0; transform: translateY(8px) scale(.985); } 25% { opacity: 1; transform: none; } 40% { opacity: .35; } 55%, 100% { opacity: 1; transform: none; } }
 
 /* ---------- Opstartreeks: eerste pagina van een tabblad, ± 1,4 s; blokkeert nooit ---------- */
-.hud-boot { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
+.hud-boot { position: fixed; inset: 0; z-index: 9990; pointer-events: none; }
 :root:not([data-theme="neon"]) .hud-boot, :root[data-theme="neon"]:not([data-boot]) .hud-boot { display: none; }
 .hud-boot::before, .hud-boot::after { content: ""; position: absolute; left: 0; right: 0; height: 50%; background: #050302; }
 .hud-boot::before { top: 0; border-bottom: 1px solid #ffa630; box-shadow: 0 1px 18px rgba(255, 166, 48, .8); animation: hud-shutter-up .42s var(--hud-cut, ease) .24s both; }
@@ -549,3 +549,26 @@
 :root[data-theme="neon"] :is(.status-badge, .apk-pill) { font-size: 12.5px; }
 :root[data-theme="neon"] .apk-pill.apk-expired { color: #ff9a7f; }
 :root[data-theme="neon"] .status-open { color: #e2cdb0; }
+
+/* ---- Bureaubladmodus in neon ---- */
+:root[data-theme="neon"] .dw { border-radius: 2px; border: 1px solid rgba(255, 166, 48, .35); box-shadow: 0 0 0 1px rgba(0, 0, 0, .6), 0 18px 40px rgba(0, 0, 0, .6), 0 0 18px rgba(255, 166, 48, .12); }
+:root[data-theme="neon"] .dw-bar { height: 32px; background: #130c07; border-bottom: 1px solid rgba(255, 166, 48, .3); }
+:root[data-theme="neon"] .dw.is-active .dw-bar { background: #1a1008; color: var(--accent); }
+:root[data-theme="neon"] .dw-title { font-family: var(--f-mono); text-transform: uppercase; letter-spacing: .1em; font-size: .78rem; font-weight: 400; }
+:root[data-theme="neon"] .dw-btn { border-radius: 1px; }
+:root[data-theme="neon"] .dt-taskbar { background: rgba(10, 6, 3, .92); border-top: 1px solid rgba(255, 166, 48, .3); }
+:root[data-theme="neon"] .dt-task { border-radius: 1px; font-family: var(--f-mono); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+:root[data-theme="neon"] .dt-task.is-active { background: rgba(255, 166, 48, .14); color: var(--accent); }
+:root[data-theme="neon"] :is(.dt-menu, .dt-ctx) { border-radius: 2px; border-color: rgba(255, 166, 48, .35); background: #0d0906; }
+:root[data-theme="neon"] .dt-icon-img { border-radius: 2px; background: rgba(255, 166, 48, .08); border: 1px solid rgba(255, 166, 48, .3); color: var(--accent); }
+
+:root[data-theme="neon"] :is(.swap-dialog, .sn-menu, .rdw-pop, .ai-busy-card) { border-radius: 2px; border-color: rgba(255, 166, 48, .35); background: #0d0906; box-shadow: 0 0 0 1px rgba(0, 0, 0, .6), 0 20px 50px rgba(0, 0, 0, .7), 0 0 30px rgba(255, 166, 48, .12); }
+:root[data-theme="neon"] .dw-close:hover { background: rgba(255, 90, 90, .8); color: #fff; }
+
+/* Werkopdracht: de titel in het sierlettertype is breed; laat hem inkorten zodat het nummer niet buiten het blad valt */
+:root[data-theme="neon"] .head-grid .title-cell .wo-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-theme="neon"] .head-grid .title-cell .nr-input { width: 4.5ch; min-width: 0; flex: 0 1 auto; letter-spacing: .04em; }
+/* Startpagina: het grote zoekveld heeft al een vergrootglas; geen tweede tekentje en ruimte voor de tekst */
+:root[data-theme="neon"] .start-search-row input[type=search] { padding-left: 3rem !important; background-image: none; }
+/* De lichte voorbeeldfoto van de auto iets dimmen op de donkere klantpagina */
+:root[data-theme="neon"] .car-photo img { filter: brightness(.85) sepia(.3) saturate(.85); }

@@ -226,13 +226,13 @@ function carryOverAfterRestore() {
     fs.writeFileSync(file, JSON.stringify({ ...info, configApplied: true }));
   } catch { /* geen terugzetting */ }
 }
-let timer = null;
+let timer = null; let firstTick = null;
 function startSchedule() {
   if (timer) return;
   carryOverAfterRestore();
   // Nooit de hele server laten vallen om een automatische backup (bijv. database al gesloten tijdens een herstart).
   const tick = () => { try { if (isDue()) runBackup({ reason: 'automatisch' }).catch(() => {}); } catch (err) { console.log('  Automatische backup overgeslagen: ' + err.message); } };
-  setTimeout(tick, 90 * 1000).unref(); // even na het starten
+  firstTick = setTimeout(tick, 90 * 1000); firstTick.unref(); // even na het starten
   timer = setInterval(tick, 10 * 60 * 1000);
   timer.unref();
 }
@@ -293,7 +293,7 @@ async function backupPath(folder, name) {
 }
 
 function isRunning() { return !!running; }
-function stopSchedule() { if (timer) clearInterval(timer); timer = null; }
+function stopSchedule() { if (timer) clearInterval(timer); timer = null; if (firstTick) clearTimeout(firstTick); firstTick = null; }
 
 module.exports = {
   isRunning, stopSchedule, BackupError, DEFAULT_DIR, config, saveConfig, checkFolder, createZip, runBackup, listBackups, startSchedule, health,

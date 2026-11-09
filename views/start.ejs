@@ -60,7 +60,7 @@
     <a class="start-stat hue-<%= t.hue %><%= t.n ? '' : ' is-zero' %>" href="<%= t.href %>">
       <span class="start-stat-icon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><%- ICONS[t.icon] %></svg></span>
       <span class="start-stat-n"><%= t.n %></span>
-      <span class="start-stat-label"><%= t.label %><br><span class="muted"><%= t.sub %></span></span>
+      <span class="start-stat-label"><%= t.label %> <br><span class="muted"><%= t.sub %></span></span>
     </a>
     <% } %>
   </nav>

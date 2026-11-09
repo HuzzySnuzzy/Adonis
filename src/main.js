@@ -28,6 +28,9 @@ const VERSION = require('./version');
 const argv = process.argv.slice(2);
 const command = argv[0] && !argv[0].startsWith('--') ? argv[0] : null;
 const cfg = config.load(argv);
+// De omgeving zoals ADONIS werd gestart: de bewaker geeft díe door aan elke nieuwe start, zodat een gewijzigd
+// config.properties ook na een automatische herstart wordt gelezen (en niet de waarden van de eerste start).
+const ORIGINAL_ENV = { ...process.env };
 
 // Doorgeven aan de rest van de app (db.js, orders.js, server.js lezen deze).
 process.env.DATA_DIR = cfg.dataDir;
@@ -288,6 +291,8 @@ function startServer() {
     setTimeout(() => process.exit(0), 3000).unref();
   }
   process.on('SIGINT', stop);
+  // De bewaker is weg (afgebroken via Taakbeheer o.i.d.): dan ook netjes stoppen, anders blijft een wees de poort bezet houden.
+  if (process.env.ADONIS_SUPERVISED) process.on('disconnect', stop);
   process.on('SIGTERM', stop);
 
   // Console-opdrachten (werkt ook in de Pterodactyl-console).
@@ -358,7 +363,8 @@ function startServer() {
   }
   // Het losse programma draait altijd onder een kleine "bewaker": die opent zelf geen database en heeft geen
   // timers, en start ADONIS (opnieuw) na een update of het terugzetten van een backup.
-  if (config.isSea() && !process.env.ADONIS_SUPERVISED && !process.env.ADONIS_NO_SUPERVISOR) return supervise({});
+  // Ook vanuit de broncode (Docker, npm start): anders blijft na een herstart dit proces met een gesloten database hangen.
+  if (!process.env.ADONIS_SUPERVISED && !process.env.ADONIS_NO_SUPERVISOR) return supervise({});
   startServer();
 })();
 
@@ -376,7 +382,7 @@ function relaunch() {
  * De bewaker blijft hetzelfde proces, dus Pterodactyl/Docker/het venster merken er niets van.
  */
 function respawn(extraEnv = {}) {
-  if (process.env.ADONIS_SUPERVISED && typeof process.send === 'function') {
+  if (process.env.ADONIS_SUPERVISED && process.connected && typeof process.send === 'function') {
     process.send({ adonis: 'respawn', env: extraEnv }, () => process.exit(0));
     setTimeout(() => process.exit(0), 2000).unref();
     return;
@@ -387,13 +393,14 @@ let child = null;
 function supervise(extraEnv) {
   if (!supervise.signals) {
     supervise.signals = true;
-    for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { if (child) child.kill(sig); else process.exit(0); } catch { /* al gestopt */ } });
+    // Op Windows krijgt het kind Ctrl+C al van de console zelf; child.kill zou het daar hard afbreken.
+    for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { try { if (!child) process.exit(0); else if (process.platform !== 'win32') child.kill(sig); } catch { /* al gestopt */ } });
   }
   const args = config.isSea() ? process.argv.slice(2) : process.argv.slice(1);
   let again = null;
   child = spawn(process.execPath, args, {
     stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-    env: { ...process.env, ...extraEnv, ADONIS_SUPERVISED: '1' },
+    env: { ...ORIGINAL_ENV, ...extraEnv, ADONIS_SUPERVISED: '1' },
   });
   child.on('message', (m) => { if (m && m.adonis === 'respawn') again = m.env || {}; });
   child.on('error', (err) => fatal('Kon ADONIS niet (opnieuw) starten: ' + err.message));

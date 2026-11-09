@@ -229,10 +229,12 @@
         document.dispatchEvent(new Event('adonis:swapped'));
       }
     } catch { /* volgende keer */ }
-    setTimeout(pollIcons, 3000);
+    schedule(3000);
   }
-  setTimeout(pollIcons, 2000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(pollIcons, 500); });
+  let pollTimer = null;
+  const schedule = (ms) => { clearTimeout(pollTimer); pollTimer = setTimeout(pollIcons, ms); }; // altijd maar één keten
+  schedule(2000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) schedule(500); });
 
   const picker = document.querySelector('[data-portal-import]');
   if (picker) picker.addEventListener('change', () => { const files = [...picker.files]; picker.value = ''; if (files.length) importFiles(files, null); });

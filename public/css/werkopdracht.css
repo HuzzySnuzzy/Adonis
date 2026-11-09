@@ -240,4 +240,15 @@ td.tread-warn { background: var(--tread-warn); }
 .order-history { max-width: 1440px; margin: 0 auto 1rem; padding: 0 1rem; font-size: .88rem; }
 .order-history summary { cursor: pointer; color: var(--muted); }
 .order-history ul { margin: .5rem 0 0; padding-left: 1.2rem; }
-.form-actions { gap: .5rem; flex-wrap: wrap; }
+
+/* Telefoon: de knoppen van de werkbalk netjes in twee kolommen (de hoofdknop over de hele breedte), en een hint dat het
+   formulier opzij schuift (de rechterhelft viel eraf zonder dat je dat kon zien). */
+@media (max-width: 760px) {
+  .order-toolbar .tb-right { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; width: 100%; }
+  .order-toolbar .tb-right .btn-primary, .order-toolbar .tb-right .btn-ok { grid-column: 1 / -1; }
+  .order-toolbar .tb-right .btn { justify-content: center; }
+  .sheet { scrollbar-width: thin; scrollbar-color: var(--muted) transparent; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
+}
+
+/* Verplicht veld leeg gelaten na een poging tot opslaan: blijft rood omrand, ook nadat de browsermelding weg is */
+.sheet .ink:user-invalid, .nr-input:user-invalid { box-shadow: inset 0 0 0 2px var(--red); background: color-mix(in srgb, var(--red) 8%, var(--paper)); }

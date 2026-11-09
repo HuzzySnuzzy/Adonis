@@ -295,6 +295,8 @@ app.get('/app-versie', (req, res) => {
 });
 
 /* ---------- alles hieronder vereist inloggen ---------- */
+// Even kijken of ADONIS (weer) draait, bijv. na het terugzetten van een backup – zonder in te loggen, zegt niets meer dan /app-versie.
+app.get('/status', (req, res) => { res.set('Cache-Control', 'no-store'); res.json({ ok: true }); });
 app.use(auth.requireLogin);
 
 // Backup-waarschuwing voor de ADONIS-beheerder (mislukt, te oud of nog nooit gemaakt).
@@ -1022,8 +1024,6 @@ app.post('/systeem/backup/terugzetten', auth.requireOwner, express.raw({ type: '
     res.redirect('/systeem#backup');
   }
 }));
-// Even kijken of ADONIS weer draait (na het terugzetten), zonder in te loggen.
-app.get('/status', (req, res) => res.json({ ok: true }));
 
 app.post('/systeem/cloudflare/installeren', auth.requireOwner, wrap(async (req, res) => {
   const port = Number(process.env.APP_PORT) || 3000;

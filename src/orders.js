@@ -344,6 +344,8 @@ function deleteOrder(id) {
   db.exec('BEGIN');
   try {
     db.prepare('DELETE FROM orders WHERE id = ?').run(id);
+    // Plaknotities op deze werkopdracht niet onzichtbaar laten worden: ze komen op het scherm van de maker.
+    try { db.prepare('UPDATE sticky_notes SET order_id = NULL WHERE order_id = ?').run(id); } catch { /* geen notities-tabel */ }
     refreshCustomer(row.customer_id);
     db.exec('COMMIT');
   } catch (err) {

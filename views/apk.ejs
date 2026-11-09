@@ -22,7 +22,7 @@
     <% for (const [k, label] of tabs) { %><a href="/apk<%= k === 'binnenkort' ? '' : '?toon=' + k %>" class="<%= show === k ? 'active' : '' %>"><%= label %> <span class="count"><%= counts[k] %></span></a><% } %>
   </nav>
   <div class="ai-job no-print" data-ai-job data-ai-job-url="/apk/modelpunten" data-ai-job-what="automodellen" hidden></div>
-  <% if (waiting) { %><p class="muted small">Van <%= waiting %> klant<%= waiting === 1 ? '' : 'en' %> worden de RDW-gegevens nog op de achtergrond opgehaald; die komen er vanzelf bij.</p><% } %>
+  <% if (waiting) { %><p class="muted small no-print">Van <%= waiting %> klant<%= waiting === 1 ? '' : 'en' %> worden de RDW-gegevens nog op de achtergrond opgehaald; die komen er vanzelf bij.</p><% } %>
   <div id="live-apk" data-live>
   <% if (!list.length) { %>
     <div class="empty"><p><%= show === 'verlopen' ? 'Er zijn geen verlopen APK\'s.' : 'Er verloopt de komende 2 maanden geen APK. 🎉' %></p></div>

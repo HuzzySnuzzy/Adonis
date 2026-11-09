@@ -201,8 +201,30 @@ function imageType(buf, contentType = '') {
   if (/<svg[\s>]/i.test(text) || /svg/i.test(contentType)) return /<svg[\s>]/i.test(buf.toString('utf8')) ? 'svg' : null;
   return null;
 }
+/* De server haalt titel en pictogram op namens de gebruiker. Dat mag niet bij zichzelf of bij interne adressen uitkomen
+ * (localhost, 169.254.x.x zoals cloud-metadata, "0.0.0.0"): zo'n link blijft gewoon werken, alleen zonder pictogram.
+ * Adressen in het eigen netwerk (10.x, 192.168.x) mogen wél: een garage heeft daar bijv. een NAS of printer staan. */
+const dns = require('node:dns').promises;
+function isInternalIp(ip) {
+  if (!ip) return true;
+  const v4 = ip.replace(/^::ffff:/i, '');
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(v4)) { const [a, b] = v4.split('.').map(Number); return a === 127 || a === 0 || (a === 169 && b === 254); }
+  return /^(::1|::|fe80:|fc|fd)/i.test(ip);
+}
+async function blocked(url) {
+  let host;
+  try { host = new URL(url).hostname.replace(/^\[|\]$/g, ''); } catch { return true; }
+  if (/^localhost$/i.test(host) || /\.localhost$/i.test(host)) return true;
+  try {
+    const addrs = await dns.lookup(host, { all: true, verbatim: true });
+    return !addrs.length || addrs.some((x) => isInternalIp(x.address));
+  } catch { return true; } // onbekende naam: er is toch niets op te halen
+}
 async function get(url, accept) {
-  return fetch(url, { headers: { 'User-Agent': UA, Accept: accept, 'Accept-Language': 'nl,en;q=0.8' }, redirect: 'follow', signal: AbortSignal.timeout(8000) });
+  if (await blocked(url)) throw new PortalError('intern adres');
+  const res = await fetch(url, { headers: { 'User-Agent': UA, Accept: accept, 'Accept-Language': 'nl,en;q=0.8' }, redirect: 'follow', signal: AbortSignal.timeout(8000) });
+  if (res.url && res.url !== url && await blocked(res.url)) throw new PortalError('intern adres'); // ook na doorsturen
+  return res;
 }
 /** Pagina lezen: titel en pictogram-kandidaten (beste eerst). */
 async function inspect(url) {

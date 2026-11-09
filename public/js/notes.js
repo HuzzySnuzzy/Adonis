@@ -66,7 +66,7 @@
       </fieldset>
       <fieldset class="swap-step" data-place><legend>Waar komt hij?</legend>
         <label class="swap-choice"><input type="radio" name="place" value="order" checked><span><b>Op deze werkopdracht</b><br><span class="muted small">Alleen te zien bij deze werkopdracht (en een briefje-teken in de lijsten).</span></span></label>
-        <label class="swap-choice"><input type="radio" name="place" value="screen"><span><b>Op het scherm</b><br><span class="muted small">Op elke pagina te zien, op dezelfde plek.</span></span></label>
+        <label class="swap-choice"><input type="radio" name="place" value="screen"><span><b>${inWindow ? 'Op het bureaublad' : 'Op het scherm'}</b><br><span class="muted small">${inWindow ? 'Op het bureaublad, onder de vensters.' : 'Op elke pagina te zien, op dezelfde plek.'}</span></span></label>
       </fieldset>
       <p class="alert" data-err hidden></p>
       <div class="swap-actions"><button class="btn" value="annuleren" type="submit">Annuleren</button><button class="btn btn-primary" value="ok" type="submit">Plakken</button></div>
@@ -107,9 +107,15 @@
   /* ----- notities tonen ----- */
   const notes = new Map(); // id -> { el, note }
   let topZ = 60;
+  // Notities liggen boven de pagina maar onder menu's en meldingen (z 60–79); vol? dan opnieuw nummeren.
+  function raise(el) {
+    if (topZ >= 79) { topZ = 60; [...notes.values()].map((x) => x.el).sort((a, b) => a.style.zIndex - b.style.zIndex).forEach((x) => { x.style.zIndex = ++topZ; }); }
+    el.style.zIndex = ++topZ;
+  }
   function place(el, note) {
     const onOrder = !!note.order_id;
-    const p = store.get('pos-' + note.id) || { x: 80, y: onOrder ? 160 : 110 };
+    const n = document.querySelectorAll('.sticky-note').length; // trapsgewijs, en op een werkopdracht onder de kentekenregel
+    const p = store.get('pos-' + note.id) || { x: 80 + (n % 5) * 34, y: (onOrder ? 220 : 110) + (n % 5) * 30 };
     const maxX = (onOrder ? document.documentElement.clientWidth : window.innerWidth) - (el.offsetWidth || 230) - 4; // helemaal in beeld
     const maxY = onOrder ? Math.max(document.documentElement.scrollHeight - 60, 0) : window.innerHeight - 40;
     el.style.left = Math.max(0, Math.min(p.x, maxX)) + 'px';
@@ -135,7 +141,7 @@
         catch (e) { el.classList.add('is-error'); el.title = e.message; }
       }, 600);
     });
-    el.addEventListener('pointerdown', () => { el.style.zIndex = ++topZ; });
+    el.addEventListener('pointerdown', () => raise(el));
     el.querySelector('[data-sn-min]').addEventListener('click', () => {
       const min = !el.classList.contains('is-min');
       el.classList.toggle('is-min', min);
@@ -156,6 +162,8 @@
     if (force || document.activeElement !== text) text.value = note.text;
   }
   function upsert(note, focus) {
+    // In een venster van de bureaubladmodus hoort een schermnotitie op het bureaublad zelf: dat laten we het bureaublad ophalen.
+    if (inWindow && !note.order_id) { try { window.top.document.dispatchEvent(new Event('adonis:notes')); } catch { /* ander adres */ } return; }
     let item = notes.get(note.id);
     if (!item) {
       item = { el: build(note), note };
@@ -166,7 +174,7 @@
     item.note = note;
     fill(item.el, note, !focus);
     place(item.el, note);
-    if (focus) { item.el.style.zIndex = ++topZ; item.el.querySelector('.sn-text').focus(); }
+    if (focus) { raise(item.el); item.el.querySelector('.sn-text').focus(); }
   }
   function remove(id) { const item = notes.get(id); if (item) { item.el.remove(); notes.delete(id); store.set('pos-' + id, null); store.set('min-' + id, null); } }
 
@@ -185,7 +193,7 @@
     menu.append(sw);
     const add = (label, fn, cls) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sn-menu-item' + (cls ? ' ' + cls : ''); b.textContent = label; b.addEventListener('click', fn); menu.append(b); };
     if (note.mine) add(note.shared ? 'Alleen voor mij maken' : 'Iedereen laten zien', () => change(note, { shared: note.shared ? '0' : '1' }));
-    if (note.order_id) add('Op het scherm hangen (elke pagina)', () => move(note, ''));
+    if (note.order_id) add(inWindow ? 'Op het bureaublad hangen' : 'Op het scherm hangen (elke pagina)', () => move(note, ''));
     else if (orderId) add('Op deze werkopdracht plakken', () => move(note, orderId));
     if (note.canDelete) add('Weggooien', async () => {
       if (!confirm('Deze notitie weggooien?' + (note.shared ? ' Hij verdwijnt dan voor iedereen.' : ''))) return;
@@ -193,20 +201,27 @@
     }, 'is-danger');
     menu.hidden = false;
   }
+  const closeMenus = () => document.querySelectorAll('.sn-menu:not([hidden])').forEach((m) => { m.hidden = true; });
   async function change(note, data) {
-    try { const r = await post('/notities/' + note.id, data); if (r.note) upsert(r.note); } catch (e) { alert(e.message); }
+    try { const r = await post('/notities/' + note.id, data); closeMenus(); if (r.note) upsert(r.note); } catch (e) { alert(e.message); }
   }
   async function move(note, target) {
     // Zelfde plek in beeld houden: scherm <-> pagina verschilt de schuifpositie.
     const p = store.get('pos-' + note.id) || { x: 80, y: 110 };
     store.set('pos-' + note.id, target ? { x: p.x, y: p.y + window.scrollY } : { x: p.x, y: Math.max(60, p.y - window.scrollY) });
-    const item = notes.get(note.id); if (item) { item.el.remove(); notes.delete(note.id); }
-    try { const r = await post('/notities/' + note.id, { werkopdracht: target }); if (r.note) upsert(r.note); } catch (e) { alert(e.message); }
+    closeMenus();
+    try {
+      const r = await post('/notities/' + note.id, { werkopdracht: target }); // eerst opslaan, dan pas van het scherm halen
+      const item = notes.get(note.id); if (item) { item.el.remove(); notes.delete(note.id); }
+      if (r.note) upsert(r.note);
+    } catch (e) { alert(e.message); }
     renderToggle();
   }
   document.addEventListener('pointerdown', (e) => {
     document.querySelectorAll('.sn-menu:not([hidden])').forEach((m) => { if (!m.parentNode.contains(e.target)) m.hidden = true; });
   });
+  // Escape sluit een open notitiemenu (en gaat dan niet naar het startscherm, zie common.js).
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.querySelector('.sn-menu:not([hidden])')) { e.preventDefault(); closeMenus(); } });
 
   /* ----- slepen ----- */
   function drag(el) {

@@ -21,7 +21,7 @@
           <legend>Hoeveel moeite mag Claude doen?</legend>
           <div data-ai-levels></div>
         </fieldset>
-        <p class="muted small">Schatting vooraf: hoeveel Claude nadenkt verschilt per opdracht. De werkelijke kosten ziet u daarna
+        <p class="muted small ai-note">Schatting vooraf: hoeveel Claude nadenkt verschilt per opdracht. De werkelijke kosten ziet u daarna
           (en bij Systeem). Bedragen zijn bij benadering, in euro's.</p>
         <p class="alert" data-ai-error hidden></p>
         <div class="swap-actions">
@@ -122,7 +122,8 @@
       const r = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(r.error || 'Er ging iets mis.');
       window.adonisLeaving = true;
-      try { localStorage.setItem('adonis-open-' + (btn.closest('[data-remember]') || {}).dataset?.remember, '1'); } catch { /* geen opslag */ }
+      const box = btn.closest('[data-remember]');
+      if (box) { try { localStorage.setItem('adonis-open-' + box.dataset.remember, '1'); } catch { /* geen opslag */ } }
       location.hash = btn.dataset.aiAnchor || 'aandachtspunten';
       location.reload();
     } catch (err) {
@@ -151,11 +152,21 @@
   async function pollJob() {
     if (!jobBox || polling) return;
     polling = true;
-    try {
-      for (;;) {
+    let failures = 0;
+    for (;;) {
+      let r;
+      try {
+        const base0 = jobBox.dataset.aiJobUrl || '/aandachtspunten';
+        const res = await fetch(base0 + '/taak', { credentials: 'same-origin' });
+        if (res.redirected || res.status === 401) break; // uitgelogd
+        r = await res.json(); failures = 0;
+      } catch { // even geen verbinding (bijv. de server werkt zichzelf bij): later opnieuw
+        if (++failures > 24) break;
+        await new Promise((ok) => setTimeout(ok, 5000)); continue;
+      }
+      {
         const base = jobBox.dataset.aiJobUrl || '/aandachtspunten';
         const what = jobBox.dataset.aiJobWhat || 'klanten';
-        const r = await (await fetch(base + '/taak', { credentials: 'same-origin' })).json();
         const j = r.job;
         if (!j) { jobBox.hidden = true; break; }
         jobBox.hidden = false;
@@ -179,7 +190,7 @@
         if (!j.running) break;
         await new Promise((ok) => setTimeout(ok, 2500));
       }
-    } catch { /* volgende keer */ }
+    }
     polling = false;
   }
   if (jobBox) pollJob();
