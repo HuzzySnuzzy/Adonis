@@ -17,12 +17,14 @@
     F.rekenhulp && { href: '/rekenhulp', icon: 'calc', hue: 'teal', title: 'Rekenhulp', text: 'Band omrekenen, bar/psi, Nm, BTW…' },
   ].filter(Boolean);
   if (importOn && F.werkopdrachten) tiles.push({ href: '/importeren', icon: 'camera', hue: 'rose', title: 'Foto importeren', text: 'Papier overnemen' });
+  tiles.push({ href: '/verkenner', icon: 'folder', hue: 'amber', title: "Foto's", text: 'Alle foto\'s in mappen (Verkenner)' });
   if (F.ai) tiles.push({ href: '/ai-analyse', icon: 'ai', hue: 'rose', title: 'AI-analyse', text: 'Röntgenfoto van een auto' });
   tiles.push({ href: '/hulp', icon: 'help', hue: 'slate', title: 'Hulp', text: 'Uitleg in stappen' });
   const ICONS = {
     ai: '<path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/><rect x="5.5" y="5.5" width="13" height="13" rx="3"/><path d="M8.6 15.2 10.4 9h.4l1.8 6.2M9.2 13.4h2.6M15 9v6.2"/>',
     calc: '<rect x="5" y="2.5" width="14" height="19" rx="2"/><rect x="8" y="5.5" width="8" height="4" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
+    folder: '<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>',
     people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.6.2 4.6 1.9 5.3 4.9"/>',
     list: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
     euro: '<path d="M17 6.5A6.5 6.5 0 1 0 17 17.5M5 10.5h9M5 13.5h9"/>',

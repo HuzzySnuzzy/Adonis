@@ -1,0 +1,92 @@
+<%- include('/partials/head') %>
+<%
+  const FOLDER_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 6.5a1.5 1.5 0 0 1 1.5-1.5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/></svg>';
+  const total = folders.reduce((n, f) => n + f.owners.reduce((m, o) => m + o.n, 0), 0);
+  const cur = map && folders.find((f) => f.type === map);
+%>
+<main class="page wide explorer-page">
+  <div class="page-head"><h1>Verkenner</h1></div>
+  <div class="xp">
+    <aside class="xp-tree" aria-label="Mappen">
+      <a class="xp-node<%= !map ? ' is-on' : '' %>" href="/verkenner"><%- FOLDER_SVG %><span>Foto's</span><span class="xp-n"><%= total %></span></a>
+      <% for (const f of folders) { %>
+      <a class="xp-node xp-sub<%= map === f.type ? ' is-on' : '' %>" href="/verkenner?map=<%= f.type %>"><%- FOLDER_SVG %><span><%= f.name %></span><span class="xp-n"><%= f.owners.reduce((m, o) => m + o.n, 0) %></span></a>
+      <% } %>
+    </aside>
+    <section class="xp-main">
+      <nav class="xp-crumbs" aria-label="Pad">
+        <a href="/verkenner">Foto's</a>
+        <% if (cur) { %> › <a href="/verkenner?map=<%= cur.type %>"><%= cur.name %></a><% } %>
+        <% if (view.kind === 'photos') { %> › <span><%= view.owner.label %></span><% } %>
+      </nav>
+
+      <% if (view.kind === 'home') { %>
+        <div class="xp-grid">
+          <% for (const f of folders) { const cover = f.owners[0] && f.owners[0].cover; %>
+          <a class="xp-item xp-folder" href="/verkenner?map=<%= f.type %>">
+            <span class="xp-thumb"><% if (cover) { %><img src="/fotos/<%= cover %>/thumb" alt="" loading="lazy"><% } %><span class="xp-fold"><%- FOLDER_SVG %></span></span>
+            <span class="xp-name"><%= f.name %></span><span class="xp-meta"><%= f.owners.length %> map<%= f.owners.length === 1 ? '' : 'pen' %></span>
+          </a>
+          <% } %>
+        </div>
+        <h2 class="start-label">Laatst toegevoegd</h2>
+        <% if (!view.recent.length) { %><p class="muted">Nog geen foto's. Foto's voegt u toe bij een werkopdracht, bandenset of voorraaditem.</p><% } %>
+        <div class="xp-grid" data-xp-photos>
+          <% for (const p of view.recent) { %>
+          <a class="xp-item xp-photo" href="/fotos/<%= p.id %>/full" data-full="/fotos/<%= p.id %>/full" data-name="<%= p.name %>" data-from="<%= p.from.label %><%= p.from.sub ? ' · ' + p.from.sub : '' %>" data-href="<%= p.from.href %>" data-when="<%= fmtDateTime(p.created_at) %><%= p.by_name ? ' · ' + p.by_name : '' %>">
+            <span class="xp-thumb"><img src="/fotos/<%= p.id %>/thumb" alt="" loading="lazy"></span>
+            <span class="xp-name"><%= p.from.label %></span><span class="xp-meta"><%= fmtDateTime(p.created_at) %></span>
+          </a>
+          <% } %>
+        </div>
+
+      <% } else if (view.kind === 'owners') { %>
+        <form class="search xp-search" method="get" action="/verkenner" role="search" autocomplete="off">
+          <input type="hidden" name="map" value="<%= map %>">
+          <input type="search" name="q" value="<%= q %>" placeholder="Zoek op kenteken, nummer of naam…">
+          <button class="btn" type="submit">Zoeken</button>
+          <% if (q) { %><a class="btn btn-ghost" href="/verkenner?map=<%= map %>">Wissen</a><% } %>
+        </form>
+        <% if (!view.owners.length) { %><p class="muted">Geen mappen<%= q ? ' gevonden voor “' + q + '”' : '' %>.</p><% } %>
+        <div class="xp-grid">
+          <% for (const o of view.owners) { %>
+          <a class="xp-item xp-folder" href="/verkenner?map=<%= map %>&id=<%= o.id %>">
+            <span class="xp-thumb"><img src="/fotos/<%= o.cover %>/thumb" alt="" loading="lazy"><span class="xp-fold"><%- FOLDER_SVG %></span></span>
+            <span class="xp-name"><%= o.label %></span><span class="xp-meta"><%= o.sub %><%= o.sub ? ' · ' : '' %><%= o.n %> foto<%= o.n === 1 ? '' : "'s" %></span>
+          </a>
+          <% } %>
+        </div>
+
+      <% } else if (view.kind === 'photos') { const o = view.owner; %>
+        <div class="xp-owner">
+          <div><b><%= o.label %></b> <span class="muted"><%= o.sub %></span></div>
+          <a class="btn btn-small" href="<%= o.href %>">Openen →</a>
+        </div>
+        <div class="xp-grid" data-xp-photos>
+          <% for (const p of view.photos) { %>
+          <a class="xp-item xp-photo" href="/fotos/<%= p.id %>/full" data-full="/fotos/<%= p.id %>/full" data-name="<%= p.name %>" data-from="<%= o.label %><%= o.sub ? ' · ' + o.sub : '' %>" data-href="<%= o.href %>" data-when="<%= fmtDateTime(p.created_at) %><%= p.by_name ? ' · ' + p.by_name : '' %>">
+            <span class="xp-thumb"><img src="/fotos/<%= p.id %>/thumb" alt="" loading="lazy"></span>
+            <span class="xp-name"><%= p.name || 'Foto ' + p.id %></span><span class="xp-meta"><%= fmtDateTime(p.created_at) %></span>
+          </a>
+          <% } %>
+        </div>
+      <% } else { %>
+        <p class="muted">Deze map bestaat niet (meer). Misschien is het record verwijderd of staat het in de prullenbak.</p>
+      <% } %>
+    </section>
+  </div>
+</main>
+<dialog class="xp-view" data-xp-view aria-label="Foto">
+  <div class="xp-view-bar">
+    <span class="xp-view-info"><b data-xp-from></b><span class="muted small" data-xp-when></span></span>
+    <a class="btn btn-small" data-xp-goto href="#">Naar de bron →</a>
+    <a class="btn btn-small" data-xp-dl href="#">Downloaden</a>
+    <button type="button" class="btn btn-small" data-xp-close aria-label="Sluiten">×</button>
+  </div>
+  <button type="button" class="xp-nav xp-prev" data-xp-prev aria-label="Vorige">‹</button>
+  <img data-xp-img alt="">
+  <button type="button" class="xp-nav xp-next" data-xp-next aria-label="Volgende">›</button>
+</dialog>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/explorer.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

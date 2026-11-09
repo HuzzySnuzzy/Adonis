@@ -5,6 +5,16 @@
  */
 module.exports = [
   {
+    version: '1.44.0', date: '2026-11-09', title: 'Prullenbak, Verkenner, Internet en een echter bureaublad',
+    items: [
+      'Prullenbak: een verwijderde werkopdracht, bandenset of voorraaditem staat eerst 30 dagen in de prullenbak (met foto\'s en geschiedenis) en is met één klik terug te zetten. Te vinden op het bureaublad, bij Werkopdrachten en bij Instellingen (beheerders).',
+      'Verkenner: alle foto\'s in mappen (Werkopdrachten, Bandenhotel, Voorraad) met per werkopdracht, bandenset of onderdeel een eigen map. Klik op een foto om hem groot te zien, met pijltjes naar de volgende, een link naar waar hij vandaan komt en Downloaden.',
+      'Internet: een gewone webbrowser op het bureaublad van de ADONIS-app. In de adresbalk van elk websitevenster kunt u nu typen: een adres of iets om op te zoeken.',
+      'Websitevensters (Portaal) vullen nu altijd het hele venster; soms was alleen een strook bovenaan zichtbaar.',
+      'Bureaublad zoals Windows: sleep een venster tegen de linker- of rechterrand voor een half scherm (met een voorbeeld), rechtermuisknop op een taakbalkknop of titelbalk voor Herstellen/Minimaliseren/Maximaliseren/Links/Rechts/Sluiten, en een knopje helemaal rechts in de taakbalk om het bureaublad te tonen.',
+    ],
+  },
+  {
     version: '1.43.0', date: '2026-11-09', title: 'Foto\'s en extra bladen bij een werkopdracht',
     items: [
       'Foto\'s bij een werkopdracht: onderaan de werkopdracht "Foto maken" of "Foto\'s kiezen" (bijvoorbeeld schade, een onderdeel, het dashboard of de km-stand). Bij een nieuwe werkopdracht kan dat na het opslaan.',

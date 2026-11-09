@@ -18,9 +18,19 @@
   const svgs = {};
   document.getElementById('dt-icon-svgs').content.querySelectorAll('[data-k]').forEach((s) => { svgs[s.dataset.k] = s.innerHTML; });
   const ICON_FOR = [[/^\/werkopdrachten\?status=klaar/, 'euro'], [/^\/werkopdracht\/nieuw/, 'plus'], [/^\/werkopdracht/, 'list'], [/^\/(instellingen|systeem)/, 'gear'], [/^\/gebruikers/, 'people'], [/^\/zoekwoorden/, 'list'], [/^\/klant/, 'people'], [/^\/apk/, 'calendar'], [/^\/bandenhotel\/wissellijst/, 'swap'],
-    [/^\/bandenhotel/, 'tyre'], [/^\/voorraad/, 'box'], [/^\/portaal/, 'grid'], [/^\/rekenhulp/, 'calc'], [/^\/ai-analyse/, 'ai'], [/^\/importeren/, 'camera'], [/^\/hulp/, 'help'], [/^\/$/, 'people']];
+    [/^\/bandenhotel/, 'tyre'], [/^\/voorraad/, 'box'], [/^\/portaal/, 'grid'], [/^\/rekenhulp/, 'calc'], [/^\/verkenner/, 'folder'], [/^\/prullenbak/, 'bin'], [/^\/ai-analyse/, 'ai'], [/^\/importeren/, 'camera'], [/^\/hulp/, 'help'], [/^\/$/, 'people']];
   const iconFor = (url) => (/^https?:/.test(url) ? 'globe' : (ICON_FOR.find(([re]) => re.test(url)) || [null, 'grid'])[1]);
   const localPath = (u) => typeof u === 'string' && u.startsWith('/') && !u.startsWith('//'); // alleen eigen pagina's in een venster
+  const INTERNET_HOME = 'https://duckduckgo.com/';
+  const inApp = () => !!(window.adonisApp && window.adonisApp.webview);
+  /** Wat iemand in de adresbalk typt: een adres (met of zonder https://) of anders een zoekopdracht. */
+  function toUrl(t) {
+    t = String(t || '').trim();
+    if (!t) return null;
+    if (/^https?:\/\//i.test(t)) return t;
+    if (!/\s/.test(t) && /^[\w-]+(\.[\w-]+)+(:\d+)?(\/.*)?$/.test(t)) return 'https://' + t;
+    return 'https://duckduckgo.com/?q=' + encodeURIComponent(t);
+  }
 
   const wins = new Map(); // id -> { el, frame, task, st }
   let topZ = 10; let seq = 0; let active = null;
@@ -56,7 +66,7 @@
     el.innerHTML = `<header class="dw-bar"><span class="dw-ico" aria-hidden="true"></span><span class="dw-title"></span>
         <span class="dw-btns"><button type="button" class="dw-btn dw-min" title="Minimaliseren" aria-label="Minimaliseren"><i></i></button><button type="button" class="dw-btn dw-max" title="Maximaliseren" aria-label="Maximaliseren"><i></i></button><button type="button" class="dw-btn dw-close" title="Sluiten" aria-label="Sluiten"><i></i></button></span></header>
       <div class="dw-body">${st.site
-    ? '<div class="dw-nav"><button type="button" class="dw-nb" data-nav="back" title="Terug" aria-label="Terug">←</button><button type="button" class="dw-nb" data-nav="fwd" title="Vooruit" aria-label="Vooruit">→</button><button type="button" class="dw-nb" data-nav="reload" title="Opnieuw laden" aria-label="Opnieuw laden">⟳</button><span class="dw-addr"></span><button type="button" class="dw-nb dw-ext" data-nav="ext" title="In de gewone browser openen">Browser ↗</button></div><webview partition="persist:portaal"></webview>'
+    ? '<div class="dw-nav"><button type="button" class="dw-nb" data-nav="back" title="Terug" aria-label="Terug">←</button><button type="button" class="dw-nb" data-nav="fwd" title="Vooruit" aria-label="Vooruit">→</button><button type="button" class="dw-nb" data-nav="reload" title="Opnieuw laden" aria-label="Opnieuw laden">⟳</button><form class="dw-addr-form" data-addr-form><input class="dw-addr" type="text" spellcheck="false" autocomplete="off" enterkeyhint="go" aria-label="Adres of zoekterm" placeholder="Zoek op internet of typ een adres"></form><button type="button" class="dw-nb dw-ext" data-nav="ext" title="In de gewone browser openen">Browser ↗</button></div><div class="dw-view"><webview partition="persist:portaal"></webview></div>'
     : '<iframe title="Venster" loading="eager"></iframe>'}<div class="dw-loading"><span class="spinner"></span></div></div>
       <i class="dw-grip" aria-hidden="true"></i>`;
     if (st.site) el.classList.add('dw-site');
@@ -80,6 +90,8 @@
     el.addEventListener('pointerdown', () => focus(w), true);
     task.addEventListener('click', () => { if (active === w && !st.min) minimize(w, true); else { minimize(w, false); focus(w); } });
     task.addEventListener('auxclick', (e) => { if (e.button === 1) close(w); });
+    task.addEventListener('contextmenu', (e) => { e.preventDefault(); winMenu(w, e.clientX, e.clientY, true); });
+    el.querySelector('.dw-bar').addEventListener('contextmenu', (e) => { if (e.target.closest('.dw-btn')) return; e.preventDefault(); winMenu(w, e.clientX, e.clientY); });
     drag(w); resize(w);
     if (st.min) minimize(w, true, true); else focus(w);
     save();
@@ -99,7 +111,24 @@
   /* Website uit het Portaal (alleen in de ADONIS-app): een <webview> met eigen knoppen. */
   function siteView(w) {
     const v = w.frame; const addr = w.el.querySelector('.dw-addr');
-    const show = () => { let u = ''; try { u = v.getURL(); } catch { return; } w.st.url = u; try { const x = new URL(u); addr.textContent = x.hostname.replace(/^www\./, '') + x.pathname; } catch { addr.textContent = u; } addr.title = u;
+    // Altijd een vaste maat in pixels geven die het venster volgt: zonder vaste hoogte bleef de pagina in de
+    // ADONIS-app soms maar een strook van ~150px hoog (de standaardhoogte van een frame).
+    const box = v.parentElement;
+    const fitView = () => { v.style.width = box.clientWidth + 'px'; v.style.height = box.clientHeight + 'px'; };
+    if (window.ResizeObserver) new ResizeObserver(fitView).observe(box);
+    v.addEventListener('did-attach', fitView); v.addEventListener('dom-ready', fitView);
+    fitView();
+    const short = (u) => { try { const x = new URL(u); return x.hostname.replace(/^www\./, '') + (x.pathname === '/' ? '' : x.pathname) + x.search; } catch { return u; } };
+    addr.addEventListener('focus', () => { addr.value = w.st.url; addr.select(); });
+    addr.addEventListener('blur', () => { addr.value = short(w.st.url); });
+    w.el.querySelector('[data-addr-form]').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = toUrl(addr.value);
+      if (!u) return;
+      w.st.url = u; addr.blur();
+      try { v.loadURL(u); } catch { v.src = u; }
+    });
+    const show = () => { let u = ''; try { u = v.getURL(); } catch { return; } w.st.url = u; if (document.activeElement !== addr) addr.value = short(u); addr.title = u;
       try { w.el.querySelector('[data-nav=back]').disabled = !v.canGoBack(); w.el.querySelector('[data-nav=fwd]').disabled = !v.canGoForward(); } catch { /* nog niet klaar */ } save(); };
     v.addEventListener('did-stop-loading', () => { w.el.classList.add('is-loaded'); show(); applyScale(w); });
     v.addEventListener('did-navigate', show);
@@ -139,8 +168,11 @@
   function place(w, fit) {
     const { el, st } = w;
     el.classList.toggle('is-max', st.max);
+    el.classList.toggle('is-snap', !st.max && !!st.snap);
     if (st.max) { el.style.left = '0px'; el.style.top = '0px'; el.style.width = '100%'; el.style.height = '100%'; return; }
     const a = area();
+    // Vastgezet tegen de linker- of rechterrand (zoals Windows): de helft van het scherm. st.x/y/w/h blijven bewaard.
+    if (st.snap) { const half = Math.round(a.width / 2); el.style.left = (st.snap === 'right' ? a.width - half : 0) + 'px'; el.style.top = '0px'; el.style.width = half + 'px'; el.style.height = '100%'; return; }
     st.w = Math.max(320, Math.min(st.w, a.width)); st.h = Math.max(200, Math.min(st.h, a.height));
     if (fit) { st.x = Math.min(st.x, Math.max(0, a.width - st.w)); st.y = Math.min(st.y, Math.max(0, a.height - st.h)); }
     st.x = Math.max(-st.w + 120, Math.min(st.x, a.width - 120)); st.y = Math.max(0, Math.min(st.y, a.height - 40));
@@ -166,7 +198,8 @@
     save();
   }
   function maxLabel(w) { const b = w.el.querySelector('.dw-max'); if (!b) return; b.title = w.st.max ? 'Herstellen' : 'Maximaliseren'; b.setAttribute('aria-label', b.title); }
-  function maximize(w, yes) { w.st.max = yes; place(w); maxLabel(w); focus(w); save(); }
+  function maximize(w, yes) { w.st.max = yes; if (yes) w.st.snap = null; place(w); maxLabel(w); focus(w); save(); }
+  function snap(w, side) { w.st.max = false; w.st.snap = side; minimize(w, false); place(w); maxLabel(w); focus(w); save(); }
   function dirty(w) {
     try { const cw = w.frame.contentWindow; return (cw.adonisOrderDirty && cw.adonisOrderDirty()) || (cw.adonisFormDirty && cw.adonisFormDirty()); } catch { return false; }
   }
@@ -188,6 +221,17 @@
     return true;
   }
 
+  /* Voorbeeld van waar het venster komt bij loslaten tegen een rand */
+  const preview = document.createElement('div');
+  preview.className = 'dt-snap no-print'; preview.hidden = true;
+  layer.append(preview);
+  function snapPreview(zone) {
+    preview.hidden = !zone;
+    if (!zone) return;
+    preview.style.left = zone === 'right' ? '50%' : '0'; preview.style.top = '0';
+    preview.style.width = zone === 'max' ? '100%' : '50%'; preview.style.height = '100%';
+  }
+
   /* ---------- slepen en vergroten (iframes vangen anders de muis af) ---------- */
   function track(e, onMove, onEnd) {
     document.documentElement.classList.add('dt-busy');
@@ -203,21 +247,24 @@
       const a = area();
       let sx = e.clientX; let sy = e.clientY;
       let ox = w.st.x; let oy = w.st.y;
-      let tearing = w.st.max; // gemaximaliseerd: pas lostrekken als er echt gesleept wordt (een klik/dubbelklik laat het zo)
-      let lastY = null;
+      let tearing = w.st.max || !!w.st.snap; // gemaximaliseerd/vastgezet: pas lostrekken als er echt gesleept wordt
+      let zone = null;
       track(e, (ev) => {
-        lastY = ev.clientY;
         if (tearing) {
           if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
           tearing = false;
-          const ratio = (sx - a.left) / a.width; // het venster blijft onder de muis
-          w.st.max = false; w.st.x = Math.round(ev.clientX - a.left - w.st.w * ratio); w.st.y = 0;
+          const ratio = Math.min(1, Math.max(0, (sx - w.el.getBoundingClientRect().left) / w.el.offsetWidth)); // het venster blijft onder de muis
+          w.st.max = false; w.st.snap = null; w.st.x = Math.round(ev.clientX - a.left - w.st.w * ratio); w.st.y = 0; maxLabel(w);
           sx = ev.clientX; sy = ev.clientY; ox = w.st.x; oy = 0;
         }
         w.st.x = ox + ev.clientX - sx; w.st.y = oy + ev.clientY - sy; place(w);
+        // Tegen een rand: bovenaan = maximaliseren, links/rechts = halve scherm (met een voorbeeld, zoals in Windows).
+        zone = ev.clientY - a.top < 4 ? 'max' : ev.clientX - a.left < 6 ? 'left' : a.right - ev.clientX < 6 ? 'right' : null;
+        snapPreview(zone);
       }, () => {
-        // Tegen de bovenrand gesleept = maximaliseren (zoals in Windows)
-        if (lastY !== null && !tearing && lastY - a.top < 4) { w.st.y = 0; maximize(w, true); } else save();
+        snapPreview(null);
+        if (tearing) return;
+        if (zone === 'max') { w.st.y = 0; maximize(w, true); } else if (zone) snap(w, zone); else save();
       });
     });
   }
@@ -225,6 +272,10 @@
     w.el.querySelector('.dw-grip').addEventListener('pointerdown', (e) => {
       if (e.button !== 0 || w.st.max) return;
       e.preventDefault();
+      if (w.st.snap) { // vastgezet venster vergroten: vanaf hoe het nu is
+        const r = w.el.getBoundingClientRect(); const a = area();
+        Object.assign(w.st, { snap: null, x: r.left - a.left, y: r.top - a.top, w: r.width, h: r.height });
+      }
       const sx = e.clientX; const sy = e.clientY; const ow = w.st.w; const oh = w.st.h;
       track(e, (ev) => { w.st.w = ow + ev.clientX - sx; w.st.h = oh + ev.clientY - sy; place(w); }, save);
     });
@@ -238,6 +289,12 @@
 
   /* ---------- pictogrammen, startmenu, taakbalk ---------- */
   function launch(url, newOne) {
+    // Internet: een eigen browservenster (in de ADONIS-app); in een gewone browser een nieuw tabblad.
+    if (url === 'internet') {
+      if (!inApp()) { window.open(INTERNET_HOME, '_blank', 'noopener'); return; }
+      open(INTERNET_HOME, { site: true, title: 'Internet' });
+      return;
+    }
     // Al open (zelfde pagina)? Dan dat venster naar voren, tenzij Ctrl/Shift.
     const same = !newOne && [...wins.values()].find((o) => o.st.url.split('#')[0] === url);
     if (same) { minimize(same, false); focus(same); return; }
@@ -262,6 +319,44 @@
     const a = area(); const cols = Math.ceil(Math.sqrt(list.length)); const rows = Math.ceil(list.length / cols);
     list.forEach((w, i) => { Object.assign(w.st, { max: false, w: Math.floor(a.width / cols), h: Math.floor(a.height / rows), x: (i % cols) * Math.floor(a.width / cols), y: Math.floor(i / cols) * Math.floor(a.height / rows) }); place(w); });
     save();
+  });
+  /* Rechtermuisknop op een taakbalkknop of titelbalk: het vertrouwde venstermenu */
+  const wmenu = document.createElement('div');
+  wmenu.className = 'dt-menu dt-ctx dt-wmenu no-print'; wmenu.setAttribute('role', 'menu'); wmenu.hidden = true;
+  document.body.append(wmenu);
+  function winMenu(w, x, y, fromTaskbar) {
+    const st = w.st;
+    const items = [
+      ['restore', 'Herstellen', st.min || st.max || st.snap], ['min', 'Minimaliseren', !st.min], ['max', 'Maximaliseren', !st.max],
+      ['left', 'Links op het scherm', true], ['right', 'Rechts op het scherm', true], ['-'], ['close', 'Sluiten', true],
+    ];
+    wmenu.innerHTML = items.map(([k, label, on]) => (k === '-' ? '<div class="dt-menu-sep" role="separator"></div>'
+      : `<button type="button" role="menuitem" class="dt-menu-item" data-w="${k}"${on ? '' : ' disabled'}>${label}</button>`)).join('');
+    wmenu.hidden = false;
+    const mw = wmenu.offsetWidth; const mh = wmenu.offsetHeight;
+    wmenu.style.left = Math.max(4, Math.min(x, innerWidth - mw - 6)) + 'px';
+    wmenu.style.top = Math.max(4, fromTaskbar ? y - mh - 6 : Math.min(y, innerHeight - mh - 50)) + 'px';
+    wmenu.onclick = (e) => {
+      const b = e.target.closest('[data-w]'); if (!b) return;
+      wmenu.hidden = true;
+      const k = b.dataset.w;
+      if (k === 'restore') { st.snap = null; minimize(w, false); maximize(w, false); }
+      else if (k === 'min') minimize(w, true);
+      else if (k === 'max') { minimize(w, false); maximize(w, true); }
+      else if (k === 'left' || k === 'right') snap(w, k);
+      else if (k === 'close') close(w);
+    };
+    const first = wmenu.querySelector('button:not(:disabled)'); if (first) first.focus();
+  }
+  document.addEventListener('pointerdown', (e) => { if (!wmenu.hidden && !wmenu.contains(e.target)) wmenu.hidden = true; });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !wmenu.hidden) wmenu.hidden = true; });
+  // Bureaublad weergeven (knopje helemaal rechts in de taakbalk): alles minimaliseren, nog eens klikken zet het terug.
+  let hiddenByShow = [];
+  const showDesk = document.querySelector('[data-showdesk]');
+  if (showDesk) showDesk.addEventListener('click', () => {
+    const open = [...wins.values()].filter((o) => !o.st.min);
+    if (open.length) { hiddenByShow = open.map((o) => o.st.id); open.forEach((o) => minimize(o, true, true)); }
+    else { hiddenByShow.map((id) => wins.get(id)).filter(Boolean).forEach((o) => { minimize(o, false); focus(o); }); hiddenByShow = []; }
   });
   // Vanuit een venster: Ctrl+klik of middelste muisknop -> nieuw venster.
   addEventListener('message', (e) => { if (e.origin === location.origin && e.data && localPath(e.data.adonisOpen)) open(e.data.adonisOpen); });
@@ -381,7 +476,7 @@
     const i = items.indexOf(document.activeElement);
     items[e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : e.key === 'ArrowDown' ? (i + 1) % items.length : (i - 1 + items.length) % items.length].focus();
   });
-  menuKeys(menu); menuKeys(ctx);
+  menuKeys(menu); menuKeys(ctx); menuKeys(wmenu);
   let ctxOpener = null;
   desk.addEventListener('contextmenu', (e) => {
     if (e.target.closest('.dw, .sticky-note')) return;
@@ -399,7 +494,7 @@
     const b = e.target.closest('[data-c]'); if (!b) return;
     ctx.hidden = true;
     const c = b.dataset.c;
-    if (c === 'new') launch('/werkopdracht/nieuw', true);
+    if (c === 'new') { const n = desk.querySelector('.dt-icon-new'); if (n) launch(n.dataset.open, true); }
     else if (c === 'naam' || c === 'standaard') sortIcons(c);
     else if (c === 'schikken') menu.querySelector('[data-arrange]').click();
     else if (c.startsWith('size-')) { look.size = c.slice(5); saveLook(); layoutIcons(); }

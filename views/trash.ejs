@@ -1,0 +1,51 @@
+<%- include('/partials/head') %>
+<main class="page trash-page">
+  <div class="page-head">
+    <h1>Prullenbak</h1>
+    <% if (items.length) { %>
+    <div class="head-buttons">
+      <form method="post" action="/prullenbak/leegmaken" class="inline" data-confirm="De prullenbak leegmaken? Alles wordt definitief verwijderd, met de foto's. Dit kan niet ongedaan worden gemaakt.">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn btn-danger" type="submit">Prullenbak leegmaken</button>
+      </form>
+    </div>
+    <% } %>
+  </div>
+  <p class="muted">Verwijderde werkopdrachten, bandensets en voorraaditems blijven hier <%= keepDays %> dagen staan, met hun foto's. Daarna worden ze vanzelf definitief verwijderd.</p>
+  <% if (!items.length) { %>
+    <div class="empty trash-empty">
+      <svg viewBox="0 0 24 24" width="48" height="48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>
+      <p>De prullenbak is leeg.</p>
+    </div>
+  <% } else { %>
+  <div class="table-wrap">
+    <table class="list">
+      <thead><tr><th>Soort</th><th>Wat</th><th>Verwijderd door</th><th>Wanneer</th><th class="num">Nog</th><th></th></tr></thead>
+      <tbody>
+      <% for (const t of items) {
+           const left = Math.max(0, keepDays - Math.floor((Date.now() - new Date(t.deleted_at.replace(' ', 'T') + 'Z')) / 864e5)); %>
+        <tr>
+          <td><span class="status-pill"><%= t.kindLabel %></span></td>
+          <td><%= t.label %></td>
+          <td><%= t.deleted_name || 'onbekend' %></td>
+          <td><%= fmtDateTime(t.deleted_at) %></td>
+          <td class="num muted"><%= left %> dag<%= left === 1 ? '' : 'en' %></td>
+          <td class="trash-actions">
+            <form method="post" action="/prullenbak/<%= t.id %>/terugzetten" class="inline">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn btn-small btn-primary" type="submit">Terugzetten</button>
+            </form>
+            <form method="post" action="/prullenbak/<%= t.id %>/verwijderen" class="inline" data-confirm="<%= t.label %> definitief verwijderen? Dit kan niet ongedaan worden gemaakt.">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn btn-small btn-ghost" type="submit">Definitief verwijderen</button>
+            </form>
+          </td>
+        </tr>
+      <% } %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

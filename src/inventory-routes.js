@@ -192,10 +192,10 @@ module.exports = function register(app, { flash, wrap }) {
   app.post('/bandenhotel/:id/verwijderen', auth.requireAdmin, (req, res) => {
     const tyre = inv.getTyre(req.params.id);
     if (tyre) {
-      photos.removeFor('tyre', tyre.id);
-      inv.deleteTyre(tyre.id);
+      require('./trash').put('tyre', db.prepare('SELECT * FROM tyre_storage WHERE id = ?').get(tyre.id), { label: `Bandenset ${tyreLabel(tyre)}`, user: req.user });
+      inv.deleteTyre(tyre.id); // foto's blijven bewaard zolang de set in de prullenbak ligt
       announce(req, 'bandenhotel', { id: tyre.id, ...note('banden', `Bandenset ${tyreLabel(tyre)} verwijderd`, '/bandenhotel') });
-      flash(req, 'ok', 'De bandenset is verwijderd.');
+      flash(req, 'ok', 'De bandenset staat in de prullenbak.');
     }
     res.redirect(tyre && tyre.soort === 'opslag' ? '/bandenhotel?soort=opslag' : '/bandenhotel');
   });
@@ -289,10 +289,10 @@ module.exports = function register(app, { flash, wrap }) {
   app.post('/voorraad/:id/verwijderen', auth.requireAdmin, (req, res) => {
     const item = inv.getStock(req.params.id);
     if (item) {
-      photos.removeFor('stock', item.id);
-      inv.deleteStock(item.id);
+      require('./trash').put('stock', db.prepare('SELECT * FROM stock_items WHERE id = ?').get(item.id), { label: stockLabel(item), user: req.user });
+      inv.deleteStock(item.id); // foto's blijven bewaard zolang het item in de prullenbak ligt
       announce(req, 'voorraad', { id: item.id, ...note('voorraad', `Verwijderd uit de voorraad: ${stockLabel(item)}`, `/voorraad?soort=${item.soort}`) });
-      flash(req, 'ok', 'Verwijderd uit de voorraad.');
+      flash(req, 'ok', 'Verwijderd uit de voorraad (staat in de prullenbak).');
     }
     res.redirect(`/voorraad?soort=${item ? item.soort : 'onderdeel'}`);
   });

@@ -29,6 +29,7 @@ const backup = require('./backup');
 const registerInventory = require('./inventory-routes');
 const features = require('./features');
 const assist = require('./order-assist');
+const trash = require('./trash');
 
 const app = express();
 // Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
@@ -394,7 +395,7 @@ app.get('/start', (req, res) => {
 app.get('/hulp', (req, res) => res.render('help', { title: 'Hulp' }));
 app.get('/rekenhulp', (req, res) => res.render('calc', { title: 'Rekenhulp', tarief: assist.lastTarief() }));
 // Bureaubladmodus: pagina's als vensters die je kunt verslepen (zie public/js/desktop.js).
-app.get('/bureaublad', (req, res) => res.render('desktop', { title: 'Bureaublad', desktopShell: true, importOn: importer.isConfigured(), aiOn: importer.isConfigured() }));
+app.get('/bureaublad', (req, res) => res.render('desktop', { title: 'Bureaublad', desktopShell: true, importOn: importer.isConfigured(), aiOn: importer.isConfigured(), trashCount: req.user.is_admin ? trash.count() : 0 }));
 // Herinneringen (één keer per dag, zie live.js): wie moet er gebeld worden?
 app.get('/meldingen/herinneringen', (req, res) => {
   const items = [];
@@ -771,12 +772,70 @@ app.post('/werkopdracht/:id/status', (req, res) => {
 app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
   const order = loadOrder(req.params.id);
   if (!order) return res.redirect('/');
+  // Eerst in de prullenbak (met klant en logboek), zodat hij terug te zetten is. Foto's blijven bewaard.
+  trash.put('order', db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id), {
+    label: `Werkopdracht ${order.nummer}${orders.parseOrderData(order.data).kenteken ? ' · ' + orders.parseOrderData(order.data).kenteken : ''}`, user: req.user,
+    extra: { customer: db.prepare('SELECT * FROM customers WHERE id = ?').get(order.customer_id), log: db.prepare('SELECT * FROM order_log WHERE order_id = ?').all(order.id) },
+  });
   const customerId = orders.deleteOrder(order.id);
-  try { require('./photos').removeFor('order', order.id); } catch (err) { console.error('Foto\'s van werkopdracht niet verwijderd:', err.message); }
   announce(req, 'deleted', { id: order.id, nummer: order.nummer, customerId });
-  flash(req, 'ok', `Werkopdracht ${order.nummer} is verwijderd.`);
+  flash(req, 'ok', `Werkopdracht ${order.nummer} staat in de prullenbak (${trash.KEEP_DAYS} dagen terug te zetten).`);
   const stillExists = db.prepare('SELECT 1 FROM customers WHERE id = ?').get(customerId);
   res.redirect(stillExists ? `/klant/${customerId}` : '/');
+});
+
+/* ---------- Verkenner: alle foto's in mappen ---------- */
+app.get('/verkenner', (req, res) => {
+  const explorer = require('./explorer');
+  const on = res.locals.feat;
+  const types = Object.keys(explorer.FOLDERS).filter((t) => on[explorer.FOLDERS[t].feature]);
+  const map = types.includes(req.query.map) ? req.query.map : null;
+  const id = map && Number(req.query.id) ? Number(req.query.id) : null;
+  const q = String(req.query.q || '').trim().toLowerCase();
+  const folders = types.map((t) => ({ type: t, name: explorer.FOLDERS[t].name, owners: explorer.owners(t) }));
+  let view;
+  if (map && id) {
+    const owner = folders.find((f) => f.type === map).owners.find((o) => o.id === id);
+    view = owner ? { kind: 'photos', owner, photos: explorer.photosOf(map, id) } : { kind: 'missing' };
+  } else if (map) {
+    const f = folders.find((x) => x.type === map);
+    view = { kind: 'owners', folder: f, owners: q ? f.owners.filter((o) => (o.label + ' ' + o.sub).toLowerCase().includes(q)) : f.owners };
+  } else {
+    view = { kind: 'home', recent: explorer.recent(types, 60) };
+  }
+  res.render('explorer', { title: 'Verkenner', folders, map, id, q, view });
+});
+
+/* ---------- prullenbak (beheerders: zij mogen ook verwijderen) ---------- */
+setInterval(() => { try { trash.purgeOld(); } catch (err) { console.error('Prullenbak opruimen:', err.message); } }, 6 * 3600 * 1000).unref();
+app.get('/prullenbak', auth.requireAdmin, (req, res) => {
+  trash.purgeOld();
+  res.render('trash', { title: 'Prullenbak', items: trash.list(), keepDays: trash.KEEP_DAYS });
+});
+app.post('/prullenbak/leegmaken', auth.requireAdmin, (req, res) => {
+  const n = trash.purgeAll();
+  flash(req, 'ok', n ? `Prullenbak geleegd (${n} ${n === 1 ? 'item' : 'items'} definitief verwijderd).` : 'De prullenbak was al leeg.');
+  res.redirect('/prullenbak');
+});
+app.post('/prullenbak/:id/terugzetten', auth.requireAdmin, (req, res) => {
+  let r;
+  try { r = trash.restore(Number(req.params.id)); } catch (err) {
+    console.error(err); flash(req, 'err', 'Terugzetten lukte niet: ' + err.message); return res.redirect('/prullenbak');
+  }
+  if (!r) return res.redirect('/prullenbak');
+  if (r.kind === 'order') {
+    const o = db.prepare('SELECT o.id, o.nummer, o.customer_id, c.kenteken FROM orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = ?').get(r.id);
+    orders.logAction(r.id, req.user, 'teruggezet uit de prullenbak');
+    announce(req, 'created', { id: o.id, nummer: o.nummer, kenteken: o.kenteken, customerId: o.customer_id, status: null });
+  } else {
+    events.broadcast({ type: 'data', area: r.kind === 'tyre' ? 'bandenhotel' : 'voorraad', by: req.user.name, byId: req.user.id });
+  }
+  flash(req, 'ok', 'Teruggezet.' + (r.note ? ' ' + r.note : ''));
+  res.redirect({ order: '/werkopdracht/', tyre: '/bandenhotel/', stock: '/voorraad/' }[r.kind] + r.id);
+});
+app.post('/prullenbak/:id/verwijderen', auth.requireAdmin, (req, res) => {
+  if (trash.purge(Number(req.params.id))) flash(req, 'ok', 'Definitief verwijderd.');
+  res.redirect('/prullenbak');
 });
 
 /* ---------- bandenhotel, voorraad en Excel-import ---------- */

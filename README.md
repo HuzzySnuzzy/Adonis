@@ -5,6 +5,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 
 ## Wat kan het?
 
+- **Prullenbak en Verkenner.** Verwijderde werkopdrachten, bandensets en voorraaditems blijven 30 dagen terug te zetten;
+  de Verkenner toont alle foto's in mappen met de bron. Op het bureaublad ook een Internet-venster (ADONIS-app),
+  vastzetten aan de linker-/rechterrand, een venstermenu op de taakbalk en "bureaublad weergeven".
 - **Foto's en extra bladen bij werkopdrachten.** Foto's (camera of bestand) onderaan de werkopdracht; extra
   vervolgbladen (voorkant, achterkant of leeg) die meetellen in het totaal, mee worden afgedrukt en doorzoekbaar zijn.
 - **Rekenhulp.** Band omrekenen (diameter, tellerafwijking, alternatieve maten), last-/snelheidsindex, DOT-leeftijd,

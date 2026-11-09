@@ -3,6 +3,11 @@
 (function () {
   const q = new URLSearchParams(location.search);
   const view = document.getElementById('view');
+  // Vaste maat in pixels die het venster volgt (anders bleef de pagina soms maar ~150px hoog).
+  const fitView = () => { const b = view.parentElement; view.style.width = b.clientWidth + 'px'; view.style.height = b.clientHeight + 'px'; };
+  if (window.ResizeObserver) new ResizeObserver(fitView).observe(view.parentElement);
+  view.addEventListener('did-attach', fitView); view.addEventListener('dom-ready', fitView);
+  fitView();
   const addr = document.getElementById('addr');
   const back = document.getElementById('back');
   const fwd = document.getElementById('fwd');

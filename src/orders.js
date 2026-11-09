@@ -380,6 +380,6 @@ function deleteOrder(id) {
 module.exports = {
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage,
   emptyOrderData, normalizeOrderData, parseOrderData,
-  nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate, updateCustomer,
+  nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate, updateCustomer, refreshCustomer,
   STATUSES, canEdit, allowedTransitions, setStatus, logAction, history, statusCounts,
 };

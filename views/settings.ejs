@@ -73,7 +73,7 @@
       </label>
       <% if (p.simple === 'on' && user.is_admin) { %>
       <p class="muted small">Beheer (staat in deze weergave niet in het menu):
-        <% if (feat.werkopdrachten) { %><a href="/importeren">Importeren</a> · <% } else if (feat.bandenhotel || feat.voorraad) { %><a href="/importeren/excel">Importeren</a> · <% } %><a href="/gebruikers">Gebruikers</a><% if (user.is_owner) { %> · <a href="/systeem">Systeem</a><% } %></p>
+        <% if (feat.werkopdrachten) { %><a href="/importeren">Importeren</a> · <% } else if (feat.bandenhotel || feat.voorraad) { %><a href="/importeren/excel">Importeren</a> · <% } %><a href="/gebruikers">Gebruikers</a> · <a href="/prullenbak">Prullenbak</a><% if (user.is_owner) { %> · <a href="/systeem">Systeem</a><% } %></p>
       <% } %>
     </section>
 
