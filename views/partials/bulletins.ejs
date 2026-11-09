@@ -41,14 +41,14 @@
           <% if (b.actie) { %><p><b>Doen:</b> <%= b.actie %></p><% } %>
           <form method="post" action="/aandachtspunt/<%= b.id %>/afgehandeld" class="inline">
             <input type="hidden" name="_csrf" value="<%= csrf %>">
-            <button class="btn btn-small" type="submit" title="Gecontroleerd of opgelost: van de lijst halen">✓ Afgehandeld</button>
+            <button class="btn btn-small" type="submit" title="Gecontroleerd of opgelost: van de lijst halen">Afgehandeld</button>
           </form>
         </div>
       </details>
       <% } %>
     </div>
     <% } else if (bl.analysis && !compactView) { %>
-    <p class="bl-none">Niets dat extra aandacht nodig heeft. 👍</p>
+    <p class="bl-none">Niets dat extra aandacht nodig heeft.</p>
     <% } %>
     <% if (bl.done.length && !compactView) { %>
     <details class="bl-done"><summary class="muted small">Afgehandeld (<%= bl.done.length %>)</summary>

@@ -11,13 +11,13 @@
   const called = list.wisselen.filter((i) => i.match.uitgenodigd_at).length;
 %>
 <main class="page wide">
-  <p class="crumbs"><a href="/bandenhotel">← Bandenhotel</a></p>
+  <p class="crumbs"><a href="/bandenhotel">Bandenhotel</a></p>
   <div class="page-head">
     <div>
       <h1>Wissellijst: naar <%= L(target).toLowerCase() %>banden</h1>
       <p class="muted small">Klanten van het bandenhotel met <%= L(target).toLowerCase() %>banden in opslag die er nog niet op rijden.
         <%= list.wisselen.length %> te wisselen<%= called ? ', waarvan ' + called + ' al gebeld' : '' %>.
-        Wat er op de auto staat leg je vast op de klantpagina; zonder gegevens gaat ADONIS uit van het andere seizoen.</p>
+        Wat er op de auto staat legt u vast op de klantpagina; zonder gegevens gaat ADONIS uit van het andere seizoen.</p>
     </div>
     <div class="head-buttons">
       <button class="btn" type="button" data-print>Afdrukken</button>
@@ -67,7 +67,7 @@
           <td class="act-col">
             <form method="post" action="/bandenhotel/<%= i.match.id %>/gebeld" class="inline call-form">
               <input type="hidden" name="_csrf" value="<%= csrf %>">
-              <button class="btn btn-small <%= i.match.uitgenodigd_at ? 'btn-ok' : '' %>" type="submit" title="<%= i.match.uitgenodigd_at ? 'Gebeld op ' + fmtDate(i.match.uitgenodigd_at) + ' (klik om te wissen)' : 'Markeer als gebeld / uitgenodigd' %>"><%= i.match.uitgenodigd_at ? '✓ ' + fmtDate(i.match.uitgenodigd_at) : 'Gebeld' %></button>
+              <button class="btn btn-small <%= i.match.uitgenodigd_at ? 'btn-ok' : '' %>" type="submit" title="<%= i.match.uitgenodigd_at ? 'Gebeld op ' + fmtDate(i.match.uitgenodigd_at) + ' (klik om te wissen)' : 'Markeer als gebeld / uitgenodigd' %>"><%= i.match.uitgenodigd_at ? 'Gebeld ' + fmtDate(i.match.uitgenodigd_at) : 'Gebeld' %></button>
             </form>
             <a class="btn btn-small btn-primary" href="/bandenhotel/<%= i.match.id %>/wissel" data-swap title="Klant is er: kiezen welke banden erop gaan en welke eraf komen">Wisselen</a>
           </td>

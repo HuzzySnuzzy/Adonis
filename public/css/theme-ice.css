@@ -227,9 +227,9 @@
 }
 :root[data-theme="ice"] .logo-sub { font-family: var(--f-mono); color: var(--uv); opacity: .85; letter-spacing: .24em; }
 :root[data-theme="ice"] .logo-mark { filter: drop-shadow(0 0 8px rgba(127, 232, 255, .45)); }
-:root[data-theme="ice"] .mainnav a { border-radius: 2px; font-size: 12.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--topbar-text); transition: color .2s, background-color .2s, text-shadow .2s; }
-:root[data-theme="ice"] .mainnav a:hover:not(.active) { color: #fff; background: transparent; text-shadow: 0 0 10px rgba(127, 232, 255, .7); }
-:root[data-theme="ice"] .mainnav a.active {
+:root[data-theme="ice"] :is(.mainnav > a, .mainnav > details > summary) { border-radius: 2px; font-size: 12.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--topbar-text); transition: color .2s, background-color .2s, text-shadow .2s; }
+:root[data-theme="ice"] :is(.mainnav > a, .mainnav > details > summary):hover:not(.active) { color: #fff; background: transparent; text-shadow: 0 0 10px rgba(127, 232, 255, .7); }
+:root[data-theme="ice"] :is(.mainnav > a, .mainnav > details > summary).active {
   color: #fff; background: linear-gradient(180deg, rgba(127, 232, 255, .16), rgba(127, 232, 255, .04));
   box-shadow: inset 0 -2px 0 var(--accent), 0 6px 18px -8px rgba(127, 232, 255, .8);
 }
@@ -402,7 +402,7 @@
 /* ---------- Telefoons ---------- */
 @media (max-width: 720px) {
   :root[data-theme="ice"] main h1 { font-size: 15px; letter-spacing: .1em; }
-  :root[data-theme="ice"] .mainnav a { letter-spacing: .06em; }
+  :root[data-theme="ice"] :is(.mainnav > a, .mainnav > details > summary) { letter-spacing: .06em; }
   .ice-field::after { display: none; }
   .ice-field .ice-glint { display: none; }
   :root[data-theme="ice"]::after { background-size: auto, 72px 72px; }

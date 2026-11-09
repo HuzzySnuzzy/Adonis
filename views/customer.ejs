@@ -1,16 +1,15 @@
 <%- include('/partials/head') %>
 <main class="page">
-  <p class="crumbs"><a href="/">← Alle klanten</a></p>
+  <p class="crumbs"><a href="/">Alle klanten</a></p>
   <% if (!editing) { %>
   <div class="customer-head<%= locals.carImg && carImg.ok ? ' has-photo' : '' %>" id="live-customer-head" data-live>
     <% if (locals.carQ) { const ci = locals.carImg; %>
     <figure class="car-photo" data-carimg-q="<%= carQ %>" data-csrf="<%= csrf %>" <%= ci && ci.ok ? '' : 'hidden' %>>
       <img src="<%= ci && ci.ok ? ci.img : '' %>" alt="Voorbeeldfoto van een <%= carQ.replace(/\s*\(.*\)$/, '') %>" <%= ci && ci.ok ? '' : 'hidden' %>>
-      <figcaption>
-        <span>Voorbeeld: <a href="<%= ci && ci.ok ? ci.pageUrl : '#' %>" target="_blank" rel="noopener" data-carimg-title><%= ci && ci.ok && ci.title && !/intitle:|insource:/i.test(ci.title) ? ci.title : carQ.replace(/\s*\(.*\)$/, '') %></a></span>
-        <span class="muted">Kan een andere uitvoering of kleur zijn<%= locals.carYear ? ' (deze auto: ' + carYear + ')' : '' %> ·
-          foto <a href="<%= ci && ci.ok && ci.fileUrl ? ci.fileUrl : '#' %>" target="_blank" rel="noopener" data-carimg-file>Wikimedia Commons</a></span>
-        <button type="button" class="linkbtn car-wrong" data-carimg-wrong>Verkeerde auto? Verbergen</button>
+      <button type="button" class="car-wrong" data-carimg-wrong title="Verkeerde auto? Foto verbergen" aria-label="Foto verbergen">×</button>
+      <figcaption title="Voorbeeldfoto: kan een andere uitvoering of kleur zijn<%= locals.carYear ? ' (deze auto: ' + carYear + ')' : '' %>. Bron: Wikimedia Commons.">
+        Voorbeeldfoto · <a href="<%= ci && ci.ok ? ci.pageUrl : '#' %>" target="_blank" rel="noopener" data-carimg-title><%= ci && ci.ok && ci.title && !/intitle:|insource:/i.test(ci.title) ? ci.title : carQ.replace(/\s*\(.*\)$/, '') %></a>
+        <a href="<%= ci && ci.ok && ci.fileUrl ? ci.fileUrl : '#' %>" target="_blank" rel="noopener" data-carimg-file hidden>Wikimedia Commons</a>
       </figcaption>
     </figure>
     <% } %>
@@ -63,7 +62,7 @@
 
   <% if (feat.portaal) { %><%- include('/partials/plate-sites', { plateLinks, kenteken: customer.kenteken }) %><% } %>
   <% if (feat.ai) { %>
-  <p class="va-link no-print"><a class="btn btn-small" href="/ai-analyse?kenteken=<%= encodeURIComponent(customer.kenteken) %>"><%- include('/partials/ai-icon') %> AI-analyse van deze auto (röntgenbeeld)</a></p>
+  <p class="va-link no-print"><a class="btn btn-small" href="/ai-analyse?kenteken=<%= encodeURIComponent(customer.kenteken) %>"><%- include('/partials/ai-icon') %> AI-analyse van deze auto</a></p>
   <div id="live-bulletins" class="bl-boxes" data-live>
     <% if (feat.werkopdrachten) { %><%- include('/partials/bulletins', { bl: bulletinData, aiOn: aiConfigured, customer }) %><% } %>
     <%- include('/partials/model-apk', { modelApk, aiOn: aiConfigured, customer }) %>
@@ -75,7 +74,7 @@
     <div class="rdw-head">
       <h2>RDW-gegevens</h2>
       <div class="rdw-links"<%= rdwData && rdwData.foreign ? ' hidden' : '' %>>
-        <a href="<%= rdwUrl(customer.kenteken) %>" target="_blank" rel="noopener">Alles bekijken op rdw.nl ↗</a>
+        <a href="<%= rdwUrl(customer.kenteken) %>" target="_blank" rel="noopener">Bekijken op rdw.nl</a>
         <form method="post" action="/klant/<%= customer.id %>/rdw" class="inline">
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <button class="linkbtn" type="submit" title="Opnieuw ophalen bij de RDW">Vernieuwen</button>
@@ -106,7 +105,7 @@
           <% if (ri.verzekerd !== null) { %><dt>WA-verzekerd</dt><dd><%= ri.verzekerd ? 'Ja' : 'Nee' %></dd><% } %>
         </dl>
       </div>
-      <% if (ri.terugroepactie) { %><div class="rdw-warn">⚠ Er staat een <strong>openstaande terugroepactie</strong> op dit voertuig. Bekijk de details op rdw.nl.</div><% } %>
+      <% if (ri.terugroepactie) { %><div class="rdw-warn">Er staat een <strong>openstaande terugroepactie</strong> op dit voertuig. Bekijk de details op rdw.nl.</div><% } %>
       <% if (ri.export) { %><div class="rdw-warn">Dit voertuig is geëxporteerd.</div><% } %>
       <% if (ri.wachtOpKeuring) { %><div class="rdw-warn">Wacht op keuring: <%= ri.wachtOpKeuring %></div><% } %>
       <p class="muted small rdw-src">Bron: RDW Open Data<%= rdwData.at ? ' · opgehaald ' + fmtDateTime(rdwData.at) : '' %></p>

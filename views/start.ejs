@@ -18,7 +18,7 @@
   ].filter(Boolean);
   if (importOn && F.werkopdrachten) tiles.push({ href: '/importeren', icon: 'camera', hue: 'rose', title: 'Foto importeren', text: 'Papier overnemen' });
   tiles.push({ href: '/verkenner', icon: 'folder', hue: 'amber', title: "Foto's", text: 'Alle foto\'s in mappen (Verkenner)' });
-  if (F.ai) tiles.push({ href: '/ai-analyse', icon: 'ai', hue: 'rose', title: 'AI-analyse', text: 'Röntgenfoto van een auto' });
+  if (F.ai) tiles.push({ href: '/ai-analyse', icon: 'ai', hue: 'rose', title: 'AI-analyse', text: 'Voertuiganalyse met AI' });
   tiles.push({ href: '/hulp', icon: 'help', hue: 'slate', title: 'Hulp', text: 'Uitleg in stappen' });
   const ICONS = {
     ai: '<path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/><rect x="5.5" y="5.5" width="13" height="13" rx="3"/><path d="M8.6 15.2 10.4 9h.4l1.8 6.2M9.2 13.4h2.6M15 9v6.2"/>',

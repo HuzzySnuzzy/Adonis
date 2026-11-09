@@ -123,16 +123,15 @@ document.addEventListener('error', (e) => {
   const backLinks = document.querySelectorAll('.crumbs a:first-child, a[data-back-link]');
   const prev = previous();
   backLinks.forEach((a) => {
-    if (!prev || !/^←/.test(a.textContent.trim())) return;
+    if (!prev) return;
     const target = new URL(a.href, location.href);
     if (target.pathname + target.search === prev) return; // gaat al naar de vorige pagina
-    a.textContent = '← Terug';
+    a.textContent = 'Terug';
     a.title = 'Terug naar de vorige pagina';
   });
   document.addEventListener('click', (e) => {
     const a = e.target.closest('.crumbs a:first-child, a[data-back-link], [data-history-back]');
     if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
-    if (a.matches('a') && !/^←/.test(a.textContent.trim())) return;
     e.preventDefault();
     goBack(a.getAttribute('href'));
   });
@@ -291,8 +290,8 @@ document.addEventListener('submit', async (e) => {
     const res = await fetch(form.action, { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'X-CSRF-Token': form.querySelector('[name=_csrf]').value } });
     if (!res.ok) throw new Error();
     const r = await res.json();
-    const d = r.uitgenodigd_at ? r.uitgenodigd_at.split('-').reverse().map((x, i) => (i === 2 ? x.slice(2) : x)).join('-') : '';
-    btn.textContent = d ? '✓ ' + d : 'Gebeld';
+    const d = r.uitgenodigd_at ? r.uitgenodigd_at.slice(0, 10).split('-').reverse().join('-') : '';
+    btn.textContent = d ? 'Gebeld ' + d : 'Gebeld';
     btn.classList.toggle('btn-ok', Boolean(d));
     form.closest('tr').classList.toggle('is-called', Boolean(d));
   } catch { form.submit(); }
@@ -624,3 +623,33 @@ document.addEventListener('click', async (e) => {
     else appApi.openSite(u.href, title);
   }, true);
 })();
+
+/* Uitklapmenu's in de menubalk (Meer, Beheer, meldingen, gebruiker): één tegelijk open, sluiten bij klikken ernaast of Esc. */
+(function () {
+  const menus = [...document.querySelectorAll('[data-nav-menu]')];
+  if (!menus.length) return;
+  const topbar = document.querySelector('.topbar');
+  const mark = () => { if (topbar) document.documentElement.style.setProperty('--topbar-bottom', (topbar.offsetTop + topbar.offsetHeight + 6) + 'px'); };
+  menus.forEach((m) => m.addEventListener('toggle', () => {
+    if (!m.open) return;
+    mark();
+    menus.forEach((o) => { if (o !== m) o.open = false; });
+  }));
+  document.addEventListener('pointerdown', (e) => { menus.forEach((m) => { if (m.open && !m.contains(e.target)) m.open = false; }); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const open = menus.find((m) => m.open);
+    if (open) { e.preventDefault(); e.stopImmediatePropagation(); open.open = false; open.querySelector('summary').focus(); }
+  }, true);
+})();
+// "Alles aanvinken" in een tabel
+document.addEventListener('change', (e) => {
+  const all = e.target.closest('[data-check-all]');
+  if (!all) return;
+  all.closest('table').querySelectorAll('tbody input[type=checkbox]').forEach((c) => { c.checked = all.checked; });
+});
+// Nieuw label getypt: de regel meteen aanvinken
+document.addEventListener('input', (e) => {
+  const row = e.target.closest('table.label-fix tr');
+  if (row) { const c = row.querySelector('input[type=checkbox]'); if (c) c.checked = true; }
+});

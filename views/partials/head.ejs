@@ -59,26 +59,50 @@
   <% const simple = prefs.simple === 'on'; const F = locals.feat || {}; const importHref = F.werkopdrachten ? '/importeren' : (user.is_admin && (F.bandenhotel || F.voorraad)) ? '/importeren/excel' : null; %>
   <% if (locals.inApp) { %><button class="iconbtn app-back" type="button" data-history-back title="Terug naar de vorige pagina (Alt + ←)" aria-label="Terug"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><% } %>
   <a class="brand" href="<%= simple ? '/start' : '/' %>" title="ADONIS – naar het begin"><%- include('/partials/logo') %></a>
-  <nav class="mainnav">
-    <% if (simple) { %><a href="/start" class="<%= path === '/start' ? 'active' : '' %>">Start</a><% } %>
-    <a href="/" class="<%= path === '/' || path.startsWith('/klant') ? 'active' : '' %>">Klanten</a>
-    <% if (F.werkopdrachten) { %><a href="/werkopdrachten" class="<%= (path === '/werkopdrachten' && !(locals.url || '').includes('status=klaar')) || path.startsWith('/werkopdracht/') ? 'active' : '' %>">Werkopdrachten</a><% } %>
-    <% if (user.can_invoice && F.werkopdrachten) { %><a href="/werkopdrachten?status=klaar" class="<%= path === '/werkopdrachten' && locals.url && locals.url.includes('status=klaar') ? 'active' : '' %>">Facturatie<span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span></a><% } %>
-    <% if (F.bandenhotel) { %><a href="/bandenhotel" class="<%= path.startsWith('/bandenhotel') ? 'active' : '' %>">Bandenhotel</a><% } %>
-    <% if (F.voorraad) { %><a href="/voorraad" class="<%= path.startsWith('/voorraad') ? 'active' : '' %>">Voorraad</a><% } %>
-    <% if (F.portaal) { %><a href="/portaal" class="<%= path.startsWith('/portaal') ? 'active' : '' %>">Portaal</a><% } %>
-    <% if (F.rekenhulp) { %><a href="/rekenhulp" class="<%= path.startsWith('/rekenhulp') ? 'active' : '' %>">Rekenhulp</a><% } %>
-    <% if (!simple) { %>
-    <% if (importHref) { %><a href="<%= importHref %>" class="<%= path.startsWith('/importeren') ? 'active' : '' %>">Importeren</a><% } %>
-    <% if (user.is_admin) { %><a href="/gebruikers" class="<%= path === '/gebruikers' ? 'active' : '' %>">Gebruikers</a><% } %>
-    <% if (user.is_owner) { %><a href="/systeem" class="<%= path === '/systeem' ? 'active' : '' %>">Systeem</a><% } %>
+  <%
+    const on = (cond) => cond ? 'active' : '';
+    const isOrders = path === '/werkopdrachten' || path.startsWith('/werkopdracht/');
+    // Minder vaak gebruikt: onder "Meer" en (beheerders) "Beheer", zodat de menubalk rustig blijft.
+    const MORE = [
+      F.portaal && ['/portaal', 'Portaal'],
+      F.rekenhulp && ['/rekenhulp', 'Rekenhulp'],
+      ['/verkenner', "Foto's"],
+      F.ai && ['/ai-analyse', 'AI-analyse'],
+      importHref && !simple && [importHref, 'Importeren'],
+    ].filter(Boolean);
+    const ADMIN = simple ? [] : [
+      user.is_admin && ['/gebruikers', 'Gebruikers'],
+      user.is_admin && ['/prullenbak', 'Prullenbak'],
+      user.is_admin && F.werkopdrachten && ['/zoekwoorden', 'Zoekwoorden'],
+      user.is_owner && ['/systeem', 'Systeem'],
+    ].filter(Boolean);
+    const inList = (list) => list.some(([h]) => path === h.split('?')[0] || path.startsWith(h.split('?')[0] + '/'));
+  %>
+  <nav class="mainnav" aria-label="Hoofdmenu">
+    <% if (simple) { %><a href="/start" class="<%= on(path === '/start') %>">Start</a><% } %>
+    <a href="/" class="<%= on(path === '/' || path.startsWith('/klant')) %>">Klanten</a>
+    <% if (F.werkopdrachten) { %><a href="/werkopdrachten" class="<%= on(isOrders) %>">Werkopdrachten<% if (user.can_invoice) { %><span id="live-nav-count" data-live><% if (locals.invoiceCount) { %><span class="nav-count" title="Klaar om te factureren"><%= invoiceCount %></span><% } %></span><% } %></a><% } %>
+    <% if (F.apk) { %><a href="/apk" class="<%= on(path === '/apk') %>">APK</a><% } %>
+    <% if (F.bandenhotel) { %><a href="/bandenhotel" class="<%= on(path.startsWith('/bandenhotel')) %>">Bandenhotel</a><% } %>
+    <% if (F.voorraad) { %><a href="/voorraad" class="<%= on(path.startsWith('/voorraad')) %>">Voorraad</a><% } %>
+    <% if (MORE.length) { %>
+    <details class="nav-menu" data-nav-menu>
+      <summary class="<%= on(inList(MORE)) %>">Meer</summary>
+      <div class="nav-pop" role="menu"><% for (const [h, t] of MORE) { %><a role="menuitem" href="<%= h %>" class="<%= on(path === h.split('?')[0] || path.startsWith(h.split('?')[0] + '/')) %>"><%= t %></a><% } %></div>
+    </details>
+    <% } %>
+    <% if (ADMIN.length) { %>
+    <details class="nav-menu" data-nav-menu>
+      <summary class="<%= on(inList(ADMIN)) %>">Beheer</summary>
+      <div class="nav-pop" role="menu"><% for (const [h, t] of ADMIN) { %><a role="menuitem" href="<%= h %>" class="<%= on(path === h) %>"><%= t %></a><% } %></div>
+    </details>
     <% } %>
   </nav>
   <div class="usernav">
     <% if (locals.newAction) { %><a class="btn btn-primary new-order-btn" href="<%= newAction.href %>" title="<%= newAction.long %>">+<span class="nw-long"> <%= newAction.long %></span><span class="nw-short"> Nieuw</span></a><% } %>
     <%
       const THEMES_MENU = [
-        { v: 'system', name: 'Systeem', sub: 'Volgt de instelling van je apparaat' },
+        { v: 'system', name: 'Systeem', sub: 'Volgt de instelling van uw apparaat' },
         { v: 'light', name: 'Licht', sub: 'Helder en rustig' },
         { v: 'dark', name: 'Donker', sub: 'Gedimd, prettig in een donkere werkplaats' },
         { v: 'adonis', name: 'ADONIS', sub: 'Wit marmer, bladgoud en Egeïsch blauw' },
@@ -127,17 +151,27 @@
             <span class="theme-name">Volledig</span><span class="theme-sub">Opstartreeks en alle animaties</span></button>
           <button type="button" role="menuitemradio" class="theme-fx-item" data-fx-value="calm" aria-checked="<%= fxNow === 'calm' %>" tabindex="-1">
             <span class="theme-name">Rustig</span><span class="theme-sub">Minder beweging, fijn op oudere pc's</span></button>
-          <p class="theme-fx-note" id="themeFxNote" hidden>Je apparaat vraagt om minder beweging</p>
+          <p class="theme-fx-note" id="themeFxNote" hidden>Uw apparaat vraagt om minder beweging</p>
         </div>
       </div>
     </div>
-    <% if (prefs.desktop === 'on') { %><a href="/bureaublad" class="iconbtn desktop-link" title="Bureaublad (vensters)" aria-label="Bureaublad"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3" y="4" width="11" height="9" rx="1.5"/><rect x="9" y="9" width="12" height="9" rx="1.5" fill="currentColor" fill-opacity=".15"/><path d="M3 21h18"/></svg></a><% } %>
-    <a href="/hulp" class="help-link<%= path === '/hulp' ? ' active' : '' %>" title="Hulp: uitleg in stappen" aria-label="Hulp"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.1" fill="currentColor"/></svg><span class="help-text">Hulp</span></a>
-    <a href="/instellingen" class="username" title="Instellingen"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.7 7.7 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.7 7.7 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.7 7.7 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.7 7.7 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span class="uname"><%= user.name %></span></a>
-    <form method="post" action="/logout" class="inline">
-      <input type="hidden" name="_csrf" value="<%= csrf %>">
-      <button class="linkbtn logout-btn" type="submit" title="Uitloggen" aria-label="Uitloggen"><svg class="lo-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10"/></svg><span class="lo-text">Uitloggen</span></button>
-    </form>
+    <details class="nav-menu bell-menu" data-nav-menu data-bell hidden>
+      <summary class="iconbtn" title="Meldingen" aria-label="Meldingen"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9zM10 19a2 2 0 0 0 4 0"/></svg><span class="bell-dot" data-bell-dot hidden></span></summary>
+      <div class="nav-pop nav-pop-right bell-pop"><p class="bell-head">Herinneringen voor vandaag</p><ul class="bell-list" data-bell-list></ul></div>
+    </details>
+    <details class="nav-menu user-menu" data-nav-menu>
+      <summary class="user-btn" title="<%= user.name %>"><span class="user-avatar" aria-hidden="true"><%= (user.name || '?').trim().charAt(0).toUpperCase() %></span><span class="uname"><%= user.name %></span></summary>
+      <div class="nav-pop nav-pop-right" role="menu">
+        <p class="user-head"><b><%= user.name %></b><span class="muted small"><%= user.is_owner ? 'Beheerder (eigenaar)' : user.is_admin ? 'Beheerder' : 'Monteur' %></span></p>
+        <a role="menuitem" href="/instellingen" class="<%= on(path === '/instellingen') %>">Instellingen</a>
+        <% if (prefs.desktop === 'on') { %><a role="menuitem" href="/bureaublad">Bureaublad</a><% } %>
+        <a role="menuitem" href="/hulp" class="<%= on(path === '/hulp') %>">Hulp</a>
+        <form method="post" action="/logout" class="nav-pop-form">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="logout-btn" type="submit" role="menuitem">Uitloggen</button>
+        </form>
+      </div>
+    </details>
   </div>
 </header>
 <% } %>

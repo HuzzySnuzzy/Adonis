@@ -65,7 +65,7 @@
       ${i.terugroepactie ? '<div class="rdw-warn">⚠ Openstaande terugroepactie</div>' : ''}
       <div class="actions">
         ${merk && !merk.disabled ? '<button type="button" class="btn btn-small btn-primary" data-fill>Merk/type, APK-datum en datum deel I invullen</button>' : ''}
-        <a href="${esc(r.url)}" target="_blank" rel="noopener">Alles op rdw.nl ↗</a>
+        <a href="${esc(r.url)}" target="_blank" rel="noopener">Bekijken op rdw.nl</a>
       </div>`);
     const fill = pop.querySelector('[data-fill]');
     if (fill) fill.addEventListener('click', () => { setField(merk, r.merkType); setField(apk, i.apk); if (deel1 && !deel1.value) setField(deel1, i.eersteToelating); closePop(); });

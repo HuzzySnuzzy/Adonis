@@ -60,7 +60,7 @@
       <% } else if (view.kind === 'photos') { const o = view.owner; %>
         <div class="xp-owner">
           <div><b><%= o.label %></b> <span class="muted"><%= o.sub %></span></div>
-          <a class="btn btn-small" href="<%= o.href %>">Openen →</a>
+          <a class="btn btn-small" href="<%= o.href %>">Openen</a>
         </div>
         <div class="xp-grid" data-xp-photos>
           <% for (const p of view.photos) { %>
@@ -79,7 +79,7 @@
 <dialog class="xp-view" data-xp-view aria-label="Foto">
   <div class="xp-view-bar">
     <span class="xp-view-info"><b data-xp-from></b><span class="muted small" data-xp-when></span></span>
-    <a class="btn btn-small" data-xp-goto href="#">Naar de bron →</a>
+    <a class="btn btn-small" data-xp-goto href="#">Naar de bron</a>
     <a class="btn btn-small" data-xp-dl href="#">Downloaden</a>
     <button type="button" class="btn btn-small" data-xp-close aria-label="Sluiten">×</button>
   </div>

@@ -36,6 +36,7 @@ module.exports = function register(app, { flash, wrap }) {
       counts: inv.tyreCounts(soort),
       locaties: inv.distinct('tyre_storage', 'locatie', `AND status = 'opgeslagen' AND soort = '${soort}'`),
       seizoenen: inv.distinct('tyre_storage', 'seizoen', `AND soort = '${soort}'`),
+      oddLabels: req.user.is_admin ? inv.suspiciousLabels().length : 0,
     });
   });
 
@@ -72,6 +73,22 @@ module.exports = function register(app, { flash, wrap }) {
   });
 
   // Wissellijst: wie moet komen wisselen (er ligt een set van het komende seizoen in opslag)?
+  /* Labels opschonen (beheerders): rare tekens uit een import of van een telefoontoetsenbord nakijken en verbeteren. */
+  app.get('/bandenhotel/labels', auth.requireAdmin, (req, res) => {
+    res.render('tyre-labels', { title: 'Labels opschonen', list: inv.suspiciousLabels() });
+  });
+  app.post('/bandenhotel/labels', auth.requireAdmin, (req, res) => {
+    const rows = req.body.l || {};
+    let n = 0;
+    for (const r of Object.values(rows)) {
+      if (!r || r.apply !== 'on' || !Number(r.id)) continue;
+      if (inv.setLabel(Number(r.id), String(r.label || ''), req.user.id)) n++;
+    }
+    if (n) announce(req, 'bandenhotel', {});
+    flash(req, 'ok', n ? `${n} label${n === 1 ? '' : 's'} aangepast.` : 'Niets aangepast (vink de regels aan die u wilt overnemen).');
+    res.redirect('/bandenhotel/labels');
+  });
+
   app.get('/bandenhotel/wissellijst', (req, res) => {
     const target = ['winter', 'zomer'].includes(req.query.naar) ? req.query.naar : inv.swapTarget();
     const list = inv.swapList(target);
@@ -115,7 +132,7 @@ module.exports = function register(app, { flash, wrap }) {
     let error = null;
     if (!data.klant_naam && !data.kenteken) error = 'Vul een kenteken of de naam van de klant in.';
     else if (req.body.versie !== tyre.updated_at) {
-      error = `${tyre.updated_by_name || 'Iemand anders'} heeft deze set intussen gewijzigd. Jouw wijzigingen staan hieronder nog ingevuld maar zijn NIET opgeslagen; open de set opnieuw om de laatste versie te zien.`;
+      error = `${tyre.updated_by_name || 'Iemand anders'} heeft deze set intussen gewijzigd. Uw wijzigingen staan hieronder nog ingevuld maar zijn NIET opgeslagen; open de set opnieuw om de laatste versie te zien.`;
     }
     if (error) return renderTyre(res, { tyre, data, error, status: 400 });
     inv.saveTyre({ id: tyre.id, data, userId: req.user.id });
@@ -180,7 +197,7 @@ module.exports = function register(app, { flash, wrap }) {
     inv.setTyreStatus(tyre.id, status, req.user.id);
     announce(req, 'bandenhotel', { id: tyre.id, ...note('banden', `${tyreLabel(tyre)}: ${status === 'uitgegeven' ? 'banden uitgegeven' : status === 'op_auto' ? 'banden op de auto' : 'banden weer in de opslag'}`, `/bandenhotel/${tyre.id}`) });
     if (status === 'uitgegeven' && req.body.wisselen === '1') {
-      flash(req, 'ok', `${tyre.seizoen || 'De'} set van ${tyre.kenteken || tyre.klant_naam} is uitgegeven. Vul nu de set in die je inslaat.`);
+      flash(req, 'ok', `${tyre.seizoen || 'De'} set van ${tyre.kenteken || tyre.klant_naam} is uitgegeven. Vul nu de set in die u inslaat.`);
       return res.redirect(`/bandenhotel/nieuw?van=${tyre.id}`);
     }
     flash(req, 'ok', status === 'uitgegeven'

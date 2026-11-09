@@ -60,7 +60,7 @@
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn btn-small';
-      btn.textContent = 'Herladen (jouw wijzigingen gaan verloren)';
+      btn.textContent = 'Herladen (uw wijzigingen gaan verloren)';
       btn.addEventListener('click', () => { window.adonisLeaving = true; location.reload(); });
       el.append(btn);
     }
@@ -222,27 +222,35 @@
     if (document.visibilityState === 'visible') close = openStream(() => { close = null; });
   }
 
-  /* Herinneringen: één keer per dag (per gebruiker en browser), blijven staan tot u ze sluit. */
+  /* Herinneringen (APK, bandenwissel): in het meldingen-menu (bel) in de menubalk in plaats van als pop-up.
+   * Eén keer per dag ophalen; een stip op de bel zolang u ze vandaag nog niet hebt bekeken. */
   (function reminders() {
-    if (!wants('herinneringen') || location.pathname === '/login' || inWindow) return;
-    // Eén keer per dag ophalen; daarna op elke pagina tonen tot u hem sluit of erop klikt.
+    const bell = document.querySelector('[data-bell]');
+    if (!bell || !wants('herinneringen') || location.pathname === '/login' || inWindow) return;
     const key = 'adonis-reminders-' + me;
     const today = new Date().toISOString().slice(0, 10);
     let st = null;
     try { st = JSON.parse(localStorage.getItem(key)); } catch { /* geen opslag */ }
     const save = () => { try { localStorage.setItem(key, JSON.stringify(st)); } catch { /* geen opslag */ } };
-    const show = () => (st.items || []).forEach((it, i) => {
-      if (st.closed.includes(i)) return;
-      toast(it.text, it.href, { sticky: true, kind: 'herinneringen', onDismiss: () => { if (!st.closed.includes(i)) st.closed.push(i); save(); } });
-    });
-    if (st && st.date === today && st.fetched) return show();
-    st = st && st.date === today ? st : { date: today, items: [], closed: [] };
+    const list = bell.querySelector('[data-bell-list]'); const dot = bell.querySelector('[data-bell-dot]');
+    function render() {
+      const items = st.items || [];
+      list.replaceChildren(...(items.length ? items.map((it) => {
+        const li = document.createElement('li'); const a = document.createElement('a');
+        a.href = it.href || '#'; a.textContent = it.text; li.append(a); return li;
+      }) : [Object.assign(document.createElement('li'), { className: 'bell-empty', textContent: 'Niets bijzonders vandaag.' })]));
+      bell.hidden = false;
+      dot.hidden = !items.length || st.seen === today;
+    }
+    bell.addEventListener('toggle', () => { if (bell.open && st.seen !== today) { st.seen = today; save(); dot.hidden = true; } });
+    if (st && st.date === today && st.fetched) return render();
+    st = { date: today, items: [], seen: st && st.date === today ? st.seen : null };
     setTimeout(async () => {
       try {
         const r = await (await fetch('/meldingen/herinneringen', { credentials: 'same-origin' })).json();
-        st.items = r.items || []; st.fetched = true; save(); show();
+        st.items = r.items || []; st.fetched = true; save(); render();
       } catch { /* morgen weer */ }
-    }, 800);
+    }, 600);
   })();
   // Instellingen: voorbeeldmelding
   document.addEventListener('click', (e) => {

@@ -50,9 +50,9 @@
 <div class="order-toolbar no-print">
   <div class="tb-left">
     <% if (order) { %>
-      <a class="btn btn-ghost" href="/klant/<%= order.customer_id %>" data-back-link>← Klant</a>
+      <a class="btn btn-ghost" href="/klant/<%= order.customer_id %>" data-back-link>Klant</a>
     <% } else { %>
-      <a class="btn btn-ghost" href="/" data-back-link>← Terug</a>
+      <a class="btn btn-ghost" href="/" data-back-link>Terug</a>
     <% } %>
     <div class="tb-title">
       <strong><%= order ? 'Werkopdracht ' + order.nummer : 'Nieuwe werkopdracht' %>
@@ -65,7 +65,7 @@
   </div>
   <div class="tb-right">
     <span class="totals muted small" id="totals" title="Som van aantal × prijs p.eenh. van onderdelen, vloeistoffen en diversen"></span>
-    <a class="btn btn-ghost" href="#achterkant">Achterkant ↓</a>
+    <a class="btn btn-ghost" href="#achterkant">Achterkant</a>
     <button class="btn" type="button" id="printBtn">Afdrukken</button>
     <%- include('/partials/order-actions', { where: 'top' }) %>
   </div>
@@ -83,14 +83,14 @@
     <div class="status-bar status-bar-klaar no-print">
       <strong>Klaar voor facturatie</strong> · door <%= order.status_by_name || 'onbekend' %> op <%= fmtDateTime(order.status_at) %>.
       <% if (user.can_invoice) { %>
-        Controleer de werkopdracht, vul het factuurnummer in (onderaan: <em>Berekend op faktuurnr.</em>) en klik op <strong>Afronden</strong>.
+        Controleer de werkopdracht, vul het factuurnummer in (onderaan: <em>Factuurnummer</em>) en klik op <strong>Afronden</strong>.
       <% } else { %>
-        Je kunt hem nu alleen bekijken. Moet er nog iets veranderen? Klik op <strong>Terughalen naar Open</strong>.
+        U kunt hem nu alleen bekijken. Moet er nog iets veranderen? Klik op <strong>Terughalen naar Open</strong>.
       <% } %>
     </div>
   <% } else if (order.status === 'gefactureerd') { %>
     <div class="status-bar status-bar-gefactureerd no-print">
-      <strong>Gefactureerd</strong><%= data.faktuurnr ? ' · factuurnr. ' + data.faktuurnr : '' %> · door <%= order.status_by_name || 'onbekend' %> op <%= fmtDateTime(order.status_at) %>.
+      <strong>Gefactureerd</strong><%= data.faktuurnr ? ' · factuurnummer ' + data.faktuurnr : '' %> · door <%= order.status_by_name || 'onbekend' %> op <%= fmtDateTime(order.status_at) %>.
       Deze werkopdracht is vergrendeld<%= user.can_invoice ? ' – klik op Heropenen om iets te wijzigen' : '' %>.
     </div>
   <% } %>
@@ -182,7 +182,7 @@
               <td><%- inp('diversen.werk_derden_prijs', dv.werk_derden_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
             </tr>
             <tr data-line>
-              <td><div class="labelled boxes"><%- box('apk', 'A.p.k.') %><%- box('afmeldkosten', 'Afmeldkosten') %></div></td>
+              <td><div class="labelled boxes"><%- box('apk', 'APK') %><%- box('afmeldkosten', 'Afmeldkosten') %></div></td>
               <td><%- inp('diversen.apk_prijs', dv.apk_prijs, 'class="ink right" inputmode="decimal" data-price') %></td>
             </tr>
             <tr data-line>
@@ -242,13 +242,13 @@
         </div>
 
         <div class="cell"><span class="lbl">Km-stand (teller)</span><%- inp('km_uit', d.km_uit, 'inputmode="numeric"') %><span class="lbl">(uit)</span></div>
-        <div class="cell"><span class="lbl">Kontakt opnemen bij extra rep.kosten boven €</span><%- inp('contact_boven', d.contact_boven, 'inputmode="decimal"') %></div>
+        <div class="cell"><span class="lbl">Contact opnemen bij extra kosten boven €</span><%- inp('contact_boven', d.contact_boven, 'inputmode="decimal"') %></div>
 
         <div class="cell"><span class="lbl">Datum deel I</span><%- inp('datum_deel1', d.datum_deel1, 'type="date"') %></div>
         <div class="cell"><span class="lbl">Chassisnummer</span><%- inp('chassisnummer', d.chassisnummer, 'class="ink upper"') %></div>
 
-        <div class="cell"><span class="lbl">A.p.k.-datum</span><%- inp('apk_datum', d.apk_datum, 'type="date"') %></div>
-        <div class="cell"><span class="lbl">Alarmcode:</span><%- inp('alarmcode', d.alarmcode) %></div>
+        <div class="cell"><span class="lbl">APK-datum</span><%- inp('apk_datum', d.apk_datum, 'type="date"') %></div>
+        <div class="cell"><span class="lbl">Alarmcode</span><%- inp('alarmcode', d.alarmcode) %></div>
       </div>
 
       <div class="work">
@@ -267,7 +267,7 @@
           <div class="w-tijd"><%- lined('werk_tijd', 'aria-label="Tijd"') %></div>
         </div>
         <div class="work-row foot">
-          <div class="w-span labelled"><span class="lbl">Berekend op faktuurnr.</span><%- inp('faktuurnr', d.faktuurnr) %></div>
+          <div class="w-span labelled"><span class="lbl">Factuurnummer</span><%- inp('faktuurnr', d.faktuurnr) %></div>
         </div>
         <div class="work-row foot">
           <div class="w-span2 labelled"><span class="lbl">Totaal gewerkte uren</span><%- inp('totaal_uren', d.totaal_uren, 'inputmode="decimal"') %></div>
@@ -303,7 +303,7 @@
       <p class="tread-legend no-print"><span class="tread bad">&lt; 1,6 mm wettelijk minimum</span> <span class="tread warn">&lt; 3 mm advies vervangen</span></p>
 
       <div class="back-block">
-        <div class="block-head">A.p.k. / Afkeurpunten</div>
+        <div class="block-head">APK / afkeurpunten</div>
         <div class="block-lines"><%- achter('apk', 12) %></div>
       </div>
     </div>

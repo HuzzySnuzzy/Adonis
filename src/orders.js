@@ -13,7 +13,7 @@ const CUSTOMER_FIELDS = [
 
 const FLUIDS = [
   { key: 'motorolie', label: 'Motorolie', kind: 'visc' },
-  { key: 'cardanolie', label: 'Cardanolie/versn.bakolie' },
+  { key: 'cardanolie', label: 'Cardan-/versnellingsbakolie' },
   { key: 'atf', label: 'ATF-olie' },
   { key: 'koelvloeistof', label: 'Koelvloeistof', suffix: '°C' },
   { key: 'remvloeistof', label: 'Remvloeistof' },

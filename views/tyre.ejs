@@ -1,6 +1,6 @@
 <%- include('/partials/head') %>
 <main class="page inv-page">
-  <p class="crumbs"><a href="/bandenhotel<%= d.soort === 'opslag' ? '?soort=opslag' : '' %>">← <%= d.soort === 'opslag' ? 'Overige bandenopslag' : 'Bandenhotel' %></a><% if (customer) { %> · <a href="/klant/<%= customer.id %>">Klant <%= d.kenteken %></a><% } %></p>
+  <p class="crumbs"><a href="/bandenhotel<%= d.soort === 'opslag' ? '?soort=opslag' : '' %>"><%= d.soort === 'opslag' ? 'Overige bandenopslag' : 'Bandenhotel' %></a><% if (customer) { %> · <a href="/klant/<%= customer.id %>">Klant <%= d.kenteken %></a><% } %></p>
   <div class="page-head">
     <div>
       <h1><%= tyre ? (d.kenteken || d.klant_naam || 'Bandenset') : 'Banden inslaan' %>
@@ -14,7 +14,7 @@
     <div class="actions">
       <% if (tyre.status === 'opgeslagen' && tyre.soort === 'klant') { %>
         <a class="btn btn-primary" href="/bandenhotel/<%= tyre.id %>/wissel" data-swap title="Kiezen welke banden erop gaan en welke eraf komen">Wisselen: op de auto zetten</a>
-        <%- post('gebeld', tyre.uitgenodigd_at ? '✓ Gebeld' : 'Gebeld', tyre.uitgenodigd_at ? 'btn-ok' : '', {}, 'Klant gebeld / uitgenodigd om te komen wisselen') %>
+        <%- post('gebeld', 'Gebeld', tyre.uitgenodigd_at ? 'btn-ok' : '', {}, 'Klant gebeld / uitgenodigd om te komen wisselen') %>
         <%- post('status', 'Uitgeven (weg)', 'btn-ghost', { status: 'uitgegeven' }, 'De klant neemt de banden mee en ze komen niet terug', 'Deze banden als uitgegeven markeren?\n\nGebruik dit alleen als de klant de banden meeneemt en ze niet terugkomen. Gaan ze op de auto? Kies dan "Wisselen".') %>
       <% } else if (tyre.status === 'opgeslagen') { %>
         <%- post('status', 'Uitgeven', '', { status: 'uitgegeven' }, '', 'Deze banden als uitgegeven markeren?') %>

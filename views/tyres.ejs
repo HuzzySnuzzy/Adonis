@@ -69,6 +69,7 @@
   <% } else { %>
     <p class="muted"><%= tyres.length %> set<%= tyres.length === 1 ? '' : 's' %><%= q || seizoen || locatie ? ' gevonden' : '' %>
       <span class="tread-legend">· profiel: <span class="tread tread-ok">ok</span> <span class="tread tread-warn">bijna op</span> <span class="tread tread-bad">te weinig</span></span></p>
+  <% if (locals.oddLabels) { %><p class="muted small label-hint"><%= oddLabels %> label<%= oddLabels === 1 ? '' : 's' %> zien er vreemd uit (bijv. tekens in plaats van cijfers). <a href="/bandenhotel/labels">Nakijken en verbeteren</a></p><% } %>
     <%- include('/partials/tyrelist', { tyres: tyres.slice(0, shownLimit), showPlate: true, showStatus: status !== 'opgeslagen' }) %>
     <%- include('/partials/more', { shown: Math.min(shownLimit, tyres.length), total: tyres.length }) %>
   <% } %>

@@ -200,6 +200,32 @@ function saveTyre({ id, data, userId }) {
     .run(...cols.map((c) => t[c]), userId, userId);
   return Number(r.lastInsertRowid);
 }
+/* ---------- labels opschonen ----------
+ * Labels zijn sleutelnummers. Een deel is op een telefoon getypt met de symbolenrij in plaats van de cijferrij
+ * (iPhone, Nederlands: - / : ; ( ) € & @ " staan precies onder 1 2 3 4 5 6 7 8 9 0). Dit is een vermoeden:
+ * de beheerder ziet de suggestie en beslist zelf. */
+const SYMBOL_ROW = { '-': '1', '/': '2', ':': '3', ';': '4', '(': '5', ')': '6', '€': '7', '&': '8', '@': '9', '"': '0', '”': '0', '“': '0' };
+function labelSuggestion(label) {
+  const s = String(label || '').trim();
+  if (!s || !/[-/:;()€&@"”“]/.test(s)) return null;
+  if (![...s].every((ch) => /[0-9]/.test(ch) || SYMBOL_ROW[ch])) return null;
+  return [...s].map((ch) => SYMBOL_ROW[ch] || ch).join('');
+}
+/** Labels die er niet uitzien als een nummer: vreemde tekens, of alleen letters (bijv. "Jdixisjjs"). */
+function suspiciousLabels() {
+  return db.prepare("SELECT id, soort, label, kenteken, klant_naam, seizoen, status FROM tyre_storage WHERE label <> '' ORDER BY id").all()
+    .filter((t) => /[€&@;:()"”“’!']/.test(t.label) || (/^[A-Za-z]{6,}$/.test(t.label) && !/\d/.test(t.label)) || /[A-Za-z]{3,}\s*[€&/]/.test(t.label))
+    .map((t) => ({ ...t, suggestion: labelSuggestion(t.label) }));
+}
+function setLabel(id, label, userId) {
+  const t = db.prepare('SELECT * FROM tyre_storage WHERE id = ?').get(id);
+  if (!t) return false;
+  const next = { ...t, label: clean(label, 60) };
+  db.prepare("UPDATE tyre_storage SET label = ?, search_text = ?, updated_by = ?, updated_at = datetime('now') WHERE id = ?")
+    .run(next.label, tyreSearchText(next), userId, id);
+  return true;
+}
+
 function getTyre(id) {
   return db.prepare(
     `SELECT t.*, c.id AS customer_id, uu.name AS updated_by_name FROM tyre_storage t
@@ -525,4 +551,5 @@ module.exports = {
   normalizeTyre, saveTyre, getTyre, searchTyres, tyresForPlate, tyreCounts, setTyreStatus, deleteTyre,
   normalizeStock, saveStock, getStock, searchStock, stockCounts, adjustStock, deleteStock,
   distinct, parseExtra, parseMm, fmtMm, treadClass, normalizeSize, normalizeSeason, numberKey, sizeKey, clean,
+  labelSuggestion, suspiciousLabels, setLabel,
 };

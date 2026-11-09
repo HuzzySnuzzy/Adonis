@@ -10,7 +10,7 @@
   <div class="page-head">
     <div>
       <h1><%- include('/partials/ai-icon') %> AI-analyse</h1>
-      <p class="muted small">Een röntgenfoto van een auto: Claude zoekt op internet alles over het voertuig op – hoe hij rijdt, comfort,
+      <p class="muted small">Voertuiganalyse: Claude zoekt op internet alles over het voertuig op – hoe hij rijdt, comfort,
         originele banden, onderhoud, bekende problemen en APK-punten – en zet het op de juiste plek in de auto.</p>
     </div>
   </div>
@@ -77,7 +77,7 @@
     </section>
   </div>
 
-  <h2 class="va-h">Per onderdeel <span class="muted small">– klik op een wijzer in het röntgenbeeld</span></h2>
+  <h2 class="va-h">Per onderdeel <span class="muted small">– klik op een punt in de afbeelding</span></h2>
   <div class="bl-boxes va-zones">
     <% for (const [z, name] of Object.entries(ZONES)) { const pts = D.zones[z] || []; const s = zoneSev(pts); %>
     <details class="card bl-box va-zone sev-<%= s %>" id="zone-<%= z %>" data-remember="va-<%= z %>">

@@ -201,9 +201,9 @@ h2 { font-size: 1.2rem; margin: 0 0 .75rem; }
 }
 .iconbtn:hover { background: var(--topbar-hover); color: #fff; }
 .mainnav { display: flex; gap: .25rem; flex-wrap: wrap; }
-.mainnav a { color: var(--topbar-text); text-decoration: none; padding: .4rem .7rem; border-radius: 6px; }
-.mainnav a:hover { background: var(--topbar-hover); color: #fff; }
-.mainnav a.active { background: var(--topbar-active); color: #fff; box-shadow: inset 0 -2px 0 var(--accent); }
+:is(.mainnav > a, .mainnav > details > summary) { color: var(--topbar-text); text-decoration: none; padding: .4rem .7rem; border-radius: 6px; }
+:is(.mainnav > a, .mainnav > details > summary):hover { background: var(--topbar-hover); color: #fff; }
+:is(.mainnav > a, .mainnav > details > summary).active { background: var(--topbar-active); color: #fff; box-shadow: inset 0 -2px 0 var(--accent); }
 .usernav { margin-left: auto; display: flex; align-items: center; gap: .9rem; }
 .usernav .username { color: var(--topbar-text); text-decoration: none; display: inline-flex; align-items: center; gap: .35rem; }
 .usernav .username:hover { color: #fff; }
@@ -773,7 +773,7 @@ table.list tr.is-skip td.row-notes, table.list tr.is-skip td.chk { text-decorati
 @media (max-width: 760px) {
   .mainnav { flex-wrap: nowrap; overflow-x: auto; width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; mask-image: linear-gradient(90deg, #000 85%, transparent); }
   .mainnav::-webkit-scrollbar { display: none; }
-  .mainnav a { flex: 0 0 auto; white-space: nowrap; }
+  :is(.mainnav > a, .mainnav > details > summary) { flex: 0 0 auto; white-space: nowrap; }
 }
 
 /* ---------- foto's ---------- */
@@ -887,8 +887,8 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 }
 :root[data-theme="oled"] body { background: #000; }
 :root[data-theme="oled"] .topbar { background: rgba(0,0,0,.9); border-bottom: 0; box-shadow: 0 1px 0 rgba(255,255,255,.06), 0 18px 40px -30px rgba(74,114,255,.5); }
-:root[data-theme="oled"] .mainnav a { border-radius: 999px; }
-:root[data-theme="oled"] .mainnav a.active { background: rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 8px 20px -10px rgba(74,114,255,.8); }
+:root[data-theme="oled"] :is(.mainnav > a, .mainnav > details > summary) { border-radius: 999px; }
+:root[data-theme="oled"] :is(.mainnav > a, .mainnav > details > summary).active { background: rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 8px 20px -10px rgba(74,114,255,.8); }
 /* Zwevende panelen */
 :root[data-theme="oled"] :where(.card, .table-wrap, .customer-head, .rdw-card, .empty, .auth-card, .sheet, .review-bar, .theme-menu, .swap-dialog, .sn-menu, .rdw-pop, .dt-menu, .dw, .ai-busy-card, .start-stat) {
   background: linear-gradient(180deg, #0e0e11, #08080a); border: 0; border-radius: var(--radius); box-shadow: var(--float);
@@ -1058,7 +1058,7 @@ table.list.stock-list td { overflow-wrap: anywhere; }
   .nw-short { display: inline; }
   .lo-icon { display: block; }
   .logout-btn { display: inline-flex; align-items: center; padding: 4px; text-decoration: none; }
-  .mainnav a { padding: .35rem .6rem; font-size: .95rem; }
+  :is(.mainnav > a, .mainnav > details > summary) { padding: .35rem .6rem; font-size: .95rem; }
   .page { padding: 1rem .75rem 2.5rem; }
   .page-head { margin: .6rem 0 .8rem; gap: .6rem; grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "search" "actions"; }
   .page-head > :is(.head-buttons, .actions) { justify-self: start; justify-content: flex-start; }
@@ -1115,7 +1115,7 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 :root[data-simple="on"] .btn { min-height: 44px; padding: .6rem 1.1rem; font-size: 1.02rem; }
 :root[data-simple="on"] .btn-small { min-height: 38px; padding: .45rem .8rem; font-size: .95rem; }
 :root[data-simple="on"] .page input:not([type=checkbox]):not([type=radio]):not(.ink), :root[data-simple="on"] .page select { font-size: 1.05rem; min-height: 44px; }
-:root[data-simple="on"] .mainnav a { font-size: 1.02rem; }
+:root[data-simple="on"] :is(.mainnav > a, .mainnav > details > summary) { font-size: 1.02rem; }
 :root[data-simple="on"] .flash { font-size: 1.1rem; font-weight: 600; padding: 1rem 1.2rem; }
 :root[data-simple="on"] .help-text { display: inline; }
 .help-link { display: inline-flex; align-items: center; gap: .3rem; color: var(--topbar-text); text-decoration: none; }
@@ -1239,7 +1239,7 @@ table.list.stock-list td { overflow-wrap: anywhere; }
 @media (min-width: 761px) and (max-width: 1749px) {
   .topbar { gap: .6rem; padding-left: .8rem; padding-right: .8rem; }
   .mainnav { gap: .1rem; }
-  .mainnav a { padding: .4rem .55rem; }
+  :is(.mainnav > a, .mainnav > details > summary) { padding: .4rem .55rem; }
   .usernav { gap: .65rem; }
   .usernav .uname { display: none; }
   .nw-long, .lo-text { display: none; }
@@ -1365,7 +1365,7 @@ form[role="search"].is-searching input[name="q"] {
 }
 /* Laptop (≤ 1400 px): menu iets compacter zodat het (met Portaal) op één rij past. */
 @media (min-width: 761px) and (max-width: 1399px) {
-  .mainnav a { padding: .4rem .45rem; font-size: .95rem; }
+  :is(.mainnav > a, .mainnav > details > summary) { padding: .4rem .45rem; font-size: .95rem; }
   .topbar .logo-sub { display: none; }
   .topbar { gap: .5rem; }
 }
@@ -2094,3 +2094,101 @@ input.dw-addr:focus { border-color: var(--primary); box-shadow: 0 0 0 2px color-
 :root:is([data-theme="w98"], [data-theme="vcds"]) .dt-showdesk { margin: 2px -2px 2px 2px; box-shadow: var(--raised); background: var(--face); border: 0; }
 .dt-wmenu { width: 230px; }
 .dt-wmenu .dt-menu-item:disabled { opacity: .45; cursor: default; }
+
+/* ---------- Menubalk: "Meer", "Beheer", meldingen en gebruikersmenu ---------- */
+.nav-menu { position: relative; }
+.nav-menu > summary { list-style: none; cursor: pointer; user-select: none; }
+.nav-menu > summary::-webkit-details-marker { display: none; }
+.mainnav .nav-menu > summary { color: var(--topbar-text); padding: .4rem .7rem; border-radius: 6px; display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
+.mainnav .nav-menu > summary::after { content: ""; width: .38em; height: .38em; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-.15em) rotate(45deg); opacity: .8; }
+.mainnav .nav-menu > summary:hover, .mainnav .nav-menu[open] > summary { background: var(--topbar-hover); color: #fff; }
+.mainnav .nav-menu > summary.active { background: var(--topbar-active); color: #fff; box-shadow: inset 0 -2px 0 var(--accent); }
+.nav-pop { position: absolute; left: 0; top: calc(100% + 8px); z-index: 82; min-width: 210px; display: grid; padding: 5px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.nav-pop-right { left: auto; right: 0; }
+.nav-pop a, .nav-pop button { display: block; width: 100%; padding: .45rem .7rem; border: 0; border-radius: calc(var(--radius) * .75); background: none;
+  color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.nav-pop a:hover, .nav-pop button:hover, .nav-pop a:focus-visible, .nav-pop button:focus-visible { background: var(--hover); color: var(--text); outline: none; }
+.mainnav .nav-pop a, .mainnav .nav-pop a:hover { color: var(--text); box-shadow: none; }
+.nav-pop a.active { font-weight: 600; background: color-mix(in srgb, var(--primary) 12%, transparent); }
+.nav-pop-form { margin: 0; border-top: 1px solid var(--border-soft, var(--border)); margin-top: 4px; padding-top: 4px; }
+.user-btn { display: inline-flex; align-items: center; gap: .45rem; color: var(--topbar-text); padding: 3px 6px 3px 3px; border-radius: 999px; }
+.user-btn:hover, .user-menu[open] > .user-btn { background: var(--topbar-hover); color: #fff; }
+.user-avatar { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: color-mix(in srgb, var(--primary) 70%, #fff); color: #fff; font-weight: 700; font-size: .85rem; }
+.user-head { display: grid; gap: 1px; margin: 0 0 4px; padding: .4rem .7rem .55rem; border-bottom: 1px solid var(--border-soft, var(--border)); }
+.bell-menu > summary { position: relative; }
+.bell-dot { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--hue-rose); box-shadow: 0 0 0 2px var(--topbar-bg); }
+.bell-dot[hidden] { display: none; }
+.bell-pop { min-width: 300px; max-width: min(380px, calc(100vw - 24px)); }
+.bell-head { margin: 0; padding: .35rem .7rem .4rem; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.bell-list { list-style: none; margin: 0; padding: 0; }
+.bell-list a { white-space: normal; line-height: 1.35; }
+.bell-list .bell-empty { padding: .45rem .7rem; color: var(--muted); }
+/* De oude losse knoppen (hulp, naam, uitloggen) bestaan niet meer in de menubalk. */
+@media (max-width: 1180px) { .user-btn .uname { display: none; } }
+/* Telefoon: het menu schuift horizontaal, dus de uitklapmenu's onder de menubalk vastzetten (anders vallen ze weg). */
+@media (max-width: 760px) {
+  .mainnav .nav-pop { position: fixed; left: 8px; right: 8px; top: var(--topbar-bottom, 110px); min-width: 0; }
+  .nav-pop-right { position: fixed; left: auto; right: 8px; top: var(--topbar-bottom, 60px); }
+}
+
+/* =====================================================================
+   Professionele uitstraling (1.45): rustiger, compacter, consequent
+   ===================================================================== */
+/* Tabellen: compacter (zoals garageprogramma's), links in tabellen niet onderstreept, getallen rechts. */
+table.list th, table.list td { padding: .5rem .75rem; }
+table.list th { font-size: .74rem; letter-spacing: .05em; }
+table.list td a:not(.btn) { color: inherit; text-decoration: none; font-weight: 500; }
+table.list td a:not(.btn):hover, table.list td a:not(.btn):focus-visible { color: var(--link, var(--primary)); text-decoration: underline; }
+table.list td a.ordernr { color: var(--red, #c62828); font-weight: 700; }
+table.list td a.tyre-label { font-family: inherit; color: var(--text); font-weight: 600; }
+/* Terug-links: een klein pijltje-icoon in plaats van een teken in de tekst. */
+.crumbs a:first-child, a[data-back-link], button[data-back] { display: inline-flex; align-items: center; gap: .4rem; }
+.crumbs a:first-child::before, a[data-back-link]::before, button[data-back]::before {
+  content: ""; width: .45em; height: .45em; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin-left: .15em; }
+.crumbs a { color: var(--muted); font-size: .9rem; }
+.crumbs a:hover { color: var(--text); }
+/* Paginakoppen iets strakker */
+h1 { letter-spacing: -.01em; }
+.page-head h1 { font-size: 1.45rem; }
+/* Plaknotitieknop: kleiner en minder opvallend tot u erop wijst */
+.note-dock-btn { width: 34px; height: 36px; opacity: .72; transition: opacity .15s, width .15s; }
+.note-dock-btn:hover, .note-dock-btn:focus-visible { opacity: 1; width: 40px; }
+.note-dock-btn svg { width: 17px; height: 17px; }
+/* Klantkop: kleinere voorbeeldfoto met een kort onderschrift en een klein sluitknopje */
+@media (min-width: 901px) { .customer-head.has-photo { grid-template-columns: 200px minmax(0, 1fr) minmax(0, 1fr) auto; } }
+.car-photo { position: relative; }
+.car-photo img { border-radius: var(--radius); }
+.car-photo figcaption { display: block; font-size: .72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.car-photo figcaption a { color: inherit; text-decoration: none; }
+.car-photo .car-wrong { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; margin: 0; padding: 0; border: 0; border-radius: 50%;
+  background: rgba(0, 0, 0, .45); color: #fff; font-size: 14px; line-height: 22px; cursor: pointer; opacity: 0; transition: opacity .15s; }
+.car-photo:hover .car-wrong, .car-wrong:focus-visible { opacity: 1; }
+@media (hover: none) { .car-photo .car-wrong { opacity: .8; } }
+/* Statuslabels: rustig en gelijk van vorm */
+.status-badge.in-list { font-weight: 600; letter-spacing: .01em; }
+/* De paginakop van de werkopdracht: één hoofdknop (Opslaan) */
+.order-toolbar .btn-ok { background: var(--surface); color: var(--text); border-color: var(--border); }
+table.label-fix input:not([type=checkbox]) { margin: 0; padding: .3rem .5rem; max-width: 220px; }
+table.label-fix .chk { width: 36px; }
+.label-hint { margin: .6rem 0 0; }
+
+/* Links: niet onderstreept (behalve bij aanwijzen); alleen in lopende tekst blijven ze herkenbaar onderstreept. */
+a { text-decoration: none; }
+a:hover { text-decoration: underline; }
+.linkbtn { text-decoration: none; color: var(--link); }
+.linkbtn:hover { text-decoration: underline; }
+:is(.help-sec, .muted, .alert, .flash, .kind-help) a { text-decoration: underline; text-underline-offset: 2px; }
+.rdw-links { gap: 1.2rem; }
+.rdw-links a, .rdw-links .linkbtn { font-weight: 500; }
+/* Telefoon: het vervagen aan de rand van het menu zou ook het uitklapmenu wegknippen */
+@media (max-width: 760px) { .mainnav:has(details[open]) { mask-image: none; -webkit-mask-image: none; } }
+.label-hint { margin: .2rem 0 .8rem; }
+/* De links in de uitklapmenu's zien er in elk thema hetzelfde uit (thema's stylen alleen de bovenste menu-items). */
+:root .nav-pop a, :root .nav-pop button { color: var(--text); background: none; box-shadow: none; border: 0; text-shadow: none; text-transform: none; letter-spacing: normal; font-variant: normal; }
+:root .nav-pop a:hover, :root .nav-pop button:hover, :root .nav-pop a:focus-visible { background: var(--hover); color: var(--text); text-decoration: none; }
+:root .nav-pop a.active { background: color-mix(in srgb, var(--primary) 12%, transparent); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .nav-pop { border-radius: 0; border: 0; padding: 3px; background: var(--face); box-shadow: var(--raised), 2px 2px 0 rgba(0, 0, 0, .35); }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .nav-pop a:hover, :root:is([data-theme="w98"], [data-theme="vcds"]) .nav-pop button:hover { background: var(--sel); color: #fff; border-radius: 0; }
+:root .nav-pop :is(a, button) { color: var(--text) !important; }
+:root:is([data-theme="w98"], [data-theme="vcds"]) .nav-pop :is(a, button):hover { color: #fff !important; }

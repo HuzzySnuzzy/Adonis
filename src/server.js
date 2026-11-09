@@ -168,7 +168,12 @@ app.use(auth.csrfProtection);
 function fmtDate(iso) {
   if (!iso) return '';
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
-  return m ? `${m[3]}-${m[2]}-${m[1].slice(2)}` : iso;
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : iso;
+}
+/** Kilometerstand netjes: "123000" -> "123.000" (tekst die geen getal is blijft zoals hij is). */
+function fmtKm(v) {
+  const s = String(v ?? '').trim();
+  return /^\d{4,7}$/.test(s) ? Number(s).toLocaleString('nl-NL') : s;
 }
 function fmtDateTime(sqlDate) {
   if (!sqlDate) return '';
@@ -211,6 +216,7 @@ app.locals.rdwMerkType = rdw.merkType;
 app.locals.esc = esc;
 app.locals.inp = inp;
 app.locals.fmtDate = fmtDate;
+app.locals.fmtKm = fmtKm;
 app.locals.fmtDateTime = fmtDateTime;
 app.locals.FLUIDS = orders.FLUIDS;
 app.locals.TIRES = orders.TIRES;
@@ -677,7 +683,7 @@ function initialStatusError(req, data) {
 /** Gefactureerd zonder factuurnummer kan, maar alleen na bevestiging (bijv. oude papieren werkopdrachten). */
 function factuurnrError(req, data, next) {
   if (next === 'gefactureerd' && !data.faktuurnr.trim() && req.body.zonder_factuurnr !== '1') {
-    return 'Vul het factuurnummer in (onderaan het formulier: "Berekend op faktuurnr.") of bevestig dat je zonder factuurnummer wilt afronden.';
+    return 'Vul het factuurnummer in (onderaan het formulier: "Factuurnummer") of bevestig dat u zonder factuurnummer wilt afronden.';
   }
   return null;
 }
@@ -735,7 +741,7 @@ app.post('/werkopdracht/:id', (req, res) => {
   if (!error && req.body.versie !== order.updated_at) {
     error = `Iemand anders (${order.updated_by_name || 'onbekend'}) heeft deze werkopdracht intussen gewijzigd ` +
       `(${fmtDateTime(order.updated_at)}). Open de werkopdracht opnieuw om de laatste versie te zien – ` +
-      'jouw wijzigingen staan hieronder nog ingevuld, maar zijn NIET opgeslagen.';
+      'uw wijzigingen staan hieronder nog ingevuld, maar zijn NIET opgeslagen.';
   }
   if (error) return renderOrder(res, { order, data, nummer: req.body.nummer, error, status: 400 });
   // Datum invoer is bij een bestaande werkopdracht aan te passen (bijv. een verkeerd geïmporteerde datum).
@@ -968,7 +974,7 @@ app.post('/instellingen', (req, res) => {
     ...Object.fromEntries(auth.NOTIFY_KINDS.map(([k]) => ['n_' + k, [].concat(req.body['n_' + k] || []).includes('on') ? 'on' : 'off'])),
   });
   setThemeCookie(res, prefs.theme);
-  flash(req, 'ok', 'Je instellingen zijn opgeslagen.');
+  flash(req, 'ok', 'Uw instellingen zijn opgeslagen.');
   res.redirect('/instellingen');
 });
 
@@ -1001,7 +1007,7 @@ app.post('/instellingen/wachtwoord', wrap(async (req, res) => {
   req.session.regenerate(() => {
     req.session.userId = userId;
     req.session.csrf = crypto.randomBytes(24).toString('hex');
-    flash(req, 'ok', 'Je wachtwoord is gewijzigd.');
+    flash(req, 'ok', 'Uw wachtwoord is gewijzigd.');
     res.redirect('/instellingen');
   });
 }));
@@ -1019,7 +1025,7 @@ app.post('/account/wachtwoord', wrap(async (req, res) => {
   req.session.regenerate(() => {
     req.session.userId = userId;
     req.session.csrf = crypto.randomBytes(24).toString('hex');
-    flash(req, 'ok', 'Je wachtwoord is gewijzigd.');
+    flash(req, 'ok', 'Uw wachtwoord is gewijzigd.');
     res.redirect('/account');
   });
 }));
@@ -1195,7 +1201,7 @@ app.post('/systeem/cloudflare/uit', auth.requireOwner, (req, res) => {
 app.post('/systeem/cloudflare/vergeten', auth.requireOwner, (req, res) => {
   tunnel.stop();
   settings.remove('cloudflare');
-  flash(req, 'ok', 'Cloudflare-instellingen verwijderd. De tunnel en het DNS-record bestaan nog in je Cloudflare-account; verwijder die daar eventueel.');
+  flash(req, 'ok', 'Cloudflare-instellingen verwijderd. De tunnel en het DNS-record bestaan nog in uw Cloudflare-account; verwijder die daar eventueel.');
   res.redirect('/systeem');
 });
 
@@ -1237,7 +1243,7 @@ app.post('/gebruikers/:id/rol', auth.requireAdmin, (req, res) => {
   const target = auth.findUserById(req.params.id);
   if (!target || target.is_owner) return res.redirect('/gebruikers');
   if (target.id === req.user.id) {
-    flash(req, 'err', 'Je kunt je eigen rol niet wijzigen; vraag een andere beheerder.');
+    flash(req, 'err', 'U kunt uw eigen rol niet wijzigen; vraag een andere beheerder.');
     return res.redirect('/gebruikers');
   }
   if (!auth.ROLES[req.body.role]) return res.redirect('/gebruikers');

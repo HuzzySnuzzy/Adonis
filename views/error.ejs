@@ -4,7 +4,7 @@
   <p class="error-msg"><%= message %></p>
   <div class="error-actions">
     <% if (locals.action) { %><a class="btn btn-primary btn-big" href="<%= action.href %>"><%= action.label %></a><% } %>
-    <button class="btn btn-big" type="button" data-back>← Terug</button>
+    <button class="btn btn-big" type="button" data-back>Terug</button>
     <a class="btn btn-big<%= locals.action ? '' : ' btn-primary' %>" href="<%= locals.user ? '/start' : '/login' %>">Naar het begin</a>
   </div>
   <p class="muted small">Weet u het niet zeker? Kijk bij <a href="/hulp">Hulp</a>, of vraag het aan de beheerder.</p>

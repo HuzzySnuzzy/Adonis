@@ -67,11 +67,11 @@
 :root[data-theme="vcds"] .logo-sub { font-family: var(--f-ui); letter-spacing: .1em; opacity: .85; }
 :root[data-theme="vcds"] .logo-mark { width: 26px; height: 26px; }
 :root[data-theme="vcds"] .mainnav { gap: 3px; }
-:root[data-theme="vcds"] .mainnav a {
+:root[data-theme="vcds"] :is(.mainnav > a, .mainnav > details > summary) {
   padding: .3rem .7rem; border-radius: 0; color: #000; background: var(--face); box-shadow: var(--raised); font-size: 13px;
 }
-:root[data-theme="vcds"] .mainnav a:hover { background: var(--face); color: #000; text-decoration: underline; }
-:root[data-theme="vcds"] .mainnav a.active { background: var(--face-light); color: #000; box-shadow: var(--pressed); font-weight: 700; padding: calc(.3rem + 1px) .7rem calc(.3rem - 1px) calc(.7rem + 1px); }
+:root[data-theme="vcds"] :is(.mainnav > a, .mainnav > details > summary):hover { background: var(--face); color: #000; text-decoration: underline; }
+:root[data-theme="vcds"] :is(.mainnav > a, .mainnav > details > summary).active { background: var(--face-light); color: #000; box-shadow: var(--pressed); font-weight: 700; padding: calc(.3rem + 1px) .7rem calc(.3rem - 1px) calc(.7rem + 1px); }
 :root[data-theme="vcds"] .nav-count { background: #b00000; color: #fff; border-radius: 0; }
 :root[data-theme="vcds"] .iconbtn { width: 26px; height: 24px; border: 0; border-radius: 0; background: var(--face); color: #000; box-shadow: var(--raised); }
 :root[data-theme="vcds"] .iconbtn:hover { background: var(--face); color: #000; }
@@ -257,7 +257,7 @@
 @media (max-width: 760px) {
   :root[data-theme="vcds"] main.page { width: calc(100% - 12px); margin-top: 8px; padding: .8rem .7rem 1.2rem; }
   :root[data-theme="vcds"] .app-footer { width: calc(100% - 12px); margin-bottom: 8px; }
-  :root[data-theme="vcds"] .mainnav a { padding: .3rem .55rem; }
+  :root[data-theme="vcds"] :is(.mainnav > a, .mainnav > details > summary) { padding: .3rem .55rem; }
   :root[data-theme="vcds"] .topbar { padding: .3rem .4rem; }
   :root[data-theme="vcds"] .flash { margin-left: 6px; margin-right: 6px; }
   /* Kaartweergave: elke rij een eigen vakje in de witte lijst */
@@ -271,7 +271,7 @@
   :root[data-theme="vcds"][data-boot] :is(main, .order-toolbar, .sheet-scroll, .flash, .app-footer, .topbar) { animation: none !important; }
 }
 @media (forced-colors: active) {
-  :root[data-theme="vcds"] :is(.btn, .mainnav a, .iconbtn, .status-tabs a, .choice-body, .start-tile) { border: 1px solid ButtonText; }
+  :root[data-theme="vcds"] :is(.btn, :is(.mainnav > a, .mainnav > details > summary), .iconbtn, .status-tabs a, .choice-body, .start-tile) { border: 1px solid ButtonText; }
 }
 
 /* ---------- afdrukken: gewoon wit papier ---------- */

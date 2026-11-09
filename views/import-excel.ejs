@@ -2,14 +2,14 @@
 <main class="page narrow import-page">
   <%- include('/partials/import-tabs', { active: 'excel' }) %>
   <h1>Excel-lijst importeren</h1>
-  <p class="muted">Zet je bestaande lijsten over naar ADONIS: het <strong>bandenhotel</strong> (banden van klanten in opslag) en de
-    <strong>voorraad</strong> (onderdelen en banden op de zaak). Je kunt alles controleren en aanpassen voordat er iets wordt opgeslagen.</p>
+  <p class="muted">Zet uw bestaande lijsten over naar ADONIS: het <strong>bandenhotel</strong> (banden van klanten in opslag) en de
+    <strong>voorraad</strong> (onderdelen en banden op de zaak). U kunt alles controleren en aanpassen voordat er iets wordt opgeslagen.</p>
 
   <section class="card" id="excelCard" data-csrf="<%= csrf %>" data-max="<%= maxMb %>">
     <ol class="steps">
       <li>Kies het Excel-bestand (.xlsx) of een CSV-bestand. Alle bladen worden bekeken.</li>
-      <li><% if (configured) { %>Claude bekijkt welk blad wat is, welke kolom bij welk veld hoort, trekt schrijfwijzen gelijk en wijst rijen aan die je moet nakijken.<% } else { %>ADONIS deelt de kolommen in op basis van de kolomkoppen.<% } %></li>
-      <li>Jij controleert alles op de volgende pagina en bevestigt de import.</li>
+      <li><% if (configured) { %>Claude bekijkt welk blad wat is, welke kolom bij welk veld hoort, trekt schrijfwijzen gelijk en wijst rijen aan die u moet nakijken.<% } else { %>ADONIS deelt de kolommen in op basis van de kolomkoppen.<% } %></li>
+      <li>U controleert alles op de volgende pagina en bevestigt de import.</li>
     </ol>
     <label class="btn btn-primary btn-big btn-block file-pick">
       <input type="file" id="excelInput" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden>

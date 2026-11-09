@@ -4,12 +4,12 @@
   <h1>Foto's koppelen</h1>
   <p class="muted">Verwijst een geïmporteerde Excel-lijst naar foto's (bijvoorbeeld <code>klanten_Images/azx1.Foto.143052.jpg</code>)?
     Kies dan hier de map met die foto's. ADONIS zoekt bij elke foto de juiste bandenset of het juiste onderdeel op
-    bestandsnaam en voegt hem toe. Al gekoppelde foto's worden overgeslagen, dus je kunt dit gerust nog een keer doen.</p>
+    bestandsnaam en voegt hem toe. Al gekoppelde foto's worden overgeslagen, dus u kunt dit gerust nog een keer doen.</p>
 
   <section class="card" id="linkCard" data-csrf="<%= csrf %>">
     <% if (!total) { %>
       <p><strong>Er zijn geen fotoverwijzingen gevonden.</strong></p>
-      <p class="muted small">Importeer eerst een Excel-lijst met een kolom met fotonamen (bijv. "Foto"). Losse foto's voeg je toe
+      <p class="muted small">Importeer eerst een Excel-lijst met een kolom met fotonamen (bijv. "Foto"). Losse foto's voegt u toe
         op de pagina van een bandenset of onderdeel.</p>
     <% } else { %>
       <p class="link-stats"><strong><%= done %></strong> van <strong><%= total %></strong> verwijzingen hebben al een foto

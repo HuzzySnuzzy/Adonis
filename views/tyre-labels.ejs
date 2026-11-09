@@ -1,0 +1,36 @@
+<%- include('/partials/head') %>
+<main class="page wide">
+  <p class="crumbs"><a href="/bandenhotel">Bandenhotel</a></p>
+  <div class="page-head"><h1>Labels opschonen</h1></div>
+  <p class="muted">Deze labels zien er niet uit als een sleutelnummer: er staan vreemde tekens in, of alleen letters. Vaak is het nummer op een
+    telefoon getypt met de rij symbolen in plaats van de cijfers (op een iPhone staan <code>- / : ; ( ) € &amp; @</code> precies onder <code>1</code> t/m <code>9</code>).
+    Waar dat zo lijkt, staat een voorstel klaar. Controleer het met het label op de banden, pas het eventueel aan of maak het vak leeg,
+    vink de regel aan en klik op <b>Aangevinkte labels opslaan</b>.</p>
+  <% if (!list.length) { %>
+    <div class="empty"><p>Alle labels zien er goed uit.</p></div>
+  <% } else { %>
+  <form method="post" action="/bandenhotel/labels" autocomplete="off">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="table-wrap">
+      <table class="list label-fix">
+        <thead><tr><th class="chk"><input type="checkbox" data-check-all aria-label="Alles aanvinken"></th><th>Kenteken</th><th>Klant</th><th>Huidig label</th><th>Voorstel</th><th>Nieuw label</th></tr></thead>
+        <tbody>
+        <% list.forEach((t, i) => { %>
+          <tr>
+            <td class="chk"><input type="hidden" name="l[<%= i %>][id]" value="<%= t.id %>"><input type="checkbox" name="l[<%= i %>][apply]" aria-label="Overnemen"></td>
+            <td><%= t.kenteken || '–' %></td>
+            <td><a href="/bandenhotel/<%= t.id %>"><%= t.klant_naam || 'Set ' + t.id %></a></td>
+            <td class="mono"><%= t.label %></td>
+            <td class="mono"><%= t.suggestion || '' %><% if (!t.suggestion) { %><span class="muted small">geen voorstel</span><% } %></td>
+            <td><input class="mono" name="l[<%= i %>][label]" value="<%= t.suggestion || t.label %>" aria-label="Nieuw label"></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Aangevinkte labels opslaan</button></div>
+  </form>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

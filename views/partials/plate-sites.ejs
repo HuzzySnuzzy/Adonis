@@ -5,7 +5,7 @@
   <% for (const l of plateLinks) { %>
   <a class="plate-site" href="<%= l.href %>" target="_blank" rel="noopener noreferrer" title="<%= l.title %> openen met kenteken <%= kenteken %>">
     <% if (l.icon) { %><img src="/portaal/icoon/<%= l.id %>?v=<%= encodeURIComponent(l.updated_at) %>" alt="" data-portal-icon><% } else { %><span class="pt-letter pl-c<%= l.color %>"><%= l.title.charAt(0).toUpperCase() %></span><% } %>
-    <span><%= l.title %></span><span class="ext" aria-hidden="true">↗</span>
+    <span><%= l.title %></span>
   </a>
   <% } %>
 </nav>

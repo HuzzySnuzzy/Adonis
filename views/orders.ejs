@@ -1,7 +1,7 @@
 <%- include('/partials/head') %>
 <main class="page wide">
   <div class="page-head">
-    <h1><%= status === 'klaar' ? 'Facturatie – klaar om te factureren' : 'Alle werkopdrachten' %></h1>
+    <h1><%= status === 'klaar' ? 'Klaar voor facturatie' : 'Alle werkopdrachten' %></h1>
     <form class="search" method="get" action="/werkopdrachten" role="search" autocomplete="off">
       <% if (status) { %><input type="hidden" name="status" value="<%= status %>"><% } %>
       <input type="search" name="q" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" data-1p-ignore data-lpignore="true" value="<%= q %>" placeholder="Zoek op nummer, kenteken, onderdeel, foutcode, tekst…" data-autofocus>
@@ -9,8 +9,6 @@
       <% if (q) { %><a class="btn btn-ghost" href="/werkopdrachten">Wissen</a><% } %>
     </form>
     <div class="head-buttons">
-      <a class="btn btn-ghost" href="/zoekwoorden" title="Woorden die hetzelfde betekenen (bijv. lampen = verlichting)">Zoekwoorden</a>
-      <% if (user.is_admin) { %><a class="btn btn-ghost" href="/prullenbak" title="Verwijderde werkopdrachten terugzetten">Prullenbak</a><% } %>
       <% if (user.is_admin && aiConfigured && feat.ai) { %>
       <button class="btn" type="button" data-ai-task="alle" data-ai-action="/aandachtspunten/alles" data-ai-bulk
         data-ai-title="Aandachtspunten voor alle klanten"><%- include('/partials/ai-icon') %> Aandachtspunten voor alle klanten</button>
@@ -28,7 +26,7 @@
     <% } %>
   </nav>
   <% if (orders.length === 0) { %>
-    <div class="empty"><p><%= q ? 'Niets gevonden voor “' + q + '”.' : status === 'klaar' ? 'Er ligt niets klaar om te factureren. 🎉' : status ? 'Geen werkopdrachten met deze status.' : 'Nog geen werkopdrachten.' %></p></div>
+    <div class="empty"><p><%= q ? 'Niets gevonden voor “' + q + '”.' : status === 'klaar' ? 'Er ligt niets klaar om te factureren.' : status ? 'Geen werkopdrachten met deze status.' : 'Nog geen werkopdrachten.' %></p></div>
   <% } else { %>
     <p class="muted"><%= q || status ? orders.length + ' gevonden' + (status === 'klaar' ? ' – oudste bovenaan' : '') : 'Laatste ' + orders.length + ' werkopdrachten' %></p>
     <%- include('/partials/orderlist', { orders, showPlate: true }) %>

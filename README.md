@@ -5,6 +5,8 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 
 ## Wat kan het?
 
+- **Rustige, zakelijke weergave.** Vijf hoofdonderdelen in de menubalk, de rest onder "Meer" en "Beheer"; herinneringen
+  onder de bel; één datumnotatie, kilometerstanden met punten en compacte tabellen. Labels opschonen in het bandenhotel.
 - **Prullenbak en Verkenner.** Verwijderde werkopdrachten, bandensets en voorraaditems blijven 30 dagen terug te zetten;
   de Verkenner toont alle foto's in mappen met de bron. Op het bureaublad ook een Internet-venster (ADONIS-app),
   vastzetten aan de linker-/rechterrand, een venstermenu op de taakbalk en "bureaublad weergeven".

@@ -70,7 +70,7 @@
         <div class="bf-head">
           <code><%= f.path %></code>
           <% if (f.result) { %><span class="status-pill status-<%= f.result.ok ? 'ok' : 'bad' %>"><%= f.result.ok ? 'laatste keer gelukt' : 'laatste keer mislukt' %></span><% } %>
-          <% if (f.path === bk.defaultDir) { %><span class="muted small">(op deze computer zelf – bij een kapotte schijf ben je deze ook kwijt)</span><% } %>
+          <% if (f.path === bk.defaultDir) { %><span class="muted small">(op deze computer zelf – bij een kapotte schijf bent u deze ook kwijt)</span><% } %>
           <form method="post" action="/systeem/backup/map/verwijderen" class="inline" data-confirm="Deze map niet meer gebruiken voor backups? (De backups die er al staan, blijven staan.)">
             <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="i" value="<%= f.i %>">
             <button class="linkbtn" type="submit">niet meer gebruiken</button>
@@ -124,7 +124,7 @@
     <p class="muted small">Kies een tijdstip waarop de computer meestal aan staat. Van de oudere backups blijven er altijd minstens 3 bewaard.</p>
 
     <h3>Terugzetten uit een bestand</h3>
-    <p class="muted small">Heb je een backupbestand (adonis-backup-….zip), bijvoorbeeld van een andere computer of uit de cloud? Kies het hier.
+    <p class="muted small">Hebt u een backupbestand (adonis-backup-….zip), bijvoorbeeld van een andere computer of uit de cloud? Kies het hier.
       Er wordt eerst een veiligheidsbackup gemaakt; daarna start ADONIS opnieuw op met de gegevens uit het bestand.</p>
     <div class="restore-upload" data-csrf="<%= csrf %>">
       <label class="btn"><input type="file" accept=".zip,application/zip" id="restoreFile" hidden> Backupbestand kiezen…</label>
@@ -137,7 +137,7 @@
       <h2>Online bereikbaar (Cloudflare)</h2>
       <% if (cf) { %><span class="status-pill status-<%= on ? cls : 'off' %>"><%= on ? label : 'Uitgeschakeld' %></span><% } %>
     </div>
-    <p class="muted">Maakt ADONIS veilig (https, met slotje) bereikbaar op je eigen domein, ook buiten de werkplaats.
+    <p class="muted">Maakt ADONIS veilig (https, met slotje) bereikbaar op uw eigen domein, ook buiten de werkplaats.
       Er hoeven geen poorten open te staan: ADONIS maakt zelf een beveiligde verbinding met Cloudflare.
       In de werkplaats blijft het gewone adres ook werken.</p>
 
@@ -178,7 +178,7 @@
     <details class="sys-install" <%= cf ? '' : 'open' %>>
       <summary><strong><%= cf ? 'Opnieuw instellen' : 'Instellen in één klik' %></strong></summary>
       <ol class="sys-steps">
-        <li>Zorg dat je domein (bijv. <code>revnet.nl</code>) in je Cloudflare-account staat.</li>
+        <li>Zorg dat uw domein (bijv. <code>revnet.nl</code>) in uw Cloudflare-account staat.</li>
         <li>Maak een API-token aan: Cloudflare → <em>My Profile</em> → <em>API Tokens</em> → <em>Create Token</em> →
           <em>Create Custom Token</em>, met deze rechten:
           <ul>
@@ -186,7 +186,7 @@
             <li>Zone → <strong>DNS</strong> → Edit</li>
             <li>Zone → <strong>Zone</strong> → Read</li>
           </ul>
-          Bij <em>Zone Resources</em>: kies je domein. Kopieer de token.</li>
+          Bij <em>Zone Resources</em>: kies uw domein. Kopieer de token.</li>
         <li>Vul hieronder het adres en de token in en klik op <strong>Installeren</strong>. ADONIS regelt de rest:
           tunnel, DNS-record, https-certificaat en het verbindingsprogramma. De token wordt niet bewaard.</li>
       </ol>

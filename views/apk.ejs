@@ -25,7 +25,7 @@
   <% if (waiting) { %><p class="muted small no-print">Van <%= waiting %> klant<%= waiting === 1 ? '' : 'en' %> worden de RDW-gegevens nog op de achtergrond opgehaald; die komen er vanzelf bij.</p><% } %>
   <div id="live-apk" data-live>
   <% if (!list.length) { %>
-    <div class="empty"><p><%= show === 'verlopen' ? 'Er zijn geen verlopen APK\'s.' : 'Er verloopt de komende 2 maanden geen APK. 🎉' %></p></div>
+    <div class="empty"><p><%= show === 'verlopen' ? 'Er zijn geen verlopen APK\'s.' : 'Er verloopt de komende 2 maanden geen APK.' %></p></div>
   <% } else { %>
     <p class="muted"><%= list.length %> klant<%= list.length === 1 ? '' : 'en' %><%= called ? ', waarvan ' + called + ' al gebeld' : '' %></p>
     <div class="table-wrap">
@@ -43,7 +43,7 @@
           <td class="act-col">
             <form method="post" action="/apk/<%= r.id %>/gebeld" class="inline call-form">
               <input type="hidden" name="_csrf" value="<%= csrf %>">
-              <button class="btn btn-small <%= r.called ? 'btn-ok' : '' %>" type="submit" title="<%= r.called ? 'Gebeld op ' + fmtDate(r.called) + ' (klik om te wissen)' : 'Markeer als gebeld' %>"><%= r.called ? '✓ ' + fmtDate(r.called) : 'Gebeld' %></button>
+              <button class="btn btn-small <%= r.called ? 'btn-ok' : '' %>" type="submit" title="<%= r.called ? 'Gebeld op ' + fmtDate(r.called) + ' (klik om te wissen)' : 'Markeer als gebeld' %>"><%= r.called ? 'Gebeld ' + fmtDate(r.called) : 'Gebeld' %></button>
             </form>
             <% if (feat.werkopdrachten) { %><a class="btn btn-small btn-primary" href="/werkopdracht/nieuw?klant=<%= r.id %>" title="Nieuwe werkopdracht (APK) voor deze klant">+ Werkopdracht</a><% } %>
           </td>

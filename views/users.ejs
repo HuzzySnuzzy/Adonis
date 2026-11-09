@@ -18,8 +18,8 @@
         <td><%= u.username %></td>
         <td>
           <% if (u.is_owner) { %>
-            <span class="role-owner" title="Eerste account: kan niet worden verwijderd of gedegradeerd">ADONIS-beheerder</span><%= u.id === user.id ? ' (jij)' : '' %>
-          <% } else if (u.id === user.id) { %><%= ROLES[u.role] || 'Monteur' %> (jij)<% } else { %>
+            <span class="role-owner" title="Eerste account: kan niet worden verwijderd of gedegradeerd">ADONIS-beheerder</span><%= u.id === user.id ? ' (u)' : '' %>
+          <% } else if (u.id === user.id) { %><%= ROLES[u.role] || 'Monteur' %> (u)<% } else { %>
           <form method="post" action="/gebruikers/<%= u.id %>/rol" class="inline role-form">
             <input type="hidden" name="_csrf" value="<%= csrf %>">
             <select name="role" aria-label="Rol van <%= u.name %>" data-autosubmit>

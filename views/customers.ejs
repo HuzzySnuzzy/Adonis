@@ -7,11 +7,6 @@
       <button class="btn" type="submit">Zoeken</button>
       <% if (q) { %><a class="btn btn-ghost" href="/">Wissen</a><% } %>
     </form>
-    <div class="head-buttons">
-      <% if (feat.apk) { %><a class="btn" href="/apk">
-        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
-        APK-lijst</a><% } %>
-    </div>
   </div>
 
   <div id="live-customers" data-live>
@@ -23,10 +18,10 @@
         <p class="muted">Of <a href="/werkopdrachten?q=<%= encodeURIComponent(q) %>">zoek in alle werkopdrachten</a>.</p><% } %>
       <% } else { %>
         <% if (feat.werkopdrachten) { %>
-        <p>Nog geen klanten. Klanten verschijnen hier automatisch zodra je een werkopdracht met een kenteken opslaat.</p>
+        <p>Nog geen klanten. Klanten verschijnen hier automatisch zodra u een werkopdracht met een kenteken opslaat.</p>
         <p><a class="btn btn-primary" href="/werkopdracht/nieuw">+ Eerste werkopdracht aanmaken</a></p>
         <% } else if (feat.bandenhotel) { %>
-        <p>Nog geen klanten. Klanten verschijnen hier automatisch zodra je banden inslaat met een kenteken.</p>
+        <p>Nog geen klanten. Klanten verschijnen hier automatisch zodra u banden inslaat met een kenteken.</p>
         <p><a class="btn btn-primary" href="/bandenhotel/nieuw">+ Eerste set banden inslaan</a></p>
         <% } else { %><p>Nog geen klanten.</p><% } %>
       <% } %>

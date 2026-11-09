@@ -11,7 +11,7 @@ class CloudflareError extends Error {}
 
 const PERMISSIONS_HELP =
   'De API-token heeft deze rechten nodig: Account → Cloudflare Tunnel → Bewerken, ' +
-  'Zone → DNS → Bewerken en Zone → Zone → Lezen (voor de zone van je domein).';
+  'Zone → DNS → Bewerken en Zone → Zone → Lezen (voor de zone van uw domein).';
 
 async function cf(token, method, path, body) {
   let res;
@@ -51,7 +51,7 @@ async function findZone(token, hostname) {
   }
   throw new CloudflareError(
     `Het domein van ${hostname} staat niet in dit Cloudflare-account (of de token mag de zone niet lezen). ` +
-    'Voeg het domein eerst toe aan Cloudflare en zet de nameservers bij je domeinregistrar om.'
+    'Voeg het domein eerst toe aan Cloudflare en zet de nameservers bij uw domeinregistrar om.'
   );
 }
 

@@ -39,7 +39,7 @@ const NOTIFY_KINDS = [
   ['notities', 'Plaknotities', 'Nieuwe gedeelde plaknotities van collega\'s'],
   ['herinneringen', 'Herinneringen', 'Eén keer per dag: welke klanten gebeld moeten worden voor de APK of de bandenwissel'],
 ];
-const PREF_DEFAULTS = { theme: 'system', ink: 'hand', start: '/', fx: 'full', secret: 'off', mscale: '90', simple: 'off', carimg: 'on', partimg: 'on', desktop: 'off',
+const PREF_DEFAULTS = { theme: 'system', ink: 'plain', start: '/', fx: 'full', secret: 'off', mscale: '90', simple: 'off', carimg: 'on', partimg: 'on', desktop: 'off',
   n_werkopdrachten: 'on', n_banden: 'on', n_voorraad: 'on', n_klanten: 'on', n_notities: 'on', n_herinneringen: 'on' };
 /** Thema's die alleen zichtbaar zijn met de voorkeur "Geheime thema's". */
 // Alleen Systeem, Licht en Donker staan altijd in de lijst; de rest is te zien met "Geheime thema's".
@@ -71,6 +71,18 @@ function savePrefs(userId, changes) {
   db.prepare('UPDATE users SET preferences = ? WHERE id = ?').run(JSON.stringify(prefs), userId);
   return prefs;
 }
+
+// Eenmalig (1.45): gewone letters op de werkopdracht voor iedereen; handschrift was de standaard en is nu een keuze.
+try {
+  const settings = require('./settings');
+  if (!settings.get('migr-ink-plain')) {
+    for (const u of db.prepare('SELECT id, preferences FROM users').all()) {
+      let p = {}; try { p = JSON.parse(u.preferences || '{}') || {}; } catch { /* leeg */ }
+      if (p.ink !== 'plain') { p.ink = 'plain'; db.prepare('UPDATE users SET preferences = ? WHERE id = ?').run(JSON.stringify(p), u.id); }
+    }
+    settings.set('migr-ink-plain', true);
+  }
+} catch (err) { console.error('Voorkeur letters bijwerken:', err.message); }
 
 // Eigenaar ("ADONIS-beheerder"): het eerste account. Kan niet worden verwijderd of gedegradeerd
 // en is de enige die de systeeminstellingen (zoals Cloudflare) ziet.

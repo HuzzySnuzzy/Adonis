@@ -5,7 +5,7 @@
     <h1>Portaal</h1>
     <div class="portal-search"><input type="search" placeholder="Zoek een website…" aria-label="Zoek een website" data-portal-filter autocomplete="off" spellcheck="false"></div>
     <div class="head-buttons">
-      <button class="btn" type="button" data-portal-edit aria-pressed="<%= editing %>"><span class="when-view">✎ Bewerken</span><span class="when-edit">✓ Klaar</span></button>
+      <button class="btn" type="button" data-portal-edit aria-pressed="<%= editing %>"><span class="when-view">Bewerken</span><span class="when-edit">Klaar</span></button>
     </div>
   </div>
 
@@ -24,7 +24,7 @@
   <% if (!folders.length) { %>
     <div class="empty portal-empty">
       <p><b>Het portaal is nog leeg.</b> Maak een map (bijv. <i>Leveranciers</i>) en zet daar websites in. ADONIS haalt het pictogram en de naam zelf op.</p>
-      <p class="muted">Staan de websites nu als pictogrammen op het bureaublad? Klik op <b>✎ Bewerken</b> en daarna op <b>Importeren…</b>, of sleep ze hierheen.</p>
+      <p class="muted">Staan de websites nu als pictogrammen op het bureaublad? Klik op <b>Bewerken</b> en daarna op <b>Importeren…</b>, of sleep ze hierheen.</p>
     </div>
   <% } %>
   <div class="portal-folders">
@@ -64,7 +64,7 @@
           <button class="btn btn-small btn-primary" type="submit">+ Website</button>
         </form>
       </div>
-      <% if (!f.links.length) { %><p class="muted small portal-folder-empty when-view">Nog leeg. Klik op ✎ Bewerken om websites toe te voegen.</p><% } %>
+      <% if (!f.links.length) { %><p class="muted small portal-folder-empty when-view">Nog leeg. Klik op Bewerken om websites toe te voegen.</p><% } %>
     </section>
   <% } %>
   </div>

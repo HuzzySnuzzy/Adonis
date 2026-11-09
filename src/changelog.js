@@ -5,6 +5,19 @@
  */
 module.exports = [
   {
+    version: '1.45.0', date: '2026-11-09', title: 'Professioneler en rustiger',
+    items: [
+      'Menubalk opgeruimd: Klanten, Werkopdrachten, APK, Bandenhotel en Voorraad staan vooraan; Portaal, Rekenhulp, Foto\'s, AI-analyse en Importeren onder "Meer"; Gebruikers, Prullenbak, Zoekwoorden en Systeem onder "Beheer". Instellingen, Hulp en Uitloggen zitten onder uw naam rechtsboven.',
+      'Dubbele knoppen verwijderd: "Facturatie" in het menu (dat is het tabblad Klaar voor facturatie bij Werkopdrachten), de APK-knop bij Klanten, en Zoekwoorden/Prullenbak bij Werkopdrachten.',
+      'Herinneringen (APK, bandenwissel) springen niet meer als melding op het scherm, maar staan onder de bel in de menubalk, met een stip zolang u ze vandaag nog niet hebt bekeken.',
+      'Werkopdracht: gewone letters in plaats van handschrift (handschrift blijft te kiezen bij Instellingen), moderne woorden (Factuurnummer, APK-datum, Contact opnemen bij extra kosten), één hoofdknop (Opslaan).',
+      'Overal dezelfde datumnotatie (dd-mm-jjjj) en kilometerstanden met punten (123.000). Tabellen zijn compacter, links niet meer onderstreept en getallen staan rechts.',
+      'Geen pijltjes en symbolen meer in knoppen; terug-links hebben een klein pijltje-icoon. Overal "u" in plaats van "je". Rustigere woorden bij de AI-analyse.',
+      'Klantpagina compacter: een kleinere voorbeeldfoto met een kort onderschrift (verbergen met het kruisje). De knop voor plaknotities is kleiner.',
+      'Bandenhotel → Labels opschonen (beheerders): labels met vreemde tekens of alleen letters nakijken. Waar het nummer op een telefoon met de symbolenrij lijkt getypt, staat een voorstel klaar; u kiest zelf wat u overneemt.',
+    ],
+  },
+  {
     version: '1.44.0', date: '2026-11-09', title: 'Prullenbak, Verkenner, Internet en een echter bureaublad',
     items: [
       'Prullenbak: een verwijderde werkopdracht, bandenset of voorraaditem staat eerst 30 dagen in de prullenbak (met foto\'s en geschiedenis) en is met één klik terug te zetten. Te vinden op het bureaublad, bij Werkopdrachten en bij Instellingen (beheerders).',

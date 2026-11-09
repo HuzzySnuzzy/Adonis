@@ -512,7 +512,7 @@ async function askClaude(sheets, filename, effortKey = 'hoog') {
   }
   const usage = importer.usageOf(response);
   const billed = (msg) => Object.assign(new SheetImportError(msg), { usage });
-  if (response.stop_reason === 'refusal') throw billed('Claude kon dit bestand niet beoordelen. Je kunt het zonder Claude importeren.');
+  if (response.stop_reason === 'refusal') throw billed('Claude kon dit bestand niet beoordelen. U kunt het zonder Claude importeren.');
   if (response.stop_reason === 'max_tokens') throw billed('Het bestand is te groot om in één keer te laten beoordelen. Importeer zonder Claude of splits het bestand.');
   const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
   try {

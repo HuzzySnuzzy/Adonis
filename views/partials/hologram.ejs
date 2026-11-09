@@ -47,7 +47,7 @@
   const elbowY = (l) => (l.ly === 'top' ? 46 : 444); const textY = (l) => (l.ly === 'top' ? 34 : 472);
   const sev = (list) => (list || []).some((p) => p.ernst === 'hoog') ? 'hoog' : (list || []).some((p) => p.ernst === 'let-op') ? 'let-op' : 'info';
 %>
-<figure class="holo<%= locals.scanning ? ' is-scanning' : '' %>" aria-label="Röntgenbeeld van de auto">
+<figure class="holo<%= locals.scanning ? ' is-scanning' : '' %>" aria-label="Schematische weergave van de auto">
   <svg viewBox="0 0 1000 490" role="img" aria-hidden="<%= Z ? 'false' : 'true' %>">
     <defs>
       <pattern id="holoGrid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" class="h-grid"/></pattern>

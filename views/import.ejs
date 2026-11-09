@@ -3,7 +3,7 @@
   <%- include('/partials/import-tabs', { active: 'foto' }) %>
   <h1>Werkopdracht importeren</h1>
   <p class="muted">Maak een foto van een papieren werkopdracht. De tekst wordt automatisch uitgelezen en in het formulier gezet.
-    Daarna controleer je alles en bevestig je de import, of annuleer je hem.</p>
+    Daarna controleert u alles en bevestigt u de import, of annuleert u hem.</p>
 
   <% if (!configured) { %>
     <div class="alert">
@@ -53,7 +53,7 @@
       $<%= usage.monthUsd.toFixed(2).replace('.', ',') %> (exacte bedragen staan in de Anthropic Console).<% } %>
   </p>
   <p class="muted small">Privacy: de foto's worden voor het uitlezen naar Anthropic (Claude) gestuurd. Ze worden hier pas als
-    werkopdracht opgeslagen nadat je de import bevestigt.</p>
+    werkopdracht opgeslagen nadat u de import bevestigt.</p>
   <% } %>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>

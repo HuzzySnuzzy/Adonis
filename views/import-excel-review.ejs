@@ -13,7 +13,7 @@
   const short = (v, n = 40) => { const s = String(v ?? ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 %>
 <main class="page wide excel-review">
-  <p class="crumbs"><a href="/importeren/excel">← Ander bestand kiezen</a></p>
+  <p class="crumbs"><a href="/importeren/excel">Ander bestand kiezen</a></p>
   <h1>Import controleren</h1>
   <p class="muted"><strong><%= draft.filename %></strong> · <%= previews.length %> blad<%= previews.length === 1 ? '' : 'en' %>
     · <%= plan.claude === 'ja' ? 'beoordeeld door Claude' : 'ingedeeld op basis van de kolomkoppen' %>. Er is nog niets opgeslagen.</p>
@@ -21,7 +21,7 @@
   <% if (plan.samenvatting) { %><div class="claude-note"><span class="claude-tag">Claude</span><p><%= plan.samenvatting %></p></div><% } %>
   <div class="review-help muted small">
     <p>Controleer per blad: <b>wat</b> het is, <b>welke kolom</b> waar naartoe gaat, hoe <b>schrijfwijzen</b> worden gelijkgetrokken en <b>welke rijen</b> mee gaan.
-      Rijen met een opmerking zijn gemarkeerd. Pas je iets aan bij de kolommen of het doel? Klik dan op <b>Voorbeeld bijwerken</b>.</p>
+      Rijen met een opmerking zijn gemarkeerd. Past u iets aan bij de kolommen of het doel? Klik dan op <b>Voorbeeld bijwerken</b>.</p>
   </div>
 
   <form method="post" action="/importeren/excel/<%= draft.id %>/bevestigen" id="reviewForm" autocomplete="off">
