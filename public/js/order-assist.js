@@ -154,16 +154,37 @@
   let ctrl = null; let timer = null;
 
   function close() { pop.hidden = true; pop.innerHTML = ''; cur = null; }
+  /* Plek van een veld op de pagina, in dezelfde (CSS-)pixels als style.top. Niet via getBoundingClientRect: op de
+   * telefoon staat de pagina ingezoomd (zoom: .9) en dan kloppen schermpixels niet met paginapixels, waardoor de lijst
+   * over het veld viel. Daarom optellen langs de offsetParents, min wat er in tussenliggende vakken is gescrold. */
+  function docBox(el) {
+    let x = 0; let y = 0; let n = el;
+    while (n) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+    for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) { x -= a.scrollLeft; y -= a.scrollTop; }
+    return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+  }
   function position(el, lineIdx) {
-    const r = el.getBoundingClientRect();
-    let top = r.bottom;
+    const b = docBox(el);
+    let top = b.y + b.h; let anchorTop = b.y;
     if (lineIdx !== undefined) {
-      const lh = parseFloat(getComputedStyle(el).lineHeight) || 20;
-      top = r.top + (parseFloat(getComputedStyle(el).paddingTop) || 0) + (lineIdx + 1) * lh - el.scrollTop;
+      const cs = getComputedStyle(el); const lh = parseFloat(cs.lineHeight) || 20;
+      anchorTop = b.y + (parseFloat(cs.paddingTop) || 0) + lineIdx * lh - el.scrollTop;
+      top = anchorTop + lh;
     }
-    pop.style.top = window.scrollY + top + 2 + 'px';
-    pop.style.left = Math.max(8, Math.min(window.scrollX + r.left, window.scrollX + document.documentElement.clientWidth - 420)) + 'px';
-    pop.style.minWidth = Math.min(Math.max(r.width, 260), 420) + 'px';
+    const zoom = (el.getBoundingClientRect().height / el.offsetHeight) || 1;
+    const vv = window.visualViewport;
+    // Zichtbaar deel van het scherm (boven het toetsenbord), in paginapixels.
+    const viewTop = (vv ? vv.pageTop : window.scrollY) / zoom; const viewH = (vv ? vv.height : window.innerHeight) / zoom;
+    pop.style.maxHeight = Math.max(140, Math.min(320, viewH * 0.45)) + 'px';
+    const h = Math.min(pop.scrollHeight, parseFloat(pop.style.maxHeight));
+    // Past hij niet onder het veld (toetsenbord), maar wel erboven? Dan erboven. Nooit óp het veld.
+    const below = top + 2 + h <= viewTop + viewH; const above = anchorTop - 2 - h >= viewTop;
+    pop.style.top = (below || !above ? top + 2 : anchorTop - 2 - h) + 'px';
+    const pageW = document.documentElement.clientWidth / zoom;
+    const width = Math.min(Math.max(b.w, 260), 420, pageW - 16);
+    pop.style.minWidth = width + 'px';
+    pop.style.maxWidth = Math.min(420, pageW - 16) + 'px';
+    pop.style.left = Math.max(8, Math.min(b.x, pageW - width - 8)) + 'px';
   }
   function show(el, kind, items, line) {
     if (!items.length || document.activeElement !== el) return close();
@@ -172,8 +193,8 @@
       ? `${it.nr ? `<b>${esc(it.nr)}</b> ` : ''}${esc(it.omschrijving)}${it.prijs ? ` <span class="oa-price">€ ${esc(it.prijs)}</span>` : ''}`
       : esc(it.text)}</span>${it.note ? `<span class="oa-note">${esc(it.note)}</span>` : ''}</li>`).join('')
       + '<li class="oa-foot" aria-hidden="true">↑↓ kiezen · Enter overnemen · Esc sluiten</li>';
-    position(el, line ? line.index : undefined);
     pop.hidden = false;
+    position(el, line ? line.index : undefined);
   }
   function mark(i) {
     if (!cur) return;
@@ -249,8 +270,11 @@
     else if (e.key === 'Tab') close();
   }, true);
   form.addEventListener('focusout', () => setTimeout(() => { if (cur && document.activeElement !== cur.el) close(); }, 120));
-  window.addEventListener('resize', close);
-  document.addEventListener('scroll', (e) => { if (cur && !pop.contains(e.target)) close(); }, true);
+  // Toetsenbord open/dicht of de telefoon scrollt het veld in beeld: de lijst gaat mee in plaats van te verdwijnen.
+  const follow = () => { if (cur && !pop.hidden) position(cur.el, cur.line ? cur.line.index : undefined); };
+  window.addEventListener('resize', follow);
+  if (window.visualViewport) { visualViewport.addEventListener('resize', follow); visualViewport.addEventListener('scroll', follow); }
+  document.addEventListener('scroll', (e) => { if (cur && !pop.contains(e.target)) follow(); }, true);
 
   render();
 })();

@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.42.1', date: '2026-11-09', title: 'Suggesties op de telefoon',
+    items: [
+      'Op de telefoon viel de lijst met suggesties over het vak waarin u typte. Nu staat hij er altijd direct onder, of erboven als het toetsenbord in de weg zit, en hij schuift mee als het scherm verspringt.',
+    ],
+  },
+  {
     version: '1.42.0', date: '2026-11-09', title: 'Rekenhulp en een slimmere werkopdracht',
     items: [
       'Nieuw: Rekenhulp in het menu. Band omrekenen (diameter, omtrek, wat de teller aangeeft en andere maten met dezelfde diameter), last- en snelheidsindex, leeftijd van een band uit de DOT-code, bar/psi/kPa, Nm/lbf·ft, kW/pk, verbruik (l/100 km, km/l, mpg), arbeidsloon, BTW, lengte, afstand, snelheid, inhoud, temperatuur en mengsmering.',
