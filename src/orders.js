@@ -47,6 +47,9 @@ function emptyOrderData() {
     km_in: '', km_uit: '', datum_deel1: '', apk_datum: '',
     naam: '', adres: '', plaats: '', tel_prive: '', tel_zaak: '',
     alle_reparaties: '', contact_boven: '', chassisnummer: '', alarmcode: '',
+    // Soort voorkant: '' = oorspronkelijk (werkzaamheden als vier grote tekstvakken), '2' = regel voor regel.
+    // De gegevens zijn bij allebei hetzelfde (tekst met een regel per werkzaamheid); alleen het formulier verschilt.
+    voorkant: '',
     // werkzaamheden
     servicebeurt_km: '',
     werk_check: '', werk_omschrijving: '', werk_code: '', werk_tijd: '',
@@ -102,7 +105,7 @@ function normalizePages(input) {
   const list = Array.isArray(input) ? input
     : input && typeof input === 'object' ? Object.keys(input).sort((a, b) => Number(a) - Number(b)).map((k) => input[k]) : [];
   return list.filter((p) => p && PAGE_TYPES[p.soort]).slice(0, MAX_PAGES)
-    .map((p) => ({ soort: p.soort, ...shape(PAGE_TYPES[p.soort].template(), p) }));
+    .map((p) => ({ soort: p.soort, ...shape(PAGE_TYPES[p.soort].template(), joinWorkRows(p)) }));
 }
 
 /** Copy `input` into the shape of `template`, keeping only known keys and coercing types. */
@@ -125,8 +128,40 @@ function shape(template, input) {
   return String(input).replace(/\r\n/g, '\n').slice(0, 5000);
 }
 
+/* ---------- Werkzaamheden regel voor regel (voorkant 2) ----------
+ * Opgeslagen als vier teksten (één regel per werkzaamheid), getoond als losse regels met vier vakjes. */
+const WORK_COLS = ['check', 'omschrijving', 'code', 'tijd'];
+function workRows(src, min = WORK_LINES) {
+  const cols = WORK_COLS.map((c) => String((src && src['werk_' + c]) || '').split('\n'));
+  const used = Math.max(0, ...cols.map((l) => (l.length === 1 && l[0] === '' ? 0 : l.length)));
+  return Array.from({ length: Math.max(min, used) }, (_, i) => Object.fromEntries(WORK_COLS.map((c, k) => [c, cols[k][i] ?? ''])));
+}
+/** Regels uit het formulier (werk_regels) terug naar de vier teksten. */
+function joinWorkRows(obj) {
+  if (!obj || typeof obj !== 'object' || !obj.werk_regels || typeof obj.werk_regels !== 'object') return obj;
+  const src = obj.werk_regels;
+  const rows = Array.isArray(src) ? Array.from(src) : Object.keys(src).sort((a, b) => Number(a) - Number(b)).map((k) => src[k]);
+  const out = { ...obj };
+  delete out.werk_regels;
+  for (const c of WORK_COLS) {
+    out['werk_' + c] = rows.map((r) => String((r && r[c]) ?? '').replace(/[\r\n]+/g, ' ')).join('\n').replace(/(\n[ \t]*)+$/, '');
+  }
+  return out;
+}
+/** Voor het formulier en live bijwerken: bij voorkant 2 de werkzaamheden als regels. */
+function withWorkRows(data) {
+  const view = JSON.parse(JSON.stringify(data));
+  if (view.voorkant !== '2') return view;
+  const swap = (o, min) => { o.werk_regels = workRows(o, min); for (const c of WORK_COLS) delete o['werk_' + c]; };
+  swap(view, WORK_LINES);
+  for (const pg of view.paginas || []) if (pg.soort === 'voor') swap(pg, WORK_LINES + 3);
+  return view;
+}
+
 function normalizeOrderData(input) {
+  input = joinWorkRows(input);
   const data = shape(emptyOrderData(), input);
+  if (data.voorkant !== '2') data.voorkant = '';
   data.kenteken = data.kenteken.toUpperCase().trim();
   if (!['ja', 'nee'].includes(data.alle_reparaties)) data.alle_reparaties = '';
   for (const f of ['datum_gereed', 'datum_deel1', 'apk_datum']) data[f] = parseDate(data[f]);
@@ -167,6 +202,7 @@ function parseOrderData(json) {
   try { raw = JSON.parse(json); } catch { /* keep empty */ }
   const data = shape(emptyOrderData(), raw);
   data.paginas = normalizePages(raw && raw.paginas);
+  if (data.voorkant !== '2') data.voorkant = '';
   fixBack(data);
   return migrateBack(data);
 }
@@ -432,18 +468,18 @@ function formFields(data, { nummer, datumInvoer } = {}) {
     else if (v && typeof v === 'object') for (const k of Object.keys(v)) walk(v[k], `${name}[${k}]`);
     else out[name] = typeof v === 'boolean' ? (v ? 'on' : '') : String(v ?? '');
   };
-  walk(data, 'd');
+  walk(withWorkRows(data), 'd');
   if (nummer !== undefined) out.nummer = String(nummer ?? '');
   if (datumInvoer !== undefined) out.datum_invoer = String(datumInvoer ?? '');
   return out;
 }
 const pathOf = (name) => {
-  if (!/^d(\[[A-Za-z0-9_]{1,40}\]){1,6}$/.test(name)) return null;
+  if (!/^d(\[[A-Za-z0-9_]{1,40}\]){1,7}$/.test(name)) return null;
   return name.slice(2, -1).split('][');
 };
 /** Gewijzigde formuliervelden ({ naam: waarde }) in de gegevens zetten. pages: de extra bladen komen in hun geheel mee. */
 function applyPatch(data, patch, { pages = false } = {}) {
-  const raw = JSON.parse(JSON.stringify(data));
+  const raw = withWorkRows(data); // bij voorkant 2: werkzaamheden als regels, zodat één regel kan worden bijgewerkt
   if (pages) raw.paginas = {};
   for (const [name, value] of Object.entries(patch)) {
     const path = pathOf(name);
@@ -474,6 +510,7 @@ function diffFields(before, after) {
 }
 
 module.exports = {
+  workRows, WORK_COLS,
   formFields, applyPatch, diffFields,
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage, UREN_ROWS, ADVIES_ROWS, migrateBack,
   emptyOrderData, normalizeOrderData, parseOrderData,

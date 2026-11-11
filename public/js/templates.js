@@ -29,8 +29,24 @@
     // Werkzaamheden: achter wat er al staat, regels gelijk houden over de vier kolommen
     const cols = ['werk_check', 'werk_omschrijving', 'werk_code', 'werk_tijd'];
     const lines = (s) => String(s || '').replace(/\n+$/, '').split('\n');
+    const wrows = [...form.querySelectorAll('[data-work-rows] .work-line')].filter((x) => !x.closest('[data-page]'));
+    if (wrows.length) { // voorkant 2: regel voor regel, na de laatste ingevulde regel
+      const tl = cols.map((c) => (String(t[c] || '').trim() ? lines(t[c]) : []));
+      const n = Math.max(...tl.map((l) => l.length));
+      let start = 0;
+      wrows.forEach((row, i) => { if ([...row.querySelectorAll('input')].some((x) => x.value.trim())) start = i + 1; });
+      for (let i = 0; i < n; i++) {
+        const row = wrows[Math.min(start + i, wrows.length - 1)];
+        cols.forEach((c, k) => {
+          const v = tl[k][i]; if (!v) return;
+          const el = row.querySelector(`[name$="[${c.slice(5)}]"]`);
+          // Geen regels meer over: achter de laatste regel zetten (er gaat niets verloren).
+          set(el, start + i >= wrows.length && el.value.trim() ? `${el.value} · ${v.trim()}` : v);
+        });
+      }
+    }
     const used = Math.max(...cols.map((c) => { const el = field(`d[${c}]`); return el && el.value.trim() ? lines(el.value).length : 0; }));
-    for (const c of cols) {
+    for (const c of wrows.length ? [] : cols) {
       const el = field(`d[${c}]`); if (!el || !String(t[c] || '').trim()) continue;
       const mine = el.value.trim() ? lines(el.value) : [];
       while (mine.length < used) mine.push('');

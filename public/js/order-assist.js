@@ -219,6 +219,7 @@
     if (!el.name || el.disabled || el.readOnly) return null;
     if (/^d(\[paginas\]\[\d+\])?\[onderdelen\]\[\d+\]\[(nr|omschrijving)\]$/.test(el.name)) return 'onderdeel';
     if (/^d(\[paginas\]\[\d+\])?\[werk_omschrijving\]$/.test(el.name)) return 'werk';
+    if (/^d(\[paginas\]\[\d+\])?\[werk_regels\]\[\d+\]\[omschrijving\]$/.test(el.name)) return 'werk';
     if (el.name === 'd[achter][band_maat]') return 'bandmaat';
     if (el.name === 'd[achter][band_merk]') return 'bandmerk';
     return null;

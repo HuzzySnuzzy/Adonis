@@ -35,12 +35,15 @@
         <div class="work-row work-head">
           <div class="w-check">✓</div><div class="w-oms">Omschrijving werkzaamheden</div><div class="w-code">Code</div><div class="w-tijd">Tijd</div>
         </div>
+        <% if (locals.v2) { %><%- include('/partials/work-rows', { src: pg, prefix: `paginas.${i}.`, min: WORK_LINES + 3 }) %>
+        <% } else { %>
         <div class="work-lines" data-sync>
           <div class="w-check"><%- ta('werk_check', WORK_LINES + 3, 'aria-label="Afgevinkt"') %></div>
           <div class="w-oms"><%- ta('werk_omschrijving', WORK_LINES + 3, 'aria-label="Omschrijving werkzaamheden"') %></div>
           <div class="w-code"><%- ta('werk_code', WORK_LINES + 3, 'aria-label="Code"') %></div>
           <div class="w-tijd"><%- ta('werk_tijd', WORK_LINES + 3, 'aria-label="Tijd"') %></div>
         </div>
+        <% } %>
       </div>
     </div>
     <% } else if (pg.soort === 'achter') { %>

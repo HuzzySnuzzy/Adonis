@@ -111,6 +111,7 @@
   function readyToCreate(snap) {
     if (String(snap['d[kenteken]'] || '').replace(/[^A-Za-z0-9]/g, '').length < 4 || !String(snap.nummer || '').trim()) return false;
     return Object.entries(snap).some(([k, v]) => v && v.trim && v.trim() && (k === 'd[werk_omschrijving]'
+      || /^d\[werk_regels\]\[\d+\]\[omschrijving\]$/.test(k)
       || /^d\[onderdelen\]\[\d+\]\[omschrijving\]$/.test(k) || /^d\[achter\]\[advies\]\[\d+\]\[tekst\]$/.test(k)
       || (isPageField(k) && !k.endsWith('[soort]'))));
   }
@@ -212,7 +213,7 @@
     let missing = false;
     for (const [k, v] of Object.entries(remote)) {
       const els = map.get(k);
-      if (!els) { if (isPageField(k)) missing = true; continue; }
+      if (!els) { if (isPageField(k) || k.includes('[werk_regels]')) missing = true; continue; }
       if (read(els) !== synced[k]) { synced[k] = v; continue; } // u heeft dit veld zelf gewijzigd: dat gaat zo naar de server
       synced[k] = v;
       if (read(els) === v) continue;
@@ -248,8 +249,9 @@
       if (r.editable !== editable) { if (!pendingPatch().any) reloadKeep(); return; } // status veranderd
       const sig = Object.keys(r.fields).filter((k) => /^d\[paginas\]\[\d+\]\[soort\]$/.test(k)).map((k) => r.fields[k]).join(',');
       if (sig !== syncedSig) { structureChanged(); return; }
-      applyRemote(r.fields);
+      const missing = applyRemote(r.fields);
       rev = Number(r.rev) || rev;
+      if (missing) structureChanged();
       if (versieInput() && r.versie) versieInput().value = r.versie;
       if (r.people) renderPeople(r.people);
     } catch { /* volgende keer */ } finally { resyncing = false; }
@@ -261,8 +263,8 @@
     if (Number(ev.prev) !== rev) { resync(); return; } // iets gemist
     rev = Number(ev.rev);
     if (versieInput() && ev.versie) versieInput().value = ev.versie;
-    applyRemote(ev.fields || {});
-    if (ev.structure) structureChanged();
+    const missing = applyRemote(ev.fields || {});
+    if (ev.structure || missing) structureChanged();
     if (stateEl && stateEl.dataset.state !== 'error' && !timer && !inflight) showRemote(String(ev.byId) === String(me) ? 'u (ander venster)' : ev.by);
   });
   document.addEventListener('adonis:order-resync', resync);
@@ -335,6 +337,17 @@
   });
   window.addEventListener('pagehide', () => { if (orderId) post({ weg: '1' }, true); });
   window.addEventListener('pageshow', (e) => { if (e.persisted) { hello(); resync(); } });
+
+  /* ---------- oude werkopdracht: werkzaamheden regel voor regel zetten ---------- */
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-voorkant-v2]');
+    if (!b || !editable) return;
+    const h = form.querySelector('input[name="d[voorkant]"]');
+    if (!h) return;
+    b.disabled = true;
+    h.value = '2';
+    if (await flush()) reloadKeep(); else { h.value = ''; b.disabled = false; }
+  });
 
   /* ---------- wanneer opslaan ---------- */
   form.addEventListener('input', (e) => { if (!e.adonisRemote) schedule(); });

@@ -1,0 +1,11 @@
+<%# Werkzaamheden regel voor regel (voorkant 2). Verwacht: src (object met werk_check/…), prefix ('' of 'paginas.N.'), min (aantal regels) %>
+<div class="work-grid" data-work-rows>
+<% workRows(src, min).forEach((r, n) => { const p = `${prefix}werk_regels.${n}.`; %>
+  <div class="work-row work-line">
+    <div class="w-check"><%- inp(p + 'check', r.check, `class="ink center w-tick" aria-label="Afgevinkt, regel ${n + 1}" title="Klik om af te vinken"`) %></div>
+    <div class="w-oms"><%- inp(p + 'omschrijving', r.omschrijving, `aria-label="Werkzaamheden, regel ${n + 1}"`) %></div>
+    <div class="w-code"><%- inp(p + 'code', r.code, `class="ink center" aria-label="Code, regel ${n + 1}"`) %></div>
+    <div class="w-tijd"><%- inp(p + 'tijd', r.tijd, `class="ink center" aria-label="Tijd, regel ${n + 1}"`) %></div>
+  </div>
+<% }) %>
+</div>

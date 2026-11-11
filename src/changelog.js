@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.51.0', date: '2026-11-11', title: 'Werkzaamheden regel voor regel',
+    items: [
+      'Nieuwe voorkant (versie 2): de werkzaamheden staan nu op losse regels, elk met een vakje voor ✓, omschrijving, code en tijd. Enter of pijl omlaag gaat naar dezelfde kolom op de volgende regel, pijl omhoog terug. Klik in het ✓-vakje om af te vinken.',
+      'Alle nieuwe werkopdrachten (ook uit een foto-import of sjabloon) krijgen de nieuwe voorkant, en een vervolgblad voorkant ook. Samen bewerken werkt nu per regel: twee mensen kunnen tegelijk op verschillende regels typen.',
+      'Bestaande werkopdrachten blijven zoals ze zijn, met het grote vak. Wilt u er toch regels van maken, klik dan onder de werkzaamheden op "Werkzaamheden regel voor regel zetten": elke regel tekst wordt één regel, er gaat niets verloren.',
+    ],
+  },
+  {
     version: '1.50.0', date: '2026-11-11', title: 'Automatisch opslaan en samen bewerken',
     items: [
       'Werkopdrachten worden automatisch opgeslagen: na een korte pauze in het typen staat alles al op de server. Bovenaan ziet u "Alles opgeslagen" of "Opslaan…". De knop Opslaan (en Ctrl+S) kan nog steeds, maar de pagina hoeft niet meer te herladen.',

@@ -217,6 +217,7 @@ app.locals.rdwUrl = rdw.rdwUrl;
 app.locals.rdwMerkType = rdw.merkType;
 app.locals.esc = esc;
 app.locals.inp = inp;
+app.locals.workRows = orders.workRows;
 app.locals.fmtDate = fmtDate;
 app.locals.fmtKm = fmtKm;
 /** Kopje per dag in de lijst met werkopdrachten: Vandaag, Gisteren, daarna de weekdag (deze week) of de volledige datum. */
@@ -672,6 +673,7 @@ app.get('/werkopdracht/suggesties', (req, res) => {
 app.get('/werkopdracht/nieuw', (req, res) => {
   const data = orders.emptyOrderData();
   data.monteur = req.user.name;
+  data.voorkant = '2'; // nieuwe werkopdrachten: werkzaamheden regel voor regel
   data.tarief = assist.lastTarief(); // zelfde uurtarief als de laatste werkopdracht
   // Nieuwe werkopdracht vanuit een sjabloon (bijv. "Bandenwissel").
   const tpl = req.query.sjabloon ? templates.get(Number(req.query.sjabloon)) : null;
@@ -832,7 +834,9 @@ app.post('/werkopdracht/:id/live', express.json({ limit: '2mb' }), (req, res) =>
   const error = validateOrder(data, nummer, order.id);
   if (error) return res.status(422).json({ error, rev: order.rev });
   const afterFields = orders.formFields(data, { nummer, datumInvoer });
-  const { changed, structure } = orders.diffFields(beforeFields, afterFields);
+  const diff = orders.diffFields(beforeFields, afterFields);
+  const { changed } = diff;
+  const structure = diff.structure || before.voorkant !== data.voorkant; // andere voorkant: andere vakjes, dus herladen
   // De opgeslagen waarde van de gestuurde velden (bijv. kenteken in hoofdletters) gaat terug naar het scherm.
   const echo = {};
   for (const k of Object.keys(patch)) if (k in afterFields) echo[k] = afterFields[k];

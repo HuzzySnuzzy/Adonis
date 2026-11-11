@@ -135,6 +135,7 @@ function toWorkOrder(r) {
   const d = orders.emptyOrderData();
   const get = (o, k) => (o && typeof o[k] === 'string' ? o[k] : o && typeof o[k] === 'number' ? String(o[k]) : '');
   for (const k of KOP) d[k] = get(r.kop, k);
+  d.voorkant = '2'; // nieuwe werkopdracht: werkzaamheden regel voor regel
   d.servicebeurt_km = get(r.werk, 'servicebeurt_km');
   d.werk_check = get(r.werk, 'check');
   d.werk_omschrijving = get(r.werk, 'omschrijving');

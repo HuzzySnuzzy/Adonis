@@ -125,6 +125,7 @@
 <form id="orderForm" method="post" action="<%= draft ? '/importeren/' + draft.id + '/bevestigen' : order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off"<% if (!draft && !error) { %> data-live-edit="<%= order ? order.id : 'nieuw' %>" data-rev="<%= order ? order.rev : '' %>"<% } %>>
   <input type="hidden" name="_csrf" value="<%= csrf %>">
   <input type="hidden" name="zonder_factuurnr" value="">
+  <input type="hidden" name="d[voorkant]" value="<%= d.voorkant %>">
   <% if (order) { %><input type="hidden" name="versie" value="<%= order.updated_at %>"><% } %>
 
   <fieldset class="order-fieldset"<%= editable ? '' : ' disabled' %>>
@@ -276,12 +277,17 @@
           <div class="w-oms labelled"><span class="lbl">Servicebeurt</span><%- inp('servicebeurt_km', d.servicebeurt_km, 'class="ink right" inputmode="numeric"') %><span class="lbl">km</span><span class="spacer"></span></div>
           <div class="w-code"></div><div class="w-tijd"></div>
         </div>
+        <% if (d.voorkant === '2') { %><%- include('/partials/work-rows', { src: d, prefix: '', min: WORK_LINES }) %>
+        <% } else { %>
         <div class="work-lines" data-sync>
           <div class="w-check"><%- lined('werk_check', 'aria-label="Afgevinkt"') %></div>
           <div class="w-oms"><%- lined('werk_omschrijving', 'aria-label="Omschrijving werkzaamheden"') %></div>
           <div class="w-code"><%- lined('werk_code', 'aria-label="Code"') %></div>
           <div class="w-tijd"><%- lined('werk_tijd', 'aria-label="Tijd"') %></div>
         </div>
+        <% if (editable && !draft) { %><div class="work-convert no-print"><button type="button" class="btn btn-small" data-voorkant-v2
+          title="De werkzaamheden worden losse regels (zoals bij nieuwe werkopdrachten). Er gaat niets verloren: elke regel tekst wordt één regel.">Werkzaamheden regel voor regel zetten</button></div><% } %>
+        <% } %>
         <div class="work-row foot">
           <div class="w-span labelled"><span class="lbl">Factuurnummer</span><%- inp('faktuurnr', d.faktuurnr) %></div>
         </div>
@@ -303,7 +309,7 @@
 
   <%# Extra bladen (vervolgblad voorkant/achterkant of een leeg blad) %>
   <div data-pages>
-  <% (d.paginas || []).forEach((pg, i) => { %><%- include('/partials/order-page', { pg, i, nummer, editable }) %><% }) %>
+  <% (d.paginas || []).forEach((pg, i) => { %><%- include('/partials/order-page', { pg, i, nummer, editable, v2: d.voorkant === '2' }) %><% }) %>
   </div>
   <% if (editable) { %>
   <div class="page-add no-print" data-page-add data-max="<%= MAX_PAGES %>">
@@ -317,7 +323,7 @@
   </fieldset>
 </form>
 <% if (editable) { for (const t of Object.keys(PAGE_TYPES)) { %>
-<template data-page-tpl="<%= t %>"><%- include('/partials/order-page', { pg: emptyPage(t), i: '__I__', nummer, editable }) %></template>
+<template data-page-tpl="<%= t %>"><%- include('/partials/order-page', { pg: emptyPage(t), i: '__I__', nummer, editable, v2: d.voorkant === '2' }) %></template>
 <% } } %>
 
 <%# Foto's bij de werkopdracht (buiten het formulier: de verwijderknoppen zijn eigen formulieren) %>

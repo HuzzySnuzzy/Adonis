@@ -238,8 +238,25 @@
     sync();
   })();
 
+  /* ---------- afvinken: een klik in het vakje zet of haalt het vinkje ---------- */
+  form.addEventListener('click', (e) => {
+    const t = e.target.closest('.w-tick');
+    if (!t || t.disabled || t.readOnly || !['', '✓'].includes(t.value.trim())) return;
+    t.value = t.value.trim() ? '' : '✓';
+    t.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
   /* ---------- Enter springt naar volgend veld i.p.v. opslaan ---------- */
+  // Werkzaamheden regel voor regel: Enter en pijl omlaag/omhoog gaan naar dezelfde kolom op de volgende/vorige regel.
+  const workRow = (el) => /^(.*\[werk_regels\]\[)(\d+)(\]\[\w+\])$/.exec(el.name || '');
   form.addEventListener('keydown', (e) => {
+    const m = e.target.tagName === 'INPUT' && !e.ctrlKey && !e.metaKey && !e.altKey && workRow(e.target);
+    if (m && ['Enter', 'ArrowDown', 'ArrowUp'].includes(e.key) && !document.querySelector('.oa-pop:not([hidden])')) {
+      const to = form.querySelector(`[name="${m[1]}${Number(m[2]) + (e.key === 'ArrowUp' ? -1 : 1)}${m[3]}"]`);
+      if (to || e.key === 'Enter') e.preventDefault();
+      if (to) { to.focus(); to.select(); }
+      if (to || e.key !== 'Enter') return;
+    }
     if (e.key !== 'Enter' || e.target.tagName !== 'INPUT' || e.ctrlKey || e.metaKey) return;
     e.preventDefault();
     const fields = Array.from(form.querySelectorAll('input:not([type=hidden]):not([type=radio]), textarea'));

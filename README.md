@@ -39,6 +39,10 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Datum invoer** wordt automatisch ingevuld met de datum waarop de werkopdracht is aangemaakt.
 - **Werkopdrachtnummer** loopt automatisch op en kan zo nodig worden aangepast.
 - **Afdrukken** op A4 liggend: pagina 1 is de voorkant, pagina 2 de achterkant.
+- **Voorkant versie 2:** werkzaamheden regel voor regel (vier vakjes per regel) in plaats van vier grote tekstvakken.
+  Opgeslagen blijft het hetzelfde (een tekst per kolom, een regel per werkzaamheid; `voorkant: '2'` in de gegevens), dus
+  zoeken, sjablonen, foto-import en AI werken voor beide. Nieuwe werkopdrachten krijgen versie 2; bestaande blijven
+  zoals ze zijn tot iemand op *Werkzaamheden regel voor regel zetten* klikt.
 - **Automatisch opslaan en live samen bewerken:** wijzigingen worden na een korte typpauze per veld opgeslagen
   (`POST /werkopdracht/:id/live`) en via de live-verbinding meteen in de schermen van collega's gezet; per veld wint wie
   het laatst typt. Bovenaan staat wie de werkopdracht nog meer open heeft, en bij een veld wie daar typt. Een nieuwe
