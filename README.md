@@ -39,6 +39,11 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Datum invoer** wordt automatisch ingevuld met de datum waarop de werkopdracht is aangemaakt.
 - **Werkopdrachtnummer** loopt automatisch op en kan zo nodig worden aangepast.
 - **Afdrukken** op A4 liggend: pagina 1 is de voorkant, pagina 2 de achterkant.
+- **+ Nieuw…** vraagt wat u toevoegt (werkopdracht, banden, onderdeel; alleen ingeschakelde onderdelen); F2 opent het menu.
+  Het startscherm toont alleen de werkopdrachten van vandaag (live).
+- **Feestdagen** (Systeem → Feestdagen): Kerst, Sinterklaas, Oud en Nieuw, Valentijn, Pasen (automatisch of vaste data),
+  Koningsdag en Halloween, elk met een eigen periode (dag-maand). Effect op één canvas achter de inhoud
+  (`public/js/festive.js`); voorbeeld via "Bekijken" of `?feest=kerst`. Per gebruiker uit te zetten (Instellingen → Effecten).
 - **Huisstijl** (Systeem → Huisstijl, alleen de eigenaar): bedrijfsnaam en ondertitel in plaats van ADONIS (menu,
   inlogpagina, venstertitel, opstartanimatie), eigen logo/favicon, banner en achtergrond met vervaging en zichtbaarheid
   (alleen thema's Systeem, Licht en Donker). Afbeeldingen worden in de browser verkleind en in de database bewaard

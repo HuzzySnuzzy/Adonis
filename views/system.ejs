@@ -39,6 +39,46 @@
     </form>
   </section>
 
+  <% const FD = feesten; %>
+  <section class="card feest-card" id="feestdagen">
+    <h2>Feestdagen</h2>
+    <p class="muted small">Een feestelijke achtergrond, rustig achter de knoppen: sneeuw met Kerst, pepernoten met Sinterklaas, vuurwerk met
+      Oud en Nieuw enzovoort. Kies per feest van wanneer tot wanneer (dag-maand, elk jaar hetzelfde). Overlappen er twee, dan wint de kortste.
+      Iedereen kan het voor zichzelf uitzetten bij <i>Instellingen → Effecten</i>.</p>
+    <form method="post" action="/systeem/feestdagen" class="stack">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label class="check big-check"><input type="checkbox" name="feesten" <%= FD.aan ? 'checked' : '' %>>
+        <span><b>Feestelijke achtergronden aan</b><% if (FD.now) { %> <span class="feest-now">Nu: <%= FD.list.find((f) => f.key === FD.now).name %></span><% } %></span></label>
+      <div class="table-wrap">
+      <table class="list feest-table">
+        <thead><tr><th>Feest</th><th>Van</th><th>Tot en met</th><th></th></tr></thead>
+        <tbody>
+        <% for (const f of FD.list) { %>
+          <tr class="<%= f.actief ? 'is-now' : '' %>">
+            <td><label class="check"><input type="checkbox" name="f_<%= f.key %>" <%= f.aan ? 'checked' : '' %>>
+              <span><b><%= f.name %></b><% if (f.actief) { %> <span class="feest-now">nu</span><% } %><br><span class="muted small"><%= f.desc %></span></span></label></td>
+            <% if (f.canAuto) { %>
+            <td colspan="2" class="feest-auto">
+              <label class="check small"><input type="checkbox" name="f_<%= f.key %>_auto" <%= f.auto ? 'checked' : '' %>>
+                Automatisch: Goede Vrijdag t/m Tweede Paasdag <span class="muted">(dit jaar <%= f.easter.van %> t/m <%= f.easter.tot %>)</span></label>
+              <span class="feest-manual small muted">of zelf:
+                <input class="feest-date" name="f_<%= f.key %>_van" value="<%= f.van || '' %>" placeholder="dd-mm" inputmode="numeric" aria-label="<%= f.name %> van (dag-maand)"> t/m
+                <input class="feest-date" name="f_<%= f.key %>_tot" value="<%= f.tot || '' %>" placeholder="dd-mm" inputmode="numeric" aria-label="<%= f.name %> tot en met (dag-maand)"></span>
+            </td>
+            <% } else { %>
+            <td><input class="feest-date" name="f_<%= f.key %>_van" value="<%= f.van %>" placeholder="dd-mm" inputmode="numeric" aria-label="<%= f.name %> van (dag-maand)"></td>
+            <td><input class="feest-date" name="f_<%= f.key %>_tot" value="<%= f.tot %>" placeholder="dd-mm" inputmode="numeric" aria-label="<%= f.name %> tot en met (dag-maand)"></td>
+            <% } %>
+            <td class="right"><button type="button" class="btn btn-small" data-feest-preview="<%= f.key %>">Bekijken</button></td>
+          </tr>
+        <% } %>
+        </tbody>
+      </table>
+      </div>
+      <div><button class="btn btn-primary" type="submit">Opslaan</button></div>
+    </form>
+  </section>
+
   <% const Bs = brand; const sysTheme = ['system', 'light', 'dark'].includes(prefs.theme || 'system'); %>
   <section class="card brand-card" id="huisstijl" data-brand-card data-csrf="<%= csrf %>">
     <h2>Huisstijl</h2>

@@ -60,6 +60,10 @@
     <span class="start-new-text"><b><%= newAction.long %></b><span><%= newAction.sub %></span></span>
     <svg class="start-new-arrow" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
   </a>
+  <% const more = (locals.newActions || []).slice(1); if (more.length) { %>
+  <p class="start-new-more"><span class="muted">Of:</span>
+    <% for (const a of more) { %><a class="btn btn-small" href="<%= a.href %>"><span aria-hidden="true">+</span> <%= a.long %></a><% } %></p>
+  <% } %>
   <% } %>
 
   <% if (todo.length) { %>
@@ -86,10 +90,16 @@
     <% } %>
   </nav>
 
-  <% if (recent.length && F.werkopdrachten) { %>
-  <section class="start-recent">
-    <h2 class="start-label">Laatst bijgewerkt</h2>
+  <% if (F.werkopdrachten) { const open = recent.filter((o) => o.status === 'open').length; %>
+  <section class="start-recent" id="live-today" data-live>
+    <h2 class="start-label">Werkopdrachten van vandaag
+      <% if (recent.length) { %><span class="start-label-count"><%= recent.length %><%= open ? ' · ' + open + ' open' : '' %></span><% } %></h2>
+    <% if (recent.length) { %>
     <%- include('/partials/orderlist', { orders: recent, showPlate: true }) %>
+    <% } else { %>
+    <div class="card start-empty"><p class="muted">Vandaag zijn er nog geen werkopdrachten.</p>
+      <a class="btn btn-small" href="/werkopdrachten">Alle werkopdrachten</a></div>
+    <% } %>
   </section>
   <% } %>
 </main>

@@ -34,6 +34,7 @@ const templates = require('./templates');
 const presence = require('./presence');
 const branding = require('./branding');
 const mywork = require('./mywork');
+const festive = require('./festive');
 
 const app = express();
 // Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
@@ -72,6 +73,11 @@ const MIME = {
   '.txt': 'text/plain; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon',
 };
 const STARTED = Date.now().toString(36);
+let festiveMemo = { at: 0, key: null };
+function festiveToday() { // hooguit eens per minuut uitrekenen
+  if (Date.now() - festiveMemo.at > 60000) festiveMemo = { at: Date.now(), key: festive.today() };
+  return festiveMemo.key;
+}
 // Versie in de links naar css/js: na een update (of herstart) haalt de browser meteen de nieuwe bestanden op.
 app.locals.assetVersion = `${buildinfo.version}-${STARTED}`;
 app.get('/static/*file', (req, res, next) => {
@@ -163,6 +169,8 @@ app.use((req, res, next) => {
     liveUpdate: process.env.AUTO_UPDATE_LIVE === 'true',
   };
   res.locals.brand = branding.get(); // huisstijl: eigen naam, logo, banner, achtergrond
+  // Feestelijke achtergrond van vandaag (Kerst, Sinterklaas…), tenzij de gebruiker die heeft uitgezet.
+  res.locals.feest = req.user && req.user.prefs.feest === 'off' ? null : festiveToday();
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;
   next();
@@ -348,6 +356,7 @@ app.use((req, res, next) => {
   const on = features.state();
   res.locals.feat = on;
   res.locals.newAction = features.newAction(on);
+  res.locals.newActions = features.newActions(on);
   if (features.allowed(req.path, on)) return next();
   // Importeren zonder werkopdrachten: meteen naar de Excel-import (bandenhotel/voorraad), als die er is.
   if (req.method === 'GET' && req.path === '/importeren' && req.user.is_admin && features.allowed('/importeren/excel', on)) return res.redirect('/importeren/excel');
@@ -418,10 +427,11 @@ app.get('/', (req, res) => {
 /* Startscherm: grote knoppen naar de belangrijkste onderdelen (standaard bij Eenvoudige weergave) */
 app.get('/start', (req, res) => {
   const counts = orders.statusCounts();
+  // Alleen de werkopdrachten van vandaag (datum invoer), nieuwste eerst.
   const recent = db.prepare(
     `SELECT o.*, c.kenteken AS c_kenteken FROM orders o JOIN customers c ON c.id = o.customer_id
-     ORDER BY o.updated_at DESC LIMIT 5`
-  ).all().map(withSummary);
+     WHERE o.datum_invoer = ? ORDER BY o.nummer DESC LIMIT 200`
+  ).all(orders.todayISO()).map(withSummary);
   let swaps = 0;
   try { swaps = inv.swapList(inv.swapTarget()).wisselen.filter((i) => !i.match.uitgenodigd_at).length; } catch { /* geen bandenhotel */ }
   const hour = Number(new Intl.DateTimeFormat('nl-NL', { hour: 'numeric', hour12: false, timeZone: process.env.APP_TIMEZONE || 'Europe/Amsterdam' }).format(new Date()));
@@ -1111,6 +1121,7 @@ app.post('/instellingen', (req, res) => {
     carimg: [].concat(req.body.carimg || []).includes('on') ? 'on' : 'off',
     partimg: [].concat(req.body.partimg || []).includes('on') ? 'on' : 'off',
     desktop: [].concat(req.body.desktop || []).includes('on') ? 'on' : 'off',
+    feest: [].concat(req.body.feest || []).includes('on') ? 'on' : 'off',
     layout: req.body.layout,
     ...Object.fromEntries(auth.NOTIFY_KINDS.map(([k]) => ['n_' + k, [].concat(req.body['n_' + k] || []).includes('on') ? 'on' : 'off'])),
   });
@@ -1179,7 +1190,7 @@ async function renderSystem(res, { error = null, status = 200, values = {} } = {
     title: 'Systeem', error, values, cf, tunnelState: tunnel.getState(),
     port: Number(process.env.APP_PORT) || null, supported: Boolean(tunnel.assetName()),
     permissionsHelp: cloudflare.PERMISSIONS_HELP,
-    bk, FEATURES: features.FEATURES,
+    bk, FEATURES: features.FEATURES, feesten: festive.overview(),
   });
 }
 async function backupView() {
@@ -1210,6 +1221,19 @@ app.get('/mijn-werk', (req, res) => {
     users: req.user.is_admin ? db.prepare('SELECT id, name FROM users ORDER BY name').all() : [],
     w: mywork.forUser(target), STATUSES: orders.STATUSES,
   });
+});
+
+/* ---------- feestdagen (alleen ADONIS-beheerder) ---------- */
+app.post('/systeem/feestdagen', auth.requireOwner, (req, res) => {
+  const items = {};
+  for (const k of festive.KEYS) {
+    items[k] = { aan: req.body[`f_${k}`] === 'on', auto: req.body[`f_${k}_auto`] === 'on', van: req.body[`f_${k}_van`], tot: req.body[`f_${k}_tot`] };
+  }
+  festive.save({ aan: req.body.feesten === 'on', items });
+  festiveMemo.at = 0;
+  const bad = festive.KEYS.filter((k) => (req.body[`f_${k}_van`] && !festive.parseDm(req.body[`f_${k}_van`])) || (req.body[`f_${k}_tot`] && !festive.parseDm(req.body[`f_${k}_tot`])));
+  flash(req, bad.length ? 'err' : 'ok', bad.length ? 'Opgeslagen, maar niet alle datums klopten (schrijf ze als dag-maand, bijv. 06-12). Die zijn teruggezet.' : 'Feestdagen opgeslagen.');
+  res.redirect('/systeem#feestdagen');
 });
 
 /* ---------- huisstijl (alleen ADONIS-beheerder) ---------- */

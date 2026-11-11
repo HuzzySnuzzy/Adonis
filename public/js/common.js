@@ -681,7 +681,10 @@ document.addEventListener('input', (e) => {
     }
     if (e.altKey || e.shiftKey) return;
     if (e.key === 'F2') {
-      const n = document.querySelector('.new-order-btn');
+      // Met "+ Nieuw…" als keuzemenu: het menu openen; anders meteen naar de nieuwe werkopdracht/banden/onderdeel.
+      const menu = document.querySelector('[data-new-menu]');
+      if (menu) { e.preventDefault(); menu.open = true; const first = menu.querySelector('.new-item'); if (first) first.focus(); return; }
+      const n = document.querySelector('a.new-order-btn');
       if (n) { e.preventDefault(); location.href = n.href; }
     } else if (e.key === 'F3') {
       const q = document.querySelector('main input[type=search], main input[name=q]');
@@ -693,3 +696,22 @@ document.addEventListener('input', (e) => {
 
 // Staafdiagrammen (bijv. Mijn werk): hoogte uit data-bar-h (procent). Geen inline style in de HTML (CSP).
 document.querySelectorAll('[data-bar-h]').forEach((el) => { el.style.setProperty('--h', Math.max(0, Math.min(100, Number(el.dataset.barH) || 0)) + '%'); });
+
+/* "+ Nieuw…": met 1, 2, 3 of de pijltjes kiezen wat u wilt toevoegen. */
+(function () {
+  const menu = document.querySelector('[data-new-menu]');
+  if (!menu) return;
+  const items = () => [...menu.querySelectorAll('.new-item')];
+  menu.addEventListener('toggle', () => { if (menu.open && document.activeElement === menu.querySelector('summary')) setTimeout(() => { const f = items()[0]; if (f) f.focus(); }, 0); });
+  menu.addEventListener('keydown', (e) => {
+    if (!menu.open) return;
+    const list = items();
+    if (/^[1-9]$/.test(e.key) && list[Number(e.key) - 1]) { e.preventDefault(); list[Number(e.key) - 1].click(); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const i = list.indexOf(document.activeElement);
+      const n = list[(i + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length];
+      if (n) n.focus();
+    }
+  });
+})();

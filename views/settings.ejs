@@ -177,6 +177,12 @@
       <%# Waarom er (nu) geen animaties zijn, zodat dat geen raadsel is. %>
       <p class="fx-why" data-fx-reduced hidden>Let op: <b>dit apparaat vraagt om minder beweging</b>, daarom speelt ADONIS geen animaties af.
         Op Windows zet u ze weer aan via <i>Instellingen → Toegankelijkheid → Visuele effecten → Animatie-effecten</i>.</p>
+      <label class="check big-check">
+        <input type="hidden" name="feest" value="off">
+        <input type="checkbox" name="feest" value="on" <%= p.feest !== 'off' ? 'checked' : '' %>>
+        <span><b>Feestelijke achtergronden</b><br><span class="muted small">Sneeuw met Kerst, pepernoten met Sinterklaas, vuurwerk met
+          Oud en Nieuw… rustig achter de knoppen, alleen in de periodes die de beheerder heeft gekozen.</span></span>
+      </label>
       <p class="fx-replay"><button type="button" class="btn btn-small" data-replay-boot>Opstartanimatie nu bekijken</button>
         <span class="muted small">De opstartanimatie speelt na het inloggen en één keer per venster (of bij het starten van de ADONIS-app), niet bij elke pagina.</span></p>
     </section>

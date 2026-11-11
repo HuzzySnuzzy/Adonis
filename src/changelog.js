@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.53.0', date: '2026-11-11', title: '+ Nieuw kiezen, vandaag op Start en feestdagen',
+    items: [
+      '+ Nieuw (rechtsboven of bovenaan de zijbalk) vraagt nu wat u wilt toevoegen: een werkopdracht, banden of een onderdeel (alleen wat aan staat). Kies met de muis, met de pijltjes of met 1, 2, 3; F2 opent het keuzemenu.',
+      'Het startscherm toont nu alleen de werkopdrachten van vandaag, met hoeveel het er zijn en hoeveel er nog open staan, en werkt live bij. Onder de grote knop staan ook de andere dingen die u kunt toevoegen.',
+      'Feestdagen: een rustige, feestelijke achtergrond achter de knoppen. Sneeuw met Kerst, pepernoten en cadeautjes met Sinterklaas, vuurwerk met Oud en Nieuw, hartjes met Valentijnsdag, bloesem en eitjes met Pasen, oranje confetti met Koningsdag en vleermuizen met Halloween.',
+      'De ADONIS-beheerder kiest bij Systeem → Feestdagen per feest van wanneer tot wanneer (dag-maand, elk jaar; Pasen kan automatisch) en kan elk feest met "Bekijken" meteen uitproberen. Wie het niet wil, zet het uit bij Instellingen → Effecten. Met "minder beweging" op het apparaat staat het stil; met Effecten Rustig is het minder druk.',
+    ],
+  },
+  {
     version: '1.52.0', date: '2026-11-11', title: 'Eigen huisstijl en Mijn werk',
     items: [
       'Huisstijl (Systeem → Huisstijl, alleen de ADONIS-beheerder): geef ADONIS de naam van uw bedrijf, met een eigen ondertitel. De naam staat in het menu, op de inlogpagina, in de titel van het venster en in de opstartanimatie; ADONIS zelf staat dan klein onderaan in de statusbalk, het gebruikersmenu en de inlogpagina.',

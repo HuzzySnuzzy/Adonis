@@ -5,7 +5,7 @@
   const THEME_LABEL = { system: 'Systeem', light: 'Licht', dark: 'Donker', oled: 'OLED', vcds: 'VCDS', neon: 'Neon', ice: 'Black Ice', adonis: 'ADONIS', aero: 'Aero', w98: 'Windows 98' };
   %>
 <!doctype html>
-<html lang="nl"<%- themeAttr %><%- locals.user && !locals.desktopShell && (prefs.layout || 'zijbalk') === 'zijbalk' ? ' data-layout="side"' : '' %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>"<%- prefs.simple === 'on' ? ' data-simple="on"' : '' %><%- locals.inApp ? ' data-app' : '' %> data-brand="<%= B.name %>"<% if (B.custom) { %> data-brand-sub="<%= B.sub %>"<% } %>>
+<html lang="nl"<%- themeAttr %><%- locals.user && !locals.desktopShell && (prefs.layout || 'zijbalk') === 'zijbalk' ? ' data-layout="side"' : '' %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>"<%- prefs.simple === 'on' ? ' data-simple="on"' : '' %><%- locals.inApp ? ' data-app' : '' %> data-brand="<%= B.name %>"<% if (locals.feest) { %> data-feest="<%= feest %>"<% } %><% if (B.custom) { %> data-brand-sub="<%= B.sub %>"<% } %>>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,6 +20,7 @@
   <% if (B.achtergrond) { %><link rel="stylesheet" href="/huisstijl.css?v=<%= B.v %>"><% } %>
   <% if (typeof extraCss !== 'undefined') { %><link rel="stylesheet" href="/static/css/<%= extraCss %>?v=<%= assetVersion %>"><% } %>
   <script src="/static/js/theme-menu.js?v=<%= assetVersion %>" defer></script>
+  <script src="/static/js/festive.js?v=<%= assetVersion %>" defer></script>
   <% if (!['neon', 'ice'].includes(prefs.theme)) { %><script src="/static/js/boot.js?v=<%= assetVersion %>" defer></script><% } %>
   <% if (prefs.theme === 'neon') { %>
   <link rel="preload" href="/static/fonts/orbitron-latin-wght-v1.woff2" as="font" type="font/woff2" crossorigin>
@@ -127,7 +128,18 @@
     <% } %>
   </nav>
   <div class="usernav">
-    <% if (locals.newAction) { %><a class="btn btn-primary new-order-btn" href="<%= newAction.href %>" title="<%= newAction.long %>">+<span class="nw-long"> <%= newAction.long %></span><span class="nw-short"> Nieuw</span></a><% } %>
+    <% const NA = locals.newActions || []; %>
+    <% if (NA.length > 1) { %>
+    <%# Meer dan één ding om toe te voegen: eerst kiezen wat (werkopdracht, banden, onderdeel). %>
+    <details class="nav-menu new-menu" data-nav-menu data-new-menu>
+      <summary class="btn btn-primary new-order-btn" title="Iets nieuws toevoegen (F2)">+<span class="nw-long"> Nieuw…</span><span class="nw-short"> Nieuw</span></summary>
+      <div class="nav-pop nav-pop-right new-pop" role="menu">
+        <p class="bell-head">Wat wilt u toevoegen?</p>
+        <% const NICO = { list: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>', tyre: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5"/>', box: '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>' }; %>
+        <% NA.forEach((a, i) => { %><a role="menuitem" href="<%= a.href %>" class="new-item new-<%= a.key %>"><span class="new-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><%- NICO[a.icon] %></svg></span><span class="new-txt"><b><%= a.title %></b><span class="muted small"><%= a.sub %></span></span><kbd class="new-key"><%= i + 1 %></kbd></a><% }) %>
+      </div>
+    </details>
+    <% } else if (locals.newAction) { %><a class="btn btn-primary new-order-btn" href="<%= newAction.href %>" title="<%= newAction.long %>">+<span class="nw-long"> <%= newAction.long %></span><span class="nw-short"> Nieuw</span></a><% } %>
     <%
       const THEMES_MENU = [
         { v: 'system', name: 'Systeem', sub: 'Volgt de instelling van uw apparaat' },

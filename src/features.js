@@ -52,6 +52,14 @@ function allowed(p, on = state()) {
 }
 
 /** De "+ Nieuw"-knop: de eerste die aan staat. */
+/** Alles wat je met "+ Nieuw" kunt toevoegen (alleen de onderdelen die aan staan). */
+function newActions(on) {
+  return [
+    on.werkopdrachten && { key: 'werk', href: '/werkopdracht/nieuw', long: 'Nieuwe werkopdracht', title: 'Werkopdracht', sub: 'Een nieuwe klus invullen', icon: 'list' },
+    on.bandenhotel && { key: 'banden', href: '/bandenhotel/nieuw', long: 'Banden inslaan', title: 'Banden', sub: 'Een set banden in het bandenhotel zetten', icon: 'tyre' },
+    on.voorraad && { key: 'onderdeel', href: '/voorraad/nieuw', long: 'Nieuw onderdeel', title: 'Onderdeel', sub: 'Iets aan de voorraad toevoegen', icon: 'box' },
+  ].filter(Boolean);
+}
 function newAction(on) {
   if (on.werkopdrachten) return { href: '/werkopdracht/nieuw', long: 'Nieuwe werkopdracht', sub: 'Een nieuwe klus invullen' };
   if (on.bandenhotel) return { href: '/bandenhotel/nieuw', long: 'Banden inslaan', sub: 'Een set banden in het bandenhotel zetten' };
@@ -59,4 +67,4 @@ function newAction(on) {
   return null;
 }
 
-module.exports = { FEATURES, KEYS, state, save, required, allowed, newAction };
+module.exports = { FEATURES, KEYS, state, save, required, allowed, newAction, newActions };
