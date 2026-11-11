@@ -274,7 +274,7 @@ async function printPreview(parent) {
   try {
     pdf = await wc.printToPDF({ printBackground: true, preferCSSPageSize: true, pageSize: 'A4' });
   } catch {
-    wc.print({ printBackground: true }); // valt terug op het gewone afdrukscherm
+    wc.print({ printBackground: true, pageSize: 'A4' }); // valt terug op het gewone afdrukscherm (ook op A4)
     return;
   }
   const title = (wc.getTitle() || 'ADONIS').replace(/ · ADONIS$/, '').replace(/[\\/:*?"<>|]+/g, '-').trim().slice(0, 80) || 'ADONIS';

@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.54.3', date: '2026-11-11', title: 'Altijd afdrukken op A4',
+    items: [
+      'Afdrukken gebeurt nu altijd op A4, ook als de printer of browser op een ander formaat (zoals Letter) staat: de werkopdracht op A4 liggend, andere pagina\'s op A4 staand. Ook het gewone afdrukscherm van de ADONIS-app staat op A4.',
+    ],
+  },
+  {
     version: '1.54.2', date: '2026-11-11', title: 'Afdrukken weer als het papieren formulier',
     items: [
       'Bij afdrukken stonden de klant en de werkzaamheden links en de onderdelen rechts (de volgorde voor de telefoon). Nu staat de voorkant weer zoals op papier: onderdelen links, klant en werkzaamheden rechts. Ook op de achterkant staan Banden en Keuringen weer naast elkaar.',
