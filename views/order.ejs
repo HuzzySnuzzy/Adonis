@@ -61,6 +61,7 @@
         <span class="muted small">Aangemaakt door <%= order.created_by_name || 'onbekend' %> op <%= fmtDateTime(order.created_at) %>
         <% if (order.updated_at !== order.created_at) { %> · gewijzigd door <%= order.updated_by_name || 'onbekend' %> op <%= fmtDateTime(order.updated_at) %><% } %></span>
       <% } %>
+      <% if (!draft) { %><span class="co-bar no-print" data-co-bar><span class="live-state small" data-live-state aria-live="polite"></span><span class="co-people" data-co-people></span></span><% } %>
     </div>
   </div>
   <div class="tb-right">
@@ -121,7 +122,7 @@
   <% if (feat.ai) { %><%- include('/partials/model-apk', { modelApk: orderBulletins.modelApk, aiOn: false, customer: orderBulletins.customer, compact: true }) %><% } %>
 </div><% } %>
 <% if (order) { %><span hidden id="live-order" data-id="<%= order.id %>"></span><% } %>
-<form id="orderForm" method="post" action="<%= draft ? '/importeren/' + draft.id + '/bevestigen' : order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off">
+<form id="orderForm" method="post" action="<%= draft ? '/importeren/' + draft.id + '/bevestigen' : order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off"<% if (!draft && !error) { %> data-live-edit="<%= order ? order.id : 'nieuw' %>" data-rev="<%= order ? order.rev : '' %>"<% } %>>
   <input type="hidden" name="_csrf" value="<%= csrf %>">
   <input type="hidden" name="zonder_factuurnr" value="">
   <% if (order) { %><input type="hidden" name="versie" value="<%= order.updated_at %>"><% } %>
@@ -355,6 +356,7 @@
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/ai.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/order.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/order-live.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/rdw.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/order-assist.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/templates.js?v=<%= assetVersion %>"></script>

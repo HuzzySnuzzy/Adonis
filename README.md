@@ -39,7 +39,11 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Datum invoer** wordt automatisch ingevuld met de datum waarop de werkopdracht is aangemaakt.
 - **Werkopdrachtnummer** loopt automatisch op en kan zo nodig worden aangepast.
 - **Afdrukken** op A4 liggend: pagina 1 is de voorkant, pagina 2 de achterkant.
-- Waarschuwing als iemand anders de werkopdracht tegelijk heeft gewijzigd, zodat er niets wordt overschreven.
+- **Automatisch opslaan en live samen bewerken:** wijzigingen worden na een korte typpauze per veld opgeslagen
+  (`POST /werkopdracht/:id/live`) en via de live-verbinding meteen in de schermen van collega's gezet; per veld wint wie
+  het laatst typt. Bovenaan staat wie de werkopdracht nog meer open heeft, en bij een veld wie daar typt. Een nieuwe
+  werkopdracht wordt aangemaakt zodra er een kenteken en werk of onderdelen op staan (bij een al gebruikt voorgevuld nummer
+  het volgende vrije nummer). In de geschiedenis staat hooguit één "gewijzigd" per persoon per kwartier.
 - Beheerders kunnen gebruikers toevoegen en verwijderen, wachtwoorden opnieuw instellen en werkopdrachten verwijderen.
 
 - **Rollen en facturatie:** een beheerder geeft iedereen een rol (*Monteur*, *Facturatie* of *Beheerder*).

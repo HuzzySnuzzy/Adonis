@@ -3,8 +3,8 @@
 (function () {
   if (!window.EventSource) return;
   const me = document.body.dataset.userId;
-  const liveOrder = document.getElementById('live-order');
-  const openOrderId = liveOrder ? liveOrder.dataset.id : null;
+  // (Een nieuwe werkopdracht krijgt pas een nummer als hij automatisch is opgeslagen: daarom steeds opnieuw kijken.)
+  const currentOrderId = () => { const el = document.getElementById('live-order'); return el ? el.dataset.id : null; };
   const toasts = document.getElementById('liveToasts');
 
   /* Meldingen rechtsonder: 15 seconden (blijven staan zolang de muis erop staat), met een kruisje om te sluiten.
@@ -96,6 +96,13 @@
     }, 300);
   }
 
+  let soonAt = 0; let soonTimer = null;
+  function refreshListsSoon() {
+    const wait = Math.max(0, soonAt + 4000 - Date.now());
+    if (soonTimer) return;
+    soonTimer = setTimeout(() => { soonTimer = null; soonAt = Date.now(); refreshLists(); }, wait);
+  }
+
   /* De server wordt bijgewerkt (nieuwe versie al gedownload, nu een paar seconden herstarten). */
   let updatingTo = null;
   // Iemand is iets aan het typen dat nog niet is opgeslagen (alleen de cursor in het zoekveld telt niet).
@@ -115,6 +122,7 @@
   }
   function afterReconnect() {
     refreshLists();
+    document.dispatchEvent(new Event('adonis:order-resync')); // open werkopdracht: alles gemist bijwerken
     if (!updatingTo) return;
     const v = updatingTo; updatingTo = null;
     if (inWindow) return; // het bureaublad herlaadt zichzelf (en daarmee alle vensters)
@@ -138,13 +146,24 @@
       if (String(ev.byId) !== String(me)) { refreshLists(); notice(ev); }
       return;
     }
+    // Werkopdracht automatisch opgeslagen (live samen bewerken): het open formulier werkt zichzelf bij (order-live.js),
+    // lijsten op andere pagina's hooguit eens per paar seconden.
+    if (ev.type === 'order-live') {
+      document.dispatchEvent(new CustomEvent('adonis:order-live', { detail: ev }));
+      if (String(ev.id) !== currentOrderId()) refreshListsSoon();
+      return;
+    }
+    if (ev.type === 'order-presence') { document.dispatchEvent(new CustomEvent('adonis:order-presence', { detail: ev })); return; }
     if (ev.type !== 'order') return;
+    const openOrderId = currentOrderId();
     const byOther = String(ev.byId) !== String(me);
     const label = `Werkopdracht ${ev.nummer}${ev.kenteken ? ` (${ev.kenteken})` : ''}`;
 
     if (openOrderId && String(ev.id) === openOrderId && byOther) {
       if (ev.action === 'deleted') {
         banner(`${ev.by} heeft deze werkopdracht zojuist verwijderd.`, false);
+      } else if (window.adonisOrderLive && ev.action === 'updated') {
+        document.dispatchEvent(new Event('adonis:order-resync')); // met de hand opgeslagen: velden bijwerken zonder herladen
       } else if (window.adonisOrderDirty && window.adonisOrderDirty()) {
         banner(`${ev.by} heeft deze werkopdracht zojuist gewijzigd. Opslaan zou hun wijzigingen overschrijven.`, true);
       } else {

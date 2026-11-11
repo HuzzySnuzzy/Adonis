@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.50.0', date: '2026-11-11', title: 'Automatisch opslaan en samen bewerken',
+    items: [
+      'Werkopdrachten worden automatisch opgeslagen: na een korte pauze in het typen staat alles al op de server. Bovenaan ziet u "Alles opgeslagen" of "Opslaan…". De knop Opslaan (en Ctrl+S) kan nog steeds, maar de pagina hoeft niet meer te herladen.',
+      'Een nieuwe werkopdracht wordt vanzelf aangemaakt zodra er een kenteken en werk of onderdelen op staan. Heeft een collega intussen hetzelfde voorgevulde nummer gebruikt, dan krijgt deze het volgende vrije nummer.',
+      'Samen bewerken: heeft een collega dezelfde werkopdracht open, dan ziet u bovenaan "Ook open:" met de naam, en bij het vak waarin die collega typt een gekleurd randje met de naam. Wat de ander typt verschijnt binnen een paar seconden ook bij u (en andersom), zonder te herladen. Per vak telt wat het laatst getypt is, dus werk liefst niet allebei in hetzelfde vak tegelijk.',
+      'Geen verbinding? Dan staat dat bovenaan en wordt opgeslagen zodra de verbinding terug is. De geschiedenis van de werkopdracht houdt het rustig: hooguit één keer "gewijzigd" per persoon per kwartier.',
+    ],
+  },
+  {
     version: '1.49.1', date: '2026-11-11', title: 'Knoppen van de werkopdracht op de telefoon',
     items: [
       'Op de telefoon staan de knoppen bovenaan een werkopdracht nu netjes op een rij: eerst Opslaan over de hele breedte, daaronder Klaar voor facturatie en Gefactureerd, en daaronder Sjabloon, Achterkant en Afdrukken even breed naast elkaar. Het Sjabloon-menu klapt direct onder de knop open.',

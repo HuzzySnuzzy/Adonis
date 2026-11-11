@@ -78,13 +78,13 @@
   form.querySelectorAll('input[type=date]').forEach(updateDate);
 
   form.addEventListener('input', (e) => {
-    markDirty();
+    if (!e.adonisRemote) markDirty();
     if (e.target.matches('[data-price], [data-qty]')) updateTotals();
     if (e.target.matches('[data-tread]')) updateTread(e.target);
     if (e.target.matches('input[type=date]')) updateDate(e.target);
   });
   form.addEventListener('change', (e) => {
-    markDirty();
+    if (!e.adonisRemote) markDirty();
     if (e.target.matches('input[type=date]')) updateDate(e.target);
   });
   updateTotals();
@@ -93,9 +93,12 @@
   // Na een fout, of bij een nog niet bevestigde import, is er nog niets opgeslagen.
   let dirty = document.querySelector('.alert-wide, .import-review') !== null;
   function markDirty() { dirty = true; toolbar.classList.add('dirty'); }
-  window.adonisOrderDirty = () => dirty; // voor live bijwerken (live.js)
+  // Met automatisch opslaan (order-live.js) bepaalt dat of er nog iets niet is opgeslagen.
+  const isDirty = () => (window.adonisLiveDirty ? window.adonisLiveDirty() : dirty);
+  window.adonisOrderDirty = isDirty; // voor live bijwerken (live.js)
+  window.adonisOrder = { fitAll, updateTotals };
   if (dirty) toolbar.classList.add('dirty');
-  window.addEventListener('beforeunload', (e) => { if (dirty && !window.adonisLeaving) { e.preventDefault(); e.returnValue = ''; } });
+  window.addEventListener('beforeunload', (e) => { if (isDirty() && !window.adonisLeaving) { e.preventDefault(); e.returnValue = ''; } });
   // Opslaan of annuleren (na bevestiging) mag de pagina verlaten zonder waarschuwing.
   // (Een <form method="dialog"> – plaknotitie, Claude-venster – verlaat de pagina niet.)
   document.addEventListener('submit', (e) => { if (!e.defaultPrevented && e.target.method !== 'dialog') dirty = false; });
@@ -168,6 +171,8 @@
     form.addEventListener('change', () => { clearTimeout(timer); timer = setTimeout(store, 300); });
     // Bij opslaan: bewaren met een vlag; pas na de groene melding wordt het verwijderd.
     form.addEventListener('submit', () => { clearTimeout(timer); store({ submitted: true }); });
+    // Automatisch opgeslagen (order-live.js): het concept op dit apparaat is niet meer nodig.
+    document.addEventListener('adonis:order-synced', () => { clearTimeout(timer); remove(KEY); });
   })();
 
   /* ---------- achterkant: uren en begroting rekenen mee (als hulp: alleen lege vakken krijgen een voorstel) ---------- */

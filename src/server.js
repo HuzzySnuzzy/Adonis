@@ -31,6 +31,7 @@ const features = require('./features');
 const assist = require('./order-assist');
 const trash = require('./trash');
 const templates = require('./templates');
+const presence = require('./presence');
 
 const app = express();
 // Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
@@ -778,6 +779,79 @@ app.post('/werkopdracht/:id', (req, res) => {
   announce(req, next ? 'status' : 'updated', { id: order.id, nummer, kenteken: data.kenteken, status: next || order.status });
   flash(req, 'ok', msg);
   res.redirect(`/werkopdracht/${order.id}`);
+});
+
+/* ---------- Automatisch opslaan en live samen bewerken ----------
+ * Het scherm stuurt alleen de velden die zijn veranderd (per veld: wie het laatst typt, wint). De server zet ze in de
+ * nieuwste versie, slaat op en stuurt de wijziging live naar iedereen die deze werkopdracht open heeft. */
+function recentlyLogged(orderId, user) {
+  return !!db.prepare(`SELECT 1 FROM order_log WHERE id = (SELECT MAX(id) FROM order_log WHERE order_id = ?)
+    AND user_id = ? AND action = 'gewijzigd' AND created_at > datetime('now', '-15 minutes')`).get(orderId, user.id);
+}
+app.get('/werkopdracht/:id/live', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const order = loadOrder(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Deze werkopdracht bestaat niet (meer).' });
+  res.json({
+    rev: order.rev, versie: order.updated_at, status: order.status, editable: orders.canEdit(req.user, order),
+    fields: orders.formFields(orders.parseOrderData(order.data), { nummer: order.nummer, datumInvoer: order.datum_invoer }),
+    people: presence.list(order.id),
+  });
+});
+app.post('/werkopdracht/:id/live', express.json({ limit: '2mb' }), (req, res) => {
+  const body = req.body || {};
+  const patch = body.patch && typeof body.patch === 'object' && !Array.isArray(body.patch) ? body.patch : null;
+  if (!patch || Object.keys(patch).length > 4000) return res.status(400).json({ error: 'Ongeldige wijziging.' });
+  const tab = String(body.tab || '').slice(0, 40);
+  if (req.params.id === 'nieuw') {
+    // Nieuwe werkopdracht: aanmaken zodra er genoeg op staat (het scherm stuurt dan alle velden mee).
+    const data = orders.applyPatch(orders.emptyOrderData(), patch, { pages: true });
+    let nummer = parseNummer(patch.nummer);
+    // Voorgevuld nummer (niet zelf getypt) intussen door een collega gebruikt: dan het volgende vrije nummer.
+    if (body.autoNummer === true && nummer && db.prepare('SELECT 1 FROM orders WHERE nummer = ?').get(nummer)) nummer = orders.nextOrderNumber();
+    const error = validateOrder(data, nummer, null);
+    if (error) return res.status(422).json({ error });
+    const id = orders.saveOrder({ nummer, data, userId: req.user.id });
+    orders.logAction(id, req.user, 'aangemaakt');
+    announce(req, 'created', { id, nummer, kenteken: data.kenteken, status: 'open' });
+    rdw.refreshInBackground(data.kenteken);
+    const order = loadOrder(id);
+    return res.json({ ok: true, id, nummer, rev: order.rev, versie: order.updated_at,
+      fields: orders.formFields(data, { nummer, datumInvoer: order.datum_invoer }) });
+  }
+  const order = loadOrder(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Deze werkopdracht bestaat niet (meer).', gone: true });
+  if (!orders.canEdit(req.user, order)) {
+    return res.status(409).json({ error: 'Deze werkopdracht kan nu niet worden gewijzigd (de status is veranderd).', locked: true });
+  }
+  const before = orders.parseOrderData(order.data);
+  const beforeFields = orders.formFields(before, { nummer: order.nummer, datumInvoer: order.datum_invoer });
+  const data = orders.applyPatch(before, patch, { pages: body.pages === true });
+  const nummer = 'nummer' in patch ? parseNummer(patch.nummer) : order.nummer;
+  const datumInvoer = 'datum_invoer' in patch ? orders.parseDate(patch.datum_invoer) || order.datum_invoer : order.datum_invoer;
+  const error = validateOrder(data, nummer, order.id);
+  if (error) return res.status(422).json({ error, rev: order.rev });
+  const afterFields = orders.formFields(data, { nummer, datumInvoer });
+  const { changed, structure } = orders.diffFields(beforeFields, afterFields);
+  // De opgeslagen waarde van de gestuurde velden (bijv. kenteken in hoofdletters) gaat terug naar het scherm.
+  const echo = {};
+  for (const k of Object.keys(patch)) if (k in afterFields) echo[k] = afterFields[k];
+  // Bladen toegevoegd/verwijderd: de server nummert ze opnieuw, dus alle bladvelden gaan terug.
+  if (body.pages === true) for (const k of Object.keys(afterFields)) if (k.startsWith('d[paginas]')) echo[k] = afterFields[k];
+  if (!Object.keys(changed).length && !structure) return res.json({ ok: true, rev: order.rev, versie: order.updated_at, fields: echo });
+  orders.saveOrder({ id: order.id, nummer, data, userId: req.user.id, datumInvoer });
+  if (!recentlyLogged(order.id, req.user)) orders.logAction(order.id, req.user, 'gewijzigd');
+  const fresh = db.prepare('SELECT rev, updated_at FROM orders WHERE id = ?').get(order.id);
+  events.broadcast({
+    type: 'order-live', id: order.id, rev: fresh.rev, prev: order.rev, versie: fresh.updated_at, fields: changed, structure, tab,
+    nummer, kenteken: data.kenteken, by: req.user.name, byId: req.user.id,
+  });
+  res.json({ ok: true, rev: fresh.rev, versie: fresh.updated_at, fields: echo, structure });
+});
+// Wie heeft deze werkopdracht open (en in welk veld)? Elk scherm meldt zich elke 20 seconden.
+app.post('/werkopdracht/:id/aanwezig', (req, res) => {
+  const people = presence.update(req.params.id, req.user, { tab: req.body.tab, field: req.body.field, gone: req.body.weg === '1' });
+  res.json({ people });
 });
 
 // Status wijzigen zonder het formulier op te slaan (terughalen, terugsturen, heropenen).

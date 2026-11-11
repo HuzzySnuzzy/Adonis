@@ -220,6 +220,8 @@ const STATUSES = {
   if (!cols.includes('status')) db.exec("ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'open'");
   if (!cols.includes('status_at')) db.exec('ALTER TABLE orders ADD COLUMN status_at TEXT');
   if (!cols.includes('status_by')) db.exec('ALTER TABLE orders ADD COLUMN status_by INTEGER REFERENCES users(id) ON DELETE SET NULL');
+  // Volgnummer van elke opslag (ook automatisch opslaan, vaker dan eens per seconde): zo merkt een scherm dat het iets heeft gemist.
+  if (!cols.includes('rev')) db.exec('ALTER TABLE orders ADD COLUMN rev INTEGER NOT NULL DEFAULT 0');
   db.exec(`
     CREATE INDEX IF NOT EXISTS orders_status ON orders(status);
     CREATE TABLE IF NOT EXISTS order_log (
@@ -343,7 +345,7 @@ function saveOrder({ id, nummer, data, userId, datumInvoer }) {
       oldCustomerId = db.prepare('SELECT customer_id FROM orders WHERE id = ?').get(id).customer_id;
       db.prepare(
         `UPDATE orders SET nummer = ?, customer_id = ?, data = ?, search_text = ?, updated_by = ?,
-         datum_invoer = COALESCE(?, datum_invoer), updated_at = datetime('now') WHERE id = ?`
+         datum_invoer = COALESCE(?, datum_invoer), updated_at = datetime('now'), rev = rev + 1 WHERE id = ?`
       ).run(nummer, customer.id, JSON.stringify(data), searchText, userId, datumInvoer || null, id);
     } else {
       const res = db.prepare(
@@ -419,7 +421,60 @@ function deleteOrder(id) {
   return row.customer_id;
 }
 
+/* ---------- Live samen bewerken ----------
+ * Het formulier gebruikt namen als d[achter][uren][2][van]: precies het pad in de opgeslagen gegevens.
+ * formFields() zet de gegevens om naar die namen (met de waarde zoals in het formulier: vinkjes "on" of leeg),
+ * applyPatch() zet gewijzigde velden terug in de gegevens. Zo kunnen schermen per veld bijwerken. */
+function formFields(data, { nummer, datumInvoer } = {}) {
+  const out = {};
+  const walk = (v, name) => {
+    if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${name}[${i}]`));
+    else if (v && typeof v === 'object') for (const k of Object.keys(v)) walk(v[k], `${name}[${k}]`);
+    else out[name] = typeof v === 'boolean' ? (v ? 'on' : '') : String(v ?? '');
+  };
+  walk(data, 'd');
+  if (nummer !== undefined) out.nummer = String(nummer ?? '');
+  if (datumInvoer !== undefined) out.datum_invoer = String(datumInvoer ?? '');
+  return out;
+}
+const pathOf = (name) => {
+  if (!/^d(\[[A-Za-z0-9_]{1,40}\]){1,6}$/.test(name)) return null;
+  return name.slice(2, -1).split('][');
+};
+/** Gewijzigde formuliervelden ({ naam: waarde }) in de gegevens zetten. pages: de extra bladen komen in hun geheel mee. */
+function applyPatch(data, patch, { pages = false } = {}) {
+  const raw = JSON.parse(JSON.stringify(data));
+  if (pages) raw.paginas = {};
+  for (const [name, value] of Object.entries(patch)) {
+    const path = pathOf(name);
+    if (!path || path.some((k) => k === '__proto__' || k === 'constructor' || k === 'prototype')) continue;
+    if (path[0] === 'paginas' && !pages) {
+      // Alleen een veld van een bestaand blad (de bladen zelf toevoegen/verwijderen gaat met pages).
+      const pg = raw.paginas[Number(path[1])];
+      if (!pg || path.length < 3 || path[2] === 'soort') continue;
+    }
+    let obj = raw;
+    for (let i = 0; i < path.length - 1; i++) {
+      const k = path[i];
+      if (obj[k] === null || typeof obj[k] !== 'object') obj[k] = {};
+      obj = obj[k];
+    }
+    obj[path[path.length - 1]] = typeof value === 'string' ? value : String(value ?? '');
+  }
+  return normalizeOrderData(raw);
+}
+/** Welke velden zijn anders? (en: is de indeling van de extra bladen veranderd?) */
+function diffFields(before, after) {
+  const changed = {};
+  for (const [k, v] of Object.entries(after)) if (before[k] !== v && !k.startsWith('d[paginas]')) changed[k] = v;
+  const pagesOf = (f) => Object.keys(f).filter((k) => /^d\[paginas\]\[\d+\]\[soort\]$/.test(k)).map((k) => f[k]).join(',');
+  const structure = pagesOf(before) !== pagesOf(after);
+  if (!structure) for (const [k, v] of Object.entries(after)) if (k.startsWith('d[paginas]') && before[k] !== v) changed[k] = v;
+  return { changed, structure };
+}
+
 module.exports = {
+  formFields, applyPatch, diffFields,
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage, UREN_ROWS, ADVIES_ROWS, migrateBack,
   emptyOrderData, normalizeOrderData, parseOrderData,
   nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate, updateCustomer, refreshCustomer,

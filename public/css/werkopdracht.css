@@ -338,3 +338,32 @@ table.grid.uren .c-uren { width: 78px; }
 table.grid.uren th { white-space: normal; line-height: 1.1; font-size: 12.5px; }
 .sign-row td.rowlabel { white-space: normal; line-height: 1.15; font-size: 12.5px; }
 table.grid.kv .sign-row td.rowlabel { white-space: normal; line-height: 1.15; font-size: 12.5px; padding: 2px 6px; }
+
+/* ---------- Automatisch opslaan en live samen bewerken (order-live.js) ---------- */
+.co-bar { display: flex; align-items: center; gap: .35rem .75rem; flex-wrap: wrap; margin-top: 2px; min-height: 1.25rem; }
+.co-bar:not(:has(.live-state:not(:empty), .co-person)) { display: none; }
+.live-state { display: inline-flex; align-items: center; gap: .35rem; color: var(--muted); }
+.live-state:empty { display: none; }
+.live-state::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok-text, #2e9d5b); flex: none; }
+.live-state:is([data-state="pending"], [data-state="saving"])::before { background: var(--warn-text, #c9871b); animation: live-pulse 1s ease-in-out infinite; }
+.live-state[data-state="new"]::before { background: var(--muted); }
+.live-state:is([data-state="error"], [data-state="offline"]) { color: var(--red, #c0392b); font-weight: 600; }
+.live-state:is([data-state="error"], [data-state="offline"])::before { background: var(--red, #c0392b); }
+.live-state[data-state="remote"]::before { background: var(--primary); }
+@keyframes live-pulse { 50% { opacity: .35; } }
+.co-people { display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.co-people:empty { display: none; }
+.co-person { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px 1px 1px; border-radius: 999px; font-size: .78rem; line-height: 18px;
+  background: color-mix(in srgb, var(--co) 16%, transparent); color: var(--text); }
+.co-person i { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--co); color: #fff;
+  font-style: normal; font-weight: 700; font-size: .68rem; }
+.co-person.is-typing i { box-shadow: 0 0 0 2px color-mix(in srgb, var(--co) 40%, transparent); animation: live-pulse 1.4s ease-in-out infinite; }
+.co-host { position: relative; }
+.sheet .co-editing, .co-editing { box-shadow: inset 0 0 0 2px var(--co) !important; border-radius: 2px; }
+.co-tag { position: absolute; top: 1px; right: 2px; z-index: 6; pointer-events: none; max-width: 70%; overflow: hidden; text-overflow: ellipsis;
+  padding: 0 5px; border-radius: 3px; background: var(--co); color: #fff; white-space: nowrap;
+  font: 600 10px/15px system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .02em; }
+.co-flash { animation: co-flash 1.4s ease-out; }
+@keyframes co-flash { from { background-color: color-mix(in srgb, var(--primary) 28%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .co-flash, .live-state::before, .co-person.is-typing i { animation: none !important; } }
+@media print { .co-bar, .co-tag { display: none !important; } .co-editing { box-shadow: none !important; } }
