@@ -74,6 +74,7 @@
       F.rekenhulp && ['/rekenhulp', 'Rekenhulp'],
       ['/verkenner', "Foto's"],
       F.ai && ['/ai-analyse', 'AI-analyse'],
+      F.ai && (F.bandenhotel || F.voorraad) && ['/lijsten/optimaliseren', 'Lijsten opschonen'],
       importHref && !simple && [importHref, 'Importeren'],
     ].filter(Boolean);
     const ADMIN = simple ? [] : [
@@ -96,6 +97,7 @@
       '/rekenhulp': '<rect x="5" y="2.5" width="14" height="19" rx="2"/><rect x="8" y="5.5" width="8" height="4" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>',
       '/verkenner': '<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/>',
       '/ai-analyse': '<path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/><rect x="5.5" y="5.5" width="13" height="13" rx="3"/>',
+      '/lijsten/optimaliseren': '<path d="M4 6.5h9M4 12h7M4 17.5h10"/><path d="M18.2 4.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9zM17.5 14.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/>',
       import: '<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
       '/gebruikers': '<circle cx="12" cy="8" r="4"/><path d="M4 20c1-4 4-6 8-6s7 2 8 6"/>',
       '/prullenbak': '<path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13"/>',

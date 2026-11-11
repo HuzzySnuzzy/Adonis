@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.56.1', date: '2026-11-11', title: 'Lijsten opschonen makkelijker te vinden',
+    items: [
+      'Lijsten opschonen staat nu ook in het menu (Hulpmiddelen / Meer → Lijsten opschonen), en de knop in het Bandenhotel en de Voorraad heet nu "Opschonen met AI".',
+    ],
+  },
+  {
     version: '1.56.0', date: '2026-11-11', title: 'Lijsten opschonen met AI',
     items: [
       'Nieuw: lijsten laten opschonen door Claude. Klik in het Bandenhotel, bij Overige bandenopslag (o.a. noodbanden) of in de Voorraad (banden of onderdelen) op Opschonen. Claude kijkt naar schrijfwijze (namen, merken, auto\'s), bandenmaten, seizoen (uit het bandenmodel), velgen, telefoonnummers en de soort onderdeel, en wijst mogelijk dubbele regels aan.',

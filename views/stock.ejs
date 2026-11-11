@@ -13,7 +13,7 @@
       <% if (q) { %><a class="btn btn-ghost" href="/voorraad?soort=<%= soort %>">Wissen</a><% } %>
     </form>
     <div class="head-buttons">
-      <% if (feat.ai) { %><a class="btn" href="/lijsten/optimaliseren?lijst=<%= soort === 'band' ? 'voorraadbanden' : 'onderdelen' %>" title="Schrijfwijze, merken, soorten en maten laten nakijken door Claude"><%- include('/partials/ai-icon') %> Opschonen</a><% } %>
+      <% if (feat.ai) { %><a class="btn" href="/lijsten/optimaliseren?lijst=<%= soort === 'band' ? 'voorraadbanden' : 'onderdelen' %>" title="Schrijfwijze, merken, soorten en maten laten nakijken door Claude"><%- include('/partials/ai-icon') %> Opschonen met AI</a><% } %>
       <a class="btn btn-primary" href="/voorraad/nieuw?soort=<%= soort %>">+ <%= soort === 'band' ? 'Band' : 'Onderdeel' %> toevoegen</a>
     </div>
   </div>
