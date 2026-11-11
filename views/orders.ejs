@@ -29,7 +29,7 @@
     <div class="empty"><p><%= q ? 'Niets gevonden voor “' + q + '”.' : status === 'klaar' ? 'Er ligt niets klaar om te factureren.' : status ? 'Geen werkopdrachten met deze status.' : 'Nog geen werkopdrachten.' %></p></div>
   <% } else { %>
     <p class="muted"><%= q || status ? orders.length + ' gevonden' + (status === 'klaar' ? ' – oudste bovenaan' : '') : 'Laatste ' + orders.length + ' werkopdrachten' %></p>
-    <%- include('/partials/orderlist', { orders, showPlate: true }) %>
+    <%- include('/partials/orderlist', { orders, showPlate: true, groupByDate: status !== 'klaar' }) %>
   <% } %>
   </div>
 </main>

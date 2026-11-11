@@ -218,6 +218,23 @@ app.locals.esc = esc;
 app.locals.inp = inp;
 app.locals.fmtDate = fmtDate;
 app.locals.fmtKm = fmtKm;
+/** Kopje per dag in de lijst met werkopdrachten: Vandaag, Gisteren, daarna de weekdag (deze week) of de volledige datum. */
+app.locals.dayLabel = (iso) => {
+  if (!iso) return 'Zonder datum';
+  const today = new Date(orders.todayISO() + 'T00:00:00Z');
+  const d = new Date(String(iso).slice(0, 10) + 'T00:00:00Z');
+  if (isNaN(d)) return iso;
+  const days = Math.round((today - d) / 864e5);
+  const opts = { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long' };
+  if (d.getUTCFullYear() !== today.getUTCFullYear()) opts.year = 'numeric';
+  const full = new Intl.DateTimeFormat('nl-NL', opts).format(d);
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  if (days === 0) return 'Vandaag · ' + full;
+  if (days === 1) return 'Gisteren · ' + full;
+  if (days === 2) return 'Eergisteren · ' + full;
+  if (days < 0) return cap(full);
+  return cap(full);
+};
 app.locals.fmtDateTime = fmtDateTime;
 app.locals.FLUIDS = orders.FLUIDS;
 app.locals.TIRES = orders.TIRES;
@@ -595,7 +612,7 @@ app.get('/werkopdrachten', (req, res) => {
   }
   if (status) { where.push('o.status = ?'); params.push(status); }
   // Te factureren: oudste eerst (wie het langst wacht, staat bovenaan).
-  const order = status === 'klaar' ? 'o.status_at ASC, o.nummer ASC' : 'o.nummer DESC';
+  const order = status === 'klaar' ? 'o.status_at ASC, o.nummer ASC' : 'o.datum_invoer DESC, o.nummer DESC';
   const rows = db.prepare(
     `SELECT o.*, c.kenteken AS c_kenteken, su.name AS status_by_name
      FROM orders o JOIN customers c ON c.id = o.customer_id LEFT JOIN users su ON su.id = o.status_by

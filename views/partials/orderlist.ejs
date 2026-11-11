@@ -6,8 +6,21 @@
   </tr></thead>
   <tbody>
   <% const noteCounts = locals.user ? notesOnOrders(user) : new Map(); %>
+  <%
+    // Per dag een kopje (Vandaag, Gisteren, ...) met hoeveel werkopdrachten er die dag zijn en hoeveel nog open staan.
+    const cols = locals.showPlate ? 8 : 6;
+    const perDay = new Map();
+    if (locals.groupByDate) for (const o of orders) { const k = o.datum_invoer || ''; const e = perDay.get(k) || { n: 0, open: 0 }; e.n++; if (o.status === 'open') e.open++; perDay.set(k, e); }
+    let lastDay = null;
+  %>
   <% for (const o of orders) { %>
-    <tr data-href="/werkopdracht/<%= o.id %>">
+    <% if (locals.groupByDate && (o.datum_invoer || '') !== lastDay) { lastDay = o.datum_invoer || ''; const e = perDay.get(lastDay); const label = dayLabel(lastDay); %>
+    <tr class="day-row<%= label.startsWith('Vandaag') ? ' is-today' : '' %>" data-day="<%= lastDay %>">
+      <td colspan="<%= cols %>"><span class="day-name"><%= label %></span>
+        <span class="day-count"><%= e.n %> werkopdracht<%= e.n === 1 ? '' : 'en' %><% if (e.open) { %> · <b><%= e.open %> open</b><% } %></span></td>
+    </tr>
+    <% } %>
+    <tr data-href="/werkopdracht/<%= o.id %>"<%- o.status === 'open' ? ' class="is-open"' : '' %>>
       <% const nNotes = noteCounts.get(o.id) || 0; %>
       <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= o.nummer %></a><% if (nNotes) { %> <span class="note-flag" title="<%= nNotes %> plaknotitie<%= nNotes === 1 ? '' : 's' %> op deze werkopdracht" aria-label="<%= nNotes %> plaknotities"></span><% } %></td>
       <td><span class="status-badge status-<%= o.status %> in-list"><%= { open: 'Open', klaar: 'Klaar', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>

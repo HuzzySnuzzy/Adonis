@@ -2277,3 +2277,20 @@ a:hover { text-decoration: underline; }
   :root[data-layout="side"] .topbar .new-order-btn { white-space: normal; text-align: center; line-height: 1.2; font-size: .9rem; letter-spacing: normal; }
 }
 .tpl-name input { max-width: 320px; }
+
+/* ---------- Werkopdrachten per dag (Vandaag, Gisteren, ...) ---------- */
+table.list tr.day-row td { padding: .9rem .75rem .35rem; background: var(--bg); border-bottom: 1px solid var(--border); }
+table.list tbody tr.day-row:first-child td { padding-top: .55rem; }
+table.list tr.day-row .day-name { font-weight: 700; font-size: .92rem; color: var(--text); }
+table.list tr.day-row .day-count { margin-left: .7rem; font-size: .8rem; color: var(--muted); }
+table.list tr.day-row .day-count b { color: var(--warn-text, #8a5a00); font-weight: 600; }
+table.list tr.day-row.is-today td { background: color-mix(in srgb, var(--primary) 8%, var(--surface)); box-shadow: inset 3px 0 0 var(--primary); }
+table.list tr.day-row.is-today .day-name { color: var(--primary); }
+table.list.clickable tbody tr.day-row { cursor: default; }
+table.list.clickable tbody tr.day-row:hover { background: none; }
+table.list tr.day-row[hidden] { display: none; }
+@media (max-width: 760px) {
+  table.list.cards > tbody > tr.day-row { display: block; padding: .7rem .9rem .35rem; background: var(--bg); }
+  table.list.cards > tbody > tr.day-row > td { display: block; padding: 0; background: none; box-shadow: none; }
+  table.list.cards > tbody > tr.day-row.is-today { box-shadow: inset 3px 0 0 var(--primary); background: color-mix(in srgb, var(--primary) 8%, var(--surface)); }
+}

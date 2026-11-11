@@ -311,6 +311,7 @@ document.addEventListener('change', (e) => {
     const heads = [...table.tHead.rows[0].cells].map((th) => th.textContent.replace(/\s+/g, ' ').trim());
     table.classList.add('cards');
     for (const row of table.tBodies[0] ? table.tBodies[0].rows : []) {
+      if (row.classList.contains('day-row')) continue; // kopje per dag blijft een kopje
       let lead = false;
       [...row.cells].forEach((td, i) => {
         td.dataset.label = heads[i] || '';
@@ -523,7 +524,9 @@ document.addEventListener('click', async (e) => {
       th.classList.toggle('sort-desc', i === col && dir === -1);
       if (sortable(th)) th.setAttribute('aria-sort', i === col && dir ? (dir === 1 ? 'ascending' : 'descending') : 'none');
     });
-    const sorted = rows.slice().sort((a, b) => {
+    // Kopjes per dag horen bij de gewone volgorde: bij sorteren op een kolom even weg, daarna weer terug.
+    rows.filter((r) => r.classList.contains('day-row')).forEach((r) => { r.hidden = Boolean(dir); });
+    const sorted = rows.filter((r) => !dir || !r.classList.contains('day-row')).sort((a, b) => {
       if (!dir) return a.dataset.origIndex - b.dataset.origIndex;
       const x = value(a.cells[col]); const y = value(b.cells[col]);
       if (x === null || y === null) return x === null && y === null ? a.dataset.origIndex - b.dataset.origIndex : x === null ? 1 : -1; // leeg altijd onderaan

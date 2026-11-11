@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.48.0', date: '2026-11-11', title: 'Werkopdrachten per dag',
+    items: [
+      'De lijst met werkopdrachten is nu verdeeld per dag: Vandaag, Gisteren, Eergisteren en daarna de weekdag met datum. Bij elk kopje staat hoeveel werkopdrachten er die dag zijn en hoeveel er nog open staan; Vandaag is extra gemarkeerd.',
+      'Sorteert u op een kolom (bijv. Km-stand), dan verdwijnen de kopjes even; klikt u terug naar de gewone volgorde, dan zijn ze er weer. Bij "Klaar voor facturatie" (oudste eerst) staan geen kopjes.',
+    ],
+  },
+  {
     version: '1.47.0', date: '2026-11-11', title: 'Sjablonen en een nieuwe achterkant',
     items: [
       'Sjablonen: voorgevulde werkopdrachten voor werk dat vaak terugkomt. Op elke werkopdracht staat bovenaan de knop Sjabloon: kies een sjabloon en de onderdelen, werkzaamheden, vloeistoffen en aantekeningen worden op de lege regels ingevuld (wat er al staat blijft staan). Met "Opslaan als sjabloon…" maakt u er zelf een van de huidige werkopdracht (zonder klant, auto, datums en km-standen).',
