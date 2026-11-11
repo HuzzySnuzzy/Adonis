@@ -142,6 +142,23 @@
       <% if (p.desktop === 'on') { %><p><a class="btn btn-small" href="/bureaublad">Bureaublad openen</a></p><% } %>
     </section>
 
+    <section class="card" id="links">
+      <h2>Links naar andere websites</h2>
+      <p class="muted small">Bijvoorbeeld het Portaal, "Opzoeken met …" bij een kenteken of "Bekijken op rdw.nl". Werkt in de ADONIS-app;
+        in een gewone browser opent een link altijd in een nieuw tabblad.</p>
+      <div class="choice-grid two" role="radiogroup" aria-label="Links openen">
+        <label class="choice">
+          <input type="radio" name="links" value="adonis" <%= (p.links || 'adonis') === 'adonis' ? 'checked' : '' %>>
+          <span class="choice-body"><span class="choice-label">In ADONIS</span><span class="choice-help">In de ingebouwde browser: een eigen venster, of in de bureaubladmodus een venster op het bureaublad</span></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="links" value="browser" <%= p.links === 'browser' ? 'checked' : '' %>>
+          <span class="choice-body"><span class="choice-label">In mijn browser</span><span class="choice-help">In Chrome, Edge of welke browser u normaal gebruikt</span></span>
+        </label>
+      </div>
+      <p class="muted small">Toch even andersom? <b>Shift + klik</b> of klik met het <b>scrollwiel</b> (middelste muisknop).</p>
+    </section>
+
     <section class="card" id="meldingen">
       <h2>Meldingen</h2>
       <p class="muted small">Rechtsonder verschijnt een melding als een collega iets doet. Ze blijven 15 seconden staan

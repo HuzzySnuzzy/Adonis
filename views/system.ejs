@@ -39,6 +39,38 @@
     </form>
   </section>
 
+  <section class="card autofill-card" id="invullen">
+    <h2>Automatisch invullen</h2>
+    <p class="muted small">Wat ADONIS voor iedereen alvast invult of voorstelt op een werkopdracht. Zet uit wat u niet wilt, en vul uw eigen
+      vaste werkzaamheden en onderdelen aan: die komen bovenaan in de suggesties tijdens het typen.</p>
+    <form method="post" action="/systeem/invullen" class="stack">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="notify-grid af-grid">
+        <% for (const [k, label, help] of AF_OPTIONS) { %>
+        <label class="check big-check"><input type="checkbox" name="af_<%= k %>" <%= af.on[k] ? 'checked' : '' %>>
+          <span><b><%= label %></b><br><span class="muted small"><%= help %></span></span></label>
+        <% } %>
+      </div>
+      <fieldset class="af-set">
+        <legend>Vaste waarden voor een nieuwe werkopdracht</legend>
+        <div class="af-row">
+          <label>Uurtarief <input name="tarief" value="<%= af.vast.tarief %>" inputmode="decimal" placeholder="bijv. 62,50" class="af-short"></label>
+          <label>Contact bij extra kosten boven € <input name="contact_boven" value="<%= af.vast.contact_boven %>" inputmode="decimal" placeholder="bijv. 150" class="af-short"></label>
+          <label>Alle noodzakelijke reparaties uitvoeren
+            <select name="alle_reparaties"><option value="">Niet invullen</option><option value="ja" <%= af.vast.alle_reparaties === 'ja' ? 'selected' : '' %>>Ja</option><option value="nee" <%= af.vast.alle_reparaties === 'nee' ? 'selected' : '' %>>Nee</option></select></label>
+        </div>
+        <p class="muted small">Leeg laten = niets invullen (het uurtarief komt dan van de vorige werkopdracht, als dat hierboven aan staat).</p>
+      </fieldset>
+      <div class="af-lists">
+        <label>Eigen werkzaamheden <span class="muted small">(één per regel)</span>
+          <textarea name="werk" rows="7" placeholder="Kleine beurt volgens fabrieksvoorschrift&#10;Grote beurt + interieurfilter&#10;APK-keuring en afmelden"><%= af.werk.join('\n') %></textarea></label>
+        <label>Eigen onderdelen <span class="muted small">(één per regel: omschrijving ; prijs ; onderdeelnummer)</span>
+          <textarea name="onderdelen" rows="7" placeholder="Oliefilter ; 12,50&#10;Motorolie 5W30 per liter ; 14,95&#10;Ruitenwisserblad set ; 24,95 ; WB-600"><%= af.onderdelen.join('\n') %></textarea></label>
+      </div>
+      <div><button class="btn btn-primary" type="submit">Opslaan</button></div>
+    </form>
+  </section>
+
   <% const FD = feesten; %>
   <section class="card feest-card" id="feestdagen">
     <h2>Feestdagen</h2>

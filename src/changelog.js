@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.55.0', date: '2026-11-11', title: 'Automatisch invullen instellen en links openen naar keuze',
+    items: [
+      'Systeem → Automatisch invullen (ADONIS-beheerder): zet per hulpje aan of uit wat ADONIS invult of voorstelt: RDW-gegevens bij het kenteken, klantgegevens van een bekende auto, suggesties tijdens het typen, hints en waarschuwingen, de monteur, het uurtarief van de vorige werkopdracht en het voorrekenen van uren en begroting.',
+      'Eigen suggesties: zet vaste werkzaamheden en onderdelen (met prijs en onderdeelnummer) in een lijst; ze komen bovenaan in de suggesties tijdens het typen. Ook vaste waarden voor elke nieuwe werkopdracht: uurtarief, contact bij extra kosten boven €, en Alle noodzakelijke reparaties uitvoeren.',
+      'Instellingen → Links naar andere websites (ADONIS-app): kies of links (Portaal, Opzoeken met …, rdw.nl) in ADONIS openen of in uw eigen browser. Shift + klik of klikken met het scrollwiel doet het andersom.',
+    ],
+  },
+  {
     version: '1.54.3', date: '2026-11-11', title: 'Altijd afdrukken op A4',
     items: [
       'Afdrukken gebeurt nu altijd op A4, ook als de printer of browser op een ander formaat (zoals Letter) staat: de werkopdracht op A4 liggend, andere pagina\'s op A4 staand. Ook het gewone afdrukscherm van de ADONIS-app staat op A4.',

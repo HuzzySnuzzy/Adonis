@@ -77,7 +77,10 @@
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && pop) { e.preventDefault(); closePop(); } });
 
   // Nieuw kenteken ingevuld en Merk/Type of APK-datum nog leeg: automatisch aanvullen.
+  const form = plate.form;
+  const autoRdw = !form || !form.dataset.autofill || form.dataset.autofill.split(' ').includes('rdw');
   plate.addEventListener('change', async () => {
+    if (!autoRdw) return; // uitgezet bij Systeem → Automatisch invullen (de knop RDW werkt wel)
     if (plate.disabled || ((merk && merk.value.trim()) && (apk && apk.value) && (!deel1 || deel1.value))) return;
     try {
       const r = await fetchRdw();

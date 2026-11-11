@@ -35,6 +35,7 @@ const presence = require('./presence');
 const branding = require('./branding');
 const mywork = require('./mywork');
 const festive = require('./festive');
+const autofill = require('./autofill');
 
 const app = express();
 // Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
@@ -685,6 +686,7 @@ function renderOrder(res, { order, data, nummer, error, status, draft, datumInvo
       const modelApk = require('./model-bulletins').get(cust);
       return bl.open.length || (modelApk.data && modelApk.data.items.length) ? { bl, customer: cust, modelApk } : null;
     })(),
+    autofillFlags: autofill.flags(),
     // Portaal-websites die met het kenteken zoeken (bijv. onderdelen of olie opzoeken tijdens het werk).
     plateLinks: data && data.kenteken ? require('./portal').plateLinks(data.kenteken) : [],
   });
@@ -698,14 +700,19 @@ app.get('/werkopdracht/hulp', (req, res) => {
 app.get('/werkopdracht/suggesties', (req, res) => {
   res.set('Cache-Control', 'no-store');
   const kind = ['onderdeel', 'werk', 'bandmaat', 'bandmerk'].includes(req.query.soort) ? req.query.soort : null;
-  res.json({ items: kind ? assist.suggest(kind, String(req.query.q || ''), { stock: res.locals.feat.voorraad }) : [] });
+  const af = autofill.state();
+  if (!af.on.suggesties) return res.json({ items: [] }); // uitgezet bij Systeem → Automatisch invullen
+  res.json({ items: kind ? assist.suggest(kind, String(req.query.q || ''), { stock: res.locals.feat.voorraad, eigen: af }) : [] });
 });
 
 app.get('/werkopdracht/nieuw', (req, res) => {
   const data = orders.emptyOrderData();
-  data.monteur = req.user.name;
+  const af = autofill.state(); // Systeem → Automatisch invullen
+  if (af.on.monteur) data.monteur = req.user.name;
   data.voorkant = '2'; // nieuwe werkopdrachten: werkzaamheden regel voor regel
-  data.tarief = assist.lastTarief(); // zelfde uurtarief als de laatste werkopdracht
+  data.tarief = af.vast.tarief || (af.on.tarief ? assist.lastTarief() : ''); // vast tarief, of dat van de laatste werkopdracht
+  if (af.vast.contact_boven) data.contact_boven = af.vast.contact_boven;
+  if (af.vast.alle_reparaties) data.alle_reparaties = af.vast.alle_reparaties;
   // Nieuwe werkopdracht vanuit een sjabloon (bijv. "Bandenwissel").
   const tpl = req.query.sjabloon ? templates.get(Number(req.query.sjabloon)) : null;
   if (tpl) templates.applyTo(data, tpl);
@@ -1152,6 +1159,7 @@ app.post('/instellingen', (req, res) => {
     partimg: [].concat(req.body.partimg || []).includes('on') ? 'on' : 'off',
     desktop: [].concat(req.body.desktop || []).includes('on') ? 'on' : 'off',
     feest: [].concat(req.body.feest || []).includes('on') ? 'on' : 'off',
+    links: req.body.links,
     layout: req.body.layout,
     ...Object.fromEntries(auth.NOTIFY_KINDS.map(([k]) => ['n_' + k, [].concat(req.body['n_' + k] || []).includes('on') ? 'on' : 'off'])),
   });
@@ -1220,7 +1228,7 @@ async function renderSystem(res, { error = null, status = 200, values = {} } = {
     title: 'Systeem', error, values, cf, tunnelState: tunnel.getState(),
     port: Number(process.env.APP_PORT) || null, supported: Boolean(tunnel.assetName()),
     permissionsHelp: cloudflare.PERMISSIONS_HELP,
-    bk, FEATURES: features.FEATURES, feesten: festive.overview(),
+    bk, FEATURES: features.FEATURES, feesten: festive.overview(), af: autofill.state(), AF_OPTIONS: autofill.OPTIONS,
   });
 }
 async function backupView() {
@@ -1251,6 +1259,13 @@ app.get('/mijn-werk', (req, res) => {
     users: req.user.is_admin ? db.prepare('SELECT id, name FROM users ORDER BY name').all() : [],
     w: mywork.forUser(target), STATUSES: orders.STATUSES,
   });
+});
+
+/* ---------- automatisch invullen (alleen ADONIS-beheerder) ---------- */
+app.post('/systeem/invullen', auth.requireOwner, (req, res) => {
+  autofill.save(req.body);
+  flash(req, 'ok', 'Automatisch invullen opgeslagen.');
+  res.redirect('/systeem#invullen');
 });
 
 /* ---------- feestdagen (alleen ADONIS-beheerder) ---------- */

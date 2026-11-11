@@ -64,15 +64,26 @@ function matcher(q) {
 }
 
 /** Suggesties tijdens het typen. kind: onderdeel | werk | bandmaat | bandmerk */
-function suggest(kind, q, { stock = true } = {}) {
+function suggest(kind, q, { stock = true, eigen = null } = {}) {
   q = txt(q).slice(0, 60);
   if (q.length < 2) return [];
   const ok = matcher(q);
   const out = [];
+  // Eigen lijst van de ADONIS-beheerder (Systeem → Automatisch invullen) eerst.
+  if (eigen && kind === 'werk') for (const t of eigen.werk) { if (out.length >= 4) break; if (ok(t)) out.push({ text: t, note: 'eigen lijst' }); }
+  if (eigen && kind === 'onderdeel') {
+    for (const l of eigen.onderdelen) {
+      if (out.length >= 4) break;
+      const p = require('./autofill').parsePart(l);
+      if (ok(p.nr, p.omschrijving)) out.push({ nr: p.nr, omschrijving: p.omschrijving, prijs: p.prijs, note: 'eigen lijst' });
+    }
+  }
+  const mine = out.length;
   if (kind === 'onderdeel') {
     // Eerst wat al eens op een werkopdracht stond (met de prijs van toen), dan de voorraad.
     for (const p of index().parts) {
-      if (out.length >= 5) break;
+      if (out.length >= 5 + mine) break;
+      if (out.some((o) => fold(o.omschrijving) === fold(p.omschrijving))) continue;
       if (ok(p.nr, p.omschrijving)) out.push({ nr: p.nr, omschrijving: p.omschrijving, prijs: p.prijs, note: `${p.n}× gebruikt` });
     }
     if (stock) {
@@ -85,7 +96,7 @@ function suggest(kind, q, { stock = true } = {}) {
       }
     }
   } else if (kind === 'werk') {
-    for (const w of index().work) { if (ok(w.text)) out.push({ text: w.text, note: `${w.n}×` }); if (out.length >= 8) break; }
+    for (const w of index().work) { if (out.length >= 8 + mine) break; if (ok(w.text) && !out.some((o) => fold(o.text) === fold(w.text))) out.push({ text: w.text, note: `${w.n}×` }); }
   } else if (kind === 'bandmaat') {
     const seen = new Set();
     const add = (t0, note) => { const t = inv.normalizeSize(t0).toUpperCase(); if (t && !seen.has(t.toUpperCase()) && (seen.add(t.toUpperCase()), true) && ok(t, inv.sizeKey(t))) out.push({ text: t, note }); };

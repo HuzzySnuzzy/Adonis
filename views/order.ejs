@@ -122,7 +122,7 @@
   <% if (feat.ai) { %><%- include('/partials/model-apk', { modelApk: orderBulletins.modelApk, aiOn: false, customer: orderBulletins.customer, compact: true }) %><% } %>
 </div><% } %>
 <% if (order) { %><span hidden id="live-order" data-id="<%= order.id %>"></span><% } %>
-<form id="orderForm" method="post" action="<%= draft ? '/importeren/' + draft.id + '/bevestigen' : order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off"<% if (!draft && !error) { %> data-live-edit="<%= order ? order.id : 'nieuw' %>" data-rev="<%= order ? order.rev : '' %>"<% } %>>
+<form id="orderForm" method="post" action="<%= draft ? '/importeren/' + draft.id + '/bevestigen' : order ? '/werkopdracht/' + order.id : '/werkopdracht' %>" autocomplete="off" data-autofill="<%= locals.autofillFlags || '' %>"<% if (!draft && !error) { %> data-live-edit="<%= order ? order.id : 'nieuw' %>" data-rev="<%= order ? order.rev : '' %>"<% } %>>
   <input type="hidden" name="_csrf" value="<%= csrf %>">
   <input type="hidden" name="zonder_factuurnr" value="">
   <input type="hidden" name="d[voorkant]" value="<%= d.voorkant %>">

@@ -2510,3 +2510,14 @@ table.list tr.day-row[hidden] { display: none; }
 
 /* Afdrukken: altijd A4 (ook als de printer of browser op Letter staat). De werkopdracht zelf: A4 liggend (werkopdracht.css). */
 @page { size: A4; margin: 12mm; }
+
+/* Systeem → Automatisch invullen */
+.af-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: .4rem 1.2rem; }
+.af-set { border: 1px solid var(--border-soft, var(--border)); border-radius: var(--radius, 8px); padding: .6rem .8rem .2rem; margin: 0; }
+.af-set legend { padding: 0 .35rem; font-weight: 600; font-size: .9rem; }
+.af-row { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem; align-items: end; }
+.af-row label { display: grid; gap: .25rem; }
+.af-short { width: 8rem; }
+.af-lists { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+.af-lists label { display: grid; gap: .3rem; }
+.af-lists textarea { width: 100%; font: inherit; font-size: .92rem; }

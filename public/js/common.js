@@ -608,22 +608,41 @@ document.addEventListener('click', async (e) => {
   addEventListener('blur', () => { alone = false; });
   addEventListener('keyup', (e) => { if (e.code === 'ControlLeft' && alone && Date.now() - at < 800) { alone = false; window.top.postMessage({ adonisStart: true }, location.origin); } }, true);
 })();
-// In de ADONIS-app: websites uit het Portaal (en "Opzoeken met …" bij een kenteken) binnen ADONIS openen.
-// In de bureaubladmodus als venster op het bureaublad, anders in een eigen ADONIS-venster. Shift+klik = gewone browser.
+// In de ADONIS-app: links naar andere websites (Portaal, "Opzoeken met …", rdw.nl, bronnen…) openen zoals de gebruiker
+// heeft gekozen (Instellingen → Links): in ADONIS zelf (bureaubladmodus: als venster op het bureaublad, anders een eigen
+// ADONIS-venster) of in de gewone browser. Shift+klik of klikken met het scrollwiel doet het andersom.
 (function () {
   let appApi = null; let top = window;
   try { top = window.top; appApi = top.adonisApp; } catch { /* ander adres */ }
   if (!appApi || !appApi.openSite) return;
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest && e.target.closest('a.portal-tile[href], a.plate-site[href], a[data-site]');
-    if (!a || e.defaultPrevented || e.shiftKey || e.button !== 0) return;
-    if (document.querySelector('.portal-page.is-editing')) return; // bewerken: niet openen
-    let u; try { u = new URL(a.href, location.href); } catch { return; }
-    if (!/^https?:$/.test(u.protocol) || u.origin === location.origin) return;
-    e.preventDefault();
+  const inAdonisByDefault = () => document.documentElement.dataset.links !== 'browser';
+  const extUrl = (a) => {
+    if (!a || !a.getAttribute('href') || a.hasAttribute('download')) return null;
+    let u; try { u = new URL(a.href, location.href); } catch { return null; }
+    return /^https?:$/.test(u.protocol) && u.origin !== location.origin ? u : null;
+  };
+  const inside = (u, a) => {
     const title = (a.title || a.textContent || '').split('\n')[0].trim().slice(0, 80);
     if (top.adonisDesktop && top.adonisDesktop.openSite) top.adonisDesktop.openSite(u.href, title);
     else appApi.openSite(u.href, title);
+  };
+  const outside = (u) => { if (appApi.openExternal) appApi.openExternal(u.href); else window.open(u.href, '_blank', 'noopener'); };
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.altKey) return;
+    const a = e.target.closest && e.target.closest('a[href]');
+    const u = extUrl(a);
+    if (!u) return;
+    if (a.closest('.portal-page.is-editing')) return; // Portaal bewerken: niet openen
+    e.preventDefault();
+    if (inAdonisByDefault() !== e.shiftKey) inside(u, a); else outside(u);
+  }, true);
+  document.addEventListener('auxclick', (e) => {
+    if (e.button !== 1) return;
+    const a = e.target.closest && e.target.closest('a[href]');
+    const u = extUrl(a);
+    if (!u) return;
+    e.preventDefault();
+    if (inAdonisByDefault()) outside(u); else inside(u, a);
   }, true);
 })();
 

@@ -177,6 +177,8 @@
 
   /* ---------- achterkant: uren en begroting rekenen mee (als hulp: alleen lege vakken krijgen een voorstel) ---------- */
   (function back() {
+    // Uitgezet bij Systeem → Automatisch invullen?
+    if (form.dataset.autofill && !form.dataset.autofill.split(' ').includes('rekenen')) return;
     const t2h = (v) => { const m = /^(\d{1,2})[:.]?(\d{2})$/.exec(String(v || '').trim()); return m ? Number(m[1]) + Number(m[2]) / 60 : NaN; };
     const nl = (n, d = 2) => n.toLocaleString('nl-NL', { minimumFractionDigits: d, maximumFractionDigits: d });
     function uur(row) {

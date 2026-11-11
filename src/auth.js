@@ -28,6 +28,7 @@ const PREF_OPTIONS = {
   desktop: ['off', 'on'], // bureaubladmodus: pagina's als vensters (alleen op de computer)
   partimg: ['on', 'off'], // voorbeeldfoto van de soort onderdeel in de voorraad (Wikipedia)
   layout: ['zijbalk', 'boven'], // menu als zijbalk links (standaard) of als balk bovenaan
+  links: ['adonis', 'browser'], // ADONIS-app: links naar andere websites in ADONIS (ingebouwde browser) of in de eigen browser
   feest: ['on', 'off'], // feestelijke achtergronden (sneeuw met Kerst enz., zie Systeem → Feestdagen)
   // Meldingen (rechtsonder) over wat collega's doen, per soort aan/uit.
   n_werkopdrachten: ['on', 'off'], n_banden: ['on', 'off'], n_voorraad: ['on', 'off'],
@@ -41,7 +42,7 @@ const NOTIFY_KINDS = [
   ['notities', 'Plaknotities', 'Nieuwe gedeelde plaknotities van collega\'s'],
   ['herinneringen', 'Herinneringen', 'Eén keer per dag: welke klanten gebeld moeten worden voor de APK of de bandenwissel'],
 ];
-const PREF_DEFAULTS = { theme: 'system', ink: 'plain', start: '/', fx: 'full', secret: 'off', mscale: '90', simple: 'off', carimg: 'on', partimg: 'on', desktop: 'off', layout: 'zijbalk', feest: 'on',
+const PREF_DEFAULTS = { theme: 'system', ink: 'plain', start: '/', fx: 'full', secret: 'off', mscale: '90', simple: 'off', carimg: 'on', partimg: 'on', desktop: 'off', layout: 'zijbalk', feest: 'on', links: 'adonis',
   n_werkopdrachten: 'on', n_banden: 'on', n_voorraad: 'on', n_klanten: 'on', n_notities: 'on', n_herinneringen: 'on' };
 /** Thema's die alleen zichtbaar zijn met de voorkeur "Geheime thema's". */
 // Alleen Systeem, Licht en Donker staan altijd in de lijst; de rest is te zien met "Geheime thema's".

@@ -10,6 +10,10 @@
   const form = document.getElementById('orderForm');
   if (!form) return;
   const editable = !form.querySelector('fieldset:disabled');
+  // Welke hulpjes staan aan (Systeem → Automatisch invullen)? Zonder lijst (bijv. de import): alles.
+  const AF = form.dataset.autofill ? form.dataset.autofill.split(' ') : ['rdw', 'klant', 'suggesties', 'waarschuwingen', 'rekenen'];
+  const afOn = (k) => AF.includes(k);
+  if (!afOn('klant') && !afOn('suggesties') && !afOn('waarschuwingen')) return;
   const $ = (name) => form.querySelector(`[name="d[${name}]"]`);
   const plate = $('kenteken');
   const orderId = (document.getElementById('live-order') || {}).dataset?.id || '';
@@ -40,6 +44,7 @@
   let info = null;
 
   function render() {
+    if (!afOn('waarschuwingen')) { bar.hidden = true; return; }
     const chips = []; const actions = []; const warns = warnings();
     if (info && info.found) {
       const c = info.customer || {};
@@ -121,11 +126,11 @@
     try { r = await (await fetch(`/werkopdracht/hulp?kenteken=${encodeURIComponent(v)}&id=${encodeURIComponent(orderId)}`, { credentials: 'same-origin' })).json(); } catch { return; }
     if (my !== seq) return;
     info = r;
-    if (fill && editable && r.found && r.customer) {
+    if (fill && editable && afOn('klant') && r.found && r.customer) {
       for (const f of ['naam', 'adres', 'plaats', 'klantnr', 'tel_prive', 'tel_zaak', 'merk_type', 'chassisnummer', 'alarmcode']) setField($(f), r.customer[f]);
       setField($('apk_datum'), r.customer.apk);
     }
-    if (fill && editable && r.km && $('km_in') && !$('km_in').value) $('km_in').placeholder = `vorige: ${fmtKm(r.km.km)}`;
+    if (fill && editable && afOn('waarschuwingen') && r.km && $('km_in') && !$('km_in').value) $('km_in').placeholder = `vorige: ${fmtKm(r.km.km)}`;
     render();
   }
   if (plate) {
@@ -229,7 +234,7 @@
     const start = v.lastIndexOf('\n', caret - 1) + 1; let end = v.indexOf('\n', caret); if (end < 0) end = v.length;
     return { start, end, text: v.slice(start, caret), index: v.slice(0, start).split('\n').length - 1 };
   }
-  if (editable) form.addEventListener('input', (e) => {
+  if (editable && afOn('suggesties')) form.addEventListener('input', (e) => {
     const el = e.target; const kind = kindOf(el);
     if (!kind || !e.isTrusted) return;
     const line = kind === 'werk' ? currentLine(el) : null;
