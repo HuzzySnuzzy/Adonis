@@ -74,7 +74,7 @@
       F.rekenhulp && ['/rekenhulp', 'Rekenhulp'],
       ['/verkenner', "Foto's"],
       F.ai && ['/ai-analyse', 'AI-analyse'],
-      F.ai && (F.bandenhotel || F.voorraad) && ['/lijsten/optimaliseren', 'Lijsten opschonen'],
+      F.ai && ['/lijsten/optimaliseren', 'Lijsten opschonen'],
       importHref && !simple && [importHref, 'Importeren'],
     ].filter(Boolean);
     const ADMIN = simple ? [] : [

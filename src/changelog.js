@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.57.0', date: '2026-11-12', title: 'Klanten opschonen met AI',
+    items: [
+      'Ook de klantenlijst kan nu worden opgeschoond: klik bij Klanten op "Opschonen met AI". Claude kijkt naar de schrijfwijze van namen, adressen en plaatsen (zevenaar → Zevenaar, s-heerenberg → \'s-Heerenberg), telefoonnummers (06-12345678) en merk/type (vw golf → Volkswagen Golf), en wijst mogelijk dubbele klanten aan. Kentekens, klantnummers en chassisnummers blijven altijd zoals ze zijn.',
+      'Doorgevoerde wijzigingen tellen als "Gegevens wijzigen": ze gaan voor op wat er in oudere werkopdrachten staat.',
+    ],
+  },
+  {
     version: '1.56.1', date: '2026-11-11', title: 'Lijsten opschonen makkelijker te vinden',
     items: [
       'Lijsten opschonen staat nu ook in het menu (Hulpmiddelen / Meer → Lijsten opschonen), en de knop in het Bandenhotel en de Voorraad heet nu "Opschonen met AI".',

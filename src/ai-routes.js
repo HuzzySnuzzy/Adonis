@@ -182,7 +182,7 @@ module.exports = function register(app, { flash, wrap }) {
   /* ================= lijsten opschonen (bandenhotel, opslag, voorraad) ================= */
   const listAllowed = (req, key) => {
     const L = listAi.LISTS[key]; const F = res0(req);
-    return L && F.ai && (L.kind === 'tyre' ? F.bandenhotel : F.voorraad);
+    return L && F.ai && (L.kind === 'customer' ? true : L.kind === 'tyre' ? F.bandenhotel : F.voorraad);
   };
   const res0 = (req) => req.res.locals.feat || {};
   app.get('/lijsten/optimaliseren', (req, res) => {

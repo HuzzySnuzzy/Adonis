@@ -7,6 +7,7 @@
       <button class="btn" type="submit">Zoeken</button>
       <% if (q) { %><a class="btn btn-ghost" href="/">Wissen</a><% } %>
     </form>
+    <% if (feat.ai) { %><div class="head-buttons"><a class="btn" href="/lijsten/optimaliseren?lijst=klanten" title="Namen, adressen, telefoonnummers en merk/type laten nakijken door Claude"><%- include('/partials/ai-icon') %> Opschonen met AI</a></div><% } %>
   </div>
 
   <div id="live-customers" data-live>

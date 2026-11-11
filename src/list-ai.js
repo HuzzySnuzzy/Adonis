@@ -25,10 +25,13 @@ CREATE INDEX IF NOT EXISTS list_ai_runs_lijst ON list_ai_runs(lijst, id);
 `);
 
 const FIELD_LABEL = {
+  naam: 'Naam', adres: 'Adres', plaats: 'Plaats', tel_prive: 'Tel. privé', tel_zaak: 'Tel. zaak', merk_type: 'Merk/type',
   klant_naam: 'Naam', telefoon: 'Telefoon', auto: 'Auto', seizoen: 'Seizoen', maat: 'Maat', merk: 'Merk', velg: 'Velg',
   type: 'Type / soort', snelheid: 'Last-/snelheidsindex', omschrijving: 'Omschrijving',
 };
 const LISTS = {
+  klanten: { label: 'Klanten', kind: 'customer', back: '/', area: 'klanten',
+    fields: ['naam', 'adres', 'plaats', 'tel_prive', 'tel_zaak', 'merk_type'], context: ['kenteken'] },
   klantbanden: { label: 'Bandenhotel (klantenbanden)', kind: 'tyre', soort: 'klant', back: '/bandenhotel', area: 'banden',
     fields: ['klant_naam', 'telefoon', 'auto', 'seizoen', 'maat', 'merk', 'velg'], context: ['label', 'kenteken'] },
   opslagbanden: { label: 'Overige bandenopslag (o.a. noodbanden)', kind: 'tyre', soort: 'opslag', back: '/bandenhotel?soort=opslag', area: 'banden',
@@ -43,8 +46,11 @@ const MAX_ROWS = 2400;
 
 class ListAiError extends Error {}
 
+const TABLE = { tyre: 'tyre_storage', stock: 'stock_items', customer: 'customers' };
+const HREF = { tyre: '/bandenhotel/', stock: '/voorraad/', customer: '/klant/' };
 function rowsOf(key) {
   const L = LISTS[key];
+  if (L.kind === 'customer') return db.prepare('SELECT * FROM customers ORDER BY id').all();
   if (L.kind === 'tyre') {
     return db.prepare("SELECT * FROM tyre_storage WHERE soort = ? AND status <> 'uitgegeven' ORDER BY id").all(L.soort);
   }
@@ -67,7 +73,9 @@ Stel verbeteringen voor zodat de lijst netjes en consequent is. Alleen voor deze
 - Seizoen alleen "Zomer", "Winter" of "All season". Leid het alleen af uit een bekend bandenmodel (bijv. Michelin Alpin = Winter, Michelin CrossClimate = All season, Continental WinterContact = Winter); anders niet invullen.
 - Velg alleen: staal, alu of zonder.
 - Telefoonnummers als 06-12345678 of 0316-123456.
-- Auto: merk en model zoals gebruikelijk (vw golf → Volkswagen Golf, OPEL CORSA → Opel Corsa).
+- Auto (ook Merk/type): merk en model zoals gebruikelijk (vw golf → Volkswagen Golf, OPEL CORSA → Opel Corsa).
+- Adres en plaats: gewone hoofdletters (dorpsstraat 1a → Dorpsstraat 1a, ZEVENAAR → Zevenaar, s-heerenberg → 's-Heerenberg).
+- Een naam of adres alleen netjes schrijven; nooit raden wie de klant is of een ander adres invullen.
 - Onderdelen: soort (veld type) in hoofdletters en overal hetzelfde woord (BOUGIE, REMBLOKKEN, OLIEFILTER…); omschrijving kort en duidelijk.
 - Een leeg veld alleen invullen als het uit de rest van de regel zeker volgt (bijv. merk uit de omschrijving).
 - Nooit artikelnummers, labels, kentekens of aantallen veranderen. Niets verzinnen. Twijfel = niet voorstellen.
@@ -122,6 +130,7 @@ async function ask(L, rows, effortKey) {
 
 /** Wat zou de regel worden met deze waarde? (zelfde controle als bij het opslaan van het formulier) */
 function normalized(L, row, field, value) {
+  if (L.kind === 'customer') return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, 200); // zoals bij Gegevens wijzigen
   const merged = { ...row, [field]: value };
   if (L.kind === 'tyre') return inv.normalizeTyre({ ...merged, profiel_voor: row.profiel_voor, profiel_achter: row.profiel_achter })[field];
   return inv.normalizeStock(merged, L.soort)[field];
@@ -196,8 +205,7 @@ function latest(key) {
   if (!run) return null;
   let res = {};
   try { res = JSON.parse(run.result); } catch { /* leeg */ }
-  const table = L.kind === 'tyre' ? 'tyre_storage' : 'stock_items';
-  const getRow = db.prepare(`SELECT * FROM ${table} WHERE id = ?`);
+  const getRow = db.prepare(`SELECT * FROM ${TABLE[L.kind]} WHERE id = ?`);
   const applied = new Set(res.applied || []);
   const rows = new Map();
   const changes = (res.changes || []).map((c) => {
@@ -207,16 +215,16 @@ function latest(key) {
     const k = `${c.id}:${c.veld}`;
     return { ...c, key: k, nu, gone: !row, applied: applied.has(k) || (row && nu === c.nieuw), stale: row && nu !== c.oud && nu !== c.nieuw };
   });
-  const title = (row) => !row ? '(verwijderd)' : L.kind === 'tyre'
+  const title = (row) => !row ? '(verwijderd)' : L.kind === 'customer' ? [row.kenteken, row.naam, row.plaats].filter(Boolean).join(' · ') : L.kind === 'tyre'
     ? [row.label && '#' + row.label, row.kenteken, row.klant_naam, row.maat].filter(Boolean).join(' · ')
     : [row.merk, row.type, row.nummer, row.maat].filter(Boolean).join(' · ') || row.omschrijving || '#' + row.id;
   const groups = [];
   for (const c of changes) {
     let g = groups.find((x) => x.id === c.id);
-    if (!g) { g = { id: c.id, title: title(rows.get(c.id)), href: (L.kind === 'tyre' ? '/bandenhotel/' : '/voorraad/') + c.id, changes: [] }; groups.push(g); }
+    if (!g) { g = { id: c.id, title: title(rows.get(c.id)), href: HREF[L.kind] + c.id, changes: [] }; groups.push(g); }
     g.changes.push(c);
   }
-  const dubbel = (res.dubbel || []).map((d) => ({ ...d, rows: d.ids.map((id) => ({ id, title: title(getRow.get(id)), href: (L.kind === 'tyre' ? '/bandenhotel/' : '/voorraad/') + id })) }));
+  const dubbel = (res.dubbel || []).map((d) => ({ ...d, rows: d.ids.map((id) => ({ id, title: title(getRow.get(id)), href: HREF[L.kind] + id })) }));
   return { run: { id: run.id, created_at: run.created_at, by_name: run.by_name, effort: run.effort, eur: run.eur, n_rows: run.n_rows }, groups, dubbel,
     open: changes.filter((c) => !c.applied && !c.gone).length };
 }
@@ -232,6 +240,21 @@ function apply(key, runId, keys, userId) {
   for (const c of res.changes || []) if (want.has(`${c.id}:${c.veld}`)) { if (!byRow.has(c.id)) byRow.set(c.id, []); byRow.get(c.id).push(c); }
   const done = [];
   const applied = new Set(res.applied || []);
+  if (L.kind === 'customer') {
+    // Klanten: zoals bij "Gegevens wijzigen" (gaat dan voor op oudere werkopdrachten); per klant een eigen transactie.
+    const orders = require('./orders');
+    for (const [id, cs] of byRow) {
+      const row = db.prepare('SELECT * FROM customers WHERE id = ?').get(id);
+      if (!row) continue;
+      const fields = Object.fromEntries(orders.CUSTOMER_FIELDS.map((f) => [f, row[f]]));
+      for (const c of cs) fields[c.veld] = c.nieuw;
+      orders.updateCustomer(id, fields, (k) => k);
+      for (const c of cs) applied.add(`${c.id}:${c.veld}`);
+      done.push(id);
+    }
+    db.prepare('UPDATE list_ai_runs SET result = ? WHERE id = ?').run(JSON.stringify({ ...res, applied: [...applied] }), runId);
+    return done;
+  }
   db.exec('BEGIN');
   try {
     for (const [id, cs] of byRow) {
