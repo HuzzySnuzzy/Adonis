@@ -12,6 +12,7 @@ const synonyms = require('./synonyms');
 const modelBulletins = require('./model-bulletins');
 const vehicle = require('./vehicle-analysis');
 const rdw = require('./rdw');
+const listAi = require('./list-ai');
 
 module.exports = function register(app, { flash, wrap }) {
   const wantsJson = (req) => (req.get('accept') || '').includes('application/json');
@@ -66,6 +67,14 @@ module.exports = function register(app, { flash, wrap }) {
       levels = modelBulletins.estimate().map((l) => ({ ...l, eurMin: l.eurMin * todo.length, eurMax: l.eurMax * todo.length, seconds: Math.round(l.seconds * todo.length / 2) }));
       detail = `Voor ${todo.length} automodel${todo.length === 1 ? '' : 'len'} uit deze lijst de bekende zwakke plekken en APK-afkeurpunten opzoeken op internet. `
         + 'Modellen die al zijn opgezocht, worden overgeslagen. Het resultaat geldt voor alle klanten met die auto.';
+    } else if (taak === 'lijst') {
+      const L = listAi.LISTS[req.query.lijst];
+      if (!L) return res.status(400).json({ error: 'Onbekende lijst.' });
+      const e = listAi.estimateFor(req.query.lijst);
+      if (!e.n) return res.status(400).json({ error: 'Deze lijst is leeg.' });
+      levels = e.levels;
+      detail = `${e.n} regel${e.n === 1 ? '' : 's'} van "${L.label}" laten controleren: schrijfwijze, merken, maten, seizoen en mogelijke dubbele regels. `
+        + 'Er verandert niets vanzelf: u kiest daarna zelf welke voorstellen u doorvoert.';
     } else if (taak === 'alle') {
       const todo = bulletins.staleCustomers();
       if (!todo.length) return res.status(400).json({ error: 'Alle klanten met werkopdrachten zijn al geanalyseerd en er is niets nieuws.' });
@@ -168,6 +177,56 @@ module.exports = function register(app, { flash, wrap }) {
   app.get('/aandachtspunten/taak', (req, res) => {
     const job = bulletins.jobStatus();
     res.json({ job: job && { ...job, eurText: ai.formatEur(job.eur) } });
+  });
+
+  /* ================= lijsten opschonen (bandenhotel, opslag, voorraad) ================= */
+  const listAllowed = (req, key) => {
+    const L = listAi.LISTS[key]; const F = res0(req);
+    return L && F.ai && (L.kind === 'tyre' ? F.bandenhotel : F.voorraad);
+  };
+  const res0 = (req) => req.res.locals.feat || {};
+  app.get('/lijsten/optimaliseren', (req, res) => {
+    const avail = Object.keys(listAi.LISTS).filter((k) => listAllowed(req, k));
+    const key = avail.includes(req.query.lijst) ? req.query.lijst : avail[0];
+    if (!key) return res.status(404).render('error', { title: 'Niet beschikbaar', message: 'Er is geen lijst om op te schonen (bandenhotel, voorraad of AI staat uit).' });
+    res.render('listai', {
+      title: 'Lijst opschonen met AI', key, L: listAi.LISTS[key], avail, LISTS: listAi.LISTS, FIELD_LABEL: listAi.FIELD_LABEL,
+      data: listAi.latest(key), job: listAi.jobStatus(key), aiConfigured: importer.isConfigured(),
+    });
+  });
+  app.post('/lijsten/optimaliseren', auth.requireAi, (req, res) => {
+    const key = String(req.body.lijst || '');
+    if (!listAllowed(req, key)) return res.status(400).json({ error: 'Onbekende lijst.' });
+    try {
+      const by = req.user.name; const byId = req.user.id;
+      const job = listAi.start(key, { effort: req.body.effort, userId: req.user.id,
+        onDone: (j) => events.broadcast({ type: 'data', area: 'lijst-ai', lijst: key, by, byId, msg: j.error ? null : `Lijst "${listAi.LISTS[key].label}" is gecontroleerd door Claude.` }) });
+      res.json({ ok: true, job });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  app.get('/lijsten/optimaliseren/status', (req, res) => {
+    const j = listAi.jobStatus(String(req.query.lijst || ''));
+    res.json({ job: j && { ...j, eurText: ai.formatEur(j.eur) } });
+  });
+  app.post('/lijsten/optimaliseren/toepassen', (req, res) => {
+    const key = String(req.body.lijst || '');
+    if (!listAllowed(req, key)) return res.redirect('/lijsten/optimaliseren');
+    const keys = [].concat(req.body.k || []).map(String).filter((k) => /^\d+:[a-z_]+$/.test(k)).slice(0, 5000);
+    if (!keys.length) { flash(req, 'err', 'Vink eerst aan welke voorstellen u wilt doorvoeren.'); return res.redirect(`/lijsten/optimaliseren?lijst=${key}`); }
+    try {
+      const ids = listAi.apply(key, Number(req.body.run), keys, req.user.id);
+      const L = listAi.LISTS[key];
+      events.broadcast({ type: 'data', area: L.area, by: req.user.name, byId: req.user.id });
+      flash(req, 'ok', `${keys.length} verbetering${keys.length === 1 ? '' : 'en'} doorgevoerd in ${ids.length} regel${ids.length === 1 ? '' : 's'}.`);
+      const sep = L.back.includes('?') ? '&' : '?';
+      res.redirect(`${L.back}${sep}bijgewerkt=${ids.slice(0, 300).join(',')}`);
+    } catch (err) {
+      if (!(err instanceof listAi.ListAiError)) console.error('Lijst toepassen:', err);
+      flash(req, 'err', err instanceof listAi.ListAiError ? err.message : 'Doorvoeren lukte niet.');
+      res.redirect(`/lijsten/optimaliseren?lijst=${key}`);
+    }
   });
 
   /* ================= AI-analyse van een voertuig ================= */

@@ -39,6 +39,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Datum invoer** wordt automatisch ingevuld met de datum waarop de werkopdracht is aangemaakt.
 - **Werkopdrachtnummer** loopt automatisch op en kan zo nodig worden aangepast.
 - **Afdrukken** op A4 liggend: pagina 1 is de voorkant, pagina 2 de achterkant.
+- **Lijsten opschonen met AI** (`/lijsten/optimaliseren`): bandenhotel, overige opslag, voorraad banden/onderdelen in
+  stukken van 120 regels naar Claude; voorstellen per veld (via dezelfde normalisatie als het formulier) en mogelijke
+  dubbele regels, bewaard in `list_ai_runs`; doorvoeren alleen wat is aangevinkt. Starten vereist AI-toegang.
 - **Automatisch invullen** (Systeem, eigenaar): RDW, klantgegevens, suggesties, hints, monteur, uurtarief en voorrekenen
   per stuk aan/uit; eigen werkzaamheden/onderdelen bovenaan in de suggesties; vaste waarden voor nieuwe werkopdrachten.
 - **Links** (Instellingen, ADONIS-app): externe links in ADONIS (ingebouwde browser) of in de eigen browser; Shift/scrollwiel = andersom.

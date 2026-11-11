@@ -793,3 +793,15 @@ window.adonisAutofilled = function (el) {
   t.classList.remove('autofilled'); void t.offsetWidth; t.classList.add('autofilled');
   clearTimeout(t._afTimer); t._afTimer = setTimeout(() => t.classList.remove('autofilled'), 2700);
 };
+
+/* Na "Lijst opschonen met AI": de bijgewerkte regels lichten op met dezelfde kleurveeg als automatisch invullen. */
+(function () {
+  const u = new URL(location.href);
+  const p = u.searchParams.get('bijgewerkt');
+  if (!p) return;
+  const rows = p.split(',').filter((x) => /^\d+$/.test(x)).map((id) => document.querySelector(`tr[data-href$="/${id}"]`)).filter(Boolean);
+  if (rows[0]) rows[0].scrollIntoView({ block: 'center' });
+  rows.slice(0, 50).forEach((tr, i) => setTimeout(() => window.adonisAutofilled(tr), 200 + i * 110));
+  u.searchParams.delete('bijgewerkt');
+  try { history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch { /* geen history */ }
+})();

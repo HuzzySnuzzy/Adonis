@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.56.0', date: '2026-11-11', title: 'Lijsten opschonen met AI',
+    items: [
+      'Nieuw: lijsten laten opschonen door Claude. Klik in het Bandenhotel, bij Overige bandenopslag (o.a. noodbanden) of in de Voorraad (banden of onderdelen) op Opschonen. Claude kijkt naar schrijfwijze (namen, merken, auto\'s), bandenmaten, seizoen (uit het bandenmodel), velgen, telefoonnummers en de soort onderdeel, en wijst mogelijk dubbele regels aan.',
+      'Er verandert niets vanzelf: u ziet per regel oud → nieuw met de reden, vinkt aan wat u wilt en klikt op Aangevinkte doorvoeren. Vooraf ziet u wat het ongeveer kost; het resultaat blijft bewaard, dus later bekijken kost niets (alleen wie AI-toegang heeft kan opnieuw laten controleren).',
+      'De voorstellen verschijnen met dezelfde kleurveeg als automatisch invullen, en na het doorvoeren lichten de bijgewerkte regels in de lijst zo op.',
+    ],
+  },
+  {
     version: '1.55.1', date: '2026-11-11', title: 'Mooier automatisch invullen en de uitlaatgastest van de RDW',
     items: [
       'Wat ADONIS automatisch invult (RDW, bekende klant, suggestie, sjabloon) licht nu op met een zachte kleurveeg die daarna rustig wegvloeit, zodat u meteen ziet wat er is ingevuld. Met Effecten Rustig of "minder beweging" alleen een korte gloed.',

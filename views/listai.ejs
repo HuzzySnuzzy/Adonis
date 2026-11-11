@@ -1,0 +1,91 @@
+<%- include('/partials/head') %>
+<%
+  const LV = { laag: 'Snel', normaal: 'Normaal', hoog: 'Grondig' };
+  const D = data;
+  const show = (v) => v === '' || v === null || v === undefined ? '—' : v;
+%>
+<main class="page listai-page">
+  <div class="page-head">
+    <div>
+      <h1>Lijst opschonen met AI</h1>
+      <p class="muted small">Claude controleert de lijst op schrijfwijze, merken, maten, seizoen en dubbele regels, en doet voorstellen.
+        Er verandert niets vanzelf: u vinkt aan wat u wilt doorvoeren.</p>
+    </div>
+    <a class="btn btn-ghost" href="<%= L.back %>">Terug naar de lijst</a>
+  </div>
+
+  <nav class="status-tabs listai-tabs" aria-label="Welke lijst">
+    <% for (const k of avail) { %><a href="/lijsten/optimaliseren?lijst=<%= k %>" class="<%= k === key ? 'active' : '' %>"><%= LISTS[k].label %></a><% } %>
+  </nav>
+
+  <section class="card listai-start" data-listai data-lijst="<%= key %>" data-csrf="<%= csrf %>" data-running="<%= job && job.running ? '1' : '' %>">
+    <div class="listai-start-row">
+      <div>
+        <b><%= L.label %></b>
+        <% if (D) { %><p class="muted small">Laatst gecontroleerd door Claude op <%= fmtDateTime(D.run.created_at) %> (<%= LV[D.run.effort] || D.run.effort %><%= D.run.by_name ? ', ' + D.run.by_name : '' %>):
+          <%= D.run.n_rows %> regels<% if (D.run.eur) { %>, kosten ca. € <%= D.run.eur.toFixed(2).replace('.', ',') %><% } %>.</p>
+        <% } else { %><p class="muted small">Nog niet gecontroleerd. U ziet vooraf wat het ongeveer kost.</p><% } %>
+      </div>
+      <% if (!aiConfigured) { %><p class="muted small">Claude is niet ingesteld (anthropic-api-key in config.properties).</p>
+      <% } else if (!user.can_ai) { %><p class="muted small ai-locked">Opnieuw laten controleren kost geld. U heeft daar geen toegang toe; vraag een beheerder.</p>
+      <% } else { %>
+      <button class="btn<%= D ? '' : ' btn-primary' %>" type="button" data-listai-start><%- include('/partials/ai-icon') %> <%= D ? 'Opnieuw controleren' : 'Controleren met Claude' %></button>
+      <% } %>
+    </div>
+    <div class="listai-progress" data-listai-progress hidden>
+      <div class="listai-bar"><span data-listai-fill></span></div>
+      <span class="muted small" data-listai-text>Claude bekijkt de lijst…</span>
+    </div>
+    <p class="alert" data-listai-error hidden></p>
+  </section>
+
+  <% if (D) { %>
+  <form method="post" action="/lijsten/optimaliseren/toepassen" class="listai-form" data-listai-form>
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <input type="hidden" name="lijst" value="<%= key %>">
+    <input type="hidden" name="run" value="<%= D.run.id %>">
+    <% if (!D.groups.length) { %>
+    <section class="card"><p class="muted">Claude vond niets om te verbeteren. De lijst ziet er netjes uit.</p></section>
+    <% } else { %>
+    <div class="listai-bar-top">
+      <h2><%= D.open %> voorstel<%= D.open === 1 ? '' : 'len' %> <span class="muted small">in <%= D.groups.length %> regel<%= D.groups.length === 1 ? '' : 's' %></span></h2>
+      <span class="listai-sel"><button type="button" class="btn btn-small btn-ghost" data-listai-all="1">Alles aanvinken</button>
+        <button type="button" class="btn btn-small btn-ghost" data-listai-all="0">Niets</button></span>
+    </div>
+    <div class="listai-groups">
+      <% for (const g of D.groups) { %>
+      <section class="card listai-group">
+        <a class="listai-title" href="<%= g.href %>"><%= g.title %></a>
+        <% for (const c of g.changes) { const off = c.applied || c.gone || c.stale; %>
+        <label class="listai-change<%= c.applied ? ' is-done' : '' %><%= c.stale ? ' is-stale' : '' %>">
+          <input type="checkbox" name="k" value="<%= c.key %>" <%= off ? 'disabled' : 'checked' %>>
+          <span class="listai-field"><%= FIELD_LABEL[c.veld] || c.veld %></span>
+          <span class="listai-vals"><span class="listai-old"><%= show(c.oud) %></span><span class="listai-arrow" aria-hidden="true">→</span><span class="listai-new" data-listai-new><%= c.nieuw %></span></span>
+          <span class="listai-why muted small"><%= c.reden %><% if (c.applied) { %> · <b>doorgevoerd</b><% } else if (c.stale) { %> · <b>intussen gewijzigd</b> (nu: <%= show(c.nu) %>)<% } %></span>
+        </label>
+        <% } %>
+      </section>
+      <% } %>
+    </div>
+    <div class="listai-apply">
+      <span class="muted small" data-listai-count></span>
+      <button class="btn btn-primary" type="submit" data-listai-apply>Aangevinkte doorvoeren</button>
+    </div>
+    <% } %>
+  </form>
+  <% if (D.dubbel.length) { %>
+  <section class="card listai-dup">
+    <h2>Mogelijk dubbel</h2>
+    <p class="muted small">Deze regels lijken op elkaar. Kijk ze na en verwijder of voeg samen wat dubbel is.</p>
+    <ul>
+      <% for (const d of D.dubbel) { %><li><% d.rows.forEach((r, i) => { %><%= i ? ' · ' : '' %><a href="<%= r.href %>"><%= r.title %></a><% }) %>
+        <span class="muted small">– <%= d.reden %></span></li><% } %>
+    </ul>
+  </section>
+  <% } %>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/ai.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/listai.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

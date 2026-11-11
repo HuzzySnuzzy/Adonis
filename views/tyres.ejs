@@ -15,6 +15,7 @@
       <% if (soort === 'klant') { %><a class="btn" href="/bandenhotel/wissellijst">
         <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M7 7h11l-3-3 1.4-1.4L22.8 9l-6.4 6.4L15 14l3-3H7zM17 17H6l3 3-1.4 1.4L1.2 15l6.4-6.4L9 10l-3 3h11z"/></svg>
         Wissellijst</a><% } %>
+      <% if (feat.ai) { %><a class="btn" href="/lijsten/optimaliseren?lijst=<%= soort === 'opslag' ? 'opslagbanden' : 'klantbanden' %>" title="Schrijfwijze, merken, maten en seizoen laten nakijken door Claude"><%- include('/partials/ai-icon') %> Opschonen</a><% } %>
       <a class="btn btn-primary" href="/bandenhotel/nieuw<%= soort === 'opslag' ? '?soort=opslag' : '' %>">+ Banden inslaan</a>
     </div>
   </div>

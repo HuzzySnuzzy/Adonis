@@ -377,28 +377,3 @@ table.grid.kv .sign-row td.rowlabel { white-space: normal; line-height: 1.15; fo
 .work-line .w-tick { cursor: pointer; font-weight: 700; caret-color: transparent; }
 .work-line .w-tick:focus { caret-color: auto; }
 .work-convert { padding: 6px 8px; border-top: var(--rule-w) solid var(--rule); background: var(--paper); }
-
-/* ---------- Automatisch ingevuld: een kleurveeg over het vak die daarna rustig wegvloeit ---------- */
-@property --af-a { syntax: '<number>'; inherits: false; initial-value: 0; }
-@property --af-x { syntax: '<percentage>'; inherits: false; initial-value: -30%; }
-.autofilled {
-  background-image: linear-gradient(105deg,
-    color-mix(in srgb, var(--primary) calc(var(--af-a) * 14%), transparent) 0%,
-    color-mix(in srgb, #8b5cf6 calc(var(--af-a) * 26%), transparent) calc(var(--af-x) - 22%),
-    color-mix(in srgb, var(--accent, #e2b44b) calc(var(--af-a) * 46%), transparent) var(--af-x),
-    color-mix(in srgb, #2bb3c0 calc(var(--af-a) * 26%), transparent) calc(var(--af-x) + 22%),
-    color-mix(in srgb, var(--primary) calc(var(--af-a) * 14%), transparent) 100%) !important;
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--primary) calc(var(--af-a) * 75%), transparent) !important;
-  border-radius: 3px;
-  animation: af-glow 2.6s cubic-bezier(.22, .7, .25, 1) both;
-}
-@keyframes af-glow {
-  0% { --af-a: 0; --af-x: -30%; }
-  10% { --af-a: 1; }
-  55% { --af-a: 1; --af-x: 130%; }
-  100% { --af-a: 0; --af-x: 130%; }
-}
-@keyframes af-fade { 0%, 40% { --af-a: 1; --af-x: 50%; } 100% { --af-a: 0; --af-x: 50%; } }
-:root[data-fx="calm"] .autofilled { animation: af-fade 2.2s ease-out both; }
-@media (prefers-reduced-motion: reduce) { .autofilled { animation: af-fade 2.2s ease-out both; } }
-@media print { .autofilled { background-image: none !important; box-shadow: none !important; } }
