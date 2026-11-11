@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.49.0', date: '2026-11-11', title: 'AI-toegang per gebruiker',
+    items: [
+      'Claude-functies kosten geld per keer. Een beheerder bepaalt nu wie ze mag starten: bij Gebruikers staat een nieuwe kolom AI-functies met een vinkje per gebruiker (ook bij het aanmaken van een nieuwe gebruiker). Beheerders mogen het altijd.',
+      'Zonder AI-toegang ziet u alle opgeslagen resultaten gewoon (aandachtspunten, APK-punten per model, AI-analyses), maar niet de knoppen om Claude opnieuw te laten werken, en geen foto-import. Op die plekken staat "vraag een beheerder".',
+      'Let op: AI-toegang staat voor iedereen behalve beheerders standaard uit, ook voor bestaande gebruikers. Zet het bij Gebruikers aan voor wie het mag gebruiken.',
+    ],
+  },
+  {
     version: '1.48.0', date: '2026-11-11', title: 'Werkopdrachten per dag',
     items: [
       'De lijst met werkopdrachten is nu verdeeld per dag: Vandaag, Gisteren, Eergisteren en daarna de weekdag met datum. Bij elk kopje staat hoeveel werkopdrachten er die dag zijn en hoeveel er nog open staan; Vandaag is extra gemarkeerd.',

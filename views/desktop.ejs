@@ -31,7 +31,7 @@
   if (F.portaal) apps.push({ href: '/portaal', icon: 'grid', title: 'Portaal' });
   if (F.rekenhulp) apps.push({ href: '/rekenhulp', icon: 'calc', title: 'Rekenhulp' });
   if (aiOn && F.ai) apps.push({ href: '/ai-analyse', icon: 'ai', title: 'AI-analyse' });
-  if (importOn && F.werkopdrachten) apps.push({ href: '/importeren', icon: 'camera', title: 'Importeren' });
+  if (importOn && F.werkopdrachten && user.can_ai) apps.push({ href: '/importeren', icon: 'camera', title: 'Importeren' });
   else if (user.is_admin && (F.bandenhotel || F.voorraad)) apps.push({ href: '/importeren/excel', icon: 'camera', title: 'Importeren' });
   apps.push({ href: '/verkenner', icon: 'folder', title: 'Verkenner' }, { href: 'internet', icon: 'globe', title: 'Internet' });
   apps.push({ href: '/start', icon: 'grid', title: 'Startscherm' }, { href: '/hulp', icon: 'help', title: 'Hulp' });

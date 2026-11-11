@@ -43,7 +43,8 @@
         </p>
         <% if (R) { %><p class="muted small">Onderzocht door Claude op <%= fmtDateTime(R.created_at) %> (<%= L[R.effort] || R.effort %><%= R.by_name ? ', ' + R.by_name : '' %>)<%= R.web ? ', met bronnen van internet' : ' – zonder internetbronnen' %>.</p><% } %>
       </div>
-      <% if (aiConfigured) { %>
+      <% if (aiConfigured && !canAi) { %><p class="muted small ai-locked">Onderzoeken met Claude kost geld. U heeft daar geen toegang toe; vraag een beheerder.</p>
+      <% } else if (aiConfigured) { %>
       <button class="btn<%= R ? '' : ' btn-primary' %>" type="button" data-va-start
         data-kenteken="<%= v.kenteken %>" data-omschrijving="<%= v.omschrijving %>"><%- include('/partials/ai-icon') %> <%= R ? 'Opnieuw onderzoeken' : 'Onderzoeken met Claude' %></button>
       <% } else { %><p class="muted small">Claude is niet ingesteld (anthropic-api-key in config.properties).</p><% } %>

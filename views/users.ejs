@@ -5,12 +5,14 @@
     <p><strong>Monteur</strong>: werkopdrachten maken en wijzigen, en naar facturatie sturen.</p>
     <p><strong>Facturatie</strong>: daarnaast werkopdrachten bij facturatie wijzigen, afronden met een factuurnummer en heropenen.</p>
     <p><strong>Beheerder</strong>: alles, plus gebruikers en rollen beheren en werkopdrachten verwijderen.</p>
+    <p><strong>AI-functies</strong>: Claude laten analyseren, opzoeken of foto's uitlezen kost geld per keer. Alleen wie hier toegang heeft kan dat starten;
+      beheerders altijd. Opgeslagen resultaten (aandachtspunten, AI-analyses) kan iedereen bekijken.</p>
     <p><strong>Eenvoudige weergave</strong>: voor wie niet zo handig is met computers. Grote knoppen, een startscherm en alleen het belangrijkste in het menu. Dezelfde rechten als de rol.</p>
   </div>
   <% if (error) { %><div class="alert"><%= error %></div><% } %>
   <div class="table-wrap">
   <table class="list">
-    <thead><tr><th>Naam</th><th>Gebruikersnaam</th><th>Rol</th><th>Eenvoudige weergave</th><th>Nieuw wachtwoord instellen</th><th></th></tr></thead>
+    <thead><tr><th>Naam</th><th>Gebruikersnaam</th><th>Rol</th><th>AI-functies</th><th>Eenvoudige weergave</th><th>Nieuw wachtwoord instellen</th><th></th></tr></thead>
     <tbody>
     <% for (const u of users) { %>
       <tr>
@@ -25,6 +27,18 @@
             <select name="role" aria-label="Rol van <%= u.name %>" data-autosubmit>
               <% for (const [k, label] of Object.entries(ROLES)) { %><option value="<%= k %>" <%= u.role === k ? 'selected' : '' %>><%= label %></option><% } %>
             </select>
+            <noscript><button class="btn btn-small" type="submit">Opslaan</button></noscript>
+          </form>
+          <% } %>
+        </td>
+        <td>
+          <% if (u.is_admin) { %><span class="muted small" title="Beheerders mogen AI-functies altijd gebruiken">Altijd (beheerder)</span>
+          <% } else { %>
+          <form method="post" action="/gebruikers/<%= u.id %>/ai" class="inline ai-form">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <label class="check" title="Mag Claude-functies starten die geld kosten (analyseren, opzoeken, foto's uitlezen)">
+              <input type="checkbox" name="ai" value="on" <%= u.can_ai ? 'checked' : '' %> data-autosubmit aria-label="AI-functies voor <%= u.name %>"> <%= u.can_ai ? 'Toegestaan' : 'Geen toegang' %>
+            </label>
             <noscript><button class="btn btn-small" type="submit">Opslaan</button></noscript>
           </form>
           <% } %>
@@ -75,6 +89,8 @@
       </label>
       <label class="check" title="Startscherm met grote knoppen en alleen het belangrijkste in het menu. Later te wijzigen bij deze gebruiker of in diens Instellingen.">
         <input type="checkbox" name="eenvoudig" value="on" checked> Eenvoudige weergave</label>
+      <label class="check" title="Mag Claude-functies starten die geld kosten. Beheerders mogen dit altijd.">
+        <input type="checkbox" name="ai" value="on"> AI-functies gebruiken</label>
       <button class="btn btn-primary" type="submit">Gebruiker toevoegen</button>
     </form>
   </section>

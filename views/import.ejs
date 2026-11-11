@@ -5,7 +5,13 @@
   <p class="muted">Maak een foto van een papieren werkopdracht. De tekst wordt automatisch uitgelezen en in het formulier gezet.
     Daarna controleert u alles en bevestigt u de import, of annuleert u hem.</p>
 
-  <% if (!configured) { %>
+  <% if (!user.can_ai) { %>
+    <div class="alert">
+      <strong>U heeft geen AI-toegang.</strong><br>
+      Het uitlezen van een foto gebeurt door Claude en kost geld per keer. Een beheerder kan AI-toegang voor u aanzetten bij <b>Gebruikers</b>.
+      U kunt de werkopdracht ook gewoon <a href="/werkopdracht/nieuw">zelf invullen</a>.
+    </div>
+  <% } else if (!configured) { %>
     <div class="alert">
       <strong>Foto-import is nog niet ingesteld.</strong><br>
       Het uitlezen van handschrift gebeurt via de Claude-API van Anthropic en heeft internet en een API-sleutel nodig.
@@ -46,7 +52,7 @@
     </div>
   </section>
   <% } %>
-  <% if (configured) { %>
+  <% if (configured && user.can_ai) { %>
   <p class="muted small usage-line">
     Vandaag <%= usage.today %> van <%= usage.limit === 0 ? 'onbeperkt' : usage.limit %> imports gebruikt.
     <% if (user.is_admin) { %>Deze maand <%= usage.monthCount %> imports, geschatte kosten ca.

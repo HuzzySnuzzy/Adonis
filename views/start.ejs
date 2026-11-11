@@ -16,7 +16,7 @@
     F.portaal && { href: '/portaal', icon: 'grid', hue: 'violet', title: 'Portaal', text: 'Websites en leveranciers' },
     F.rekenhulp && { href: '/rekenhulp', icon: 'calc', hue: 'teal', title: 'Rekenhulp', text: 'Band omrekenen, bar/psi, Nm, BTW…' },
   ].filter(Boolean);
-  if (importOn && F.werkopdrachten) tiles.push({ href: '/importeren', icon: 'camera', hue: 'rose', title: 'Foto importeren', text: 'Papier overnemen' });
+  if (importOn && F.werkopdrachten && user.can_ai) tiles.push({ href: '/importeren', icon: 'camera', hue: 'rose', title: 'Foto importeren', text: 'Papier overnemen' });
   tiles.push({ href: '/verkenner', icon: 'folder', hue: 'amber', title: "Foto's", text: 'Alle foto\'s in mappen (Verkenner)' });
   if (F.ai) tiles.push({ href: '/ai-analyse', icon: 'ai', hue: 'rose', title: 'AI-analyse', text: 'Voertuiganalyse met AI' });
   tiles.push({ href: '/hulp', icon: 'help', hue: 'slate', title: 'Hulp', text: 'Uitleg in stappen' });

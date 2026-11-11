@@ -46,6 +46,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   De monteur klikt **Klaar → naar facturatie**; de werkopdracht verschijnt dan bij **Facturatie** (met teller in het
   menu en een melding). Facturatie vult het factuurnummer in en klikt **Afronden**: de werkopdracht is dan vergrendeld.
   Terughalen, terugsturen en heropenen kan ook; de geschiedenis laat zien wie wat wanneer deed.
+- **AI-toegang per gebruiker:** Claude-functies kosten geld per keer. Alleen beheerders en gebruikers bij wie een beheerder
+  bij *Gebruikers* **AI-functies** aanzet kunnen Claude starten (aandachtspunten, APK-punten per model, AI-analyse,
+  foto-import); de server weigert het anders. Opgeslagen resultaten bekijken mag iedereen. Standaard staat het uit.
   Facturatie en beheerders kunnen een open (of nieuwe/geïmporteerde) werkopdracht ook **direct als gefactureerd**
   afronden – handig bij het overzetten van oude papieren werkopdrachten (zonder factuurnummer na bevestiging).
 - **RDW-gegevens** (RDW Open Data, gratis): op de klantpagina APK-vervaldatum (groen/oranje/rood), merk/type,

@@ -64,8 +64,8 @@
   <% if (feat.ai) { %>
   <p class="va-link no-print"><a class="btn btn-small" href="/ai-analyse?kenteken=<%= encodeURIComponent(customer.kenteken) %>"><%- include('/partials/ai-icon') %> AI-analyse van deze auto</a></p>
   <div id="live-bulletins" class="bl-boxes" data-live>
-    <% if (feat.werkopdrachten) { %><%- include('/partials/bulletins', { bl: bulletinData, aiOn: aiConfigured, customer }) %><% } %>
-    <%- include('/partials/model-apk', { modelApk, aiOn: aiConfigured, customer }) %>
+    <% if (feat.werkopdrachten) { %><%- include('/partials/bulletins', { bl: bulletinData, aiOn: aiConfigured && user.can_ai, aiLocked: aiConfigured && !user.can_ai, customer }) %><% } %>
+    <%- include('/partials/model-apk', { modelApk, aiOn: aiConfigured && user.can_ai, aiLocked: aiConfigured && !user.can_ai, customer }) %>
   </div>
   <% } %>
 

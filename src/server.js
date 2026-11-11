@@ -905,7 +905,7 @@ app.get('/importeren', (req, res) => {
   });
 });
 
-app.post('/importeren', express.json({ limit: '30mb' }), wrap(async (req, res) => {
+app.post('/importeren', auth.requireAi, express.json({ limit: '30mb' }), wrap(async (req, res) => {
   try {
     const id = await importer.createDraft(req.body && req.body.images, req.user.id, req.body && req.body.effort);
     res.json({ redirect: `/importeren/${id}` });
@@ -1256,7 +1256,7 @@ app.post('/systeem/cloudflare/vergeten', auth.requireOwner, (req, res) => {
 /* ---------- gebruikersbeheer (beheerder) ---------- */
 function renderUsers(req, res, error, status) {
   const users = db.prepare('SELECT id, username, name, is_admin, is_owner, role, created_at FROM users ORDER BY is_owner DESC, name').all()
-    .map((u) => ({ ...u, prefs: auth.findUserById(u.id).prefs }));
+    .map((u) => ({ ...u, ...auth.findUserById(u.id) }));
   res.status(status || 200).render('users', { title: 'Gebruikers', users, error, ROLES: auth.ROLES });
 }
 app.get('/gebruikers', auth.requireAdmin, (req, res) => renderUsers(req, res, null));
@@ -1265,6 +1265,7 @@ app.post('/gebruikers', auth.requireAdmin, wrap(async (req, res) => {
     await auth.createUser({
       username: req.body.username, name: req.body.name, password: req.body.password, role: req.body.role,
       simple: req.body.eenvoudig === 'on', // standaard aangevinkt op het formulier
+      ai: req.body.ai === 'on', // standaard uit: AI kost geld
     });
   } catch (err) {
     return renderUsers(req, res, err.message, 400);
@@ -1306,6 +1307,17 @@ app.post('/gebruikers/:id/eenvoudig', auth.requireAdmin, (req, res) => {
   const on = req.body.simple === 'on';
   auth.savePrefs(target.id, on ? { simple: 'on', start: '/start' } : { simple: 'off' });
   flash(req, 'ok', `Eenvoudige weergave staat ${on ? 'aan' : 'uit'} voor ${target.name}.${on ? ' Bij het inloggen opent het startscherm met grote knoppen.' : ''}`);
+  res.redirect('/gebruikers');
+});
+// AI-toegang aan/uit: Claude-functies kosten geld, dus de beheerder bepaalt wie ze mag starten.
+// Beheerders hebben altijd toegang; opgeslagen resultaten bekijken mag iedereen.
+app.post('/gebruikers/:id/ai', auth.requireAdmin, (req, res) => {
+  const target = auth.findUserById(req.params.id);
+  if (!target) return res.redirect('/gebruikers');
+  if (target.is_admin) { flash(req, 'ok', `${target.name} is beheerder en mag AI-functies altijd gebruiken.`); return res.redirect('/gebruikers'); }
+  const on = req.body.ai === 'on';
+  auth.setAiAccess(target.id, on);
+  flash(req, 'ok', on ? `${target.name} mag nu AI-functies gebruiken (dit kost geld per keer).` : `${target.name} kan geen AI-functies meer starten. Opgeslagen resultaten blijven zichtbaar.`);
   res.redirect('/gebruikers');
 });
 app.post('/gebruikers/:id/verwijderen', auth.requireAdmin, (req, res) => {

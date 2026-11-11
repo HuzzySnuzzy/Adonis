@@ -112,15 +112,26 @@ if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'role')
   db.exec("UPDATE users SET role = 'beheerder' WHERE is_admin = 1 OR is_owner = 1");
 }
 
+/* AI-toegang: Claude-functies kosten geld per gebruik. Beheerders mogen altijd; anderen alleen als een beheerder
+ * het aanzet. Opgeslagen resultaten bekijken mag iedereen (dat kost niets). Standaard uit. */
+if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'ai_access')) {
+  db.exec('ALTER TABLE users ADD COLUMN ai_access INTEGER NOT NULL DEFAULT 0');
+}
+
 function findUserById(id) {
-  const row = db.prepare('SELECT id, username, name, is_admin, is_owner, role, preferences FROM users WHERE id = ?').get(id);
+  const row = db.prepare('SELECT id, username, name, is_admin, is_owner, role, ai_access, preferences FROM users WHERE id = ?').get(id);
   if (!row) return row;
   const { preferences, ...user } = row;
   if (user.is_owner) user.role = 'beheerder';
   if (!ROLES[user.role]) user.role = 'monteur';
   user.is_admin = user.role === 'beheerder' ? 1 : 0;
   user.can_invoice = user.role === 'facturatie' || user.role === 'beheerder';
+  user.can_ai = user.is_admin === 1 || user.ai_access === 1;
   return { ...user, prefs: parsePrefs(preferences) };
+}
+
+function setAiAccess(userId, on) {
+  db.prepare('UPDATE users SET ai_access = ? WHERE id = ?').run(on ? 1 : 0, userId);
 }
 
 function setRole(userId, role) {
@@ -144,7 +155,7 @@ function validatePassword(password) {
   return null;
 }
 
-async function createUser({ username, name, password, isAdmin, role, simple = false }) {
+async function createUser({ username, name, password, isAdmin, role, simple = false, ai = false }) {
   username = String(username || '').trim();
   name = String(name || '').trim() || username;
   if (!/^[A-Za-z0-9._-]{2,40}$/.test(username)) {
@@ -159,8 +170,8 @@ async function createUser({ username, name, password, isAdmin, role, simple = fa
   const first = userCount() === 0; // het allereerste account wordt eigenaar
   let r = ROLES[role] ? role : isAdmin ? 'beheerder' : 'monteur';
   if (first) r = 'beheerder';
-  db.prepare('INSERT INTO users (username, name, password_hash, is_admin, is_owner, role) VALUES (?, ?, ?, ?, ?, ?)').run(
-    username, name.slice(0, 80), hash, r === 'beheerder' ? 1 : 0, first ? 1 : 0, r
+  db.prepare('INSERT INTO users (username, name, password_hash, is_admin, is_owner, role, ai_access) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+    username, name.slice(0, 80), hash, r === 'beheerder' ? 1 : 0, first ? 1 : 0, r, ai ? 1 : 0
   );
   // Nieuwe gebruikers beginnen in de eenvoudige weergave (startscherm met grote knoppen); niet de eigenaar,
   // die heeft Gebruikers en Systeem nodig om ADONIS in te richten.
@@ -215,6 +226,14 @@ function requireOwner(req, res, next) {
   res.status(403).render('error', { title: 'Geen toegang', message: 'Alleen de ADONIS-beheerder (eigenaar) heeft toegang tot deze pagina.' });
 }
 
+// Claude-functies die geld kosten. Bekijken van opgeslagen resultaten valt hier niet onder.
+const AI_DENIED = 'U heeft geen toestemming om AI-functies te gebruiken (die kosten geld). Vraag een beheerder om AI-toegang voor u aan te zetten bij Gebruikers.';
+function requireAi(req, res, next) {
+  if (req.user && req.user.can_ai) return next();
+  if ((req.get('accept') || '').includes('application/json') || req.is('application/json')) return res.status(403).json({ error: AI_DENIED });
+  res.status(403).render('error', { title: 'Geen AI-toegang', message: AI_DENIED });
+}
+
 function csrfProtection(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD') return next();
   const token = (req.body && req.body._csrf) || req.get('x-csrf-token');
@@ -259,7 +278,7 @@ setInterval(() => {
 }, WINDOW).unref();
 
 module.exports = {
-  PREF_OPTIONS, SECRET_THEMES, NOTIFY_KINDS, visibleThemes, savePrefs, ROLES, setRole,
+  PREF_OPTIONS, SECRET_THEMES, NOTIFY_KINDS, visibleThemes, savePrefs, ROLES, setRole, setAiAccess, requireAi, AI_DENIED,
   userCount, findUserById, verifyLogin, createUser, setPassword, checkPassword,
   loadUser, requireLogin, requireAdmin, requireOwner, csrfProtection,
   loginBlocked, loginFailed, loginSucceeded,

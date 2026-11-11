@@ -1,5 +1,5 @@
 <nav class="status-tabs import-tabs" aria-label="Soort import">
-  <% if (feat.werkopdrachten) { %><a href="/importeren" class="<%= active === 'foto' ? 'active' : '' %>">Werkopdracht (foto)</a><% } %>
+  <% if (feat.werkopdrachten && user.can_ai) { %><a href="/importeren" class="<%= active === 'foto' ? 'active' : '' %>">Werkopdracht (foto)</a><% } %>
   <% if (user.is_admin && (feat.bandenhotel || feat.voorraad)) { %><a href="/importeren/excel" class="<%= active === 'excel' ? 'active' : '' %>">Bandenhotel / voorraad (Excel)</a>
   <a href="/importeren/fotos" class="<%= active === 'fotos' ? 'active' : '' %>">Foto's koppelen</a><% } %>
 </nav>

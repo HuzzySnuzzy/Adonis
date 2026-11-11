@@ -106,7 +106,7 @@ module.exports = function register(app, { flash, wrap }) {
   });
 
   /* ================= aandachtspunten ================= */
-  app.post('/klant/:id/aandachtspunten', wrap(async (req, res) => {
+  app.post('/klant/:id/aandachtspunten', auth.requireAi, wrap(async (req, res) => {
     try {
       const r = await bulletins.analyze(Number(req.params.id), { effort: req.body.effort, userId: req.user.id });
       events.broadcast({ type: 'data', area: 'klanten', id: Number(req.params.id), by: req.user.name, byId: req.user.id });
@@ -124,7 +124,7 @@ module.exports = function register(app, { flash, wrap }) {
     }
   }));
   // APK-aandachtspunten voor het model van deze auto (gedeeld met alle klanten met dezelfde auto).
-  app.post('/klant/:id/apk-model', wrap(async (req, res) => {
+  app.post('/klant/:id/apk-model', auth.requireAi, wrap(async (req, res) => {
     const c = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
     try {
       if (!c) throw new modelBulletins.ModelBulletinError('Deze klant bestaat niet (meer).');
@@ -196,11 +196,11 @@ module.exports = function register(app, { flash, wrap }) {
     const v = (req.query.kenteken || req.query.omschrijving) ? await vehicleFacts(req.query) : null;
     res.render('ai-analysis', {
       title: 'AI-analyse', v, result: v ? vehicle.get(v.key) : null, busy: v ? running.has(v.key) : false,
-      recent: vehicle.recent(), ZONES: vehicle.ZONES, aiConfigured: importer.isConfigured(),
+      recent: vehicle.recent(), ZONES: vehicle.ZONES, aiConfigured: importer.isConfigured(), canAi: req.user.can_ai,
       customers: db.prepare('SELECT kenteken, merk_type FROM customers ORDER BY updated_at DESC LIMIT 400').all(),
     });
   }));
-  app.post('/ai-analyse', wrap(async (req, res) => {
+  app.post('/ai-analyse', auth.requireAi, wrap(async (req, res) => {
     const v = await vehicleFacts(req.body);
     if (!v.key) return res.status(400).json({ error: 'Vul een kenteken of een omschrijving van de auto in.' });
     const cur = running.get(v.key);

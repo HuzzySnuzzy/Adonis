@@ -27,6 +27,7 @@
       <% if (aiOn) { %>
       <button class="btn btn-small<%= !bl.analysis || bl.stale ? ' btn-primary' : '' %>" type="button" data-ai-task="klant" data-ai-id="<%= customer.id %>"
         data-ai-action="/klant/<%= customer.id %>/aandachtspunten" data-ai-anchor="aandachtspunten" data-ai-title="Werkopdrachten laten doorlezen door Claude"><%- include('/partials/ai-icon') %> <%= bl.analysis ? 'Opnieuw analyseren' : 'Analyseren met Claude' %></button>
+      <% } else if (locals.aiLocked) { %><span class="muted small ai-locked" title="AI-functies kosten geld; een beheerder bepaalt wie ze mag starten">Geen AI-toegang – vraag een beheerder</span>
       <% } %>
       <% } %>
     </div>
