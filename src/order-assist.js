@@ -102,6 +102,18 @@ function suggest(kind, q, { stock = true, eigen = null } = {}) {
     const add = (t0, note) => { const t = inv.normalizeSize(t0).toUpperCase(); if (t && !seen.has(t.toUpperCase()) && (seen.add(t.toUpperCase()), true) && ok(t, inv.sizeKey(t))) out.push({ text: t, note }); };
     for (const s of index().tyreSizes) { add(s.text, `${s.n}×`); if (out.length >= 8) break; }
     if (out.length < 8) for (const r of db.prepare("SELECT maat, COUNT(*) AS n FROM tyre_storage WHERE maat <> '' GROUP BY maat ORDER BY n DESC LIMIT 200").all()) { add(r.maat, 'bandenhotel'); if (out.length >= 8) break; }
+  } else if (kind === 'klant') {
+    // Bestaande klanten op naam (nieuwste bezoek eerst), met hun gegevens om in één keer in te vullen.
+    const longest = fold(q).split(/\s+/).sort((a, b) => b.length - a.length)[0] || '';
+    const rows = db.prepare(`SELECT c.*, (SELECT MAX(o.datum_invoer) FROM orders o WHERE o.customer_id = c.id) AS laatst
+      FROM customers c WHERE c.naam <> '' AND c.naam LIKE ? ESCAPE '\\' ORDER BY laatst IS NULL, laatst DESC, c.updated_at DESC LIMIT 80`)
+      .all('%' + longest.replace(/[\\%_]/g, (m) => '\\' + m) + '%');
+    for (const c of rows) {
+      if (out.length >= 8) break;
+      if (!ok(c.naam)) continue;
+      out.push({ text: c.naam, note: [c.kenteken, c.merk_type, c.plaats].filter(Boolean).join(' · '),
+        fill: Object.fromEntries(['naam', 'adres', 'plaats', 'klantnr', 'tel_prive', 'tel_zaak', 'kenteken', 'merk_type', 'chassisnummer', 'alarmcode'].map((k) => [k, c[k] || ''])) });
+    }
   } else if (kind === 'bandmerk') {
     for (const b of index().tyreBrands) { if (ok(b.text)) out.push({ text: b.text, note: `${b.n}×` }); if (out.length >= 8) break; }
   }

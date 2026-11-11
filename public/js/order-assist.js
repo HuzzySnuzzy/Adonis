@@ -185,7 +185,7 @@
     pop.innerHTML = items.map((it, i) => `<li role="option" data-i="${i}"><span class="oa-main">${it.nr !== undefined
       ? `${it.nr ? `<b>${esc(it.nr)}</b> ` : ''}${esc(it.omschrijving)}${it.prijs ? ` <span class="oa-price">€ ${esc(it.prijs)}</span>` : ''}`
       : esc(it.text)}</span>${it.note ? `<span class="oa-note">${esc(it.note)}</span>` : ''}</li>`).join('')
-      + '<li class="oa-foot" aria-hidden="true">↑↓ kiezen · Enter overnemen · Esc sluiten</li>';
+      + `<li class="oa-foot" aria-hidden="true">↑↓ kiezen · Enter ${kind === 'klant' ? 'klantgegevens invullen' : 'overnemen'} · Esc sluiten</li>`;
     pop.hidden = false;
     position(el, line ? line.index : undefined);
   }
@@ -206,6 +206,16 @@
       setField(f('prijs'), it.prijs);
       if (f('aantal') && !f('aantal').value) setField(f('aantal'), '1');
       (f('aantal') || el).focus();
+    } else if (kind === 'klant') {
+      // Bestaande klant gekozen: naam, adres, telefoon enz. in één keer (lege vakken; kenteken en auto alleen als er nog geen kenteken staat).
+      const f = it.fill || {};
+      setField($('naam'), f.naam, { force: true });
+      for (const k of ['adres', 'plaats', 'klantnr', 'tel_prive', 'tel_zaak']) setField($(k), f[k]);
+      if (plate && !plate.value.trim() && f.kenteken) {
+        for (const k of ['merk_type', 'chassisnummer', 'alarmcode']) setField($(k), f[k]);
+        setField(plate, f.kenteken); // zoekt daarna ook de RDW-gegevens en de vorige werkopdracht op
+      }
+      render();
     } else if (kind === 'werk') {
       const v = el.value;
       el.value = v.slice(0, line.start) + it.text + v.slice(line.end);
@@ -224,6 +234,7 @@
     if (/^d(\[paginas\]\[\d+\])?\[onderdelen\]\[\d+\]\[(nr|omschrijving)\]$/.test(el.name)) return 'onderdeel';
     if (/^d(\[paginas\]\[\d+\])?\[werk_omschrijving\]$/.test(el.name)) return 'werk';
     if (/^d(\[paginas\]\[\d+\])?\[werk_regels\]\[\d+\]\[omschrijving\]$/.test(el.name)) return 'werk';
+    if (el.name === 'd[naam]') return 'klant';
     if (el.name === 'd[achter][band_maat]') return 'bandmaat';
     if (el.name === 'd[achter][band_merk]') return 'bandmerk';
     return null;
@@ -246,7 +257,7 @@
       try {
         const r = await (await fetch(`/werkopdracht/suggesties?soort=${kind}&q=${encodeURIComponent(q)}`, { credentials: 'same-origin', signal: ctrl.signal })).json();
         if (line) { const p = (line.text.match(/^[-–•*\s]+/) || [''])[0]; r.items.forEach((it) => { it.text = p + it.text.replace(/^[-–•*\s]+/, ''); }); }
-        show(el, kind, r.items.filter((it) => (it.text || '').trim().toLowerCase() !== q.toLowerCase()), line);
+        show(el, kind, kind === 'klant' ? r.items : r.items.filter((it) => (it.text || '').trim().toLowerCase() !== q.toLowerCase()), line);
       } catch { /* afgebroken of offline */ }
     }, 160);
   });

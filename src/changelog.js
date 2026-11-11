@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.59.0', date: '2026-11-12', title: 'Bestaande klant kiezen bij Naam',
+    items: [
+      'Werkopdracht: typt u bij Naam een paar letters, dan verschijnen bestaande klanten (met kenteken, auto en plaats; recente klanten eerst). Kies er een met de muis of met ↓ en Enter, en adres, plaats, klantnummer en telefoonnummers worden in één keer ingevuld (alleen lege vakken), met de kleurveeg van automatisch invullen.',
+      'Staat er nog geen kenteken, dan komen ook het kenteken, merk/type, chassisnummer en alarmcode van die klant mee; daarna worden de RDW-gegevens en de vorige werkopdracht vanzelf opgezocht.',
+    ],
+  },
+  {
     version: '1.58.1', date: '2026-11-12', title: 'Zoeken-in als uitklapknop',
     items: [
       'De keuze waarin u zoekt op het startscherm is nu één knop links van het zoekveld (bijv. "Klanten +2"). Klik erop om Klanten, Werkopdrachten, Banden en Onderdelen aan of uit te vinken; klikken ernaast of Esc sluit het menu. Rustiger, en op de telefoon past alles op één regel.',

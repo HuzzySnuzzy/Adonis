@@ -743,7 +743,7 @@ app.get('/werkopdracht/hulp', (req, res) => {
 });
 app.get('/werkopdracht/suggesties', (req, res) => {
   res.set('Cache-Control', 'no-store');
-  const kind = ['onderdeel', 'werk', 'bandmaat', 'bandmerk'].includes(req.query.soort) ? req.query.soort : null;
+  const kind = ['onderdeel', 'werk', 'bandmaat', 'bandmerk', 'klant'].includes(req.query.soort) ? req.query.soort : null;
   const af = autofill.state();
   if (!af.on.suggesties) return res.json({ items: [] }); // uitgezet bij Systeem → Automatisch invullen
   res.json({ items: kind ? assist.suggest(kind, String(req.query.q || ''), { stock: res.locals.feat.voorraad, eigen: af }) : [] });
