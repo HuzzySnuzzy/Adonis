@@ -229,6 +229,9 @@ app.locals.rdwMerkType = rdw.merkType;
 app.locals.esc = esc;
 app.locals.inp = inp;
 app.locals.workRows = orders.workRows;
+app.locals.avatarHtml = auth.avatarHtml;
+app.locals.AVATAR_ICONS = auth.AVATAR_ICONS;
+app.locals.AVATAR_COLORS = auth.AVATAR_COLORS;
 app.locals.fmtDate = fmtDate;
 app.locals.fmtKm = fmtKm;
 /** Kopje per dag in de lijst met werkopdrachten: Vandaag, Gisteren, daarna de weekdag (deze week) of de volledige datum. */
@@ -1112,6 +1115,30 @@ app.get('/instellingen/adonis-app.json', (req, res) => {
 app.get('/instellingen', (req, res) => renderSettings(res));
 app.get('/account', (req, res) => res.redirect('/instellingen'));
 
+/* Profielfoto: eerste letter, een pictogram met kleur, of een eigen foto (in de browser verkleind tot 256 × 256). */
+app.get('/profielfoto/:id', (req, res) => {
+  const f = auth.avatarImage(Number(req.params.id));
+  if (!f) return res.status(404).end();
+  res.set({ 'Content-Type': f.mime, 'Cache-Control': req.query.v === f.hash ? 'private, max-age=31536000, immutable' : 'no-cache' });
+  res.send(f.data);
+});
+app.post('/instellingen/profiel', (req, res) => {
+  const look = String(req.body.look || 'letter');
+  auth.setAvatar(req.user.id, { type: look === 'letter' || look === 'img' ? look : 'icon', icon: look, color: req.body.kleur });
+  flash(req, 'ok', 'Profiel opgeslagen.');
+  res.redirect('/instellingen#profiel');
+});
+app.post('/instellingen/profielfoto', express.json({ limit: '3mb' }), (req, res) => {
+  const m = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(req.body.data || ''));
+  const buf = m ? Buffer.from(m[2], 'base64') : null;
+  const okType = buf && ((m[1] === 'image/png' && buf.readUInt32BE(0) === 0x89504e47) || (m[1] === 'image/jpeg' && buf[0] === 0xff && buf[1] === 0xd8)
+    || (m[1] === 'image/webp' && buf.toString('ascii', 8, 12) === 'WEBP'));
+  if (!okType) return res.status(400).json({ error: 'Kies een foto (PNG, JPG of WebP).' });
+  if (buf.length > 1.5 * 1024 * 1024) return res.status(400).json({ error: 'De foto is te groot.' });
+  auth.setAvatarImage(req.user.id, m[1], buf);
+  res.json({ ok: true });
+});
+
 app.post('/instellingen', (req, res) => {
   const prefs = auth.savePrefs(req.user.id, {
     // Eerst de geheime thema's (aan/uit), dan het thema: zo kan beide in één keer.
@@ -1475,6 +1502,21 @@ app.post('/gebruikers/:id/ai', auth.requireAdmin, (req, res) => {
   flash(req, 'ok', on ? `${target.name} mag nu AI-functies gebruiken (dit kost geld per keer).` : `${target.name} kan geen AI-functies meer starten. Opgeslagen resultaten blijven zichtbaar.`);
   res.redirect('/gebruikers');
 });
+// De rol ADONIS-beheerder overdragen (alleen de huidige eigenaar), met bevestiging en het eigen wachtwoord.
+app.post('/gebruikers/eigenaar-overdragen', auth.requireOwner, wrap(async (req, res) => {
+  const target = auth.findUserById(req.body.naar);
+  const key = 'overdragen|' + req.user.id;
+  const back = (msg) => { flash(req, 'err', msg); res.redirect('/gebruikers#overdragen'); };
+  if (!target || target.id === req.user.id) return back('Kies aan wie u de rol ADONIS-beheerder wilt overdragen.');
+  if (req.body.bevestig !== 'on') return back('Vink aan dat u begrijpt wat er gebeurt.');
+  if (auth.loginBlocked(key)) return back('Te veel verkeerde wachtwoorden. Probeer het over 15 minuten opnieuw.');
+  if (!(await auth.checkPassword(req.user.id, req.body.wachtwoord))) { auth.loginFailed(key); return back('Uw wachtwoord klopt niet. Er is niets veranderd.'); }
+  auth.loginSucceeded(key);
+  auth.transferOwnership(req.user.id, target.id);
+  console.log(`Rol ADONIS-beheerder overgedragen van ${req.user.username} naar ${target.username}.`);
+  flash(req, 'ok', `${target.name} is nu de ADONIS-beheerder. U bent gewoon beheerder gebleven.`);
+  res.redirect('/gebruikers');
+}));
 app.post('/gebruikers/:id/verwijderen', auth.requireAdmin, (req, res) => {
   const target = auth.findUserById(req.params.id);
   if (target && target.id !== req.user.id && !target.is_owner) {

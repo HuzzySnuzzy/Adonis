@@ -39,6 +39,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Datum invoer** wordt automatisch ingevuld met de datum waarop de werkopdracht is aangemaakt.
 - **Werkopdrachtnummer** loopt automatisch op en kan zo nodig worden aangepast.
 - **Afdrukken** op A4 liggend: pagina 1 is de voorkant, pagina 2 de achterkant.
+- **Profiel:** pictogram + kleur of eigen foto (256 × 256, in de database), in menu, gebruikerslijst en aanwezigheid.
+  In de eenvoudige weergave staat Beheer in het gebruikersmenu. De eigenaar kan de rol ADONIS-beheerder overdragen
+  (Gebruikers; bevestiging + eigen wachtwoord, met blokkade na te veel pogingen).
 - **+ Nieuw…** vraagt wat u toevoegt (werkopdracht, banden, onderdeel; alleen ingeschakelde onderdelen); F2 opent het menu.
   Het startscherm toont alleen de werkopdrachten van vandaag (live).
 - **Feestdagen** (Systeem → Feestdagen): Kerst, Sinterklaas, Oud en Nieuw, Valentijn, Pasen (automatisch of vaste data),

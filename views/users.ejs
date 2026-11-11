@@ -16,7 +16,7 @@
     <tbody>
     <% for (const u of users) { %>
       <tr>
-        <td><%= u.name %></td>
+        <td><span class="user-cell"><%- avatarHtml(u) %><span><%= u.name %></span></span></td>
         <td><%= u.username %></td>
         <td>
           <% if (u.is_owner) { %>
@@ -94,6 +94,28 @@
       <button class="btn btn-primary" type="submit">Gebruiker toevoegen</button>
     </form>
   </section>
+
+  <% if (user.is_owner && users.length > 1) { %>
+  <section class="card owner-transfer" id="overdragen">
+    <h2>Rol ADONIS-beheerder overdragen</h2>
+    <p class="muted small">Er is altijd precies één ADONIS-beheerder (eigenaar): alleen die kan bij <i>Systeem</i> (backups, huisstijl,
+      onderdelen, updates) en kan niet worden verwijderd. Draagt u de rol over, dan wordt de ander de ADONIS-beheerder en blijft u
+      gewoon beheerder. Terugdraaien kan alleen de nieuwe ADONIS-beheerder.</p>
+    <form method="post" action="/gebruikers/eigenaar-overdragen" class="stack narrow-form" data-confirm="Weet u het zeker? U bent daarna geen ADONIS-beheerder meer en kunt niet meer bij Systeem.">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label>Overdragen aan
+        <select name="naar" required>
+          <option value="">Kies een gebruiker…</option>
+          <% for (const u of users) { if (u.id === user.id) continue; %><option value="<%= u.id %>"><%= u.name %> (<%= u.username %>, <%= (ROLES[u.role] || 'Monteur').toLowerCase() %>)</option><% } %>
+        </select></label>
+      <label>Uw wachtwoord <span class="muted small">(ter controle)</span>
+        <input type="password" name="wachtwoord" autocomplete="current-password" required></label>
+      <label class="check"><input type="checkbox" name="bevestig" value="on" required>
+        Ik begrijp dat ik daarna geen ADONIS-beheerder meer ben.</label>
+      <div><button class="btn btn-danger" type="submit">Rol overdragen</button></div>
+    </form>
+  </section>
+  <% } %>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

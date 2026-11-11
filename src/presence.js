@@ -10,7 +10,7 @@ const orders = new Map(); // orderId -> Map(tab -> { userId, name, field, t })
 
 function list(orderId) {
   const m = orders.get(Number(orderId));
-  return m ? [...m.entries()].map(([tab, p]) => ({ tab, userId: p.userId, name: p.name, field: p.field })) : [];
+  return m ? [...m.entries()].map(([tab, p]) => ({ tab, userId: p.userId, name: p.name, field: p.field, av: p.av })) : [];
 }
 function announce(orderId) {
   events.broadcast({ type: 'order-presence', id: Number(orderId), people: list(orderId) });
@@ -28,7 +28,7 @@ function update(orderId, user, { tab, field, gone }) {
     return list(id);
   }
   if (!m) { m = new Map(); orders.set(id, m); }
-  m.set(tab, { userId: user.id, name: user.name, field, t: Date.now() });
+  m.set(tab, { userId: user.id, name: user.name, field, t: Date.now(), av: require('./auth').avatarHtml(user, 'co-av') });
   if (!before || before.field !== field) announce(id);
   return list(id);
 }

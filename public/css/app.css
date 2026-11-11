@@ -2463,3 +2463,47 @@ table.list tr.day-row[hidden] { display: none; }
   color: var(--text); text-decoration: none; }
 .start-new-item:hover, .start-new-item:focus-visible { background: var(--hover); outline: none; }
 @media (prefers-reduced-motion: reduce) { .start-new-toggle svg { transition: none; } }
+
+/* =====================================================================
+   Profielfoto (Instellingen → Profiel) en gebruikersmenu
+   ===================================================================== */
+.avatar { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 auto; border-radius: 50%; overflow: hidden; color: #fff;
+  font-weight: 700; font-size: .85rem; line-height: 1; user-select: none; }
+.avatar svg { width: 62%; height: 62%; }
+.avatar.av-img { background: var(--surface); }
+.avatar.av-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.av-c0 { background: color-mix(in srgb, var(--primary) 70%, #fff); }
+.av-c1 { background: #3b5bdb; } .av-c2 { background: #5f3dc4; } .av-c3 { background: #9c36b5; } .av-c4 { background: #c2255c; }
+.av-c5 { background: #e03131; } .av-c6 { background: #d9480f; } .av-c7 { background: #b8860b; } .av-c8 { background: #2f9e44; }
+.av-c9 { background: #0b7285; } .av-c10 { background: #1098ad; } .av-c11 { background: #495057; } .av-c12 { background: #8d5524; }
+.avatar.av-lg { width: 40px; height: 40px; font-size: 1.05rem; }
+.avatar.av-xl { width: 84px; height: 84px; font-size: 2rem; box-shadow: 0 0 0 4px var(--surface), 0 0 0 5px var(--border); }
+.co-person .avatar.co-av { width: 18px; height: 18px; font-size: .62rem; }
+.user-head { display: flex; align-items: center; gap: .7rem; }
+.user-head-txt { display: grid; gap: 1px; min-width: 0; }
+.user-sec { display: grid; margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border-soft, var(--border)); }
+.user-sec .bell-head { margin: .3rem .7rem .2rem; }
+
+.profile-top { display: flex; align-items: center; gap: 1.2rem; margin: .4rem 0 1rem; flex-wrap: wrap; }
+.profile-preview { padding: 5px; }
+.profile-who { display: grid; gap: .15rem; min-width: 0; }
+.profile-who b { font-size: 1.1rem; }
+.profile-photo-actions { display: flex; align-items: center; gap: .6rem; margin-top: .4rem; flex-wrap: wrap; }
+.profile-set { border: 0; padding: 0; margin: 0 0 1rem; }
+.profile-set legend { font-weight: 600; font-size: .9rem; margin-bottom: .45rem; padding: 0; }
+.profile-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: .45rem; max-width: 560px; }
+.profile-opt, .profile-swatch { position: relative; cursor: pointer; }
+.profile-opt input, .profile-swatch input { position: absolute; opacity: 0; pointer-events: none; }
+.profile-tile { display: grid; place-items: center; height: 46px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); font-weight: 700; font-size: 1.1rem; transition: border-color .12s, box-shadow .12s; overflow: hidden; }
+.profile-tile.profile-img img { width: 100%; height: 100%; object-fit: cover; }
+.profile-opt:hover .profile-tile { border-color: var(--muted); }
+.profile-opt input:checked + .profile-tile { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); color: var(--primary); }
+.profile-opt input:focus-visible + .profile-tile, .profile-swatch input:focus-visible + span { outline: 2px solid var(--primary); outline-offset: 2px; }
+.profile-colors { display: flex; flex-wrap: wrap; gap: .5rem; }
+.profile-colors.is-off { opacity: .4; }
+.profile-swatch span { display: block; width: 32px; height: 32px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); transition: box-shadow .12s; }
+.profile-swatch input:checked + span { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
+.user-cell { display: inline-flex; align-items: center; gap: .55rem; }
+.owner-transfer { border-left: 4px solid var(--red, #c0392b); margin-top: 1.5rem; }
+.owner-transfer select { display: block; width: 100%; max-width: 440px; margin-top: .3rem; }

@@ -201,13 +201,19 @@
       <div class="nav-pop nav-pop-right bell-pop"><p class="bell-head">Herinneringen voor vandaag</p><ul class="bell-list" data-bell-list></ul></div>
     </details>
     <details class="nav-menu user-menu" data-nav-menu>
-      <summary class="user-btn" title="<%= user.name %>"><span class="user-avatar" aria-hidden="true"><%= (user.name || '?').trim().charAt(0).toUpperCase() %></span><span class="uname"><%= user.name %></span></summary>
+      <summary class="user-btn" title="<%= user.name %>"><%- avatarHtml(user) %><span class="uname"><%= user.name %></span></summary>
       <div class="nav-pop nav-pop-right" role="menu">
-        <p class="user-head"><b><%= user.name %></b><span class="muted small"><%= user.is_owner ? 'Beheerder (eigenaar)' : user.is_admin ? 'Beheerder' : 'Monteur' %></span></p>
+        <div class="user-head"><%- avatarHtml(user, 'av-lg') %><span class="user-head-txt"><b><%= user.name %></b><span class="muted small"><%= user.is_owner ? 'Beheerder (eigenaar)' : user.is_admin ? 'Beheerder' : user.can_invoice ? 'Facturatie' : 'Monteur' %></span></span></div>
         <% if (F.werkopdrachten) { %><a role="menuitem" href="/mijn-werk" class="<%= on(path === '/mijn-werk') %>">Mijn werk</a><% } %>
         <a role="menuitem" href="/instellingen" class="<%= on(path === '/instellingen') %>">Instellingen</a>
         <% if (prefs.desktop === 'on') { %><a role="menuitem" href="/bureaublad">Bureaublad</a><% } %>
         <a role="menuitem" href="/hulp" class="<%= on(path === '/hulp') %>">Hulp</a>
+        <%# In de eenvoudige weergave staan Importeren en Beheer niet in het menu: dan hier, onder een eigen kopje. %>
+        <% const MISSING = simple ? [importHref && [importHref, 'Importeren'], ...[
+             user.is_admin && ['/gebruikers', 'Gebruikers'], user.is_admin && ['/prullenbak', 'Prullenbak'],
+             user.is_admin && F.werkopdrachten && ['/zoekwoorden', 'Zoekwoorden'], user.is_owner && ['/systeem', 'Systeem']]].filter(Boolean) : []; %>
+        <% if (MISSING.length) { %><div class="user-sec"><p class="bell-head">Beheer</p>
+          <% for (const [h, t] of MISSING) { %><a role="menuitem" href="<%= h %>" class="<%= on(path === h || path.startsWith(h + '/')) %>"><%= t %></a><% } %></div><% } %>
         <form method="post" action="/logout" class="nav-pop-form">
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <button class="logout-btn" type="submit" role="menuitem">Uitloggen</button>

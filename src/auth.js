@@ -119,8 +119,72 @@ if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'ai_acc
   db.exec('ALTER TABLE users ADD COLUMN ai_access INTEGER NOT NULL DEFAULT 0');
 }
 
+/* ---------- Profielfoto ----------
+ * Iedereen kiest zelf: de eerste letter (standaard), een pictogram met een achtergrondkleur, of een eigen foto.
+ * Kleuren zijn vaste klassen (av-c1 … av-c12), zodat er geen inline stijl nodig is (beveiligingsregels van de pagina). */
+if (!db.prepare('PRAGMA table_info(users)').all().some((c) => c.name === 'avatar')) {
+  db.exec("ALTER TABLE users ADD COLUMN avatar TEXT NOT NULL DEFAULT ''");
+}
+db.exec(`CREATE TABLE IF NOT EXISTS user_avatars (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  mime TEXT NOT NULL, data BLOB NOT NULL, hash TEXT NOT NULL
+);`);
+const AVATAR_ICONS = {
+  moersleutel: ['Moersleutel', '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3.5 17.2a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.3-.5-.5-2.3z"/>'],
+  auto: ['Auto', '<path d="M4 16.5v-4l2-5h12l2 5v4z"/><path d="M6.5 16.5V19M17.5 16.5V19"/><circle cx="8" cy="13.2" r="1"/><circle cx="16" cy="13.2" r="1"/>'],
+  band: ['Band', '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5"/>'],
+  tandwiel: ['Tandwiel', '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>'],
+  bliksem: ['Bliksem', '<path d="M13 2.5 5 13.5h6l-1 8 8-11h-6z"/>'],
+  druppel: ['Olie', '<path d="M12 3.5s6 6.4 6 10.5a6 6 0 0 1-12 0c0-4.1 6-10.5 6-10.5z"/>'],
+  accu: ['Accu', '<rect x="3.5" y="7.5" width="17" height="11" rx="1.5"/><path d="M7 7.5v-2h3v2M14 7.5v-2h3v2M6.5 13h3.5M14 13h3.5M15.75 11.25v3.5"/>'],
+  sleutel: ['Sleutel', '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l2 2M15 8l2 2"/>'],
+  vlag: ['Finishvlag', '<path d="M5 21V4M5 4h13l-2.5 4L18 12H5"/>'],
+  teller: ['Toerenteller', '<path d="M4 16a8 8 0 1 1 16 0"/><path d="m12 16 4-5"/><circle cx="12" cy="16" r="1.2"/>'],
+  ster: ['Ster', '<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'],
+  hart: ['Hart', '<path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z"/>'],
+  koffie: ['Koffie', '<path d="M4.5 9h12v5.5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/><path d="M16.5 10.5h1.5a2.5 2.5 0 0 1 0 5h-1.6M8 3.5c-.6 1 .6 1.6 0 2.6M12 3.5c-.6 1 .6 1.6 0 2.6"/>'],
+  raket: ['Raket', '<path d="M12 2.5c3.5 2.3 5 6 4.5 10.5l-2 3.5h-5l-2-3.5C7 8.5 8.5 4.8 12 2.5z"/><circle cx="12" cy="9.5" r="1.8"/><path d="M9.5 16.5 7 20l3-1M14.5 16.5 17 20l-3-1"/>'],
+  blad: ['Blad', '<path d="M5 19c0-8 5-13.5 14.5-14-.2 9.6-5.7 14.5-13.5 14.5zM5 19l7-7"/>'],
+  schild: ['Schild', '<path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6z"/>'],
+};
+const AVATAR_COLORS = ['Blauw', 'Indigo', 'Paars', 'Roze', 'Rood', 'Oranje', 'Goud', 'Groen', 'Petrol', 'Turquoise', 'Leisteen', 'Bruin'];
+function parseAvatar(json) {
+  let a = {};
+  try { a = JSON.parse(json || '{}') || {}; } catch { /* standaard */ }
+  const color = Number.isInteger(a.color) && a.color >= 1 && a.color <= AVATAR_COLORS.length ? a.color : 0;
+  if (a.type === 'img' && /^[0-9a-f]{8,40}$/.test(a.hash || '')) return { type: 'img', hash: a.hash, color };
+  if (a.type === 'icon' && AVATAR_ICONS[a.icon]) return { type: 'icon', icon: a.icon, color };
+  return { type: 'letter', color };
+}
+const escHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+/** Het rondje met de profielfoto, het pictogram of de eerste letter. */
+function avatarHtml(user, cls = '') {
+  if (!user) return '';
+  const a = user.avatar || { type: 'letter', color: 0 };
+  const c = `avatar user-avatar av-c${a.color || 0}${cls ? ' ' + cls : ''}`;
+  if (a.type === 'img') return `<span class="${c} av-img" aria-hidden="true"><img src="/profielfoto/${Number(user.id)}?v=${a.hash}" alt="" loading="lazy"></span>`;
+  if (a.type === 'icon') return `<span class="${c} av-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${AVATAR_ICONS[a.icon][1]}</svg></span>`;
+  return `<span class="${c}" aria-hidden="true">${escHtml((user.name || '?').trim().charAt(0).toUpperCase())}</span>`;
+}
+function setAvatar(userId, { type, icon, color }) {
+  const cur = parseAvatar((db.prepare('SELECT avatar FROM users WHERE id = ?').get(userId) || {}).avatar);
+  const next = { type: type === 'icon' && AVATAR_ICONS[icon] ? 'icon' : type === 'img' && cur.type === 'img' ? 'img' : 'letter', icon, color: Number(color) || 0, hash: cur.hash };
+  if (next.type !== 'img') db.prepare('DELETE FROM user_avatars WHERE user_id = ?').run(userId);
+  db.prepare('UPDATE users SET avatar = ? WHERE id = ?').run(JSON.stringify(parseAvatar(JSON.stringify(next))), userId);
+}
+function setAvatarImage(userId, mime, buf) {
+  const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 12);
+  db.prepare(`INSERT INTO user_avatars (user_id, mime, data, hash) VALUES (?, ?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET mime = excluded.mime, data = excluded.data, hash = excluded.hash`).run(userId, mime, buf, hash);
+  const cur = parseAvatar((db.prepare('SELECT avatar FROM users WHERE id = ?').get(userId) || {}).avatar);
+  db.prepare('UPDATE users SET avatar = ? WHERE id = ?').run(JSON.stringify({ type: 'img', hash, color: cur.color }), userId);
+}
+function avatarImage(userId) {
+  return db.prepare('SELECT mime, data, hash FROM user_avatars WHERE user_id = ?').get(userId);
+}
+
 function findUserById(id) {
-  const row = db.prepare('SELECT id, username, name, is_admin, is_owner, role, ai_access, preferences FROM users WHERE id = ?').get(id);
+  const row = db.prepare('SELECT id, username, name, is_admin, is_owner, role, ai_access, avatar, preferences FROM users WHERE id = ?').get(id);
   if (!row) return row;
   const { preferences, ...user } = row;
   if (user.is_owner) user.role = 'beheerder';
@@ -128,6 +192,7 @@ function findUserById(id) {
   user.is_admin = user.role === 'beheerder' ? 1 : 0;
   user.can_invoice = user.role === 'facturatie' || user.role === 'beheerder';
   user.can_ai = user.is_admin === 1 || user.ai_access === 1;
+  user.avatar = parseAvatar(user.avatar);
   return { ...user, prefs: parsePrefs(preferences) };
 }
 
@@ -189,6 +254,16 @@ async function setPassword(userId, password) {
   db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, userId);
   // Log the user out everywhere else.
   db.prepare("DELETE FROM sessions WHERE json_extract(data, '$.userId') = ?").run(userId);
+}
+
+/** De rol ADONIS-beheerder (eigenaar) overdragen. De vorige eigenaar blijft gewoon beheerder. */
+function transferOwnership(fromId, toId) {
+  db.exec('BEGIN');
+  try {
+    db.prepare('UPDATE users SET is_owner = 0, is_admin = 1, role = ? WHERE id = ?').run('beheerder', fromId);
+    db.prepare('UPDATE users SET is_owner = 1, is_admin = 1, role = ? WHERE id = ?').run('beheerder', toId);
+    db.exec('COMMIT');
+  } catch (err) { db.exec('ROLLBACK'); throw err; }
 }
 
 async function checkPassword(userId, password) {
@@ -280,6 +355,7 @@ setInterval(() => {
 
 module.exports = {
   PREF_OPTIONS, SECRET_THEMES, NOTIFY_KINDS, visibleThemes, savePrefs, ROLES, setRole, setAiAccess, requireAi, AI_DENIED,
+  transferOwnership, AVATAR_ICONS, AVATAR_COLORS, avatarHtml, setAvatar, setAvatarImage, avatarImage,
   userCount, findUserById, verifyLogin, createUser, setPassword, checkPassword,
   loadUser, requireLogin, requireAdmin, requireOwner, csrfProtection,
   loginBlocked, loginFailed, loginSucceeded,

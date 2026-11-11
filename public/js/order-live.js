@@ -282,7 +282,8 @@
         const el = document.createElement('span');
         el.className = 'co-person' + (p.field ? ' is-typing' : '');
         el.style.setProperty('--co', `hsl(${hue(p.userId)} 65% 45%)`);
-        const dot = document.createElement('i'); dot.textContent = (p.name || '?').trim().charAt(0).toUpperCase();
+        let dot = document.createElement('i'); dot.textContent = (p.name || '?').trim().charAt(0).toUpperCase();
+        if (p.av) { const t = document.createElement('template'); t.innerHTML = p.av; if (t.content.firstElementChild) dot = t.content.firstElementChild; } // profielfoto (van de server)
         const name = document.createElement('span'); name.textContent = own ? 'u (ander venster)' : p.name;
         el.title = (own ? 'U heeft deze werkopdracht ook in een ander venster open' : `${p.name} heeft deze werkopdracht open`) + (p.field ? ' en is aan het typen' : '');
         el.append(dot, name);

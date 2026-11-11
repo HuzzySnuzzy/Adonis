@@ -60,6 +60,44 @@
     <% } %>
 
 
+  <% const av = user.avatar || { type: 'letter', color: 0 }; const look = av.type === 'icon' ? av.icon : av.type; %>
+  <section class="card profile-card" id="profiel" data-profile data-csrf="<%= csrf %>">
+    <h2>Profiel</h2>
+    <p class="muted small">Hoe u eruitziet in het menu en bij collega's (bijv. als u samen een werkopdracht bewerkt). Kies een pictogram en een
+      kleur, of gebruik een eigen foto.</p>
+    <form method="post" action="/instellingen/profiel" class="profile-form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="profile-top">
+        <div class="profile-preview" data-profile-preview><%- avatarHtml(user, 'av-xl') %></div>
+        <div class="profile-who"><b><%= user.name %></b><span class="muted small"><%= user.username %></span>
+          <div class="profile-photo-actions">
+            <label class="btn btn-small"><input type="file" accept="image/*" hidden data-profile-file> <%= av.type === 'img' ? 'Andere foto…' : 'Eigen foto…' %></label>
+            <span class="muted small" data-profile-busy hidden>Foto verwerken…</span>
+          </div>
+          <p class="alert" data-profile-error hidden></p>
+        </div>
+      </div>
+      <fieldset class="profile-set">
+        <legend>Pictogram</legend>
+        <div class="profile-icons" role="radiogroup" aria-label="Pictogram">
+          <label class="profile-opt" title="Eerste letter van uw naam"><input type="radio" name="look" value="letter" <%= look === 'letter' ? 'checked' : '' %>><span class="profile-tile profile-letter"><%= (user.name || '?').trim().charAt(0).toUpperCase() %></span></label>
+          <% if (av.type === 'img') { %><label class="profile-opt" title="Uw foto"><input type="radio" name="look" value="img" checked><span class="profile-tile profile-img"><img src="/profielfoto/<%= user.id %>?v=<%= av.hash %>" alt=""></span></label><% } %>
+          <% for (const [k, [label, svg]] of Object.entries(AVATAR_ICONS)) { %>
+          <label class="profile-opt" title="<%= label %>"><input type="radio" name="look" value="<%= k %>" <%= look === k ? 'checked' : '' %> aria-label="<%= label %>"><span class="profile-tile"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><%- svg %></svg></span></label>
+          <% } %>
+        </div>
+      </fieldset>
+      <fieldset class="profile-set">
+        <legend>Achtergrondkleur</legend>
+        <div class="profile-colors" role="radiogroup" aria-label="Achtergrondkleur">
+          <label class="profile-swatch" title="Standaard"><input type="radio" name="kleur" value="0" <%= !av.color ? 'checked' : '' %> aria-label="Standaard"><span class="av-c0"></span></label>
+          <% AVATAR_COLORS.forEach((c, i) => { %><label class="profile-swatch" title="<%= c %>"><input type="radio" name="kleur" value="<%= i + 1 %>" <%= av.color === i + 1 ? 'checked' : '' %> aria-label="<%= c %>"><span class="av-c<%= i + 1 %>"></span></label><% }) %>
+        </div>
+      </fieldset>
+      <div><button class="btn btn-primary" type="submit">Profiel opslaan</button></div>
+    </form>
+  </section>
+
   <form method="post" action="/instellingen" class="settings-form" data-guard>
     <input type="hidden" name="_csrf" value="<%= csrf %>">
 
@@ -72,7 +110,7 @@
           alleen het belangrijkste in het menu. Fijn als u niet zo vaak met computers werkt.</span></span>
       </label>
       <% if (p.simple === 'on' && user.is_admin) { %>
-      <p class="muted small">Beheer (staat in deze weergave niet in het menu):
+      <p class="muted small">Beheer (staat in deze weergave in het gebruikersmenu, onder uw naam):
         <% if (feat.werkopdrachten) { %><a href="/importeren">Importeren</a> · <% } else if (feat.bandenhotel || feat.voorraad) { %><a href="/importeren/excel">Importeren</a> · <% } %><a href="/gebruikers">Gebruikers</a> · <a href="/prullenbak">Prullenbak</a><% if (user.is_owner) { %> · <a href="/systeem">Systeem</a><% } %></p>
       <% } %>
     </section>
@@ -270,4 +308,5 @@
   </section>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/profile.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

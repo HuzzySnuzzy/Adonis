@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.54.0', date: '2026-11-11', title: 'Profielfoto, Beheer in het gebruikersmenu en eigenaar overdragen',
+    items: [
+      'Profiel (Instellingen → Profiel): kies hoe u eruitziet. Een pictogram (moersleutel, auto, band, accu, toerenteller…) met een achtergrondkleur, of een eigen foto (wordt vanzelf vierkant bijgesneden). Uw keuze staat in het menu, in de lijst met gebruikers en bij "Ook open" als u samen een werkopdracht bewerkt.',
+      'Gebruikersmenu: bovenaan uw profielfoto. In de eenvoudige weergave staan Importeren, Gebruikers, Prullenbak, Zoekwoorden en Systeem nu in het gebruikersmenu, onder het kopje Beheer.',
+      'De ADONIS-beheerder (eigenaar) kan de rol overdragen aan een andere gebruiker (Gebruikers → Rol ADONIS-beheerder overdragen). Daarvoor vraagt ADONIS of u het zeker weet, een vinkje en uw eigen wachtwoord. U blijft daarna gewoon beheerder.',
+    ],
+  },
+  {
     version: '1.53.1', date: '2026-11-11', title: 'Grote knop met keuzepijltje',
     items: [
       'Op het startscherm heeft de grote knop "Nieuwe werkopdracht" nu rechts een pijltje: klik erop (of druk op pijl omlaag) en de andere keuzes klappen eronder open, zoals Banden inslaan en Nieuw onderdeel. Het losse rijtje knoppen eronder is weg.',
