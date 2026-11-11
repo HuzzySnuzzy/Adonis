@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.54.2', date: '2026-11-11', title: 'Afdrukken weer als het papieren formulier',
+    items: [
+      'Bij afdrukken stonden de klant en de werkzaamheden links en de onderdelen rechts (de volgorde voor de telefoon). Nu staat de voorkant weer zoals op papier: onderdelen links, klant en werkzaamheden rechts. Ook op de achterkant staan Banden en Keuringen weer naast elkaar.',
+    ],
+  },
+  {
     version: '1.54.1', date: '2026-11-11', title: 'Werkopdrachtnummers met vier cijfers',
     items: [
       'Werkopdrachtnummers onder de 1000 staan nu overal met voorloopnullen, net als op het papieren formulier: 0001, 0050, 0100. Zoeken werkt met en zonder nullen (0100 en 100 vinden dezelfde werkopdracht).',

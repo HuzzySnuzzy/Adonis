@@ -191,7 +191,7 @@ td.tread-warn { background: var(--tread-warn); }
 .delete-form { max-width: 1440px; margin: 0 auto 3rem; padding: 0 1rem; text-align: right; }
 
 /* ---------- smal scherm: helften onder elkaar ---------- */
-@media (max-width: 1150px) {
+@media screen and (max-width: 1150px) {
   .sheet { flex-direction: column; min-width: 0; max-width: 760px; gap: 28px; }
   .sheet-scroll { padding: .6rem; }
   .sheet .panel { min-width: 600px; }
@@ -200,7 +200,7 @@ td.tread-warn { background: var(--tread-warn); }
   .sheet { overflow-x: auto; }
   .order-toolbar { top: 0; position: relative; }
 }
-@media (max-width: 640px) {
+@media screen and (max-width: 640px) {
   .sheet { padding: 12px; }
   .sheet .panel { min-width: 560px; }
 }
@@ -246,7 +246,7 @@ td.tread-warn { background: var(--tread-warn); }
 
 /* Telefoon: de knoppen van de werkbalk netjes in twee kolommen (de hoofdknop over de hele breedte), en een hint dat het
    formulier opzij schuift (de rechterhelft viel eraf zonder dat je dat kon zien). */
-@media (max-width: 760px) {
+@media screen and (max-width: 760px) {
   .order-toolbar .tb-right { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; width: 100%; }
   .order-toolbar .tb-right .btn-primary, .order-toolbar .tb-right .btn-ok { grid-column: 1 / -1; }
   .order-toolbar .tb-right .btn { justify-content: center; }
@@ -285,7 +285,7 @@ td.tread-warn { background: var(--tread-warn); }
 .oa-price { color: var(--muted); }
 .oa-note { flex: 0 0 auto; color: var(--muted); font-size: 12px; }
 .oa-foot { padding: 4px 8px 2px; color: var(--muted); font-size: 11px; border-top: 1px solid var(--border-soft, var(--border)); margin-top: 2px; }
-@media (max-width: 760px) { .order-assist { margin: .5rem .5rem 0; } }
+@media screen and (max-width: 760px) { .order-assist { margin: .5rem .5rem 0; } }
 
 /* ---------- extra bladen ---------- */
 .extra-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
@@ -327,7 +327,7 @@ table.grid.kv td.unit { font-size: 12.5px; padding: 0 6px; color: var(--label); 
 .janee.janee-left { margin-left: 6px; }
 .lbl-inline { font-size: 13px; color: var(--label); margin-right: .5rem; }
 .sign-row td { height: calc(var(--row) * 1.8); }
-@media (max-width: 1150px) { .back-blocks { grid-template-columns: 1fr; } }
+@media screen and (max-width: 1150px) { .back-blocks { grid-template-columns: 1fr; } }
 .tpl-menu > summary { list-style: none; }
 .tpl-menu > summary::-webkit-details-marker { display: none; }
 .tpl-menu .nav-pop { min-width: 260px; top: calc(100% + 6px); }
