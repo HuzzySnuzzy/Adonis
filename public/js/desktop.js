@@ -52,7 +52,7 @@
     const a = area();
     const n = wins.size;
     const st = Object.assign({
-      id: 'w' + (++seq) + '-' + Date.now().toString(36), url, title: 'ADONIS',
+      id: 'w' + (++seq) + '-' + Date.now().toString(36), url, title: document.documentElement.getAttribute('data-brand') || 'ADONIS',
       // Rechts van de pictogrammen beginnen (die blijven zo bereikbaar), elk volgend venster iets verschoven.
       w: Math.min(1100, Math.round((a.width - 120) * 0.8)), h: Math.min(760, Math.round(a.height * 0.82)),
       x: 120 + (n % 6) * 34, y: 20 + (n % 6) * 30, max: false, min: false, z: ++topZ,
@@ -98,7 +98,8 @@
     return w;
   }
   function setTitle(w, title, url) {
-    const t = (title || 'ADONIS').replace(/\s*·\s*ADONIS$/, '');
+    const brand = document.documentElement.getAttribute('data-brand') || 'ADONIS';
+    const t = (title || brand).replace(/\s*·\s*ADONIS$/, '').split(' · ' + brand).join('');
     w.st.title = t;
     w.el.querySelector('.dw-title').textContent = t;
     w.el.setAttribute('aria-label', t);

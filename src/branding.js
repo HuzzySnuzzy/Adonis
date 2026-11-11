@@ -1,0 +1,115 @@
+'use strict';
+/**
+ * Huisstijl van het bedrijf (alleen de ADONIS-beheerder): eigen naam in plaats van "ADONIS", eigen logo (vierkant),
+ * banner (breed logo) en een achtergrondafbeelding met instelbare vervaging en zichtbaarheid (alleen bij de
+ * thema's Systeem, Licht en Donker). De afbeeldingen staan in de database, dus ze gaan mee in elke backup.
+ */
+const crypto = require('crypto');
+const { db } = require('./db');
+const settings = require('./settings');
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS branding_files (
+  slot       TEXT PRIMARY KEY,
+  mime       TEXT NOT NULL,
+  data       BLOB NOT NULL,
+  hash       TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`);
+
+const SLOTS = {
+  logo: { label: 'Logo', max: 2 * 1024 * 1024 },
+  banner: { label: 'Banner', max: 3 * 1024 * 1024 },
+  achtergrond: { label: 'Achtergrond', max: 8 * 1024 * 1024 },
+};
+const MIMES = ['image/png', 'image/jpeg', 'image/webp'];
+const DEFAULTS = { naam: '', sub: '', blur: 6, zicht: 35, bannerInMenu: false };
+
+let cache = null;
+function get() {
+  if (cache) return cache;
+  const s = { ...DEFAULTS, ...(settings.get('branding', {}) || {}) };
+  const files = Object.fromEntries(db.prepare('SELECT slot, hash FROM branding_files').all().map((r) => [r.slot, r.hash]));
+  const naam = String(s.naam || '').trim();
+  cache = {
+    naam, // leeg = ADONIS
+    sub: String(s.sub || '').trim(),
+    name: naam || 'ADONIS',
+    custom: !!naam,
+    blur: clamp(s.blur, 0, 40, DEFAULTS.blur),
+    zicht: clamp(s.zicht, 5, 100, DEFAULTS.zicht),
+    bannerInMenu: !!s.bannerInMenu && !!files.banner,
+    logo: files.logo ? `/huisstijl/logo?v=${files.logo}` : null,
+    banner: files.banner ? `/huisstijl/banner?v=${files.banner}` : null,
+    achtergrond: files.achtergrond ? `/huisstijl/achtergrond?v=${files.achtergrond}` : null,
+  };
+  // Eén versie voor het stylesheet met de achtergrond (verandert bij elke wijziging).
+  cache.v = crypto.createHash('sha1').update(JSON.stringify(cache)).digest('hex').slice(0, 10);
+  return cache;
+}
+function clamp(v, min, max, dflt) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : dflt;
+}
+
+function saveSettings(input) {
+  const cur = { ...DEFAULTS, ...(settings.get('branding', {}) || {}) };
+  const next = { ...cur };
+  if ('naam' in input) next.naam = String(input.naam || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  if ('sub' in input) next.sub = String(input.sub || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  if ('blur' in input) next.blur = clamp(input.blur, 0, 40, DEFAULTS.blur);
+  if ('zicht' in input) next.zicht = clamp(input.zicht, 5, 100, DEFAULTS.zicht);
+  if ('bannerInMenu' in input) next.bannerInMenu = !!input.bannerInMenu;
+  settings.set('branding', next);
+  cache = null;
+  return get();
+}
+
+class BrandingError extends Error {}
+/** Afbeelding opslaan (al verkleind in de browser). dataUrl: "data:image/png;base64,...". */
+function saveFile(slot, dataUrl) {
+  if (!SLOTS[slot]) throw new BrandingError('Onbekend soort afbeelding.');
+  const m = /^data:(image\/[a-z+.-]+);base64,([A-Za-z0-9+/=\s]+)$/.exec(String(dataUrl || ''));
+  if (!m || !MIMES.includes(m[1])) throw new BrandingError('Kies een afbeelding (PNG, JPG of WebP).');
+  const buf = Buffer.from(m[2], 'base64');
+  if (!buf.length) throw new BrandingError('De afbeelding is leeg.');
+  if (buf.length > SLOTS[slot].max) throw new BrandingError(`De afbeelding is te groot (maximaal ${SLOTS[slot].max / 1024 / 1024} MB).`);
+  if (!looksLike(m[1], buf)) throw new BrandingError('Dit bestand is geen geldige afbeelding.');
+  const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 12);
+  db.prepare(`INSERT INTO branding_files (slot, mime, data, hash) VALUES (?, ?, ?, ?)
+    ON CONFLICT(slot) DO UPDATE SET mime = excluded.mime, data = excluded.data, hash = excluded.hash, updated_at = datetime('now')`)
+    .run(slot, m[1], buf, hash);
+  cache = null;
+  return get();
+}
+// Kloppen de eerste bytes bij het soort afbeelding? (geen HTML of script als "plaatje")
+function looksLike(mime, b) {
+  if (mime === 'image/png') return b.length > 8 && b.readUInt32BE(0) === 0x89504e47;
+  if (mime === 'image/jpeg') return b.length > 3 && b[0] === 0xff && b[1] === 0xd8;
+  if (mime === 'image/webp') return b.length > 12 && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP';
+  return false;
+}
+function removeFile(slot) {
+  db.prepare('DELETE FROM branding_files WHERE slot = ?').run(slot);
+  if (slot === 'banner') saveSettings({ bannerInMenu: false });
+  cache = null;
+  return get();
+}
+function file(slot) {
+  return SLOTS[slot] ? db.prepare('SELECT mime, data, hash FROM branding_files WHERE slot = ?').get(slot) : null;
+}
+
+/** Stylesheet met de achtergrond (alleen bij de thema's Systeem, Licht en Donker). */
+function css() {
+  const b = get();
+  if (!b.achtergrond) return '/* geen achtergrond */\n';
+  const sys = ':root:is(:not([data-theme]), [data-theme="light"], [data-theme="dark"])';
+  return `${sys} { --brand-bg-blur: ${b.blur}px; --brand-bg-zicht: ${b.zicht / 100}; }
+${sys}:not(.in-window) { background: var(--bg); }
+${sys}:not(.in-window) body { background: transparent; }
+${sys}:not(.in-window) .brand-bg { display: block; background-image: url("${b.achtergrond}"); }
+`;
+}
+
+module.exports = { get, saveSettings, saveFile, removeFile, file, css, SLOTS, BrandingError };

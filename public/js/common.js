@@ -690,3 +690,6 @@ document.addEventListener('input', (e) => {
     }
   });
 })();
+
+// Staafdiagrammen (bijv. Mijn werk): hoogte uit data-bar-h (procent). Geen inline style in de HTML (CSP).
+document.querySelectorAll('[data-bar-h]').forEach((el) => { el.style.setProperty('--h', Math.max(0, Math.min(100, Number(el.dataset.barH) || 0)) + '%'); });

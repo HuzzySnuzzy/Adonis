@@ -134,10 +134,11 @@
   function handle(ev) {
     if (ev.type === 'server-update') { updatingTo = ev.version; toast(`ADONIS wordt bijgewerkt naar v${ev.version} – een paar seconden geduld…`); return; }
     // De beheerder zette een onderdeel aan of uit: menu's kloppen niet meer, dus opnieuw laden (als dat kan).
-    if (ev.type === 'features') {
+    if (ev.type === 'features' || ev.type === 'branding') {
       if (String(ev.byId) === String(me) || inWindow) return;
       if (!busyHere()) { window.adonisLeaving = true; location.reload(); return; }
-      toast('De beheerder heeft onderdelen van ADONIS aan- of uitgezet. Vernieuw de pagina (F5) als u klaar bent.');
+      toast(ev.type === 'branding' ? 'De beheerder heeft de huisstijl aangepast. Vernieuw de pagina (F5) als u klaar bent.'
+        : 'De beheerder heeft onderdelen van ADONIS aan- of uitgezet. Vernieuw de pagina (F5) als u klaar bent.');
       return;
     }
     if (ev.type === 'notes') { if (String(ev.byId) !== String(me)) { document.dispatchEvent(new CustomEvent('adonis:notes', { detail: ev })); notice(ev); } return; }

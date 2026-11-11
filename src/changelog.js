@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.52.0', date: '2026-11-11', title: 'Eigen huisstijl en Mijn werk',
+    items: [
+      'Huisstijl (Systeem → Huisstijl, alleen de ADONIS-beheerder): geef ADONIS de naam van uw bedrijf, met een eigen ondertitel. De naam staat in het menu, op de inlogpagina, in de titel van het venster en in de opstartanimatie; ADONIS zelf staat dan klein onderaan in de statusbalk, het gebruikersmenu en de inlogpagina.',
+      'Eigen logo (ook het pictogram in het tabblad), een banner (breed logo, op de inlogpagina en desgewenst in het menu) en een achtergrondafbeelding. Afbeeldingen worden vanzelf verkleind en gaan mee in de backup.',
+      'De achtergrond is te zien bij de thema\'s Systeem, Licht en Donker. Met de schuifjes Vervaging en Zichtbaarheid maakt u er een rustige achtergrond van; u ziet het meteen in het voorbeeld.',
+      'Mijn werk (in het gebruikersmenu rechtsboven): hoeveel servicebeurten, werkopdrachten, APK\'s en bandenwissels u heeft gedaan, deze week, maand, dit jaar en in totaal, de uren uit de kolom Tijd, een grafiek per maand en uw laatste werkopdrachten. Beheerders kunnen het voor iedere monteur bekijken.',
+    ],
+  },
+  {
     version: '1.51.0', date: '2026-11-11', title: 'Werkzaamheden regel voor regel',
     items: [
       'Nieuwe voorkant (versie 2): de werkzaamheden staan nu op losse regels, elk met een vakje voor ✓, omschrijving, code en tijd. Enter of pijl omlaag gaat naar dezelfde kolom op de volgende regel, pijl omhoog terug. Klik in het ✓-vakje om af te vinken.',

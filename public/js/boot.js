@@ -1,4 +1,7 @@
 'use strict';
+// Naam in de opstartanimatie: de eigen bedrijfsnaam (Systeem → Huisstijl) of ADONIS.
+function BRAND_SUB() { var h = document.documentElement; return h.hasAttribute('data-brand-sub') ? h.getAttribute('data-brand-sub') : 'Werkopdrachten'; }
+function BRAND() { return (document.documentElement.getAttribute('data-brand') || 'ADONIS').toUpperCase(); }
 /* Opstartanimatie voor Systeem, Licht, Donker, OLED en VCDS (Neon en Black Ice hebben een eigen reeks).
  * early.js zet data-boot="1" op de eerste pagina van een tabblad (niet bij Effecten: Rustig of "minder beweging").
  * Het ADONIS-logo bouwt zich op, daarna komt de pagina omhoog. Een klik of toets slaat alles over.
@@ -70,7 +73,7 @@
     if (mark) { var m = mark.cloneNode(true); m.setAttribute('class', 'logo-mark olympus-boot-mark'); c.append(m); }
     var word = document.createElement('div');
     word.className = 'olympus-boot-word';
-    'ADONIS'.split('').forEach(function (ch, i) {
+    BRAND().split('').forEach(function (ch, i) {
       var s = document.createElement('span');
       s.textContent = ch;
       s.style.setProperty('--i', i);
@@ -80,7 +83,7 @@
     rule.className = 'olympus-boot-rule';
     var sub = document.createElement('div');
     sub.className = 'olympus-boot-sub';
-    sub.textContent = 'Werkopdrachten';
+    sub.textContent = BRAND_SUB();
     c.append(word, rule, sub);
     box.append(c);
     document.body.append(box);
@@ -100,7 +103,7 @@
     if (mark) pane.append(mark.cloneNode(true));
     var word = document.createElement('div');
     word.className = 'aero-boot-word';
-    word.textContent = 'ADONIS';
+    word.textContent = BRAND();
     var busy = document.createElement('div');
     busy.className = 'aero-boot-busy';
     var ring = document.createElement('i');
@@ -131,7 +134,7 @@
     text.className = 'app-boot-text';
     var word = document.createElement('div');
     word.className = 'app-boot-word';
-    'ADONIS'.split('').forEach(function (ch, i) {
+    BRAND().split('').forEach(function (ch, i) {
       var s = document.createElement('span');
       s.textContent = ch;
       s.style.setProperty('--i', i);
@@ -139,7 +142,7 @@
     });
     var sub = document.createElement('div');
     sub.className = 'app-boot-sub';
-    sub.textContent = 'Werkopdrachten';
+    sub.textContent = BRAND_SUB();
     text.append(word, sub);
     logo.append(text);
     box.append(logo);

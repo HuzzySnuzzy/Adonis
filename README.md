@@ -39,6 +39,12 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Datum invoer** wordt automatisch ingevuld met de datum waarop de werkopdracht is aangemaakt.
 - **Werkopdrachtnummer** loopt automatisch op en kan zo nodig worden aangepast.
 - **Afdrukken** op A4 liggend: pagina 1 is de voorkant, pagina 2 de achterkant.
+- **Huisstijl** (Systeem → Huisstijl, alleen de eigenaar): bedrijfsnaam en ondertitel in plaats van ADONIS (menu,
+  inlogpagina, venstertitel, opstartanimatie), eigen logo/favicon, banner en achtergrond met vervaging en zichtbaarheid
+  (alleen thema's Systeem, Licht en Donker). Afbeeldingen worden in de browser verkleind en in de database bewaard
+  (`branding_files`), dus ze gaan mee in de backup. ADONIS blijft klein zichtbaar in statusbalk, gebruikersmenu en inlogpagina.
+- **Mijn werk** (gebruikersmenu): servicebeurten, werkopdrachten, APK's, bandenwissels en uren per week/maand/jaar/totaal
+  voor de werkopdrachten waarop iemand als monteur staat, met een grafiek per maand; beheerders kunnen iedereen bekijken.
 - **Voorkant versie 2:** werkzaamheden regel voor regel (vier vakjes per regel) in plaats van vier grote tekstvakken.
   Opgeslagen blijft het hetzelfde (een tekst per kolom, een regel per werkzaamheid; `voorkant: '2'` in de gegevens), dus
   zoeken, sjablonen, foto-import en AI werken voor beide. Nieuwe werkopdrachten krijgen versie 2; bestaande blijven

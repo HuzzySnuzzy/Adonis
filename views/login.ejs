@@ -22,6 +22,7 @@
     <% if (inApp && appCanChangeServer) { %><a href="adonis-app:server-wijzigen" class="server-change" title="Een ander serveradres kiezen (sneltoets Ctrl + ,)">Wijzigen</a>
     <% } else if (inApp) { %><span class="muted small">Wijzigen: druk op <kbd>Ctrl</kbd> + <kbd>,</kbd></span><% } %>
   </div>
+  <% if (locals.brand && brand.custom) { %><p class="powered-by center">Werkplaatssoftware: <b>ADONIS</b></p><% } %>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

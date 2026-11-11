@@ -32,6 +32,8 @@ const assist = require('./order-assist');
 const trash = require('./trash');
 const templates = require('./templates');
 const presence = require('./presence');
+const branding = require('./branding');
+const mywork = require('./mywork');
 
 const app = express();
 // Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
@@ -160,6 +162,7 @@ app.use((req, res, next) => {
     autoUpdate: process.env.AUTO_UPDATE_ENABLED === 'true',
     liveUpdate: process.env.AUTO_UPDATE_LIVE === 'true',
   };
+  res.locals.brand = branding.get(); // huisstijl: eigen naam, logo, banner, achtergrond
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;
   next();
@@ -321,6 +324,18 @@ app.post('/logout', (req, res) => {
 app.get('/app-versie', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json({ version: buildinfo.version });
+});
+
+/* Huisstijl: logo, banner en achtergrond (ook op de inlogpagina, dus zonder inloggen). */
+app.get('/huisstijl.css', (req, res) => {
+  res.set({ 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': req.query.v ? 'public, max-age=31536000, immutable' : 'no-cache' });
+  res.send(branding.css());
+});
+app.get('/huisstijl/:slot', (req, res) => {
+  const f = branding.file(req.params.slot);
+  if (!f) return res.status(404).end();
+  res.set({ 'Content-Type': f.mime, 'Cache-Control': req.query.v === f.hash ? 'public, max-age=31536000, immutable' : 'no-cache' });
+  res.send(f.data);
 });
 
 /* ---------- alles hieronder vereist inloggen ---------- */
@@ -1184,6 +1199,44 @@ app.post('/systeem/onderdelen', auth.requireOwner, (req, res) => {
   flash(req, 'ok', off.length ? `Opgeslagen. Uit: ${off.join(', ')}.` : 'Opgeslagen. Alle onderdelen staan aan.');
   events.broadcast({ type: 'features', byId: req.user.id });
   res.redirect('/systeem#onderdelen');
+});
+
+/* ---------- Mijn werk: wat heeft een monteur gedaan (beheerders kunnen iedereen bekijken) ---------- */
+app.get('/mijn-werk', (req, res) => {
+  let target = req.user;
+  if (req.user.is_admin && req.query.gebruiker) target = auth.findUserById(req.query.gebruiker) || req.user;
+  res.render('mywork', {
+    title: target.id === req.user.id ? 'Mijn werk' : `Werk van ${target.name}`, target,
+    users: req.user.is_admin ? db.prepare('SELECT id, name FROM users ORDER BY name').all() : [],
+    w: mywork.forUser(target), STATUSES: orders.STATUSES,
+  });
+});
+
+/* ---------- huisstijl (alleen ADONIS-beheerder) ---------- */
+app.post('/systeem/huisstijl', auth.requireOwner, (req, res) => {
+  branding.saveSettings({
+    naam: req.body.naam, sub: req.body.sub, blur: req.body.blur, zicht: req.body.zicht, bannerInMenu: req.body.bannerInMenu === 'on',
+  });
+  events.broadcast({ type: 'branding', byId: req.user.id });
+  if ((req.get('accept') || '').includes('application/json')) return res.json({ ok: true, brand: branding.get() });
+  flash(req, 'ok', 'Huisstijl opgeslagen.');
+  res.redirect('/systeem#huisstijl');
+});
+app.post('/systeem/huisstijl/afbeelding', auth.requireOwner, express.json({ limit: '12mb' }), (req, res) => {
+  try {
+    const b = branding.saveFile(String(req.body.slot || ''), req.body.data);
+    events.broadcast({ type: 'branding', byId: req.user.id });
+    res.json({ ok: true, brand: b });
+  } catch (err) {
+    if (!(err instanceof branding.BrandingError)) console.error('Huisstijl:', err);
+    res.status(400).json({ error: err instanceof branding.BrandingError ? err.message : 'Opslaan lukte niet.' });
+  }
+});
+app.post('/systeem/huisstijl/:slot/verwijderen', auth.requireOwner, (req, res) => {
+  if (branding.SLOTS[req.params.slot]) branding.removeFile(req.params.slot);
+  events.broadcast({ type: 'branding', byId: req.user.id });
+  flash(req, 'ok', `${(branding.SLOTS[req.params.slot] || { label: 'Afbeelding' }).label} verwijderd.`);
+  res.redirect('/systeem#huisstijl');
 });
 
 /* ---------- backups (alleen ADONIS-beheerder) ---------- */

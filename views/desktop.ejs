@@ -51,7 +51,7 @@
 <template id="dt-icon-svgs"><% for (const k of Object.keys(ICONS)) { %><span data-k="<%= k %>"><%- svg(k, 16) %></span><% } %></template>
 
 <nav class="dt-taskbar no-print" aria-label="Taakbalk">
-  <button type="button" class="dt-start" data-start aria-haspopup="menu" aria-expanded="false"><%- include('/partials/logo') %></button>
+  <button type="button" class="dt-start" data-start aria-haspopup="menu" aria-expanded="false"><%- include('/partials/logo', { noBanner: true }) %></button>
   <div class="dt-tasks" data-tasks role="toolbar" aria-label="Open vensters"></div>
   <span class="dt-clock" data-clock></span>
   <button type="button" class="dt-showdesk" data-showdesk title="Bureaublad weergeven" aria-label="Bureaublad weergeven"></button>

@@ -1,0 +1,104 @@
+<%- include('/partials/head') %>
+<%
+  const T = w.totals;
+  const self = target.id === user.id;
+  const nl = (n, d = 0) => Number(n || 0).toLocaleString('nl-NL', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const uren = (h) => h ? nl(h, h % 1 ? 1 : 0) : '0';
+  const MONTH = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+  const mLabel = (k) => MONTH[Number(k.slice(5, 7)) - 1];
+  const max = Math.max(1, ...w.months.map((m) => m.werk));
+  const ROWS = [
+    ['werkopdrachten', 'Werkopdrachten', nl], ['service', 'Servicebeurten', nl], ['apk', "APK's", nl],
+    ['banden', 'Bandenwissels', nl], ['uren', 'Uren (kolom Tijd)', uren], ['afgerond', 'Gefactureerd', nl],
+  ];
+%>
+<main class="page mywork-page">
+  <div class="page-head">
+    <div>
+      <h1><%= self ? 'Mijn werk' : 'Werk van ' + target.name %></h1>
+      <p class="muted small">Uit de werkopdrachten waarop <%= self ? 'u' : target.name %> als monteur staat<%= self ? 't' : '' %>.</p>
+    </div>
+    <% if (users.length) { %>
+    <form method="get" action="/mijn-werk" class="mw-who">
+      <label class="small muted" for="mwUser">Bekijken voor</label>
+      <select id="mwUser" name="gebruiker" data-autosubmit>
+        <% for (const u of users) { %><option value="<%= u.id %>" <%= u.id === target.id ? 'selected' : '' %>><%= u.name %><%= u.id === user.id ? ' (u)' : '' %></option><% } %>
+      </select>
+      <noscript><button class="btn btn-small" type="submit">Tonen</button></noscript>
+    </form>
+    <% } %>
+  </div>
+
+  <% if (!w.count) { %>
+  <section class="card"><p class="muted">Nog geen werkopdrachten met <b><%= target.name %></b> als monteur. Vult u bij een werkopdracht
+    het vak <i>Monteur</i> in (dat gebeurt bij een nieuwe werkopdracht vanzelf), dan verschijnt het werk hier.</p></section>
+  <% } else { %>
+  <section class="mw-tiles" aria-label="Kerncijfers">
+    <div class="mw-tile mw-hero">
+      <span class="mw-k">Servicebeurten dit jaar</span>
+      <span class="mw-v"><%= nl(T.service.jaar) %></span>
+      <span class="mw-s">deze maand <b><%= nl(T.service.maand) %></b> · in totaal <b><%= nl(T.service.totaal) %></b></span>
+    </div>
+    <div class="mw-tile">
+      <span class="mw-k">Werkopdrachten deze maand</span>
+      <span class="mw-v"><%= nl(T.werkopdrachten.maand) %></span>
+      <span class="mw-s">deze week <b><%= nl(T.werkopdrachten.week) %></b> · dit jaar <b><%= nl(T.werkopdrachten.jaar) %></b></span>
+    </div>
+    <div class="mw-tile">
+      <span class="mw-k">Uren deze maand</span>
+      <span class="mw-v"><%= uren(T.uren.maand) %></span>
+      <span class="mw-s">dit jaar <b><%= uren(T.uren.jaar) %></b> uur</span>
+    </div>
+  </section>
+
+  <section class="card mw-chart-card">
+    <h2>Werkopdrachten per maand</h2>
+    <p class="muted small">De afgelopen twaalf maanden. Wijs een staaf aan voor de aantallen.</p>
+    <div class="mw-chart" role="img" aria-label="Werkopdrachten per maand: <%= w.months.map((m) => mLabel(m.key) + ' ' + m.werk).join(', ') %>">
+      <% w.months.forEach((m, i) => { const last = i === w.months.length - 1; %>
+      <div class="mw-col<%= last ? ' is-now' : '' %>" tabindex="0">
+        <span class="mw-tip"><b><%= mLabel(m.key) %> <%= m.key.slice(0, 4) %></b><br><%= m.werk %> werkopdracht<%= m.werk === 1 ? '' : 'en' %><br><%= m.service %> servicebeurt<%= m.service === 1 ? '' : 'en' %></span>
+        <span class="mw-bar-wrap"><% if (last && m.werk) { %><span class="mw-val"><%= m.werk %></span><% } %><span class="mw-bar" data-bar-h="<%= Math.round(m.werk / max * 100) %>"></span></span>
+        <span class="mw-x"><%= mLabel(m.key) %></span>
+      </div>
+      <% }) %>
+    </div>
+    <details class="mw-table-toggle">
+      <summary class="small">Als tabel</summary>
+      <div class="table-wrap"><table class="list"><thead><tr><th>Maand</th><th class="num">Werkopdrachten</th><th class="num">Servicebeurten</th></tr></thead>
+        <tbody><% for (const m of [...w.months].reverse()) { %><tr><td><%= mLabel(m.key) %> <%= m.key.slice(0, 4) %></td><td class="num"><%= m.werk %></td><td class="num"><%= m.service %></td></tr><% } %></tbody></table></div>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Overzicht</h2>
+    <div class="table-wrap">
+      <table class="list mw-table">
+        <thead><tr><th></th><th class="num">Deze week</th><th class="num">Deze maand</th><th class="num">Dit jaar</th><th class="num">Totaal</th></tr></thead>
+        <tbody>
+          <% for (const [k, label, f] of ROWS) { %>
+          <tr><th scope="row"><%= label %></th><td class="num"><%= f(T[k].week) %></td><td class="num"><%= f(T[k].maand) %></td><td class="num"><%= f(T[k].jaar) %></td><td class="num"><%= f(T[k].totaal) %></td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Laatste werkopdrachten</h2>
+    <ul class="mw-recent">
+      <% for (const r of w.recent) { %>
+      <li><a href="/werkopdracht/<%= r.id %>"><b>#<%= r.nummer %></b> <span class="mw-plate"><%= r.kenteken %></span>
+        <span class="muted"><%= [r.merk_type, r.werk].filter(Boolean).join(' · ') %></span></a>
+        <span class="muted small"><%= fmtDate(r.datum) %></span>
+        <span class="status-badge status-<%= r.status %> in-list"><%= STATUSES[r.status] %></span></li>
+      <% } %>
+    </ul>
+  </section>
+  <p class="muted small">Hoe wordt er geteld? Een <b>servicebeurt</b> is een werkopdracht met een km-stand bij Servicebeurt, of met
+    "service", "onderhoud", "kleine/grote beurt" of "olie verversen" in de werkzaamheden. <b>APK</b>: aangevinkt bij Diversen of "APK" in de
+    werkzaamheden. <b>Uren</b>: opgeteld uit de kolom Tijd (bijv. 0,5 of 1:30). Datum = datum invoer.</p>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

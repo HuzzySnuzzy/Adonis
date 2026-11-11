@@ -39,6 +39,64 @@
     </form>
   </section>
 
+  <% const Bs = brand; const sysTheme = ['system', 'light', 'dark'].includes(prefs.theme || 'system'); %>
+  <section class="card brand-card" id="huisstijl" data-brand-card data-csrf="<%= csrf %>">
+    <h2>Huisstijl</h2>
+    <p class="muted small">Geef ADONIS de naam en het logo van uw bedrijf. Iedereen ziet ze in het menu, op de inlogpagina, in de titel van het
+      venster en in de opstartanimatie. ADONIS zelf blijft klein zichtbaar onderaan (in de statusbalk en het gebruikersmenu).</p>
+
+    <div class="brand-grid">
+      <form method="post" action="/systeem/huisstijl" class="stack brand-form" data-brand-form>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <label>Naam van het bedrijf
+          <input name="naam" value="<%= Bs.naam %>" maxlength="40" placeholder="ADONIS" autocomplete="organization" data-brand-name>
+          <span class="muted small">Leeg laten = ADONIS.</span></label>
+        <label>Ondertitel <span class="muted small">(optioneel)</span>
+          <input name="sub" value="<%= Bs.sub %>" maxlength="40" placeholder="bijv. Autobedrijf · APK · Banden" data-brand-sub></label>
+        <label class="check"><input type="checkbox" name="bannerInMenu" <%= Bs.bannerInMenu ? 'checked' : '' %> <%= Bs.banner ? '' : 'disabled' %> data-brand-bannermenu>
+          Banner in het menu tonen in plaats van logo en naam<% if (!Bs.banner) { %> <span class="muted small">(eerst een banner kiezen)</span><% } %></label>
+
+        <fieldset class="brand-bgset"<%= Bs.achtergrond ? '' : ' disabled' %>>
+          <legend>Achtergrond</legend>
+          <% if (!Bs.achtergrond) { %><p class="muted small">Kies eerst een achtergrondafbeelding hiernaast.</p><% } %>
+          <label class="brand-range">Vervaging <output data-out="blur"><%= Bs.blur %> px</output>
+            <input type="range" name="blur" min="0" max="40" step="1" value="<%= Bs.blur %>" data-brand-blur></label>
+          <label class="brand-range">Zichtbaarheid <output data-out="zicht"><%= Bs.zicht %>%</output>
+            <input type="range" name="zicht" min="5" max="100" step="1" value="<%= Bs.zicht %>" data-brand-zicht></label>
+          <p class="muted small">De achtergrond is alleen te zien bij de thema's Systeem, Licht en Donker.
+            <% if (!sysTheme) { %><b>U gebruikt nu een ander thema</b>, dus u ziet hem zelf niet.<% } %></p>
+        </fieldset>
+        <div><button class="btn btn-primary" type="submit">Opslaan</button></div>
+      </form>
+
+      <div class="brand-preview" aria-label="Voorbeeld">
+        <span class="muted small">Voorbeeld in het menu</span>
+        <div class="brand-pv-bar" data-brand-pv><%- include('/partials/logo', { noBanner: false }) %></div>
+        <span class="muted small">Voorbeeld van de achtergrond</span>
+        <div class="brand-pv-bg"><% if (Bs.achtergrond) { %><div class="brand-pv-img" data-brand-pv-img></div><% } %>
+          <div class="brand-pv-card"><b>Werkopdracht 1024</b><span class="muted small">Kaarten en tabellen blijven goed leesbaar.</span></div>
+          <% if (!Bs.achtergrond) { %><span class="muted small brand-pv-none">Geen achtergrond</span><% } %></div>
+      </div>
+    </div>
+
+    <div class="brand-files">
+      <% for (const [slot, label, help] of [['logo', 'Logo', 'Vierkant, bijv. 512 × 512. Ook het pictogram in het tabblad.'], ['banner', 'Banner', 'Breed logo of naam, bijv. 1200 × 300. Op de inlogpagina.'], ['achtergrond', 'Achtergrond', 'Een rustige foto, bijv. de werkplaats. Liggend.']]) { const url = Bs[slot]; %>
+      <div class="brand-file brand-file-<%= slot %>">
+        <div class="brand-thumb<%= url ? '' : ' is-empty' %>"><% if (url) { %><img src="<%= url %>" alt="<%= label %>"><% } else { %><span class="muted small">Geen <%= label.toLowerCase() %></span><% } %></div>
+        <div class="brand-file-info"><b><%= label %></b><span class="muted small"><%= help %></span>
+          <div class="brand-file-actions">
+            <label class="btn btn-small"><input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden data-brand-file="<%= slot %>"><%= url ? 'Vervangen…' : 'Kiezen…' %></label>
+            <% if (url) { %><button class="btn btn-small btn-ghost" type="submit" form="brandDel-<%= slot %>">Verwijderen</button><% } %>
+          </div>
+        </div>
+      </div>
+      <% if (url) { %><form id="brandDel-<%= slot %>" method="post" action="/systeem/huisstijl/<%= slot %>/verwijderen" hidden data-confirm="<%= label %> verwijderen?"><input type="hidden" name="_csrf" value="<%= csrf %>"></form><% } %>
+      <% } %>
+    </div>
+    <p class="alert" data-brand-error hidden></p>
+    <p class="muted small" data-brand-busy hidden>Afbeelding verwerken…</p>
+  </section>
+
   <section class="card backup-card" id="backup">
     <div class="sys-head">
       <h2>Backups</h2>
@@ -220,4 +278,5 @@
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/system.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/branding.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

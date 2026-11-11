@@ -1,20 +1,23 @@
 <%
   const prefs = locals.prefs || { theme: 'system', ink: 'hand' };
   const themeAttr = prefs.theme === 'system' ? '' : ` data-theme="${prefs.theme}"`;
+  const B = locals.brand || { name: 'ADONIS' }; // huisstijl (Systeem → Huisstijl)
   const THEME_LABEL = { system: 'Systeem', light: 'Licht', dark: 'Donker', oled: 'OLED', vcds: 'VCDS', neon: 'Neon', ice: 'Black Ice', adonis: 'ADONIS', aero: 'Aero', w98: 'Windows 98' };
   %>
 <!doctype html>
-<html lang="nl"<%- themeAttr %><%- locals.user && !locals.desktopShell && (prefs.layout || 'zijbalk') === 'zijbalk' ? ' data-layout="side"' : '' %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>"<%- prefs.simple === 'on' ? ' data-simple="on"' : '' %><%- locals.inApp ? ' data-app' : '' %>>
+<html lang="nl"<%- themeAttr %><%- locals.user && !locals.desktopShell && (prefs.layout || 'zijbalk') === 'zijbalk' ? ' data-layout="side"' : '' %> data-ink="<%= prefs.ink %>" data-fx="<%= prefs.fx || 'full' %>" data-mscale="<%= prefs.mscale || '90' %>"<%- prefs.simple === 'on' ? ' data-simple="on"' : '' %><%- locals.inApp ? ' data-app' : '' %> data-brand="<%= B.name %>"<% if (B.custom) { %> data-brand-sub="<%= B.sub %>"<% } %>>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="<%= prefs.theme === 'system' ? 'light dark' : ['neon', 'ice', 'oled'].includes(prefs.theme) ? 'dark' : ['vcds', 'adonis', 'aero', 'w98'].includes(prefs.theme) ? 'light' : prefs.theme %>">
   <meta name="theme-color" content="<%= prefs.theme === 'neon' ? '#07090c' : prefs.theme === 'ice' ? '#03060c' : prefs.theme === 'oled' ? '#000000' : prefs.theme === 'vcds' ? '#0a246a' : prefs.theme === 'adonis' ? '#11214f' : prefs.theme === 'aero' ? '#3f9be6' : prefs.theme === 'w98' ? '#000080' : '#14171c' %>">
-  <title><%= title %> · ADONIS</title>
-  <link rel="icon" type="image/svg+xml" href="/static/img/adonis-icon.svg">
-  <link rel="apple-touch-icon" href="/static/img/adonis-icon.svg">
+  <title><%= title %> · <%= B.name %></title>
+  <% if (B.logo) { %><link rel="icon" href="<%= B.logo %>"><link rel="apple-touch-icon" href="<%= B.logo %>">
+  <% } else { %><link rel="icon" type="image/svg+xml" href="/static/img/adonis-icon.svg">
+  <link rel="apple-touch-icon" href="/static/img/adonis-icon.svg"><% } %>
   <script src="/static/js/early.js?v=<%= assetVersion %>"></script>
   <link rel="stylesheet" href="/static/css/app.css?v=<%= assetVersion %>">
+  <% if (B.achtergrond) { %><link rel="stylesheet" href="/huisstijl.css?v=<%= B.v %>"><% } %>
   <% if (typeof extraCss !== 'undefined') { %><link rel="stylesheet" href="/static/css/<%= extraCss %>?v=<%= assetVersion %>"><% } %>
   <script src="/static/js/theme-menu.js?v=<%= assetVersion %>" defer></script>
   <% if (!['neon', 'ice'].includes(prefs.theme)) { %><script src="/static/js/boot.js?v=<%= assetVersion %>" defer></script><% } %>
@@ -41,6 +44,7 @@
   <% } %>
 </head>
 <body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"<% if (locals.user) { %> data-user-id="<%= user.id %>" data-desktop-mode="<%= prefs.desktop === 'on' ? 'on' : 'off' %>" data-notify="<%= ['werkopdrachten', 'banden', 'voorraad', 'klanten', 'notities', 'herinneringen'].filter((k) => prefs['n_' + k] !== 'off' && (!locals.feat || feat[{ werkopdrachten: 'werkopdrachten', banden: 'bandenhotel', voorraad: 'voorraad' }[k]] !== false)).join(' ') %>"<%- user.can_invoice ? ' data-can-invoice="1"' : '' %><% } %>>
+<% if (B.achtergrond && !locals.desktopShell) { %><div class="brand-bg no-print" aria-hidden="true"></div><% } %>
 <% if (prefs.theme === 'ice') { %>
 <div class="ice-field no-print" aria-hidden="true"><i class="ice-aurora"></i><i class="ice-aurora"></i><i class="ice-aurora"></i><i class="ice-core"></i><i class="ice-glint"></i></div>
 <% } %>
@@ -58,7 +62,7 @@
 <header class="topbar no-print">
   <% const simple = prefs.simple === 'on'; const F = locals.feat || {}; const importHref = F.werkopdrachten && user.can_ai ? '/importeren' : (user.is_admin && (F.bandenhotel || F.voorraad)) ? '/importeren/excel' : null; %>
   <% if (locals.inApp) { %><button class="iconbtn app-back" type="button" data-history-back title="Terug naar de vorige pagina (Alt + ←)" aria-label="Terug"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><% } %>
-  <a class="brand" href="<%= simple ? '/start' : '/' %>" title="ADONIS – naar het begin"><%- include('/partials/logo') %></a>
+  <a class="brand" href="<%= simple ? '/start' : '/' %>" title="<%= B.name %> – naar het begin"><%- include('/partials/logo') %></a>
   <%
     const on = (cond) => cond ? 'active' : '';
     const isOrders = path === '/werkopdrachten' || path.startsWith('/werkopdracht/');
@@ -188,6 +192,7 @@
       <summary class="user-btn" title="<%= user.name %>"><span class="user-avatar" aria-hidden="true"><%= (user.name || '?').trim().charAt(0).toUpperCase() %></span><span class="uname"><%= user.name %></span></summary>
       <div class="nav-pop nav-pop-right" role="menu">
         <p class="user-head"><b><%= user.name %></b><span class="muted small"><%= user.is_owner ? 'Beheerder (eigenaar)' : user.is_admin ? 'Beheerder' : 'Monteur' %></span></p>
+        <% if (F.werkopdrachten) { %><a role="menuitem" href="/mijn-werk" class="<%= on(path === '/mijn-werk') %>">Mijn werk</a><% } %>
         <a role="menuitem" href="/instellingen" class="<%= on(path === '/instellingen') %>">Instellingen</a>
         <% if (prefs.desktop === 'on') { %><a role="menuitem" href="/bureaublad">Bureaublad</a><% } %>
         <a role="menuitem" href="/hulp" class="<%= on(path === '/hulp') %>">Hulp</a>
@@ -195,6 +200,7 @@
           <input type="hidden" name="_csrf" value="<%= csrf %>">
           <button class="logout-btn" type="submit" role="menuitem">Uitloggen</button>
         </form>
+        <% if (B.custom) { %><p class="powered-by"><%= B.name %> werkt met <b>ADONIS</b><%= locals.appInfo ? ' v' + appInfo.version : '' %></p><% } %>
       </div>
     </details>
     <button type="button" class="iconbtn side-collapse" data-side-collapse title="Zijbalk smaller/breder" aria-label="Zijbalk smaller of breder"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>

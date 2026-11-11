@@ -1,4 +1,11 @@
-<span class="logo<%= locals.big ? ' logo-big' : '' %>" aria-label="ADONIS">
-  <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="var(--brand)"/><path d="M32 11 50.5 53h-9L32 30.5 22.5 53h-9z" fill="#fff"/><rect x="21" y="40" width="22" height="5.5" rx="2.75" fill="var(--accent)"/></svg>
-  <span class="logo-text"><span class="logo-word">ADONIS</span><span class="logo-sub">Werkopdrachten</span></span>
+<%# Logo in de menubalk, op de inlogpagina en in het startmenu. Met een eigen huisstijl: logo, naam en ondertitel van het bedrijf. %>
+<% const Bl = locals.brand || { name: 'ADONIS' }; const bannerHere = Bl.banner && (locals.big || (Bl.bannerInMenu && !locals.noBanner)); %>
+<% if (bannerHere) { %>
+<span class="logo logo-banner<%= locals.big ? ' logo-big' : '' %>"><img class="brand-banner" src="<%= Bl.banner %>" alt="<%= Bl.name %>"></span>
+<% } else { %>
+<span class="logo<%= locals.big ? ' logo-big' : '' %><%= Bl.custom ? ' logo-custom' : '' %>" aria-label="<%= Bl.name %>">
+  <% if (Bl.logo) { %><img class="logo-mark logo-img" src="<%= Bl.logo %>" alt="">
+  <% } else { %><svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="var(--brand)"/><path d="M32 11 50.5 53h-9L32 30.5 22.5 53h-9z" fill="#fff"/><rect x="21" y="40" width="22" height="5.5" rx="2.75" fill="var(--accent)"/></svg><% } %>
+  <span class="logo-text"><span class="logo-word"><%= Bl.name %></span><span class="logo-sub"><%= Bl.sub || (Bl.custom ? '' : 'Werkopdrachten') %></span></span>
 </span>
+<% } %>
