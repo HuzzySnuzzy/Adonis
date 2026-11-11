@@ -12,6 +12,28 @@
   const fmt = (iso) => (iso ? iso.split('-').reverse().join('-') : '');
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
+  /* Welke uitlaatgastest hoort bij deze auto (APK)? Diesel: roetmeting. Benzine, LPG of aardgas (ook hybride): viergastest.
+   * Alleen elektrisch of waterstof: geen van beide. Alleen invullen als er nog niets is aangevinkt. */
+  const roet = document.querySelector('[name="d[achter][keuring][roet]"]');
+  const viergas = document.querySelector('[name="d[achter][keuring][viergas]"]');
+  function testFor(brandstof) {
+    const b = String(brandstof || '').toLowerCase();
+    if (!b) return null;
+    if (/diesel/.test(b)) return 'roet';
+    if (/benzine|lpg|cng|aardgas|alcohol|ethanol/.test(b)) return 'viergas';
+    return 'geen';
+  }
+  function setTest(brandstof) {
+    const t = testFor(brandstof);
+    if (!t || t === 'geen' || !roet || !viergas || roet.disabled || roet.checked || viergas.checked) return false;
+    const box = t === 'roet' ? roet : viergas;
+    box.checked = true;
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+    box.dispatchEvent(new Event('change', { bubbles: true }));
+    if (window.adonisAutofilled) window.adonisAutofilled(box);
+    return true;
+  }
+
   async function fetchRdw() {
     const key = plate.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (key.length < 4) return null;
@@ -24,8 +46,7 @@
     input.value = value;
     input.dispatchEvent(new Event('input', { bubbles: true })); // telt als wijziging (opslaan-waarschuwing, datumweergave)
     input.dispatchEvent(new Event('change', { bubbles: true }));
-    input.classList.add('needs-check');
-    setTimeout(() => input.classList.remove('needs-check'), 2500);
+    if (window.adonisAutofilled) window.adonisAutofilled(input);
   }
 
   function closePop() {
@@ -64,11 +85,11 @@
       </dl>
       ${i.terugroepactie ? '<div class="rdw-warn">⚠ Openstaande terugroepactie</div>' : ''}
       <div class="actions">
-        ${merk && !merk.disabled ? '<button type="button" class="btn btn-small btn-primary" data-fill>Merk/type, APK-datum en datum deel I invullen</button>' : ''}
+        ${merk && !merk.disabled ? '<button type="button" class="btn btn-small btn-primary" data-fill>Merk/type, APK-datum, datum deel I en uitlaatgastest invullen</button>' : ''}
         <a href="${esc(r.url)}" target="_blank" rel="noopener">Bekijken op rdw.nl</a>
       </div>`);
     const fill = pop.querySelector('[data-fill]');
-    if (fill) fill.addEventListener('click', () => { setField(merk, r.merkType); setField(apk, i.apk); if (deel1 && !deel1.value) setField(deel1, i.eersteToelating); closePop(); });
+    if (fill) fill.addEventListener('click', () => { setField(merk, r.merkType); setField(apk, i.apk); if (deel1 && !deel1.value) setField(deel1, i.eersteToelating); setTest(i.brandstof); closePop(); });
   });
 
   document.addEventListener('click', (e) => {
@@ -81,13 +102,15 @@
   const autoRdw = !form || !form.dataset.autofill || form.dataset.autofill.split(' ').includes('rdw');
   plate.addEventListener('change', async () => {
     if (!autoRdw) return; // uitgezet bij Systeem → Automatisch invullen (de knop RDW werkt wel)
-    if (plate.disabled || ((merk && merk.value.trim()) && (apk && apk.value) && (!deel1 || deel1.value))) return;
+    const testDone = !roet || !viergas || roet.checked || viergas.checked;
+    if (plate.disabled || ((merk && merk.value.trim()) && (apk && apk.value) && (!deel1 || deel1.value) && testDone)) return;
     try {
       const r = await fetchRdw();
       if (r && r.ok && r.info.found) {
         if (merk && !merk.value.trim()) setField(merk, r.merkType);
         if (apk && !apk.value) setField(apk, r.info.apk);
         if (deel1 && !deel1.value) setField(deel1, r.info.eersteToelating);
+        setTest(r.info.brandstof); // achterkant: roetmeting of viergastest aanvinken
       }
     } catch { /* RDW niet bereikbaar: niets doen */ }
   });

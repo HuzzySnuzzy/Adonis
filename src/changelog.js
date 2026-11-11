@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.55.1', date: '2026-11-11', title: 'Mooier automatisch invullen en de uitlaatgastest van de RDW',
+    items: [
+      'Wat ADONIS automatisch invult (RDW, bekende klant, suggestie, sjabloon) licht nu op met een zachte kleurveeg die daarna rustig wegvloeit, zodat u meteen ziet wat er is ingevuld. Met Effecten Rustig of "minder beweging" alleen een korte gloed.',
+      'Bij een kenteken vinkt ADONIS op de achterkant (Keuringen) nu ook de juiste uitlaatgastest aan, op basis van de brandstof bij de RDW: diesel = Roetmeting, benzine, LPG of aardgas (ook hybride) = Viergastest. Volledig elektrisch: geen van beide. Alleen als er nog niets is aangevinkt.',
+    ],
+  },
+  {
     version: '1.55.0', date: '2026-11-11', title: 'Automatisch invullen instellen en links openen naar keuze',
     items: [
       'Systeem → Automatisch invullen (ADONIS-beheerder): zet per hulpje aan of uit wat ADONIS invult of voorstelt: RDW-gegevens bij het kenteken, klantgegevens van een bekende auto, suggesties tijdens het typen, hints en waarschuwingen, de monteur, het uurtarief van de vorige werkopdracht en het voorrekenen van uren en begroting.',

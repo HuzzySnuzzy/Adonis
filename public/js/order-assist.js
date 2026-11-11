@@ -29,8 +29,7 @@
     input.value = value;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
-    input.classList.add('needs-check');
-    setTimeout(() => input.classList.remove('needs-check'), 2500);
+    if (window.adonisAutofilled) window.adonisAutofilled(input);
     return true;
   }
 

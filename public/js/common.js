@@ -785,3 +785,11 @@ window.adonisAsk = function ({ title = '', text = '', value = '', placeholder = 
     input.focus(); input.select();
   });
 };
+
+/* Automatisch ingevuld (RDW, bekende klant, suggestie, sjabloon): een zachte kleurveeg over het vak die daarna wegvloeit. */
+window.adonisAutofilled = function (el) {
+  if (!el) return;
+  const t = el.type === 'checkbox' || el.type === 'radio' ? el.closest('label') || el : el;
+  t.classList.remove('autofilled'); void t.offsetWidth; t.classList.add('autofilled');
+  clearTimeout(t._afTimer); t._afTimer = setTimeout(() => t.classList.remove('autofilled'), 2700);
+};

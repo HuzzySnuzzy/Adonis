@@ -12,7 +12,7 @@
     if (el.type === 'checkbox') { if (!el.checked) { el.checked = true; el.dispatchEvent(new Event('change', { bubbles: true })); } return; }
     el.value = v;
     el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.classList.add('needs-check'); setTimeout(() => el.classList.remove('needs-check'), 2500);
+    if (window.adonisAutofilled) window.adonisAutofilled(el);
   }
   const fill = (name, v) => { const el = field(name); if (el && (el.type === 'checkbox' ? !el.checked : !el.value.trim())) set(el, v); };
 
