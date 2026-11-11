@@ -17,7 +17,7 @@ function owners(type) {
     let label = null; let sub = '';
     if (type === 'order') {
       const o = db.prepare('SELECT o.nummer, o.data, o.datum_invoer, c.kenteken, c.naam FROM orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = ?').get(r.owner_id);
-      if (o) { label = `Werkopdracht ${o.nummer}`; sub = [o.kenteken, o.naam || parseOrderData(o.data).naam].filter(Boolean).join(' · '); }
+      if (o) { label = `Werkopdracht ${require('./orders').fmtNr(o.nummer)}`; sub = [o.kenteken, o.naam || parseOrderData(o.data).naam].filter(Boolean).join(' · '); }
     } else if (type === 'tyre') {
       const t = db.prepare('SELECT kenteken, klant_naam, label, seizoen, maat FROM tyre_storage WHERE id = ?').get(r.owner_id);
       if (t) { label = t.kenteken || t.label || `Bandenset ${r.owner_id}`; sub = [t.klant_naam, t.seizoen, t.maat].filter(Boolean).join(' · '); }

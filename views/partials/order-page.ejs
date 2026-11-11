@@ -12,7 +12,7 @@
     <input type="hidden" name="d[paginas][<%= i %>][soort]" value="<%= pg.soort %>">
     <% if (pg.soort === 'voor') { %>
     <div class="panel panel-left">
-      <div class="back-head"><span class="wo-title small-title">Onderdelen (vervolg)</span><span class="red-nr mirror-nr"><%= nummer %></span></div>
+      <div class="back-head"><span class="wo-title small-title">Onderdelen (vervolg)</span><span class="red-nr mirror-nr"><%= fmtNr(nummer) %></span></div>
       <table class="grid parts">
         <colgroup><col class="c-rownum"><col class="c-partnr"><col><col class="c-qty"><col class="c-price"></colgroup>
         <thead><tr><th colspan="2">Onderdeelnummer</th><th>Omschrijving</th><th class="center">Aantal</th><th class="center">Prijs p.eenh.</th></tr></thead>
@@ -48,7 +48,7 @@
     </div>
     <% } else if (pg.soort === 'achter') { %>
     <div class="panel panel-left">
-      <div class="back-head"><span class="wo-title small-title">Vervolgblad</span><span class="red-nr mirror-nr"><%= nummer %></span></div>
+      <div class="back-head"><span class="wo-title small-title">Vervolgblad</span><span class="red-nr mirror-nr"><%= fmtNr(nummer) %></span></div>
       <div class="back-block">
         <div class="block-head">APK / afkeurpunten</div>
         <div class="block-lines"><%- ta('apk', 18) %></div>
@@ -68,7 +68,7 @@
     <div class="panel panel-blank">
       <div class="back-head">
         <input class="ink blank-title" name="d[paginas][<%= i %>][titel]" value="<%= pg.titel %>" placeholder="Titel (optioneel)" autocomplete="off" aria-label="Titel van dit blad">
-        <span class="red-nr mirror-nr"><%= nummer %></span>
+        <span class="red-nr mirror-nr"><%= fmtNr(nummer) %></span>
       </div>
       <div class="back-block">
         <div class="block-lines"><%- ta('tekst', 20, 'aria-label="Tekst"') %></div>

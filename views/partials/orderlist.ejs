@@ -22,7 +22,7 @@
     <% } %>
     <tr data-href="/werkopdracht/<%= o.id %>"<%- o.status === 'open' ? ' class="is-open"' : '' %>>
       <% const nNotes = noteCounts.get(o.id) || 0; %>
-      <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= o.nummer %></a><% if (nNotes) { %> <span class="note-flag" title="<%= nNotes %> plaknotitie<%= nNotes === 1 ? '' : 's' %> op deze werkopdracht" aria-label="<%= nNotes %> plaknotities"></span><% } %></td>
+      <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= fmtNr(o.nummer) %></a><% if (nNotes) { %> <span class="note-flag" title="<%= nNotes %> plaknotitie<%= nNotes === 1 ? '' : 's' %> op deze werkopdracht" aria-label="<%= nNotes %> plaknotities"></span><% } %></td>
       <td><span class="status-badge status-<%= o.status %> in-list"><%= { open: 'Open', klaar: 'Klaar', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>
       <td><%= fmtDate(o.datum_invoer) %></td>
       <% if (showPlate) { %><td><%- include('/partials/plate', { kenteken: o.d.kenteken || o.c_kenteken }) %></td><td><%= o.d.naam %></td><% } %>

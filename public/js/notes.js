@@ -156,7 +156,7 @@
     el.dataset.id = note.id;
     el.classList.toggle('tilt-l', note.id % 2 === 0);
     const who = el.querySelector('.sn-who');
-    who.textContent = (note.shared ? (note.mine ? 'Iedereen' : note.owner || 'Collega') : 'Alleen ik') + (note.order_id ? ` · wo ${note.order_nummer}` : '');
+    who.textContent = (note.shared ? (note.mine ? 'Iedereen' : note.owner || 'Collega') : 'Alleen ik') + (note.order_id ? ` · wo ${String(note.order_nummer).padStart(4, '0')}` : '');
     who.title = note.shared ? `Zichtbaar voor iedereen · gemaakt door ${note.owner || '?'}${note.editor && note.editor !== note.owner ? `, laatst aangepast door ${note.editor}` : ''}` : 'Alleen voor u zichtbaar';
     const text = el.querySelector('.sn-text');
     if (force || document.activeElement !== text) text.value = note.text;

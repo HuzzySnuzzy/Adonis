@@ -62,7 +62,7 @@ function restore(trashId) {
       const r = { ...row, customer_id: cust.id };
       if (db.prepare('SELECT 1 FROM orders WHERE nummer = ?').get(r.nummer)) {
         const nr = orders.nextOrderNumber();
-        note = `Nummer ${r.nummer} was intussen in gebruik; de werkopdracht heeft nu nummer ${nr}.`;
+        note = `Nummer ${require('./orders').fmtNr(r.nummer)} was intussen in gebruik; de werkopdracht heeft nu nummer ${require('./orders').fmtNr(nr)}.`;
         r.nummer = nr;
       }
       newId = insertRow('orders', r, idFree('orders', r.id));

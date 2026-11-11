@@ -318,6 +318,12 @@ function statusCounts() {
   return counts;
 }
 
+/** Werkopdrachtnummer zoals op het papieren formulier: minstens 4 cijfers (0001, 0100, 1234; daarna gewoon 10000). */
+function fmtNr(n) {
+  const s = String(n ?? '').trim();
+  return /^\d+$/.test(s) ? s.replace(/^0+(?=\d)/, '').padStart(4, '0') : s;
+}
+
 function nextOrderNumber() {
   const row = db.prepare('SELECT MAX(nummer) AS max FROM orders').get();
   const start = parseInt(process.env.START_ORDER_NUMBER || '1', 10) || 1;
@@ -372,7 +378,7 @@ function refreshCustomer(customerId) {
 
 function saveOrder({ id, nummer, data, userId, datumInvoer }) {
   const customer = getOrCreateCustomer(data.kenteken);
-  const searchText = [nummer, ...flattenText(data)].join(' \n ');
+  const searchText = [nummer, fmtNr(nummer), ...flattenText(data)].join(' \n ');
   let orderId = id;
   let oldCustomerId = null;
   db.exec('BEGIN');
@@ -469,7 +475,7 @@ function formFields(data, { nummer, datumInvoer } = {}) {
     else out[name] = typeof v === 'boolean' ? (v ? 'on' : '') : String(v ?? '');
   };
   walk(withWorkRows(data), 'd');
-  if (nummer !== undefined) out.nummer = String(nummer ?? '');
+  if (nummer !== undefined) out.nummer = fmtNr(nummer);
   if (datumInvoer !== undefined) out.datum_invoer = String(datumInvoer ?? '');
   return out;
 }
@@ -510,7 +516,7 @@ function diffFields(before, after) {
 }
 
 module.exports = {
-  workRows, WORK_COLS,
+  workRows, WORK_COLS, fmtNr,
   formFields, applyPatch, diffFields,
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage, UREN_ROWS, ADVIES_ROWS, migrateBack,
   emptyOrderData, normalizeOrderData, parseOrderData,

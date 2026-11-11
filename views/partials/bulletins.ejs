@@ -36,7 +36,7 @@
       <% for (const b of bl.open) { %>
       <details class="bl-item bl-<%= b.ernst %>">
         <summary><span class="bl-dot" aria-hidden="true"></span><b class="bl-title"><%= b.titel %></b>
-          <span class="muted small bl-when"><%= b.order_nummer ? 'werkopdracht ' + b.order_nummer : '' %><%= b.datum ? ' · ' + fmtDate(b.datum) : '' %></span></summary>
+          <span class="muted small bl-when"><%= b.order_nummer ? 'werkopdracht ' + fmtNr(b.order_nummer) : '' %><%= b.datum ? ' · ' + fmtDate(b.datum) : '' %></span></summary>
         <div class="bl-detail">
           <% if (b.tekst) { %><p><%= b.tekst %></p><% } %>
           <% if (b.actie) { %><p><b>Doen:</b> <%= b.actie %></p><% } %>

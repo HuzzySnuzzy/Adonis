@@ -44,7 +44,7 @@
     if (info && info.found) {
       const c = info.customer || {};
       chips.push(`<span class="oa-chip"><b>Bekende klant</b> <a href="/klant/${c.id}">${esc(c.naam || info.kenteken)}</a>${info.orders ? ` · ${info.orders} eerdere werkopdracht${info.orders === 1 ? '' : 'en'}` : ''}</span>`);
-      if (info.last) chips.push(`<span class="oa-chip">Vorige keer: <a href="/werkopdracht/${info.last.id}">nr ${info.last.nummer}</a> op ${fmtDate(info.last.datum)}</span>`);
+      if (info.last) chips.push(`<span class="oa-chip">Vorige keer: <a href="/werkopdracht/${info.last.id}">nr ${String(info.last.nummer).padStart(4, '0')}</a> op ${fmtDate(info.last.datum)}</span>`);
       if (info.km) chips.push(`<span class="oa-chip">Laatste km-stand: <b>${fmtKm(info.km.km)}</b> (${fmtDate(info.km.datum)})</span>`);
       if (info.service) chips.push(`<span class="oa-chip">Laatste servicebeurt: ${fmtKm(info.service.km)} km</span>`);
       if (info.oil) {

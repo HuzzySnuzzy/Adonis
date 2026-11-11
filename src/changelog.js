@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.54.1', date: '2026-11-11', title: 'Werkopdrachtnummers met vier cijfers',
+    items: [
+      'Werkopdrachtnummers onder de 1000 staan nu overal met voorloopnullen, net als op het papieren formulier: 0001, 0050, 0100. Zoeken werkt met en zonder nullen (0100 en 100 vinden dezelfde werkopdracht).',
+      'Na 9999 gaat de nummering gewoon door met 10000, 10001 enzovoort. Er wordt nooit opnieuw bij 0001 begonnen, zodat elk nummer uniek blijft.',
+    ],
+  },
+  {
     version: '1.54.0', date: '2026-11-11', title: 'Profielfoto, Beheer in het gebruikersmenu en eigenaar overdragen',
     items: [
       'Profiel (Instellingen → Profiel): kies hoe u eruitziet. Een pictogram (moersleutel, auto, band, accu, toerenteller…) met een achtergrondkleur, of een eigen foto (wordt vanzelf vierkant bijgesneden). Uw keuze staat in het menu, in de lijst met gebruikers en bij "Ook open" als u samen een werkopdracht bewerkt.',

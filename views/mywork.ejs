@@ -88,7 +88,7 @@
     <h2>Laatste werkopdrachten</h2>
     <ul class="mw-recent">
       <% for (const r of w.recent) { %>
-      <li><a href="/werkopdracht/<%= r.id %>"><b>#<%= r.nummer %></b> <span class="mw-plate"><%= r.kenteken %></span>
+      <li><a href="/werkopdracht/<%= r.id %>"><b><%= fmtNr(r.nummer) %></b> <span class="mw-plate"><%= r.kenteken %></span>
         <span class="muted"><%= [r.merk_type, r.werk].filter(Boolean).join(' · ') %></span></a>
         <span class="muted small"><%= fmtDate(r.datum) %></span>
         <span class="status-badge status-<%= r.status %> in-list"><%= STATUSES[r.status] %></span></li>

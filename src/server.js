@@ -229,6 +229,7 @@ app.locals.rdwMerkType = rdw.merkType;
 app.locals.esc = esc;
 app.locals.inp = inp;
 app.locals.workRows = orders.workRows;
+app.locals.fmtNr = orders.fmtNr;
 app.locals.avatarHtml = auth.avatarHtml;
 app.locals.AVATAR_ICONS = auth.AVATAR_ICONS;
 app.locals.AVATAR_COLORS = auth.AVATAR_COLORS;
@@ -391,7 +392,7 @@ app.use((req, res, next) => {
 app.get('/events', (req, res) => events.subscribe(req, res));
 function announce(req, action, order) {
   events.broadcast({
-    type: 'order', action, id: order.id, nummer: order.nummer, kenteken: order.kenteken || '', status: order.status || null,
+    type: 'order', action, id: order.id, nummer: orders.fmtNr(order.nummer), kenteken: order.kenteken || '', status: order.status || null,
     customerId: order.customerId || null, by: req.user.name, byId: req.user.id,
   });
 }
@@ -637,8 +638,10 @@ app.get('/werkopdrachten', (req, res) => {
   if (q) {
     // Elk woord moet voorkomen; voor elk woord tellen ook woorden uit dezelfde zoekwoordengroep.
     sq = synonyms.sqlFor('o.search_text', q, likeTerm);
-    where.push(`((${sq.where}) OR c.plate_key LIKE ? ESCAPE '\\')`);
-    params.push(...sq.params, likeTerm(plateKey(q) || q));
+    // Een nummer (ook 0100 voor werkopdracht 100) vindt altijd die werkopdracht.
+    const asNr = /^\d{1,9}$/.test(q) ? Number(q) : -1;
+    where.push(`((${sq.where}) OR c.plate_key LIKE ? ESCAPE '\\' OR o.nummer = ?)`);
+    params.push(...sq.params, likeTerm(plateKey(q) || q), asNr);
   }
   if (status) { where.push('o.status = ?'); params.push(status); }
   // Te factureren: oudste eerst (wie het langst wacht, staat bovenaan).
@@ -664,7 +667,7 @@ function withSummary(row) {
 function renderOrder(res, { order, data, nummer, error, status, draft, datumInvoer }) {
   const user = res.locals.user;
   res.status(status || 200).render('order', {
-    title: draft ? 'Import controleren' : order ? `Werkopdracht ${order.nummer}` : 'Nieuwe werkopdracht',
+    title: draft ? 'Import controleren' : order ? `Werkopdracht ${orders.fmtNr(order.nummer)}` : 'Nieuwe werkopdracht',
     order, data, nummer, error, draft: draft || null,
     STATUSES: orders.STATUSES, PAGE_TYPES: orders.PAGE_TYPES, MAX_PAGES: orders.MAX_PAGES, emptyPage: orders.emptyPage,
     photoList: order ? require('./photos').list('order', order.id) : [],
@@ -722,7 +725,7 @@ function validateOrder(data, nummer, existingId) {
   if (!nummer) return 'Vul een geldig werkopdrachtnummer in.';
   if (!plateKey(data.kenteken)) return 'Vul een kenteken in – werkopdrachten worden per kenteken opgeslagen.';
   const clash = db.prepare('SELECT id FROM orders WHERE nummer = ?').get(nummer);
-  if (clash && clash.id !== existingId) return `Werkopdrachtnummer ${nummer} bestaat al.`;
+  if (clash && clash.id !== existingId) return `Werkopdrachtnummer ${orders.fmtNr(nummer)} bestaat al.`;
   return null;
 }
 
@@ -750,10 +753,10 @@ app.post('/werkopdracht', (req, res) => {
   const id = orders.saveOrder({ nummer, data, userId: req.user.id });
   orders.logAction(id, req.user, 'aangemaakt');
   const next = req.body.next_status;
-  let msg = `Werkopdracht ${nummer} is opgeslagen.`;
+  let msg = `Werkopdracht ${orders.fmtNr(nummer)} is opgeslagen.`;
   if (next) {
     orders.setStatus(id, next, req.user);
-    msg = `Werkopdracht ${nummer} is opgeslagen en ${DONE_MSG[next]}.`;
+    msg = `Werkopdracht ${orders.fmtNr(nummer)} is opgeslagen en ${DONE_MSG[next]}.`;
   }
   announce(req, 'created', { id, nummer, kenteken: data.kenteken, status: next || 'open' });
   rdw.refreshInBackground(data.kenteken);
@@ -800,11 +803,11 @@ app.post('/werkopdracht/:id', (req, res) => {
   // Datum invoer is bij een bestaande werkopdracht aan te passen (bijv. een verkeerd geïmporteerde datum).
   orders.saveOrder({ id: order.id, nummer, data, userId: req.user.id, datumInvoer: orders.parseDate(req.body.datum_invoer) || null });
   orders.logAction(order.id, req.user, 'gewijzigd');
-  let msg = `Werkopdracht ${nummer} is opgeslagen.`;
+  let msg = `Werkopdracht ${orders.fmtNr(nummer)} is opgeslagen.`;
   if (next) {
     orders.setStatus(order.id, next, req.user);
-    msg = next === 'klaar' ? `Werkopdracht ${nummer} is naar facturatie gestuurd.`
-      : next === 'gefactureerd' ? `Werkopdracht ${nummer} is afgerond${data.faktuurnr ? ` (factuur ${data.faktuurnr})` : ' (zonder factuurnummer)'}.` : msg;
+    msg = next === 'klaar' ? `Werkopdracht ${orders.fmtNr(nummer)} is naar facturatie gestuurd.`
+      : next === 'gefactureerd' ? `Werkopdracht ${orders.fmtNr(nummer)} is afgerond${data.faktuurnr ? ` (factuur ${data.faktuurnr})` : ' (zonder factuurnummer)'}.` : msg;
   }
   announce(req, next ? 'status' : 'updated', { id: order.id, nummer, kenteken: data.kenteken, status: next || order.status });
   flash(req, 'ok', msg);
@@ -846,7 +849,7 @@ app.post('/werkopdracht/:id/live', express.json({ limit: '2mb' }), (req, res) =>
     announce(req, 'created', { id, nummer, kenteken: data.kenteken, status: 'open' });
     rdw.refreshInBackground(data.kenteken);
     const order = loadOrder(id);
-    return res.json({ ok: true, id, nummer, rev: order.rev, versie: order.updated_at,
+    return res.json({ ok: true, id, nummer: orders.fmtNr(nummer), rev: order.rev, versie: order.updated_at,
       fields: orders.formFields(data, { nummer, datumInvoer: order.datum_invoer }) });
   }
   const order = loadOrder(req.params.id);
@@ -876,7 +879,7 @@ app.post('/werkopdracht/:id/live', express.json({ limit: '2mb' }), (req, res) =>
   const fresh = db.prepare('SELECT rev, updated_at FROM orders WHERE id = ?').get(order.id);
   events.broadcast({
     type: 'order-live', id: order.id, rev: fresh.rev, prev: order.rev, versie: fresh.updated_at, fields: changed, structure, tab,
-    nummer, kenteken: data.kenteken, by: req.user.name, byId: req.user.id,
+    nummer: orders.fmtNr(nummer), kenteken: data.kenteken, by: req.user.name, byId: req.user.id,
   });
   res.json({ ok: true, rev: fresh.rev, versie: fresh.updated_at, fields: echo, structure });
 });
@@ -898,8 +901,8 @@ app.post('/werkopdracht/:id/status', (req, res) => {
   orders.setStatus(order.id, next, req.user);
   announce(req, 'status', { id: order.id, nummer: order.nummer, status: next });
   flash(req, 'ok', next === 'open'
-    ? `Werkopdracht ${order.nummer} staat weer op Open en kan worden gewijzigd.`
-    : `Werkopdracht ${order.nummer} is heropend en staat weer bij facturatie.`);
+    ? `Werkopdracht ${orders.fmtNr(order.nummer)} staat weer op Open en kan worden gewijzigd.`
+    : `Werkopdracht ${orders.fmtNr(order.nummer)} is heropend en staat weer bij facturatie.`);
   res.redirect(`/werkopdracht/${order.id}`);
 });
 
@@ -908,12 +911,12 @@ app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
   if (!order) return res.redirect('/');
   // Eerst in de prullenbak (met klant en logboek), zodat hij terug te zetten is. Foto's blijven bewaard.
   trash.put('order', db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id), {
-    label: `Werkopdracht ${order.nummer}${orders.parseOrderData(order.data).kenteken ? ' · ' + orders.parseOrderData(order.data).kenteken : ''}`, user: req.user,
+    label: `Werkopdracht ${orders.fmtNr(order.nummer)}${orders.parseOrderData(order.data).kenteken ? ' · ' + orders.parseOrderData(order.data).kenteken : ''}`, user: req.user,
     extra: { customer: db.prepare('SELECT * FROM customers WHERE id = ?').get(order.customer_id), log: db.prepare('SELECT * FROM order_log WHERE order_id = ?').all(order.id) },
   });
   const customerId = orders.deleteOrder(order.id);
   announce(req, 'deleted', { id: order.id, nummer: order.nummer, customerId });
-  flash(req, 'ok', `Werkopdracht ${order.nummer} staat in de prullenbak (${trash.KEEP_DAYS} dagen terug te zetten).`);
+  flash(req, 'ok', `Werkopdracht ${orders.fmtNr(order.nummer)} staat in de prullenbak (${trash.KEEP_DAYS} dagen terug te zetten).`);
   const stillExists = db.prepare('SELECT 1 FROM customers WHERE id = ?').get(customerId);
   res.redirect(stillExists ? `/klant/${customerId}` : '/');
 });
@@ -1036,7 +1039,7 @@ app.get('/importeren/:id', (req, res) => {
   const r = draft.result;
   const nr = parseNummer(r.nummer);
   const clash = nr && db.prepare('SELECT 1 FROM orders WHERE nummer = ?').get(nr);
-  const onzeker = clash ? [`Werkopdrachtnummer ${nr} bestaat al – kies een ander nummer.`, ...r.onzeker] : r.onzeker;
+  const onzeker = clash ? [`Werkopdrachtnummer ${orders.fmtNr(nr)} bestaat al – kies een ander nummer.`, ...r.onzeker] : r.onzeker;
   renderOrder(res, {
     order: null, data: r.data, nummer: nr || orders.nextOrderNumber(),
     draft: { ...draft, onzeker }, datumInvoer: orders.parseDate(r.datum_invoer), // leeg = niet gelezen: gebruiker moet invullen
@@ -1067,7 +1070,7 @@ app.post('/importeren/:id/bevestigen', (req, res) => {
   rdw.refreshInBackground(data.kenteken);
   announce(req, 'created', { id, nummer, kenteken: data.kenteken, status: req.body.next_status || 'open' });
   importer.deleteDraft(draft.id);
-  flash(req, 'ok', `Import bevestigd: werkopdracht ${nummer} is opgeslagen${req.body.next_status ? ' en ' + DONE_MSG[req.body.next_status] : ''}.`);
+  flash(req, 'ok', `Import bevestigd: werkopdracht ${orders.fmtNr(nummer)} is opgeslagen${req.body.next_status ? ' en ' + DONE_MSG[req.body.next_status] : ''}.`);
   res.redirect(`/werkopdracht/${id}`);
 });
 
