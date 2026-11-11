@@ -30,6 +30,7 @@ const registerInventory = require('./inventory-routes');
 const features = require('./features');
 const assist = require('./order-assist');
 const trash = require('./trash');
+const templates = require('./templates');
 
 const app = express();
 // Beveiligde cookies: altijd als COOKIE_SECURE=true, anders automatisch zodra het verzoek via HTTPS
@@ -620,6 +621,7 @@ function renderOrder(res, { order, data, nummer, error, status, draft, datumInvo
     order, data, nummer, error, draft: draft || null,
     STATUSES: orders.STATUSES, PAGE_TYPES: orders.PAGE_TYPES, MAX_PAGES: orders.MAX_PAGES, emptyPage: orders.emptyPage,
     photoList: order ? require('./photos').list('order', order.id) : [],
+    templates: templates.list(),
     editable: draft ? true : orders.canEdit(user, order),
     transitions: orders.allowedTransitions(user, order || { status: 'open' }),
     history: order ? orders.history(order.id) : [],
@@ -653,6 +655,9 @@ app.get('/werkopdracht/nieuw', (req, res) => {
   const data = orders.emptyOrderData();
   data.monteur = req.user.name;
   data.tarief = assist.lastTarief(); // zelfde uurtarief als de laatste werkopdracht
+  // Nieuwe werkopdracht vanuit een sjabloon (bijv. "Bandenwissel").
+  const tpl = req.query.sjabloon ? templates.get(Number(req.query.sjabloon)) : null;
+  if (tpl) templates.applyTo(data, tpl);
   if (req.query.klant) {
     const c = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.query.klant);
     if (c) for (const f of orders.CUSTOMER_FIELDS) data[f] = c[f];
@@ -810,6 +815,31 @@ app.get('/verkenner', (req, res) => {
     view = { kind: 'home', recent: explorer.recent(types, 60) };
   }
   res.render('explorer', { title: 'Verkenner', folders, map, id, q, view });
+});
+
+/* ---------- sjablonen: voorgevulde werkopdrachten ---------- */
+app.get('/sjablonen', (req, res) => res.render('templates', { title: 'Sjablonen', list: templates.list() }));
+app.get('/sjablonen/:id.json', (req, res) => {
+  const t = templates.get(Number(req.params.id));
+  if (!t) return res.status(404).json({ error: 'Sjabloon niet gevonden.' });
+  res.json({ id: t.id, naam: t.naam, data: t.data });
+});
+// Opslaan vanaf een werkopdracht (de gegevens van het formulier; klant/auto/datums worden niet bewaard).
+app.post('/sjablonen', (req, res) => {
+  const naam = String(req.body.naam || '').trim();
+  if (!naam) return res.status(400).json({ error: 'Geef het sjabloon een naam.' });
+  const existing = templates.list().find((t) => t.naam.toLowerCase() === naam.toLowerCase());
+  let id;
+  if (existing && req.body.vervangen === '1') { templates.update(existing.id, req.body.d || {}); id = existing.id; }
+  else if (existing) return res.status(409).json({ error: `Er bestaat al een sjabloon "${existing.naam}".`, exists: true });
+  else id = templates.create(naam, req.body.d || {}, req.user.id);
+  res.json({ ok: true, id });
+});
+app.post('/sjablonen/:id/naam', (req, res) => { templates.rename(Number(req.params.id), req.body.naam); res.redirect('/sjablonen'); });
+app.post('/sjablonen/:id/verwijderen', (req, res) => {
+  const t = templates.get(Number(req.params.id));
+  if (t) { templates.remove(t.id); flash(req, 'ok', `Sjabloon "${t.naam}" verwijderd.`); }
+  res.redirect('/sjablonen');
 });
 
 /* ---------- prullenbak (beheerders: zij mogen ook verwijderen) ---------- */

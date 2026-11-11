@@ -4,6 +4,10 @@ const { db, plateKey } = require('./db');
 
 const PART_ROWS = 22;
 const WORK_LINES = 19;
+const UREN_ROWS = 6;
+const ADVIES_ROWS = 16;
+const ADVIES_SOORT = ['garantie', 'noodzaak', 'geen'];
+const ADVIES_BESLUIT = ['uitvoeren', 'niet', 'afspraak'];
 
 /** Header fields that belong to the customer/vehicle (copied onto new orders). */
 const CUSTOMER_FIELDS = [
@@ -64,7 +68,17 @@ function emptyOrderData() {
     },
     // achterzijde
     achter: {
-      banden: tires,
+      banden: tires, // profiel per wiel (+ oude velden maat/merk/dot per wiel)
+      band_merk: '', band_type: '', band_maat: '',
+      // Uren per monteur
+      uren: Array.from({ length: UREN_ROWS }, () => ({ datum: '', naam: '', van: '', tot: '', uren: '', tarief: '', bedrag: '' })),
+      // Aantekeningen van de werkplaats / APK-advies, met keuze per regel
+      advies: Array.from({ length: ADVIES_ROWS }, () => ({ check: false, tekst: '', soort: '', kosten: '', besluit: '' })),
+      begroot: '',
+      keuring: { apk: false, goed: false, af: false, roet: false, viergas: false, motorcode: '', olie_min: '', olie_test: '',
+        stationair: '', stationair_tot: '', afregel: '', afregel_tot: '', k_waarde: '' },
+      leenauto: { getankt: '', merk_type: '', kenteken: '', retour_km: '', retour_dd: '', retour_om: '', vertrek_km: '', vertrek_dd: '', vertrek_om: '', tarief: '', per: '' },
+      // Oude achterkant (vóór 1.47): wordt bij openen omgezet naar de aantekeningen hierboven
       apk: '',
       aandachtspunten: '',
       notities: '',
@@ -117,6 +131,33 @@ function normalizeOrderData(input) {
   if (!['ja', 'nee'].includes(data.alle_reparaties)) data.alle_reparaties = '';
   for (const f of ['datum_gereed', 'datum_deel1', 'apk_datum']) data[f] = parseDate(data[f]);
   data.paginas = normalizePages(input && input.paginas);
+  fixBack(data);
+  return data;
+}
+/** Keuzes op de achterkant: alleen bekende waarden. */
+function fixBack(data) {
+  const a = data.achter;
+  for (const r of a.advies) {
+    if (!ADVIES_SOORT.includes(r.soort)) r.soort = '';
+    if (!ADVIES_BESLUIT.includes(r.besluit)) r.besluit = '';
+  }
+  if (!['ja', 'nee'].includes(a.leenauto.getankt)) a.leenauto.getankt = '';
+  if (!['halve', 'dag'].includes(a.leenauto.per)) a.leenauto.per = '';
+}
+/** Oude werkopdrachten (achterkant van vóór 1.47) netjes tonen op de nieuwe achterkant. */
+function migrateBack(data) {
+  const a = data.achter;
+  const wheels = Object.values(a.banden);
+  if (!a.band_maat) a.band_maat = (wheels.find((w) => w.maat) || {}).maat || '';
+  if (!a.band_merk) a.band_merk = (wheels.find((w) => w.merk) || {}).merk || '';
+  const old = [['APK', a.apk], ['', a.aandachtspunten], ['', a.notities]].filter(([, t]) => t && t.trim());
+  if (old.length && a.advies.every((r) => !r.tekst.trim())) {
+    const lines = old.flatMap(([pre, t]) => t.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => (pre && !/^apk/i.test(l) ? `${pre}: ${l}` : l)));
+    lines.slice(0, a.advies.length).forEach((l, i) => { a.advies[i].tekst = l; });
+    // Past het niet allemaal, dan de rest achter de laatste regel zetten (er gaat niets verloren).
+    if (lines.length > a.advies.length) a.advies[a.advies.length - 1].tekst += ' · ' + lines.slice(a.advies.length).join(' · ');
+    a.apk = ''; a.aandachtspunten = ''; a.notities = '';
+  }
   return data;
 }
 
@@ -126,7 +167,8 @@ function parseOrderData(json) {
   try { raw = JSON.parse(json); } catch { /* keep empty */ }
   const data = shape(emptyOrderData(), raw);
   data.paginas = normalizePages(raw && raw.paginas);
-  return data;
+  fixBack(data);
+  return migrateBack(data);
 }
 
 function flattenText(value, out = []) {
@@ -378,7 +420,7 @@ function deleteOrder(id) {
 }
 
 module.exports = {
-  PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage,
+  PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage, UREN_ROWS, ADVIES_ROWS, migrateBack,
   emptyOrderData, normalizeOrderData, parseOrderData,
   nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate, updateCustomer, refreshCustomer,
   STATUSES, canEdit, allowedTransitions, setStatus, logAction, history, statusCounts,

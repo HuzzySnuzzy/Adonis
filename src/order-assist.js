@@ -35,7 +35,8 @@ function index() {
       const l = txt(line); if (l.length < 3) continue;
       const k = fold(l); const e = work.get(k) || { text: l, n: 0 }; e.n++; e.text = l; work.set(k, e);
     }
-    for (const b of Object.values((d.achter && d.achter.banden) || {})) {
+    const back = d.achter || {};
+    for (const b of [...Object.values(back.banden || {}), { maat: back.band_maat, merk: back.band_merk }]) {
       const m = inv.normalizeSize(b.maat); if (m && /\d{3}\/\d{2}/.test(m)) sizes.set(m, (sizes.get(m) || 0) + 1);
       const br = txt(b.merk); if (br) brands.set(fold(br), { text: br, n: ((brands.get(fold(br)) || {}).n || 0) + 1 });
     }
@@ -119,8 +120,10 @@ function vehicle(kenteken, { exceptOrderId = null, tyres = true } = {}) {
         if (k && (!km || k > km.km)) km = { km: k, datum: r.datum_invoer, nummer: r.nummer };
         const mo = d.vloeistoffen && d.vloeistoffen.motorolie;
         if (!oil && mo && (txt(mo.info) || txt(mo.liter))) oil = { visc: txt(mo.info) && txt(mo.info2) ? `${txt(mo.info)}w${txt(mo.info2)}` : txt(mo.info), info: txt(mo.info), info2: txt(mo.info2), liter: txt(mo.liter), nummer: r.nummer };
-        const b = d.achter && d.achter.banden;
-        if (!banden && b && Object.values(b).some((x) => txt(x.maat) || txt(x.merk))) banden = Object.fromEntries(Object.entries(b).map(([k2, v]) => [k2, { maat: txt(v.maat), merk: txt(v.merk) }]));
+        // Banden van vorige keer: maat/merk (achterkant sinds 1.47), anders van het eerste wiel (oudere werkopdrachten).
+        const back = d.achter || {}; const w = Object.values(back.banden || {}).find((x) => txt(x.maat) || txt(x.merk)) || {};
+        const bm = txt(back.band_maat) || txt(w.maat); const bb = txt(back.band_merk) || txt(w.merk);
+        if (!banden && (bm || bb)) banden = { maat: bm, merk: bb, type: txt(back.band_type) };
         if (!service && num(d.servicebeurt_km)) service = { km: num(d.servicebeurt_km), datum: r.datum_invoer };
       }
       Object.assign(res, { km, oil, banden, service });

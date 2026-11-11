@@ -103,7 +103,7 @@ const DIVERSEN = ['servicewagen', 'leenauto', 'werk_derden', 'apk', 'afmeldkoste
   'balanceren', 'kleinmateriaal', 'milieutoeslag', 'extra'];
 
 const RESULT_SCHEMA = obj(
-  ['nummer', 'datum_invoer', 'onzeker', 'kop', 'werk', 'onderdelen', 'vloeistoffen', 'diversen', 'banden', 'achterkant'],
+  ['nummer', 'datum_invoer', 'onzeker', 'kop', 'werk', 'onderdelen', 'vloeistoffen', 'diversen', 'banden', 'band', 'advies', 'uren', 'keuring', 'leenauto', 'achterkant'],
   {
     onzeker: { type: 'array', items: str },
     kop: obj(KOP),
@@ -118,6 +118,14 @@ const RESULT_SCHEMA = obj(
       type: 'array',
       items: obj(['band', 'profiel', 'maat', 'merk', 'dot'], { band: { type: 'string', enum: orders.TIRES.map((t) => t.key) } }),
     },
+    band: obj(['merk', 'type', 'maat']),
+    advies: { type: 'array', items: obj(['check', 'tekst', 'soort', 'kosten', 'besluit'], {
+      check: { type: 'boolean' }, soort: { type: 'string', enum: ['', 'garantie', 'noodzaak', 'geen'] }, besluit: { type: 'string', enum: ['', 'uitvoeren', 'niet', 'afspraak'] } }) },
+    uren: { type: 'array', items: obj(['datum', 'naam', 'van', 'tot', 'uren', 'tarief', 'bedrag']) },
+    keuring: obj(['apk', 'goed', 'af', 'roet', 'viergas', 'motorcode', 'olie_min', 'olie_test', 'stationair', 'stationair_tot', 'afregel', 'afregel_tot', 'k_waarde'],
+      { apk: { type: 'boolean' }, goed: { type: 'boolean' }, af: { type: 'boolean' }, roet: { type: 'boolean' }, viergas: { type: 'boolean' } }),
+    leenauto: obj(['getankt', 'merk_type', 'kenteken', 'vertrek_km', 'vertrek_dd', 'vertrek_om', 'retour_km', 'retour_dd', 'retour_om', 'tarief', 'per'],
+      { getankt: { type: 'string', enum: ['', 'ja', 'nee'] }, per: { type: 'string', enum: ['', 'halve', 'dag'] } }),
     achterkant: obj(['apk', 'aandachtspunten', 'notities']),
   }
 );
@@ -171,10 +179,22 @@ function toWorkOrder(r) {
       d.achter.banden[b.band] = { profiel: get(b, 'profiel'), maat: get(b, 'maat'), merk: get(b, 'merk'), dot: get(b, 'dot') };
     }
   }
-  d.achter.apk = get(r.achterkant, 'apk');
-  d.achter.aandachtspunten = get(r.achterkant, 'aandachtspunten');
-  d.achter.notities = get(r.achterkant, 'notities');
-  return orders.normalizeOrderData(d);
+  // Achterkant (formulier sinds 1.47): bandeninfo, aantekeningen/APK-advies, uren, keuringen en leenauto.
+  const a = d.achter;
+  a.band_merk = get(r.band, 'merk'); a.band_type = get(r.band, 'type'); a.band_maat = get(r.band, 'maat');
+  (Array.isArray(r.advies) ? r.advies : []).filter((x) => x && (get(x, 'tekst') || get(x, 'kosten'))).slice(0, a.advies.length).forEach((x, i) => {
+    a.advies[i] = { check: x.check === true, tekst: get(x, 'tekst'), soort: get(x, 'soort'), kosten: get(x, 'kosten'), besluit: get(x, 'besluit') };
+  });
+  (Array.isArray(r.uren) ? r.uren : []).filter((x) => x && Object.values(x).some((v) => String(v || '').trim())).slice(0, a.uren.length).forEach((x, i) => {
+    a.uren[i] = Object.fromEntries(Object.keys(a.uren[i]).map((k) => [k, get(x, k)]));
+  });
+  for (const k of Object.keys(a.keuring)) a.keuring[k] = typeof a.keuring[k] === 'boolean' ? (r.keuring && r.keuring[k] === true) : get(r.keuring, k);
+  for (const k of Object.keys(a.leenauto)) a.leenauto[k] = get(r.leenauto, k);
+  // Oude formulieren (APK/afkeurpunten, aandachtspunten, notities): komen in de aantekeningen terecht.
+  a.apk = get(r.achterkant, 'apk');
+  a.aandachtspunten = get(r.achterkant, 'aandachtspunten');
+  a.notities = get(r.achterkant, 'notities');
+  return orders.migrateBack(orders.normalizeOrderData(d));
 }
 
 const FLUID_KEYS = orders.FLUIDS.map((f) => `${f.key}${f.label ? ` (${f.label})` : ' (vrije regel)'}`).join(', ');
@@ -203,8 +223,20 @@ Opbouw van het formulier en waar elk vak hoort:
 - "diversen" (linksonder): alleen ingevulde of aangekruiste regels. "veld" is een van: servicewagen of leenauto
   (tekst = km), werk_derden, apk / afmeldkosten / uitlijnen / balanceren (alleen opnemen als het hokje is aangekruist),
   testapparatuur, kleinmateriaal, milieutoeslag, extra (de lege vrije regel). Prijs uit de kolom Prijs p.eenh.
-- "banden" (achterkant, bandenprofiel): alleen ingevulde banden, "band" is een van: ${TIRE_KEYS}; profiel in mm, maat, merk, DOT.
-- "achterkant": A.p.k./afkeurpunten -> apk, aandachtspunten, en al het overige van de achterkant -> notities.
+Achterkant (nieuw formulier):
+- "advies" ("Aantekeningen van de werkplaats/APK advies"): alleen ingevulde regels, in volgorde. ✓ -> check (true als aangevinkt),
+  tekst, soort = "garantie" / "noodzaak" / "geen" (geen noodzaak) als dat vakje is aangekruist, anders "";
+  kosten (kolom "kosten inclusief montage en btw"); besluit = "uitvoeren" / "niet" (niet uitvoeren) / "afspraak" (nieuwe afspraak) of "".
+- "uren" (tabel Datum / Naam / Gewerkt van / tot / Totaal uren / Uur tarief / Bedrag): alleen ingevulde regels.
+- "band" (blok Banden): merk, type, maat. "banden": per band het profiel in mm; "band" is een van: ${TIRE_KEYS}
+  (Linksvoor = lv, Linksachter = la, Rechtsvoor = rv, Rechtsachter = ra, Reservewiel = reserve). maat/merk/dot per band alleen bij een oud formulier.
+- "keuring" (blok Keuringen-Voertuiggegevens): apk, goed (goedkeuring), af (afkeuring), roet (roetmeting), viergas (viergastest)
+  = true als aangekruist; motorcode (Plaats motorcode), olie_min + olie_test (Olietemperatuur min. / test), stationair + stationair_tot,
+  afregel + afregel_tot (Afregel toerental ... tot), k_waarde (Max. K-waarde).
+- "leenauto" (blok Leenauto): getankt "ja"/"nee"/"", merk_type, kenteken, vertrek_km/_dd/_om, retour_km/_dd/_om, tarief (Huurtarief €),
+  per "halve" (½ dag) / "dag" / "".
+- "achterkant": alleen bij een OUD formulier (A.p.k./afkeurpunten -> apk, aandachtspunten, overige tekst -> notities); anders lege tekst.
+- Een blok dat niet op de foto staat of leeg is: lege tekst / false / lege lijst.
 
 Regels:
 - Neem de tekst letterlijk over zoals geschreven: zelfde woorden, geen samenvatting en geen spelling verbeteren

@@ -5,6 +5,16 @@
  */
 module.exports = [
   {
+    version: '1.47.0', date: '2026-11-11', title: 'Sjablonen en een nieuwe achterkant',
+    items: [
+      'Sjablonen: voorgevulde werkopdrachten voor werk dat vaak terugkomt. Op elke werkopdracht staat bovenaan de knop Sjabloon: kies een sjabloon en de onderdelen, werkzaamheden, vloeistoffen en aantekeningen worden op de lege regels ingevuld (wat er al staat blijft staan). Met "Opslaan als sjabloon…" maakt u er zelf een van de huidige werkopdracht (zonder klant, auto, datums en km-standen).',
+      'Er staat al een sjabloon klaar: Bandenwissel (WinG, ZomO, Omw met de vaste regels en de opmerking over het profiel). Alle sjablonen staan onder Meer → Sjablonen, waar u ze ook kunt hernoemen, verwijderen of meteen een nieuwe werkopdracht mee kunt beginnen.',
+      'Nieuwe achterkant, zoals het nieuwe papieren formulier: Aantekeningen van de werkplaats/APK-advies met per regel garantie / noodzaak / geen noodzaak, kosten en uitvoeren / niet uitvoeren / nieuwe afspraak (het begrote totaal telt zichzelf op); Uren (van–tot rekent de uren en het bedrag voor); Banden (merk, type, maat en profiel per wiel); Keuringen-Voertuiggegevens; Leenauto.',
+      'Oude werkopdrachten: de vroegere APK-/aandachtspunten en notities staan nu in de aantekeningen, en de bandenmaat en het merk staan in het blok Banden. Er gaat niets verloren.',
+      'Foto-import van een papieren werkopdracht leest de nieuwe achterkant ook (en oude formulieren nog steeds).',
+    ],
+  },
+  {
     version: '1.46.4', date: '2026-11-09', title: 'Notitieknop in bureaubladvensters op de juiste plek',
     items: [
       'In een venster op het bureaublad stond de knop voor plaknotities midden in de inhoud (hij schoof mee met de breedte van de zijbalk, die er in een venster niet is). Nu staat hij weer linksonder in het venster, ook bij een kleinere vensterinhoud.',

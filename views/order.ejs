@@ -65,6 +65,19 @@
   </div>
   <div class="tb-right">
     <span class="totals muted small" id="totals" title="Som van aantal × prijs p.eenh. van onderdelen, vloeistoffen en diversen"></span>
+    <% if (editable) { %>
+    <details class="nav-menu tpl-menu" data-nav-menu data-tpl-menu>
+      <summary class="btn btn-ghost">Sjabloon</summary>
+      <div class="nav-pop nav-pop-right" role="menu">
+        <% if (templates.length) { %><p class="bell-head">Invullen met</p><% } %>
+        <% for (const t of templates) { %><button type="button" role="menuitem" data-tpl-apply="<%= t.id %>"><%= t.naam %></button><% } %>
+        <div class="nav-pop-form">
+          <button type="button" role="menuitem" data-tpl-save>Opslaan als sjabloon…</button>
+          <a role="menuitem" href="/sjablonen">Sjablonen beheren</a>
+        </div>
+      </div>
+    </details>
+    <% } %>
     <a class="btn btn-ghost" href="#achterkant">Achterkant</a>
     <button class="btn" type="button" id="printBtn">Afdrukken</button>
     <%- include('/partials/order-actions', { where: 'top' }) %>
@@ -282,43 +295,7 @@
   <!-- ===================== ACHTERKANT ===================== -->
   <h2 class="side-title no-print" id="achterkant">Achterkant</h2>
   <div class="sheet-scroll">
-  <section class="sheet back" aria-label="Achterkant werkopdracht">
-    <div class="panel panel-left">
-      <div class="back-head"><span class="wo-title small-title">Bandenprofiel</span><span class="red-nr mirror-nr"><%= nummer %></span></div>
-      <table class="grid tires">
-        <colgroup><col class="c-tire"><col class="c-prof"><col><col><col class="c-dot"></colgroup>
-        <thead><tr><th>Band</th><th class="center">Profiel (mm)</th><th>Maat</th><th>Merk</th><th class="center">DOT</th></tr></thead>
-        <tbody>
-        <% TIRES.forEach((t) => { const b = d.achter.banden[t.key]; %>
-          <tr data-line>
-            <td class="rowlabel"><%= t.label %></td>
-            <td><%- inp(`achter.banden.${t.key}.profiel`, b.profiel, 'class="ink center" inputmode="decimal" data-tread') %></td>
-            <td><%- inp(`achter.banden.${t.key}.maat`, b.maat, 'placeholder=""') %></td>
-            <td><%- inp(`achter.banden.${t.key}.merk`, b.merk) %></td>
-            <td><%- inp(`achter.banden.${t.key}.dot`, b.dot, 'class="ink center" inputmode="numeric"') %></td>
-          </tr>
-        <% }) %>
-        </tbody>
-      </table>
-      <p class="tread-legend no-print"><span class="tread bad">&lt; 1,6 mm wettelijk minimum</span> <span class="tread warn">&lt; 3 mm advies vervangen</span></p>
-
-      <div class="back-block">
-        <div class="block-head">APK / afkeurpunten</div>
-        <div class="block-lines"><%- achter('apk', 12) %></div>
-      </div>
-    </div>
-
-    <div class="panel panel-right">
-      <div class="back-block">
-        <div class="block-head">Aandachtspunten</div>
-        <div class="block-lines"><%- achter('aandachtspunten', 14) %></div>
-      </div>
-      <div class="back-block">
-        <div class="block-head">Notities</div>
-        <div class="block-lines"><%- achter('notities', 9) %></div>
-      </div>
-    </div>
-  </section>
+  <%- include('/partials/order-back', { d, nummer }) %>
   </div>
 
   <%# Extra bladen (vervolgblad voorkant/achterkant of een leeg blad) %>
@@ -378,5 +355,6 @@
 <script src="/static/js/order.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/rdw.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/order-assist.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/templates.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

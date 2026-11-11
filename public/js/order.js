@@ -29,7 +29,7 @@
   fitAll();
 
   /* ---------- Ja/Nee: nogmaals klikken maakt keuze ongedaan ---------- */
-  document.querySelectorAll('.janee input').forEach((r) => {
+  document.querySelectorAll('.janee input, .cellbox input[type=radio]').forEach((r) => {
     let was = false;
     r.addEventListener('pointerdown', () => { was = r.checked; });
     r.closest('label').addEventListener('click', (e) => {
@@ -168,6 +168,33 @@
     form.addEventListener('change', () => { clearTimeout(timer); timer = setTimeout(store, 300); });
     // Bij opslaan: bewaren met een vlag; pas na de groene melding wordt het verwijderd.
     form.addEventListener('submit', () => { clearTimeout(timer); store({ submitted: true }); });
+  })();
+
+  /* ---------- achterkant: uren en begroting rekenen mee (als hulp: alleen lege vakken krijgen een voorstel) ---------- */
+  (function back() {
+    const t2h = (v) => { const m = /^(\d{1,2})[:.]?(\d{2})$/.exec(String(v || '').trim()); return m ? Number(m[1]) + Number(m[2]) / 60 : NaN; };
+    const nl = (n, d = 2) => n.toLocaleString('nl-NL', { minimumFractionDigits: d, maximumFractionDigits: d });
+    function uur(row) {
+      const van = t2h(row.querySelector('[data-van]').value); const tot = t2h(row.querySelector('[data-tot]').value);
+      const uIn = row.querySelector('[data-uren-n]'); const tIn = row.querySelector('[data-uren-tarief]'); const bIn = row.querySelector('[data-uren-bedrag]');
+      const h = !isNaN(van) && !isNaN(tot) && tot > van ? Math.round((tot - van) * 4) / 4 : NaN;
+      uIn.placeholder = isNaN(h) ? '' : nl(h, h % 1 ? 2 : 0);
+      const hours = num(uIn.value || uIn.placeholder); const rate = num(tIn.value);
+      bIn.placeholder = !isNaN(hours) && !isNaN(rate) ? nl(hours * rate) : '';
+    }
+    function begroot() {
+      const total = form.querySelector('[data-advies-total]'); if (!total) return;
+      let sum = 0;
+      form.querySelectorAll('[data-advies] tr[data-line]').forEach((tr) => {
+        const v = num(tr.querySelector('[data-advies-cost]').value);
+        const niet = tr.querySelector('input[value="niet"]:checked');
+        if (!isNaN(v) && !niet) sum += v;
+      });
+      total.placeholder = sum ? nl(sum) : '';
+    }
+    form.querySelectorAll('tr[data-uur]').forEach(uur); begroot();
+    form.addEventListener('input', (e) => { const r = e.target.closest('tr[data-uur]'); if (r) uur(r); if (e.target.closest('[data-advies]')) begroot(); });
+    form.addEventListener('change', (e) => { if (e.target.closest('[data-advies]')) begroot(); });
   })();
 
   /* ---------- extra bladen toevoegen / verwijderen ---------- */

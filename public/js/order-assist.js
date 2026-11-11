@@ -4,7 +4,7 @@
  *  - Kenteken ingevuld: bekende klant? Dan naam, adres, telefoon enz. aanvullen (alleen lege vakken, geel = even nakijken),
  *    en bovenaan wat we al weten: vorige werkopdracht, laatste km-stand, olie en banden van vorige keer, bandenhotel.
  *  - Suggesties tijdens het typen: onderdelen (eerdere werkopdrachten + voorraad, met prijs), werkzaamheden, bandenmaat en -merk.
- *  - Waarschuwingen: km-stand lager dan vorige keer, km uit < km in, APK verlopen, oude banden (DOT).
+ *  - Waarschuwingen: km-stand lager dan vorige keer, km uit < km in, APK verlopen, profiel onder 1,6 mm.
  */
 (function () {
   const form = document.getElementById('orderForm');
@@ -66,15 +66,12 @@
       + (warns.length ? `<ul class="oa-warns">${warns.map((w) => `<li>⚠ ${w}</li>`).join('')}</ul>` : '');
   }
 
-  // Bandenmaten: van de vorige werkopdracht, anders wat er volgens het bandenhotel op de auto staat.
-  const WHEELS = ['lv', 'rv', 'la', 'ra'];
-  const tyreInput = (w, f) => form.querySelector(`[name="d[achter][banden][${w}][${f}]"]`);
+  // Bandenmaat en -merk (achterkant): van de vorige werkopdracht, anders wat er volgens het bandenhotel op de auto staat.
+  const tyreField = (f) => form.querySelector(`[name="d[achter][band_${f}]"]`);
   function tyreSource() {
-    if (!info) return null;
-    const empty = WHEELS.some((w) => tyreInput(w, 'maat') && !tyreInput(w, 'maat').value.trim());
-    if (!empty) return null;
-    if (info.banden && WHEELS.some((w) => info.banden[w] && info.banden[w].maat)) return { label: 'van vorige keer', get: (w) => info.banden[w] || {} };
-    if (info.tyres && info.tyres.onCar && info.tyres.onCar.maat) return { label: 'bandenhotel', get: () => ({ maat: info.tyres.onCar.maat, merk: info.tyres.onCar.merk }) };
+    if (!info || !tyreField('maat') || tyreField('maat').value.trim()) return null;
+    if (info.banden && info.banden.maat) return { label: 'van vorige keer', v: info.banden };
+    if (info.tyres && info.tyres.onCar && info.tyres.onCar.maat) return { label: 'bandenhotel', v: { maat: info.tyres.onCar.maat, merk: info.tyres.onCar.merk } };
     return null;
   }
 
@@ -88,21 +85,12 @@
     }
     if (b.dataset.oa === 'tyres') {
       const src = tyreSource();
-      if (src) for (const w of WHEELS) { const v = src.get(w); setField(tyreInput(w, 'maat'), v.maat); setField(tyreInput(w, 'merk'), v.merk); }
+      if (src) { setField(tyreField('maat'), src.v.maat); setField(tyreField('merk'), src.v.merk); setField(tyreField('type'), src.v.type); }
     }
     render();
   });
 
   /* ---------- waarschuwingen ---------- */
-  function dotAge(v) {
-    const m = /^(\d{2})(\d{2})$/.exec(String(v || '').replace(/\D/g, '').slice(-4));
-    if (!m) return null;
-    const week = Number(m[1]); const year = 2000 + Number(m[2]);
-    if (week < 1 || week > 53) return null;
-    const made = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
-    const years = (Date.now() - made) / (365.25 * 864e5);
-    return years < -0.1 ? null : years;
-  }
   function warnings() {
     const out = [];
     const kmIn = kmOf(($('km_in') || {}).value); const kmUit = kmOf(($('km_uit') || {}).value);
@@ -111,14 +99,15 @@
     const apk = ($('apk_datum') || {}).value;
     if (apk && apk < new Date().toISOString().slice(0, 10)) out.push(`APK is verlopen (${fmtDate(apk)}).`);
     else if (apk && (new Date(apk) - Date.now()) / 864e5 <= 60) out.push(`APK verloopt binnenkort (${fmtDate(apk)}): even melden aan de klant?`);
-    const old = WHEELS.map((w) => [w, dotAge((tyreInput(w, 'dot') || {}).value)]).filter(([, a]) => a !== null && a >= 6);
-    if (old.length) out.push(`Banden ouder dan 6 jaar (DOT): ${old.map(([w, a]) => `${w.toUpperCase()} ${Math.floor(a)} jaar`).join(', ')}.`);
+    const thin = [['lv', 'LV'], ['la', 'LA'], ['rv', 'RV'], ['ra', 'RA']].map(([w, n]) => [n, parseFloat(String((form.querySelector(`[name="d[achter][banden][${w}][profiel]"]`) || {}).value || '').replace(',', '.'))])
+      .filter(([, v]) => !isNaN(v) && v < 1.6);
+    if (thin.length) out.push(`Profiel onder het wettelijk minimum (1,6 mm): ${thin.map(([n, v]) => `${n} ${String(v).replace('.', ',')} mm`).join(', ')}.`);
     if (info && info.service && kmIn && kmIn - info.service.km >= 15000) out.push(`Laatste servicebeurt was bij ${fmtKm(info.service.km)} km: nu ${fmtKm(kmIn - info.service.km)} km geleden.`);
     return out;
   }
   let warnTimer = null;
   form.addEventListener('input', (e) => {
-    if (!e.target.matches('[name="d[km_in]"], [name="d[km_uit]"], [name="d[apk_datum]"], [name*="[dot]"], [name*="[maat]"]')) return;
+    if (!e.target.matches('[name="d[km_in]"], [name="d[km_uit]"], [name="d[apk_datum]"], [name*="[profiel]"], [name*="[band_maat]"]')) return;
     clearTimeout(warnTimer); warnTimer = setTimeout(render, 300);
   });
 
@@ -221,12 +210,6 @@
       el.dispatchEvent(new Event('input', { bubbles: true }));
     } else {
       setField(el, it.text, { force: true });
-      // Bandenmaat: dezelfde maat op het andere wiel van dezelfde as, als dat nog leeg is. Merk: op alle lege wielen.
-      const m = /\[banden\]\[(lv|rv|la|ra)\]\[(maat|merk)\]/.exec(el.name);
-      if (m) {
-        const pair = { lv: ['rv'], rv: ['lv'], la: ['ra'], ra: ['la'] }[m[1]];
-        for (const w of m[2] === 'merk' ? WHEELS : pair) setField(tyreInput(w, m[2]), it.text);
-      }
       render();
     }
   }
@@ -236,8 +219,8 @@
     if (!el.name || el.disabled || el.readOnly) return null;
     if (/^d(\[paginas\]\[\d+\])?\[onderdelen\]\[\d+\]\[(nr|omschrijving)\]$/.test(el.name)) return 'onderdeel';
     if (/^d(\[paginas\]\[\d+\])?\[werk_omschrijving\]$/.test(el.name)) return 'werk';
-    if (/\[banden\]\[\w+\]\[maat\]$/.test(el.name)) return 'bandmaat';
-    if (/\[banden\]\[\w+\]\[merk\]$/.test(el.name)) return 'bandmerk';
+    if (el.name === 'd[achter][band_maat]') return 'bandmaat';
+    if (el.name === 'd[achter][band_merk]') return 'bandmerk';
     return null;
   }
   function currentLine(el) {

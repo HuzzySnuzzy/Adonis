@@ -64,6 +64,7 @@
     const isOrders = path === '/werkopdrachten' || path.startsWith('/werkopdracht/');
     // Minder vaak gebruikt: onder "Meer" en (beheerders) "Beheer", zodat de menubalk rustig blijft.
     const MORE = [
+      F.werkopdrachten && ['/sjablonen', 'Sjablonen'],
       F.portaal && ['/portaal', 'Portaal'],
       F.rekenhulp && ['/rekenhulp', 'Rekenhulp'],
       ['/verkenner', "Foto's"],
@@ -94,6 +95,7 @@
       '/gebruikers': '<circle cx="12" cy="8" r="4"/><path d="M4 20c1-4 4-6 8-6s7 2 8 6"/>',
       '/prullenbak': '<path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13"/>',
       '/zoekwoorden': '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
+      '/sjablonen': '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5M14.5 15.5l1.5 1.5 3-3"/>',
       '/systeem': '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
     };
     const ico = (k) => `<svg class="nav-ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${NAV_ICON[k] || NAV_ICON[k && k.startsWith('/importeren') ? 'import' : 'start']}</svg>`;

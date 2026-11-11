@@ -285,3 +285,43 @@ td.tread-warn { background: var(--tread-warn); }
 @media print {
   .extra-page .sheet { break-before: page; page-break-before: always; break-after: auto; page-break-after: auto; }
 }
+
+/* ---------- achterkant (1.47): zoals het papieren formulier ---------- */
+.back2 .panel-left { flex-basis: 55%; }
+.back2 .panel-right { flex-basis: 45%; gap: 12px; }
+table.grid.advies .c-chk { width: 30px; }
+table.grid.advies .c-opt { width: 46px; }
+table.grid.advies .c-kost { width: 92px; }
+table.grid.advies th.vert { font-size: 10.5px; line-height: 1.05; white-space: normal; padding: 2px; text-align: center; height: 44px; }
+table.grid.advies th.small-th { font-size: 10.5px; line-height: 1.05; white-space: normal; padding: 2px 4px; }
+table.grid td.center, table.grid th.center { text-align: center; }
+.advies-total td { background: var(--form-grey-dark); }
+.right-label { text-align: right; padding: 0 8px !important; font-weight: 700; font-size: 13.5px; color: var(--label); }
+.cellbox { display: inline-grid; place-items: center; width: 100%; height: 100%; cursor: pointer; }
+.cellbox input { position: absolute; opacity: 0; pointer-events: none; }
+.cellbox span { width: 15px; height: 15px; border: 1.5px solid var(--label); background: var(--paper); border-radius: 2px; }
+.cellbox input[type=radio] + span { border-radius: 50%; }
+.cellbox input:checked + span { background: var(--ink); border-color: var(--ink); box-shadow: inset 0 0 0 2.5px var(--paper); }
+.cellbox input:focus-visible + span { outline: 2px dashed var(--ink); outline-offset: 2px; }
+table.grid.uren .c-dat { width: 92px; } table.grid.uren .c-tijd2 { width: 62px; } table.grid.uren .c-uren { width: 64px; }
+table.grid.uren .c-tarief { width: 72px; } table.grid.uren .c-bedrag { width: 84px; }
+.back-blocks { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 12px; }
+table.grid.kv th { background: var(--form-grey-dark); }
+table.grid.kv td.rowlabel { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+table.grid.kv .c-kvl { width: 112px; } table.grid.kv .c-kvl2 { width: 140px; } table.grid.kv .c-kvl3 { width: 34px; }
+table.grid.kv .c-unit { width: 38px; } table.grid.kv .c-small { width: 36px; }
+table.grid.kv td.unit { font-size: 12.5px; padding: 0 6px; color: var(--label); }
+.janee.janee-left { margin-left: 6px; }
+.lbl-inline { font-size: 13px; color: var(--label); margin-right: .5rem; }
+.sign-row td { height: calc(var(--row) * 1.8); }
+@media (max-width: 1150px) { .back-blocks { grid-template-columns: 1fr; } }
+.tpl-menu > summary { list-style: none; }
+.tpl-menu > summary::-webkit-details-marker { display: none; }
+.tpl-menu .nav-pop { min-width: 260px; top: calc(100% + 6px); }
+table.grid.advies .c-opt { width: 54px; }
+table.grid.advies .c-kost { width: 96px; }
+table.grid.advies th.vert { font-size: 10px; word-break: break-word; hyphens: auto; }
+table.grid.uren .c-uren { width: 78px; }
+table.grid.uren th { white-space: normal; line-height: 1.1; font-size: 12.5px; }
+.sign-row td.rowlabel { white-space: normal; line-height: 1.15; font-size: 12.5px; }
+table.grid.kv .sign-row td.rowlabel { white-space: normal; line-height: 1.15; font-size: 12.5px; padding: 2px 6px; }

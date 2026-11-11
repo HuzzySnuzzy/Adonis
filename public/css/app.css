@@ -2276,3 +2276,4 @@ a:hover { text-decoration: underline; }
 @media (min-width: 1000px) {
   :root[data-layout="side"] .topbar .new-order-btn { white-space: normal; text-align: center; line-height: 1.2; font-size: .9rem; letter-spacing: normal; }
 }
+.tpl-name input { max-width: 320px; }

@@ -32,7 +32,7 @@ function save(on) {
  * een lijst met { any: [...] } als één ervan genoeg is, of null (altijd bereikbaar).
  */
 function required(p) {
-  if (/^\/werkopdracht(en)?(\/|$)/.test(p) || /^\/zoekwoorden(\/|$)/.test(p)) return ['werkopdrachten'];
+  if (/^\/werkopdracht(en)?(\/|$)/.test(p) || /^\/(zoekwoorden|sjablonen)(\/|$)/.test(p)) return ['werkopdrachten'];
   // Importeren: /importeren(/:id) = foto van een werkopdracht; excel en foto's koppelen = bandenhotel/voorraad.
   if (/^\/importeren\/(excel|fotos)(\/|$)/.test(p)) return { any: ['bandenhotel', 'voorraad'] };
   if (/^\/importeren(\/|$)/.test(p)) return ['werkopdrachten'];

@@ -1,0 +1,41 @@
+<%- include('/partials/head') %>
+<main class="page">
+  <div class="page-head"><h1>Sjablonen</h1></div>
+  <p class="muted">Een sjabloon is een voorgevulde werkopdracht voor werk dat vaak terugkomt, zoals een bandenwissel of een kleine beurt:
+    vaste onderdelen, werkzaamheden, vloeistoffen en aantekeningen. Kies op een werkopdracht <b>Sjabloon</b> om het in te vullen (lege regels
+    worden aangevuld, wat er al staat blijft staan), of begin hieronder meteen een nieuwe werkopdracht. Een eigen sjabloon maakt u op een
+    werkopdracht met <b>Sjabloon → Opslaan als sjabloon</b>; klant, auto, datums en km-standen worden daarbij niet bewaard.</p>
+  <% if (!list.length) { %>
+    <div class="empty"><p>Nog geen sjablonen.</p></div>
+  <% } else { %>
+  <div class="table-wrap">
+    <table class="list">
+      <thead><tr><th>Naam</th><th>Inhoud</th><th>Gewijzigd</th><th></th></tr></thead>
+      <tbody>
+      <% for (const t of list) { %>
+        <tr>
+          <td>
+            <form method="post" action="/sjablonen/<%= t.id %>/naam" class="inline-form tpl-name">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <input name="naam" value="<%= t.naam %>" aria-label="Naam van het sjabloon">
+              <button class="btn btn-small btn-ghost" type="submit">Naam opslaan</button>
+            </form>
+          </td>
+          <td class="muted"><%= t.summary %></td>
+          <td class="muted"><%= fmtDateTime(t.updated_at) %><%= t.by ? ' · ' + t.by : '' %></td>
+          <td class="trash-actions">
+            <a class="btn btn-small btn-primary" href="/werkopdracht/nieuw?sjabloon=<%= t.id %>">Nieuwe werkopdracht</a>
+            <form method="post" action="/sjablonen/<%= t.id %>/verwijderen" class="inline" data-confirm="Sjabloon &quot;<%= t.naam %>&quot; verwijderen?">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn btn-small btn-ghost" type="submit">Verwijderen</button>
+            </form>
+          </td>
+        </tr>
+      <% } %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

@@ -5,6 +5,8 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 
 ## Wat kan het?
 
+- **Sjablonen.** Voorgevulde werkopdrachten (bijv. Bandenwissel) invullen of zelf opslaan vanaf een werkopdracht.
+- **Achterkant zoals het papieren formulier.** Aantekeningen/APK-advies met keuzes en begroting, uren, banden, keuringen en leenauto.
 - **Zakelijke indeling.** Zijbalk met pictogrammen (smal te maken), statusbalk met verbinding en klok, sneltoetsen
   Alt+1–5, F2 (nieuw) en F3 (zoeken); de menubalk bovenaan blijft te kiezen bij Instellingen.
 - **Rustige, zakelijke weergave.** Vijf hoofdonderdelen in de menubalk, de rest onder "Meer" en "Beheer"; herinneringen
