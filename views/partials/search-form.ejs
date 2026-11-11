@@ -3,13 +3,16 @@
 <form class="start-search" method="get" action="/zoeken" role="search" autocomplete="off" data-scope-form>
   <label for="startQ" class="sr-only">Zoeken</label>
   <div class="start-search-row">
-    <% if (scopes.length > 1) { %>
-    <fieldset class="search-scope" aria-label="Zoeken in">
-      <legend class="sr-only">Zoeken in</legend>
-      <% for (const [k, label] of scopes) { %>
-      <label class="scope-chip"><input type="checkbox" name="in" value="<%= k %>" <%= sel.includes(k) ? 'checked' : '' %>><span><%= label %></span></label>
-      <% } %>
-    </fieldset>
+    <% if (scopes.length > 1) { const names = scopes.filter(([k]) => sel.includes(k)).map(([, l]) => l); %>
+    <details class="search-scope" data-scope-menu>
+      <summary class="scope-btn" title="Waarin zoeken?" aria-label="Zoeken in"><span class="scope-sum" data-scope-sum><%= names[0] || 'Klanten' %><%= names.length > 1 ? ' +' + (names.length - 1) : '' %></span></summary>
+      <div class="scope-pop" role="group" aria-label="Zoeken in">
+        <p class="bell-head">Zoeken in</p>
+        <% for (const [k, label] of scopes) { %>
+        <label class="scope-opt"><input type="checkbox" name="in" value="<%= k %>" data-label="<%= label %>" <%= sel.includes(k) ? 'checked' : '' %>><span><%= label %></span></label>
+        <% } %>
+      </div>
+    </details>
     <% } %>
     <div class="start-search-field">
       <svg class="start-search-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>

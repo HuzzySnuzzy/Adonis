@@ -822,5 +822,19 @@ window.adonisAutofilled = function (el) {
     if (!boxes.some((b) => b.checked)) e.target.checked = true;
     try { localStorage.setItem(KEY, JSON.stringify(boxes.filter((b) => b.checked).map((b) => b.value))); } catch { /* geen opslag */ }
     form.dispatchEvent(new Event('adonis:rerun'));
+    sum();
   });
+  // De knop laat zien waarin gezocht wordt ("Klanten +2"); klikken ernaast of Esc sluit het menu.
+  const menu = form.querySelector('[data-scope-menu]');
+  const sumEl = form.querySelector('[data-scope-sum]');
+  function sum() {
+    const on = boxes.filter((b) => b.checked).map((b) => b.dataset.label);
+    if (sumEl) sumEl.textContent = (on[0] || 'Klanten') + (on.length > 1 ? ' +' + (on.length - 1) : '');
+    if (menu) menu.title = 'Zoeken in: ' + on.join(', ');
+  }
+  sum();
+  if (menu) {
+    document.addEventListener('pointerdown', (e) => { if (menu.open && !menu.contains(e.target)) menu.open = false; });
+    menu.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.open) { e.preventDefault(); menu.open = false; menu.querySelector('summary').focus(); } });
+  }
 })();

@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.58.1', date: '2026-11-12', title: 'Zoeken-in als uitklapknop',
+    items: [
+      'De keuze waarin u zoekt op het startscherm is nu één knop links van het zoekveld (bijv. "Klanten +2"). Klik erop om Klanten, Werkopdrachten, Banden en Onderdelen aan of uit te vinken; klikken ernaast of Esc sluit het menu. Rustiger, en op de telefoon past alles op één regel.',
+    ],
+  },
+  {
     version: '1.58.0', date: '2026-11-12', title: 'Zoeken op het startscherm: kies waarin',
     items: [
       'Links van het zoekveld op het startscherm kiest u nu waarin u zoekt: Klanten, Werkopdrachten, Banden (bandenhotel, overige opslag en voorraadbanden) en Onderdelen. Vink er één of meer aan; de resultaten verschijnen terwijl u typt, per soort, met een link naar de volledige lijst.',
