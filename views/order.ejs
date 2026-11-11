@@ -65,6 +65,7 @@
   </div>
   <div class="tb-right">
     <span class="totals muted small" id="totals" title="Som van aantal × prijs p.eenh. van onderdelen, vloeistoffen en diversen"></span>
+    <div class="tb-tools">
     <% if (editable) { %>
     <details class="nav-menu tpl-menu" data-nav-menu data-tpl-menu>
       <summary class="btn btn-ghost">Sjabloon</summary>
@@ -80,7 +81,8 @@
     <% } %>
     <a class="btn btn-ghost" href="#achterkant">Achterkant</a>
     <button class="btn" type="button" id="printBtn">Afdrukken</button>
-    <%- include('/partials/order-actions', { where: 'top' }) %>
+    </div>
+    <div class="tb-actions"><%- include('/partials/order-actions', { where: 'top' }) %></div>
   </div>
 </div>
 <% if (order) { %>

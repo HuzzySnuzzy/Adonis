@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.49.1', date: '2026-11-11', title: 'Knoppen van de werkopdracht op de telefoon',
+    items: [
+      'Op de telefoon staan de knoppen bovenaan een werkopdracht nu netjes op een rij: eerst Opslaan over de hele breedte, daaronder Klaar voor facturatie en Gefactureerd, en daaronder Sjabloon, Achterkant en Afdrukken even breed naast elkaar. Het Sjabloon-menu klapt direct onder de knop open.',
+    ],
+  },
+  {
     version: '1.49.0', date: '2026-11-11', title: 'AI-toegang per gebruiker',
     items: [
       'Claude-functies kosten geld per keer. Een beheerder bepaalt nu wie ze mag starten: bij Gebruikers staat een nieuwe kolom AI-functies met een vinkje per gebruiker (ook bij het aanmaken van een nieuwe gebruiker). Beheerders mogen het altijd.',

@@ -22,6 +22,7 @@
   backdrop-filter: blur(4px);
 }
 .tb-left, .tb-right { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.tb-tools, .tb-actions { display: contents; }
 .tb-title { display: flex; flex-direction: column; line-height: 1.25; }
 .order-toolbar.dirty #saveBtn::after { content: " •"; }
 .totals:empty { display: none; }
@@ -249,6 +250,18 @@ td.tread-warn { background: var(--tread-warn); }
   .order-toolbar .tb-right { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; width: 100%; }
   .order-toolbar .tb-right .btn-primary, .order-toolbar .tb-right .btn-ok { grid-column: 1 / -1; }
   .order-toolbar .tb-right .btn { justify-content: center; }
+  /* Werkopdracht: eerst Opslaan (hele breedte) en de statusknoppen, daaronder een rustige rij hulpmiddelen. */
+  .order-toolbar .tb-right:has(> .tb-actions) { display: flex; flex-direction: column; align-items: stretch; gap: .5rem; }
+  .order-toolbar .tb-actions { order: -1; display: flex; flex-wrap: wrap; gap: .5rem; }
+  .order-toolbar .tb-actions:not(:has(*)) { display: none; }
+  .order-toolbar .tb-actions > .btn { flex: 1 1 0; min-width: 0; }
+  .order-toolbar .tb-actions > .btn-primary { flex-basis: 100%; min-height: 44px; }
+  .order-toolbar .tb-tools { display: flex; gap: .5rem; }
+  .order-toolbar .tb-tools > * { flex: 1 1 0; min-width: 0; }
+  .order-toolbar .tb-tools .btn, .order-toolbar .tb-tools > details > summary.btn { width: 100%; justify-content: center; padding-inline: .4rem; white-space: nowrap; }
+  .order-toolbar .tpl-menu { position: relative; }
+  .order-toolbar .tpl-menu .nav-pop { position: absolute; left: 0; right: auto; top: calc(100% + 6px); min-width: min(280px, calc(100vw - 32px)); }
+  .order-toolbar .totals { text-align: center; }
   .sheet { scrollbar-width: thin; scrollbar-color: var(--muted) transparent; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
 }
 
