@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.58.0', date: '2026-11-12', title: 'Zoeken op het startscherm: kies waarin',
+    items: [
+      'Links van het zoekveld op het startscherm kiest u nu waarin u zoekt: Klanten, Werkopdrachten, Banden (bandenhotel, overige opslag en voorraadbanden) en Onderdelen. Vink er één of meer aan; de resultaten verschijnen terwijl u typt, per soort, met een link naar de volledige lijst.',
+      'Uw keuze wordt op dit apparaat onthouden. Enter opent een zoekpagina met dezelfde resultaten; met alleen Klanten aan en een precies kenteken gaat u meteen naar die klant.',
+    ],
+  },
+  {
     version: '1.57.0', date: '2026-11-12', title: 'Klanten opschonen met AI',
     items: [
       'Ook de klantenlijst kan nu worden opgeschoond: klik bij Klanten op "Opschonen met AI". Claude kijkt naar de schrijfwijze van namen, adressen en plaatsen (zevenaar → Zevenaar, s-heerenberg → \'s-Heerenberg), telefoonnummers (06-12345678) en merk/type (vw golf → Volkswagen Golf), en wijst mogelijk dubbele klanten aan. Kentekens, klantnummers en chassisnummers blijven altijd zoals ze zijn.',

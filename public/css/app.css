@@ -2588,3 +2588,41 @@ table.list tr.day-row[hidden] { display: none; }
 /* Een hele regel in een lijst: één veeg over de hele breedte. */
 tr.autofilled { box-shadow: none !important; }
 tr.autofilled > td { background: transparent !important; }
+
+/* Startscherm: waarin zoeken (links van het zoekveld) en de resultaten per soort */
+.start-search-field { position: relative; flex: 1 1 auto; display: flex; min-width: 0; }
+.start-search-field input[type=search] { width: 100%; }
+.search-scope { display: grid; grid-template-columns: repeat(2, auto); gap: 4px; align-content: center; margin: 0; padding: 4px; border: 1px solid var(--border);
+  border-radius: 14px; background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px -16px rgba(0,0,0,.35); }
+.search-scope:has(> label:nth-of-type(3):last-of-type), .search-scope:has(> label:nth-of-type(2):last-of-type) { grid-auto-flow: column; grid-template-columns: none; }
+.scope-chip { position: relative; cursor: pointer; }
+.scope-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.scope-chip span { display: flex; align-items: center; gap: .35rem; height: 24px; padding: 0 .6rem 0 .45rem; border-radius: 8px; font-size: .8rem; font-weight: 600;
+  color: var(--muted); white-space: nowrap; transition: background .12s, color .12s; }
+.scope-chip span::before { content: ""; width: 13px; height: 13px; border-radius: 4px; border: 1.5px solid currentColor; flex: none; opacity: .7;
+  background: center / 10px no-repeat; }
+.scope-chip:hover span { background: var(--hover); color: var(--text); }
+.scope-chip input:checked + span { background: color-mix(in srgb, var(--primary) 13%, transparent); color: var(--primary); }
+.scope-chip input:checked + span::before { opacity: 1; background-color: var(--primary); border-color: var(--primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6l4.5-5' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+.scope-chip input:focus-visible + span { outline: 2px solid var(--primary); outline-offset: 1px; }
+@media (max-width: 760px) {
+  .start-search-row { flex-wrap: wrap; }
+  .search-scope { order: -1; flex: 1 1 100%; display: flex; flex-wrap: wrap; grid-template-columns: none; }
+}
+.search-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: .8rem; }
+.search-group { padding: .7rem .8rem; border-radius: 14px; background: var(--surface); border: 1px solid var(--border-soft, var(--border)); }
+.search-group h3 { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 .35rem; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.search-group h3 a { text-transform: none; letter-spacing: 0; font-weight: 600; }
+.search-hit { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "tag main" "tag sub"; column-gap: .65rem; align-items: center;
+  padding: .45rem .5rem; border-radius: 9px; text-decoration: none; color: var(--text); }
+.search-hit:hover, .search-hit:focus-visible { background: var(--hover); outline: none; }
+.search-hit > :first-child { grid-area: tag; }
+.search-hit > b { grid-area: main; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-hit > .small { grid-area: sub; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plate-mini { display: inline-block; min-width: 4.8rem; padding: 2px 6px; border-radius: 4px; text-align: center; font: 700 .78rem/1.3 ui-monospace, Consolas, monospace;
+  background: color-mix(in srgb, var(--muted) 12%, transparent); color: var(--text); }
+.search-hit .ordernr { min-width: 4.8rem; text-align: center; font-weight: 700; color: var(--red, #c0392b); font-variant-numeric: tabular-nums; }
+.search-none { margin: .2rem 0; }
+.search-page h1 { margin-bottom: .8rem; }
+.plate-mini { max-width: 7.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }

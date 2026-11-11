@@ -226,13 +226,14 @@ if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
       finally { if (ctrl === mine) form.classList.remove('is-searching'); } // een afgebroken (oudere) zoekopdracht laat de nieuwere met rust
     };
     input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 250); });
+    form.addEventListener('adonis:rerun', () => { last = null; clearTimeout(timer); run(); }); // bijv. andere keuze waarin gezocht wordt
   });
 })();
 // Toets "/" springt naar het zoekveld (als je niet al aan het typen bent).
 document.addEventListener('keydown', (e) => {
   if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;
-  const box = document.querySelector('form[role="search"] input[name="q"], .start-search input');
+  const box = document.querySelector('form[role="search"] input[name="q"]');
   if (!box) return;
   e.preventDefault();
   box.focus();
@@ -804,4 +805,22 @@ window.adonisAutofilled = function (el) {
   rows.slice(0, 50).forEach((tr, i) => setTimeout(() => window.adonisAutofilled(tr), 200 + i * 110));
   u.searchParams.delete('bijgewerkt');
   try { history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch { /* geen history */ }
+})();
+
+/* Startscherm: waarin zoeken (klanten, werkopdrachten, banden, onderdelen). Keuze onthouden op dit apparaat; minstens één aan. */
+(function () {
+  const form = document.querySelector('[data-scope-form]');
+  if (!form) return;
+  const boxes = [...form.querySelectorAll('input[name=in]')];
+  if (!boxes.length) return;
+  const KEY = 'adonis-search-in';
+  if (!new URLSearchParams(location.search).has('in')) {
+    try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (Array.isArray(saved) && saved.length && boxes.some((b) => saved.includes(b.value))) boxes.forEach((b) => { b.checked = saved.includes(b.value); }); } catch { /* geen opslag */ }
+  }
+  form.addEventListener('change', (e) => {
+    if (!e.target.matches('input[name=in]')) return;
+    if (!boxes.some((b) => b.checked)) e.target.checked = true;
+    try { localStorage.setItem(KEY, JSON.stringify(boxes.filter((b) => b.checked).map((b) => b.value))); } catch { /* geen opslag */ }
+    form.dispatchEvent(new Event('adonis:rerun'));
+  });
 })();

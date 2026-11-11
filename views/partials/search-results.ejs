@@ -1,0 +1,23 @@
+<%# Resultaten van /zoeken, per soort. Verwacht: q, scope, R, LIM %>
+<% if (q) { const any = scope.some((k) => (R[k] || []).length); %>
+<div class="search-groups">
+  <% if (!any) { %><p class="muted search-none">Niets gevonden voor “<b><%= q %></b>”.</p><% } %>
+  <% if (R.klanten && R.klanten.length) { %>
+  <section class="search-group"><h3>Klanten <a class="small" href="/?q=<%= encodeURIComponent(q) %>">alle</a></h3>
+    <% for (const c of R.klanten.slice(0, LIM)) { %><a class="search-hit" href="/klant/<%= c.id %>"><span class="plate-mini"><%= c.kenteken %></span><b><%= c.naam || '—' %></b><span class="muted small"><%= [c.merk_type, c.plaats].filter(Boolean).join(' · ') %></span></a><% } %>
+  </section><% } %>
+  <% if (R.werkopdrachten && R.werkopdrachten.length) { %>
+  <section class="search-group"><h3>Werkopdrachten <a class="small" href="/werkopdrachten?q=<%= encodeURIComponent(q) %>">alle</a></h3>
+    <% for (const o of R.werkopdrachten.slice(0, LIM)) { %><a class="search-hit" href="/werkopdracht/<%= o.id %>"><span class="ordernr"><%= fmtNr(o.nummer) %></span><b><%= o.c_kenteken %></b><span class="muted small"><%= [o.summary, fmtDate(o.datum_invoer)].filter(Boolean).join(' · ') %></span></a><% } %>
+  </section><% } %>
+  <% if (R.banden && R.banden.length) { %>
+  <section class="search-group"><h3>Banden <a class="small" href="/bandenhotel?status=alle&q=<%= encodeURIComponent(q) %>">alle</a></h3>
+    <% for (const x of R.banden.slice(0, LIM)) { if (x.t) { const t = x.t; %><a class="search-hit" href="/bandenhotel/<%= t.id %>"><span class="plate-mini"><%= t.kenteken || (t.label ? '#' + t.label : 'opslag') %></span><b><%= [t.maat, t.merk].filter(Boolean).join(' ') || 'Banden' %></b><span class="muted small"><%= [t.klant_naam, t.seizoen, t.soort === 'opslag' ? 'overige opslag' : t.status === 'uitgegeven' ? 'uitgegeven' : 'bandenhotel'].filter(Boolean).join(' · ') %></span></a>
+    <% } else { const s = x.s; %><a class="search-hit" href="/voorraad/<%= s.id %>"><span class="plate-mini">voorraad</span><b><%= [s.maat, s.merk, s.type].filter(Boolean).join(' ') %></b><span class="muted small"><%= s.aantal %> st.<%= s.locatie ? ' · ' + s.locatie : '' %></span></a><% } } %>
+  </section><% } %>
+  <% if (R.onderdelen && R.onderdelen.length) { %>
+  <section class="search-group"><h3>Onderdelen <a class="small" href="/voorraad?soort=onderdeel&q=<%= encodeURIComponent(q) %>">alle</a></h3>
+    <% for (const s of R.onderdelen.slice(0, LIM)) { %><a class="search-hit" href="/voorraad/<%= s.id %>"><span class="plate-mini"><%= s.nummer || s.oe_nummer || 'onderdeel' %></span><b><%= [s.type, s.merk].filter(Boolean).join(' · ') || s.omschrijving %></b><span class="muted small"><%= s.aantal %> st.<%= s.locatie ? ' · ' + s.locatie : '' %><%= s.omschrijving ? ' · ' + s.omschrijving.slice(0, 60) : '' %></span></a><% } %>
+  </section><% } %>
+</div>
+<% } %>

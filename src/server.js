@@ -429,6 +429,50 @@ app.get('/', (req, res) => {
   res.render('customers', { title: 'Klanten', q, customers: rows });
 });
 
+/* Zoeken vanaf het startscherm: kies waarin (klanten, werkopdrachten, banden, onderdelen); per soort de beste treffers. */
+const SEARCH_SCOPES = [
+  ['klanten', 'Klanten', () => true], ['werkopdrachten', 'Werkopdrachten', (F) => F.werkopdrachten],
+  ['banden', 'Banden', (F) => F.bandenhotel || F.voorraad], ['onderdelen', 'Onderdelen', (F) => F.voorraad],
+];
+app.locals.SEARCH_SCOPES = SEARCH_SCOPES;
+app.get('/zoeken', (req, res) => {
+  const q = String(req.query.q || '').trim();
+  const F = res.locals.feat;
+  const avail = SEARCH_SCOPES.filter(([, , ok]) => ok(F)).map(([k]) => k);
+  let scope = [].concat(req.query.in || []).filter((k) => avail.includes(k));
+  if (!scope.length) scope = ['klanten'];
+  const R = {};
+  const LIM = 8;
+  if (q) {
+    const term = likeTerm(q); const pkey = plateKey(q);
+    if (scope.includes('klanten')) {
+      R.klanten = db.prepare(`SELECT c.* FROM customers c WHERE (? <> '' AND c.plate_key LIKE ? ESCAPE '\\') OR c.naam LIKE ? ESCAPE '\\'
+        OR c.merk_type LIKE ? ESCAPE '\\' OR c.klantnr LIKE ? ESCAPE '\\' OR c.plaats LIKE ? ESCAPE '\\' OR c.chassisnummer LIKE ? ESCAPE '\\'
+        ORDER BY c.updated_at DESC LIMIT ${LIM + 1}`).all(pkey, likeTerm(pkey), term, term, term, term, term);
+    }
+    if (scope.includes('werkopdrachten')) {
+      const sq = synonyms.sqlFor('o.search_text', q, likeTerm);
+      const asNr = /^\d{1,9}$/.test(q) ? Number(q) : -1;
+      R.werkopdrachten = db.prepare(`SELECT o.*, c.kenteken AS c_kenteken FROM orders o JOIN customers c ON c.id = o.customer_id
+        WHERE ((${sq.where}) OR c.plate_key LIKE ? ESCAPE '\\' OR o.nummer = ?) ORDER BY o.datum_invoer DESC, o.nummer DESC LIMIT ${LIM + 1}`)
+        .all(...sq.params, likeTerm(pkey || q), asNr).map(withSummary);
+    }
+    if (scope.includes('banden')) {
+      R.banden = [
+        ...(F.bandenhotel ? [...inv.searchTyres({ soort: 'klant', q, status: 'alle' }), ...inv.searchTyres({ soort: 'opslag', q, status: 'alle' })] : []).map((t) => ({ t })),
+        ...(F.voorraad ? inv.searchStock({ soort: 'band', q }) : []).map((s) => ({ s })),
+      ].slice(0, LIM + 1);
+    }
+    if (scope.includes('onderdelen')) R.onderdelen = inv.searchStock({ soort: 'onderdeel', q }).slice(0, LIM + 1);
+  }
+  // Enter met alleen Klanten aan en precies één klant met dit kenteken: meteen naar die klant (zoals op de klantenlijst).
+  if (q && !req.get('X-Live-Refresh') && scope.length === 1 && scope[0] === 'klanten') {
+    const exact = (R.klanten || []).filter((c) => c.plate_key && c.plate_key === plateKey(q));
+    if (exact.length === 1) return res.redirect(`/klant/${exact[0].id}`);
+  }
+  res.render('search', { title: q ? `Zoeken: ${q}` : 'Zoeken', q, scope, avail, R, LIM });
+});
+
 /* Startscherm: grote knoppen naar de belangrijkste onderdelen (standaard bij Eenvoudige weergave) */
 app.get('/start', (req, res) => {
   const counts = orders.statusCounts();
