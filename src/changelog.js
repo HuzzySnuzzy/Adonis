@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.53.1', date: '2026-11-11', title: 'Grote knop met keuzepijltje',
+    items: [
+      'Op het startscherm heeft de grote knop "Nieuwe werkopdracht" nu rechts een pijltje: klik erop (of druk op pijl omlaag) en de andere keuzes klappen eronder open, zoals Banden inslaan en Nieuw onderdeel. Het losse rijtje knoppen eronder is weg.',
+    ],
+  },
+  {
     version: '1.53.0', date: '2026-11-11', title: '+ Nieuw kiezen, vandaag op Start en feestdagen',
     items: [
       '+ Nieuw (rechtsboven of bovenaan de zijbalk) vraagt nu wat u wilt toevoegen: een werkopdracht, banden of een onderdeel (alleen wat aan staat). Kies met de muis, met de pijltjes of met 1, 2, 3; F2 opent het keuzemenu.',

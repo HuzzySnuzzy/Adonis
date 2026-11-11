@@ -54,16 +54,30 @@
     <div id="live-customers" class="start-results" data-live data-live-remote></div>
   </header>
 
-  <% if (locals.newAction) { %>
-  <a class="start-new" href="<%= newAction.href %>">
-    <span class="start-new-icon"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
-    <span class="start-new-text"><b><%= newAction.long %></b><span><%= newAction.sub %></span></span>
-    <svg class="start-new-arrow" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-  </a>
-  <% const more = (locals.newActions || []).slice(1); if (more.length) { %>
-  <p class="start-new-more"><span class="muted">Of:</span>
-    <% for (const a of more) { %><a class="btn btn-small" href="<%= a.href %>"><span aria-hidden="true">+</span> <%= a.long %></a><% } %></p>
-  <% } %>
+  <% if (locals.newAction) { const more = (locals.newActions || []).slice(1);
+     const NICO = { tyre: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5"/>', box: '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>', list: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>' }; %>
+  <%# Grote knop; met meer onderdelen aan een pijltje rechts dat de andere keuzes (banden, onderdeel) openklapt. %>
+  <div class="start-new-wrap" data-split>
+    <div class="start-new<%= more.length ? ' start-new-split' : '' %>">
+      <a class="start-new-main" href="<%= newAction.href %>">
+        <span class="start-new-icon"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span class="start-new-text"><b><%= newAction.long %></b><span><%= newAction.sub %></span></span>
+        <% if (!more.length) { %><svg class="start-new-arrow" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><% } %>
+      </a>
+      <% if (more.length) { %>
+      <button type="button" class="start-new-toggle" data-split-toggle aria-expanded="false" aria-controls="startNewMore" aria-haspopup="menu"
+        title="Iets anders toevoegen" aria-label="Iets anders toevoegen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <% } %>
+    </div>
+    <% if (more.length) { %>
+    <div class="start-new-pop" id="startNewMore" role="menu" hidden>
+      <% for (const a of more) { %>
+      <a role="menuitem" href="<%= a.href %>" class="start-new-item new-<%= a.key %>"><span class="new-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><%- NICO[a.icon] %></svg></span>
+        <span class="new-txt"><b><%= a.long %></b><span class="muted small"><%= a.sub %></span></span></a>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
   <% } %>
 
   <% if (todo.length) { %>

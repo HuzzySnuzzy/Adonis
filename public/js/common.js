@@ -715,3 +715,28 @@ document.querySelectorAll('[data-bar-h]').forEach((el) => { el.style.setProperty
     }
   });
 })();
+
+/* Startscherm: het pijltje rechts op de grote knop klapt de andere keuzes open (banden, onderdeel). */
+(function () {
+  const wrap = document.querySelector('[data-split]');
+  const btn = wrap && wrap.querySelector('[data-split-toggle]');
+  if (!btn) return;
+  const pop = wrap.querySelector('.start-new-pop');
+  const set = (open, focus) => {
+    pop.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+    if (open && focus) { const f = pop.querySelector('a'); if (f) f.focus(); }
+  };
+  btn.addEventListener('click', () => set(pop.hidden, false));
+  btn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown') { e.preventDefault(); set(true, true); } });
+  document.addEventListener('pointerdown', (e) => { if (!pop.hidden && !wrap.contains(e.target)) set(false); });
+  wrap.addEventListener('keydown', (e) => {
+    if (pop.hidden) return;
+    const items = [...pop.querySelectorAll('a')];
+    if (e.key === 'Escape') { e.preventDefault(); set(false); btn.focus(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const i = items.indexOf(document.activeElement);
+      const n = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]; if (n) n.focus();
+    }
+  });
+})();

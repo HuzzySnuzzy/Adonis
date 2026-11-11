@@ -398,3 +398,6 @@
   :root[data-theme="adonis"] :is(.page-head h1, main.page > h1, .start-hero h1, .logo-word) { background: none; color: #000; filter: none; animation: none; }
   :root[data-theme="adonis"] :is(.card, .rdw-card, .customer-head, .table-wrap, .empty, .bl-box) { box-shadow: none; background: #fff; }
 }
+:root[data-theme="adonis"] .start-new-wrap > .start-new { padding: 0; }
+:root[data-theme="adonis"] .start-new-main { padding-bottom: calc(1rem + 10px); }
+:root[data-theme="adonis"] .start-new-toggle { border-left-color: rgba(243, 215, 124, .45); padding-bottom: 10px; }

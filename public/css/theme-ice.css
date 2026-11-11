@@ -453,7 +453,7 @@
 :root[data-theme="ice"], :root[data-theme="ice"] body { overflow-x: clip; }
 
 /* "Nieuwe werkopdracht" op het startscherm: donkere tekst op het lichte ijsblauw (goed leesbaar). */
-:root[data-theme="ice"] a.start-new, :root[data-theme="ice"] a.start-new:hover { color: var(--accent-text); }
+:root[data-theme="ice"] .start-new, :root[data-theme="ice"] .start-new:hover { color: var(--accent-text); }
 :root[data-theme="ice"] :is(.status-badge, .apk-pill) { font-size: 12.5px; }
 :root[data-theme="ice"] .apk-pill.apk-expired { color: #ffa8c4; }
 :root[data-theme="ice"] .status-open { color: #c4d6ec; }

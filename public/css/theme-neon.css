@@ -545,7 +545,7 @@
 :root[data-theme="neon"] .theme-btn[aria-expanded="true"] { background: rgba(255, 166, 48, .12); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px rgba(255, 166, 48, .35); }
 
 /* "Nieuwe werkopdracht" op het startscherm: donkere tekst op de lichte hoofdkleur (goed leesbaar). */
-:root[data-theme="neon"] a.start-new, :root[data-theme="neon"] a.start-new:hover { color: var(--accent-text); }
+:root[data-theme="neon"] .start-new, :root[data-theme="neon"] .start-new:hover { color: var(--accent-text); }
 :root[data-theme="neon"] :is(.status-badge, .apk-pill) { font-size: 12.5px; }
 :root[data-theme="neon"] .apk-pill.apk-expired { color: #ff9a7f; }
 :root[data-theme="neon"] .status-open { color: #e2cdb0; }
