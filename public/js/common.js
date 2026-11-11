@@ -759,3 +759,29 @@ document.querySelectorAll('[data-bar-h]').forEach((el) => { el.style.setProperty
     }
   });
 })();
+
+/* Een vraag met een tekstvak, in de stijl van ADONIS. (window.prompt() werkt niet in de ADONIS-app.)
+ * adonisAsk({ title, text, value, placeholder, ok }) -> Promise met de tekst, of null bij Annuleren. */
+window.adonisAsk = function ({ title = '', text = '', value = '', placeholder = '', ok = 'Opslaan', maxLength = 80 } = {}) {
+  return new Promise((resolve) => {
+    const dlg = document.createElement('dialog');
+    dlg.className = 'swap-dialog ask-dialog';
+    dlg.innerHTML = '<form method="dialog" class="swap-form"><h1></h1><p class="muted small ask-text"></p>'
+      + '<input class="ask-input" autocomplete="off" required>'
+      + '<div class="swap-actions"><button class="btn" type="button" data-cancel>Annuleren</button><button class="btn btn-primary" type="button" data-ok></button></div></form>';
+    dlg.querySelector('h1').textContent = title;
+    const p = dlg.querySelector('.ask-text'); p.textContent = text; p.hidden = !text;
+    const input = dlg.querySelector('input');
+    input.value = value; input.placeholder = placeholder; input.maxLength = maxLength;
+    dlg.querySelector('[data-ok]').textContent = ok;
+    let answer = null;
+    const done = (v) => { answer = v; dlg.close(); };
+    dlg.querySelector('[data-ok]').addEventListener('click', () => { if (input.value.trim()) done(input.value.trim()); else input.focus(); });
+    dlg.querySelector('[data-cancel]').addEventListener('click', () => done(null));
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); if (input.value.trim()) done(input.value.trim()); } });
+    dlg.addEventListener('close', () => { dlg.remove(); resolve(answer); });
+    document.body.append(dlg);
+    dlg.showModal();
+    input.focus(); input.select();
+  });
+};

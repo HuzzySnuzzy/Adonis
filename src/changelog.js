@@ -10,6 +10,7 @@ module.exports = [
       'Systeem → Automatisch invullen (ADONIS-beheerder): zet per hulpje aan of uit wat ADONIS invult of voorstelt: RDW-gegevens bij het kenteken, klantgegevens van een bekende auto, suggesties tijdens het typen, hints en waarschuwingen, de monteur, het uurtarief van de vorige werkopdracht en het voorrekenen van uren en begroting.',
       'Eigen suggesties: zet vaste werkzaamheden en onderdelen (met prijs en onderdeelnummer) in een lijst; ze komen bovenaan in de suggesties tijdens het typen. Ook vaste waarden voor elke nieuwe werkopdracht: uurtarief, contact bij extra kosten boven €, en Alle noodzakelijke reparaties uitvoeren.',
       'Instellingen → Links naar andere websites (ADONIS-app): kies of links (Portaal, Opzoeken met …, rdw.nl) in ADONIS openen of in uw eigen browser. Shift + klik of klikken met het scrollwiel doet het andersom.',
+      'Opgelost: "Opslaan als sjabloon…" deed niets in de ADONIS-app (de app kent het standaard vraagvenster van de browser niet). Er verschijnt nu een eigen venster om de naam in te vullen. Hetzelfde voor het kiezen van een map bij het importeren van snelkoppelingen in het Portaal.',
     ],
   },
   {

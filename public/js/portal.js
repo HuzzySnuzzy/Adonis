@@ -201,7 +201,8 @@
     if (shortcuts.length) {
       let folderName = '';
       if (!folderId) {
-        folderName = window.prompt(`${shortcuts.length} snelkoppeling${shortcuts.length === 1 ? '' : 'en'} gevonden. In welke map moeten ze?`, 'Bureaublad');
+        folderName = await window.adonisAsk({ title: `${shortcuts.length} snelkoppeling${shortcuts.length === 1 ? '' : 'en'} gevonden`,
+          text: 'In welke map moeten ze?', value: 'Bureaublad', ok: 'Toevoegen' });
         if (folderName === null) return;
       }
       groups.push({ name: folderName || 'Bureaublad', links: shortcuts });

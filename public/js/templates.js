@@ -80,7 +80,10 @@
       } catch { alert('Het sjabloon kon niet worden geladen.'); }
       return;
     }
-    const naam = prompt('Naam van het sjabloon (bijv. "Kleine beurt" of "Bandenwissel naar zomer"):\n\nKlant, auto, datums en km-standen worden niet bewaard.');
+    const naam = await window.adonisAsk({
+      title: 'Opslaan als sjabloon', ok: 'Sjabloon opslaan', placeholder: 'bijv. Kleine beurt of Bandenwissel naar zomer',
+      text: 'Onderdelen, werkzaamheden, vloeistoffen en aantekeningen worden bewaard. Klant, auto, datums en km-standen niet.',
+    });
     if (!naam || !naam.trim()) return;
     const send = async (vervangen) => {
       const body = new URLSearchParams();

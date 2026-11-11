@@ -2521,3 +2521,6 @@ table.list tr.day-row[hidden] { display: none; }
 .af-lists { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
 .af-lists label { display: grid; gap: .3rem; }
 .af-lists textarea { width: 100%; font: inherit; font-size: .92rem; }
+.ask-dialog { width: min(460px, calc(100vw - 24px)); }
+.ask-dialog h1 { font-size: 1.2rem; }
+.ask-dialog .ask-input { width: 100%; margin-top: .6rem; font-size: 1rem; }
