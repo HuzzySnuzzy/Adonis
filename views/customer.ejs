@@ -17,6 +17,8 @@
       <%- include('/partials/plate', { kenteken: customer.kenteken }) %>
       <h1><%= customer.naam || 'Onbekende klant' %></h1>
       <p class="muted"><%= customer.merk_type %></p>
+      <% if (customer.status) { %><p class="cust-status-note"><span class="cust-status st-<%= customer.status %>"><%= customer.status === 'weg' ? 'Komt niet meer bij ons' : 'Genegeerd' %></span>
+        <span class="muted small">sinds <%= fmtDate((customer.status_at || '').slice(0, 10)) %><%= customer.status_by ? ' (' + customer.status_by + ')' : '' %> · geen APK-herinneringen, niet op de wissellijst</span></p><% } %>
     </div>
     <dl class="facts">
       <% const facts = [['Klantnr.', customer.klantnr], ['Adres', customer.adres], ['Plaats', customer.plaats],
@@ -30,6 +32,11 @@
         <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.8 9.95l-3.75-3.75L3 17.25zm17.7-10.2a1 1 0 0 0 0-1.4l-2.35-2.35a1 1 0 0 0-1.4 0l-1.85 1.85 3.75 3.75 1.85-1.85z"/></svg>
         Gegevens wijzigen
       </a>
+      <form method="post" action="/klant/<%= customer.id %>/status" class="inline">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <% if (customer.status) { %><input type="hidden" name="status" value=""><button class="btn" type="submit" title="Weer herinneringen voor APK en bandenwissel">Weer actief maken</button>
+        <% } else { %><input type="hidden" name="status" value="weg"><button class="btn btn-ghost" type="submit" title="Geen APK-herinneringen en niet op de wissellijst; werkopdrachten blijven bewaard">Komt niet meer bij ons</button><% } %>
+      </form>
     </div>
   </div>
   <% } else { const v = editValues || customer; %>

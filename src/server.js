@@ -409,6 +409,10 @@ app.get('/', (req, res) => {
     SELECT c.*, COUNT(o.id) AS aantal, MAX(o.datum_invoer) AS laatste,
       (SELECT COUNT(*) FROM tyre_storage t WHERE t.plate_key = c.plate_key AND t.soort = 'klant' AND t.status = 'opgeslagen') AS banden
     FROM customers c LEFT JOIN orders o ON o.customer_id = c.id`;
+  // Tabbladen: actieve klanten (standaard), niet meer bij ons, genegeerd, alle. Zoeken vindt altijd iedereen.
+  const toon = ['actief', 'weg', 'genegeerd', 'alle'].includes(req.query.toon) ? req.query.toon : 'actief';
+  const statusWhere = q || toon === 'alle' ? '1' : toon === 'actief' ? "COALESCE(c.status, '') = ''" : 'c.status = ?';
+  const statusParams = !q && (toon === 'weg' || toon === 'genegeerd') ? [toon] : [];
   if (q) {
     const term = likeTerm(q);
     const pkey = plateKey(q);
@@ -419,14 +423,15 @@ app.get('/', (req, res) => {
        GROUP BY c.id ORDER BY c.plate_key LIMIT 500`
     ).all(pkey, likeTerm(pkey), term, term, term, term, term);
   } else {
-    rows = db.prepare(`${base} GROUP BY c.id ORDER BY c.plate_key LIMIT 2000`).all();
+    rows = db.prepare(`${base} WHERE ${statusWhere} GROUP BY c.id ORDER BY c.plate_key LIMIT 2000`).all(...statusParams);
   }
+  const statusCounts = Object.fromEntries(db.prepare("SELECT COALESCE(status, '') AS s, COUNT(*) AS n FROM customers GROUP BY s").all().map((r) => [r.s || 'actief', r.n]));
   // Precies één klant met dit kenteken? Dan meteen naar die klant (niet bij live zoeken tijdens het typen).
   if (q && !req.get('X-Live-Refresh')) {
     const exact = rows.filter((c) => c.plate_key && c.plate_key === plateKey(q));
     if (exact.length === 1) return res.redirect(`/klant/${exact[0].id}`);
   }
-  res.render('customers', { title: 'Klanten', q, customers: rows });
+  res.render('customers', { title: 'Klanten', q, customers: rows, toon, statusCounts, CUSTOMER_STATUS: orders.CUSTOMER_STATUS });
 });
 
 /* Zoeken vanaf het startscherm: kies waarin (klanten, werkopdrachten, banden, onderdelen); per soort de beste treffers. */
@@ -519,7 +524,7 @@ function apkRows() {
   const today = orders.todayISO();
   const rows = db.prepare(
     `SELECT c.*, MAX(o.datum_invoer) AS laatste FROM customers c LEFT JOIN orders o ON o.customer_id = c.id
-     WHERE c.apk_vervaldatum IS NOT NULL AND c.apk_vervaldatum <> '' GROUP BY c.id`
+     WHERE c.apk_vervaldatum IS NOT NULL AND c.apk_vervaldatum <> '' AND COALESCE(c.status, '') = '' GROUP BY c.id`
   ).all();
   return rows.map((c) => {
     const days = Math.round((new Date(c.apk_vervaldatum + 'T00:00:00Z') - new Date(today + 'T00:00:00Z')) / 864e5);
@@ -555,6 +560,18 @@ app.post('/apk/:id/gebeld', (req, res) => {
 });
 
 /* Eén klant met alle werkopdrachten */
+// Klantstatus: actief / niet meer bij ons / genegeerd (geen APK-herinneringen en wissellijst meer).
+app.post('/klant/:id/status', (req, res) => {
+  const c = db.prepare('SELECT id, kenteken FROM customers WHERE id = ?').get(req.params.id);
+  if (!c) return res.redirect('/');
+  const status = ['', 'weg', 'genegeerd'].includes(req.body.status) ? req.body.status : '';
+  orders.setCustomerStatus(c.id, status, req.user);
+  events.broadcast({ type: 'data', area: 'klanten', id: c.id, by: req.user.name, byId: req.user.id });
+  flash(req, 'ok', status ? `${c.kenteken} staat nu op "${orders.CUSTOMER_STATUS[status]}": geen APK-herinneringen en niet op de wissellijst. Werkopdrachten en gegevens blijven bewaard.`
+    : `${c.kenteken} is weer een actieve klant.`);
+  const back = String(req.body.terug || '');
+  res.redirect(back.startsWith('/') && !back.startsWith('//') ? back : `/klant/${c.id}`);
+});
 app.get('/klant/:id', wrap(async (req, res) => {
   const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
   if (!customer) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze klant bestaat niet.' });

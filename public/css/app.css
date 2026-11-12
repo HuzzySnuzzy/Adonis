@@ -2638,3 +2638,30 @@ td.nowrap { white-space: nowrap; }
 .car-dot.k-beige { background: #d8c7a3; } .car-dot.k-paars { background: #6a3fa0; } .car-dot.k-roze { background: #e48aa8; }
 .car-dot.k-creme { background: #f1e6c8; } .car-dot.k-brons { background: #a0682d; }
 .car-dot.k-anders { background: conic-gradient(#c62828, #f2c200, #2e7d32, #2f5fbf, #c62828); }
+
+/* Klantstatus: niet meer bij ons / genegeerd */
+tr.is-inactive > td { opacity: .62; }
+tr.is-inactive > td.row-act { opacity: 1; }
+.cust-status { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-weight: 700; letter-spacing: .02em; white-space: nowrap; vertical-align: middle;
+  background: color-mix(in srgb, var(--muted) 16%, transparent); color: var(--muted); }
+.cust-status.st-weg { background: color-mix(in srgb, #d9480f 14%, transparent); color: #c2410c; }
+.cust-status-note { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: .35rem 0 0; }
+.tab-n { opacity: .7; font-variant-numeric: tabular-nums; margin-left: .15rem; }
+.row-act-h, .row-act { width: 1%; text-align: right; }
+.row-menu > summary { list-style: none; }
+.row-menu > summary::-webkit-details-marker { display: none; }
+.row-menu-btn { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; color: var(--muted); }
+.row-menu-btn:hover, .row-menu[open] > .row-menu-btn { background: var(--hover); color: var(--text); }
+.row-pop { position: fixed; z-index: 85; width: 290px; display: grid; gap: 2px; padding: 6px; text-align: left;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); }
+.row-pop form { margin: 0; }
+.row-pop button { display: grid; gap: 1px; width: 100%; padding: .45rem .6rem; border: 0; border-radius: 8px; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.row-pop button:hover { background: var(--hover); }
+.row-pop button.is-on { background: color-mix(in srgb, var(--primary) 12%, transparent); }
+.row-pop button.is-on b::after { content: "  ✓"; color: var(--primary); }
+@media print { .row-act, .row-act-h { display: none; } }
+/* Telefoon (kaarten): het ⋯-menu rechtsboven in de kaart, zonder kopje */
+@media (max-width: 760px) {
+  table.list.cards > tbody > tr > td.row-act { position: absolute; top: .55rem; right: .6rem; width: auto; }
+  table.list.cards > tbody > tr > td.row-act::before { display: none; }
+}

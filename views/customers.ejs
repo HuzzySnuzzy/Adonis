@@ -10,6 +10,17 @@
     <% if (feat.ai) { %><div class="head-buttons"><a class="btn" href="/lijsten/optimaliseren?lijst=klanten" title="Namen, adressen, telefoonnummers en merk/type laten nakijken door Claude"><%- include('/partials/ai-icon') %> Opschonen met AI</a></div><% } %>
   </div>
 
+  <% const ST_HELP = { '': 'Actief: gewoon herinneringen voor APK en bandenwissel', weg: 'Komt niet meer bij ons: geen APK-herinneringen en niet op de wissellijst', genegeerd: 'Negeren: geen APK-herinneringen en niet op de wissellijst' };
+     const ST_BTN = { '': 'Actief', weg: 'Komt niet meer bij ons', genegeerd: 'Negeren' }; %>
+  <% if (!q) { %>
+  <nav class="status-tabs" aria-label="Welke klanten">
+    <% for (const [k, label] of [['actief', 'Actief'], ['weg', 'Niet meer bij ons'], ['genegeerd', 'Genegeerd'], ['alle', 'Alle']]) {
+         const n = k === 'alle' ? Object.values(statusCounts).reduce((a, b) => a + b, 0) : statusCounts[k] || 0;
+         if ((k === 'weg' || k === 'genegeerd') && !n && toon !== k) continue; %>
+    <a href="/<%= k === 'actief' ? '' : '?toon=' + k %>" class="<%= toon === k ? 'active' : '' %>"><%= label %> <span class="tab-n"><%= n %></span></a>
+    <% } %>
+  </nav>
+  <% } %>
   <div id="live-customers" data-live>
   <% if (customers.length === 0) { %>
     <div class="empty">
@@ -31,18 +42,32 @@
     <p class="muted"><%= customers.length %> klant<%= customers.length === 1 ? '' : 'en' %><%= q ? ' gevonden' : '' %></p>
     <div class="table-wrap">
     <table class="list clickable">
-      <thead><tr><th>Kenteken</th><th>Naam</th><th>Merk/Type</th><th>Plaats</th><th>APK</th><% if (feat.bandenhotel) { %><th>Banden</th><% } %><% if (feat.werkopdrachten) { %><th class="num">Opdrachten</th><th>Laatste bezoek</th><% } %></tr></thead>
+      <thead><tr><th>Kenteken</th><th>Naam</th><th>Merk/Type</th><th>Plaats</th><th>APK</th><% if (feat.bandenhotel) { %><th>Banden</th><% } %><% if (feat.werkopdrachten) { %><th class="num">Opdrachten</th><th>Laatste bezoek</th><% } %><th class="row-act-h"><span class="sr-only">Status</span></th></tr></thead>
       <tbody>
       <% for (const c of customers.slice(0, shownLimit)) { %>
-        <tr data-href="/klant/<%= c.id %>">
+        <tr data-href="/klant/<%= c.id %>"<%- c.status ? ' class="is-inactive"' : '' %>>
           <td><a href="/klant/<%= c.id %>"><%- include('/partials/plate', { kenteken: c.kenteken }) %></a></td>
-          <td><%= c.naam %></td>
+          <td><%= c.naam %><% if (c.status) { %> <span class="cust-status st-<%= c.status %>" title="<%= ST_HELP[c.status] %>"><%= CUSTOMER_STATUS[c.status] %></span><% } %></td>
           <td><%= c.merk_type %></td>
           <td><%= c.plaats %></td>
           <td><% const a = apkStatus(c.apk_vervaldatum); if (a) { %><span class="apk-pill apk-<%= a.cls %>" title="<%= a.rel %>"><%= fmtDate(c.apk_vervaldatum) %></span><% } %></td>
           <% if (feat.bandenhotel) { %><td><% if (c.banden) { %><span class="season season-all" title="Banden in het bandenhotel"><%= c.banden === 1 ? '1 set' : c.banden + ' sets' %></span><% } %></td><% } %>
           <% if (feat.werkopdrachten) { %><td class="num"><%= c.aantal %></td>
           <td><%= fmtDate(c.laatste) %></td><% } %>
+          <td class="row-act">
+            <details class="row-menu" data-row-menu>
+              <summary class="row-menu-btn" title="Status van deze klant" aria-label="Status van <%= c.kenteken %>"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></summary>
+              <div class="row-pop" role="menu">
+                <p class="bell-head"><%= c.kenteken %></p>
+                <% for (const k of ['', 'weg', 'genegeerd']) { %>
+                <form method="post" action="/klant/<%= c.id %>/status">
+                  <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="<%= k %>"><input type="hidden" name="terug" value="<%= url %>">
+                  <button type="submit" role="menuitem" class="<%= (c.status || '') === k ? 'is-on' : '' %>"><b><%= ST_BTN[k] %></b><span class="muted small"><%= ST_HELP[k].split(': ')[1] %></span></button>
+                </form>
+                <% } %>
+              </div>
+            </details>
+          </td>
         </tr>
       <% } %>
       </tbody>

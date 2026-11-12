@@ -401,7 +401,7 @@ function swapList(target) {
   const rows = db.prepare(
     `SELECT t.*, c.id AS customer_id, c.naam AS c_naam, c.tel_prive AS c_tel_prive, c.tel_zaak AS c_tel_zaak
      FROM tyre_storage t LEFT JOIN customers c ON c.plate_key = t.plate_key AND t.plate_key <> ''
-     WHERE t.soort = 'klant' AND t.status IN ('opgeslagen', 'op_auto')`
+     WHERE t.soort = 'klant' AND t.status IN ('opgeslagen', 'op_auto') AND COALESCE(c.status, '') = ''`
   ).all();
   const groups = new Map();
   for (const r of rows) {

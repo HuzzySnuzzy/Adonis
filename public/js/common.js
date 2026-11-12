@@ -156,7 +156,7 @@ document.addEventListener('keydown', (e) => {
 // Klikbare tabelrijen
 document.addEventListener('click', (e) => {
   const row = e.target.closest('tr[data-href]');
-  if (!row || e.target.closest('a, button, input, form')) return;
+  if (!row || e.target.closest('a, button, input, form, details, summary, label, select')) return;
   if (e.ctrlKey || e.metaKey) window.open(row.dataset.href, '_blank');
   else window.location.href = row.dataset.href;
 });
@@ -837,4 +837,26 @@ window.adonisAutofilled = function (el) {
     document.addEventListener('pointerdown', (e) => { if (menu.open && !menu.contains(e.target)) menu.open = false; });
     menu.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.open) { e.preventDefault(); menu.open = false; menu.querySelector('summary').focus(); } });
   }
+})();
+
+/* Menu per regel (bijv. ⋯ bij een klant): zwevend boven de tabel en niet afgesneden door het schuifvak. Tijdens het openstaan
+ * staat het menu los in <body> (een animatie van de pagina zou "position: fixed" anders laten verschuiven). Eén tegelijk open. */
+(function () {
+  const popOf = (m) => m._pop || m.querySelector('.row-pop');
+  document.addEventListener('toggle', (e) => {
+    const m = e.target;
+    if (!(m instanceof HTMLElement) || !m.matches('[data-row-menu]')) return;
+    const pop = popOf(m);
+    if (!m.open) { if (m._pop) { m.append(m._pop); m._pop = null; } return; }
+    document.querySelectorAll('[data-row-menu][open]').forEach((o) => { if (o !== m) o.open = false; });
+    m._pop = pop; document.body.append(pop);
+    const r = m.querySelector('summary').getBoundingClientRect();
+    pop.style.top = Math.max(8, Math.min(r.bottom + 4, window.innerHeight - pop.offsetHeight - 8)) + 'px';
+    pop.style.left = Math.max(8, Math.min(r.right - pop.offsetWidth, window.innerWidth - pop.offsetWidth - 8)) + 'px';
+  }, true);
+  document.addEventListener('pointerdown', (e) => {
+    document.querySelectorAll('[data-row-menu][open]').forEach((m) => { if (!m.contains(e.target) && !(m._pop && m._pop.contains(e.target))) m.open = false; });
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('[data-row-menu][open]').forEach((m) => { m.open = false; }); });
+  addEventListener('scroll', (e) => { if (e.target && e.target.closest && e.target.closest('.row-pop')) return; document.querySelectorAll('[data-row-menu][open]').forEach((m) => { m.open = false; }); }, true);
 })();

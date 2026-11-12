@@ -271,6 +271,21 @@ const STATUSES = {
   `);
 }
 
+/* Klantstatus: '' = actief, 'weg' = komt niet meer bij ons, 'genegeerd' = negeren. Werkopdrachten en gegevens blijven;
+ * alleen APK-lijst, herinneringen en de wissellijst slaan deze klanten over. */
+const CUSTOMER_STATUS = { '': 'Actief', weg: 'Niet meer bij ons', genegeerd: 'Genegeerd' };
+{
+  const cols = db.prepare('PRAGMA table_info(customers)').all().map((c) => c.name);
+  if (!cols.includes('status')) db.exec("ALTER TABLE customers ADD COLUMN status TEXT NOT NULL DEFAULT ''");
+  if (!cols.includes('status_at')) db.exec('ALTER TABLE customers ADD COLUMN status_at TEXT');
+  if (!cols.includes('status_by')) db.exec("ALTER TABLE customers ADD COLUMN status_by TEXT NOT NULL DEFAULT ''");
+}
+function setCustomerStatus(id, status, user) {
+  if (!Object.hasOwn(CUSTOMER_STATUS, status)) throw new Error('Onbekende status.');
+  db.prepare("UPDATE customers SET status = ?, status_at = CASE WHEN ? = '' THEN NULL ELSE datetime('now') END, status_by = ? WHERE id = ?")
+    .run(status, status, status ? user.name : '', id);
+}
+
 /** Wie mag de inhoud van een werkopdracht wijzigen? */
 function canEdit(user, order) {
   const status = order ? order.status : 'open';
@@ -516,7 +531,7 @@ function diffFields(before, after) {
 }
 
 module.exports = {
-  workRows, WORK_COLS, fmtNr,
+  workRows, WORK_COLS, fmtNr, CUSTOMER_STATUS, setCustomerStatus,
   formFields, applyPatch, diffFields,
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage, UREN_ROWS, ADVIES_ROWS, migrateBack,
   emptyOrderData, normalizeOrderData, parseOrderData,

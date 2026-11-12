@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.61.0', date: '2026-11-12', title: 'Klant op "niet meer bij ons" of "negeren" zetten',
+    items: [
+      'Bij Klanten staat achter elke klant een ⋯-menu: Actief, Komt niet meer bij ons of Negeren. Zo\'n klant komt niet meer op de APK-lijst, niet in de herinneringen (bel) en niet op de wissellijst van het bandenhotel. Werkopdrachten, banden en gegevens blijven gewoon bewaard en vindbaar.',
+      'Bovenaan de klantenlijst staan tabbladen Actief, Niet meer bij ons, Genegeerd en Alle. Zoeken vindt altijd alle klanten; een klant die niet meer komt staat dan wat lichter met een label.',
+      'Op de pagina van de klant ziet u het ook (sinds wanneer en door wie), met de knop "Komt niet meer bij ons" of "Weer actief maken".',
+    ],
+  },
+  {
     version: '1.60.0', date: '2026-11-12', title: 'Merk, model en kleur in de lijst met werkopdrachten',
     items: [
       'De lijst met werkopdrachten (en Werkopdrachten van vandaag op het startscherm) heeft nu een kolom Auto: merk en model van de werkopdracht (of van de klant / de RDW als het daar leeg is), met de kleur volgens de RDW en een gekleurde stip, bijv. "● Volkswagen Golf · blauw". Ook op de telefoon.',
