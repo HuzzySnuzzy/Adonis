@@ -318,7 +318,8 @@ document.addEventListener('change', (e) => {
         td.dataset.label = heads[i] || '';
         const filled = td.textContent.trim() || td.querySelector('img, svg, input, button, select, .plate');
         td.classList.toggle('is-empty', !filled);
-        if (!lead && filled && !SKIP_LEAD.some((c) => td.classList.contains(c))) { td.classList.add('card-lead'); lead = true; }
+        // Altijd de eerste kolom als kop van de kaart (niet "de eerste ingevulde"), zodat alles op elke kaart op dezelfde plek staat.
+        if (!lead && !SKIP_LEAD.some((c) => td.classList.contains(c)) && !td.classList.contains('row-act')) { td.classList.add('card-lead'); lead = true; }
       });
     }
   }

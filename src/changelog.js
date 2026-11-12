@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.61.2', date: '2026-11-12', title: 'Telefoon: alles op elke kaart op dezelfde plek',
+    items: [
+      'Op de telefoon (lijsten als kaarten) stond bijvoorbeeld Monteur niet op elke kaart op dezelfde plek, omdat lege vakken werden weggelaten. Nu blijft elk vak op zijn vaste plek en staat er een licht streepje (—) als het leeg is. Zo vindt u alles op gevoel terug. Geldt voor alle lijsten: werkopdrachten, klanten, bandenhotel, voorraad enz.',
+    ],
+  },
+  {
     version: '1.61.1', date: '2026-11-12', title: 'Zakelijkere namen voor de klantstatus',
     items: [
       'De klantstatus heeft nu neutrale, zakelijke namen (klanten kunnen het scherm ook zien): Actief, Inactief (geen klant meer; gegevens en historie blijven bewaard) en Geen herinneringen (blijft klant, maar niet op de APK-lijst of wissellijst). Het label is grijs en onopvallend.',

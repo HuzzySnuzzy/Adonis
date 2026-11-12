@@ -1083,7 +1083,9 @@ table.list.stock-list td { overflow-wrap: anywhere; }
     font-size: .68rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
   }
   table.list.cards > tbody > tr > td[data-label=""]::before { display: none; }
-  table.list.cards > tbody > tr > td.is-empty { display: none; }
+  /* Leeg vak: niet weglaten maar een streepje, zodat elk gegeven op elke kaart op dezelfde plek staat (spiergeheugen). */
+  table.list.cards > tbody > tr > td.is-empty::after { content: "—"; color: var(--muted); opacity: .55; }
+  table.list.cards > tbody > tr > td.is-empty[data-label=""] { display: none; }
   /* De eerste ingevulde kolom (kenteken, nummer, maat...) is de kop van de kaart. */
   table.list.cards > tbody > tr > td.card-lead { grid-column: 1 / -1; font-size: 1.05rem; font-weight: 600; }
   table.list.cards > tbody > tr > td.card-lead::before { display: none; }
