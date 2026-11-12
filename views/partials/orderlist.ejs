@@ -26,7 +26,7 @@
       <td><span class="status-badge status-<%= o.status %> in-list"><%= { open: 'Open', klaar: 'Klaar', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>
       <td class="nowrap"><%= fmtDate(o.datum_invoer) %></td>
       <% if (showPlate) { %><td><%- include('/partials/plate', { kenteken: o.d.kenteken || o.c_kenteken }) %></td>
-      <td class="car-cell"><% if (o.car && (o.car.merk || o.car.kleur)) { %><% if (o.car.cls) { %><span class="car-dot k-<%= o.car.cls %>" title="<%= o.car.kleur %>"></span><% } %><span class="car-txt"><%= o.car.merk %><% if (o.car.kleur) { %> <span class="muted small car-kleur"><%= o.car.merk ? '· ' : '' %><%= o.car.kleur.toLowerCase() %></span><% } %></span><% } %></td>
+      <td class="car-cell"><% if (o.car && (o.car.merk || o.car.jaar)) { %><% if (o.car.cls) { %><span class="car-dot k-<%= o.car.cls %>" title="Kleur: <%= o.car.kleur.toLowerCase() %>"></span><% } %><span class="car-txt"<%- o.car.kleur ? ` title="Kleur: ${esc(o.car.kleur.toLowerCase())}"` : '' %>><%= o.car.merk %><% if (o.car.jaar) { %> <span class="muted small car-kleur" title="Bouwjaar (eerste toelating)"><%= o.car.merk ? '· ' : '' %><%= o.car.jaar %></span><% } %></span><% } %></td>
       <td><%= o.d.naam %></td><% } %>
       <td class="num"><%= fmtKm(o.d.km_in || o.d.km_uit) %></td>
       <td><%= o.d.monteur %></td>

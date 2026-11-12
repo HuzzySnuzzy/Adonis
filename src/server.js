@@ -737,7 +737,9 @@ function carOf(row, data) {
   const merk = niceCase((data.merk_type || (c && c.merk_type) || rdw.merkType(info) || '').trim());
   const kleur = info && info.found !== false ? String(info.kleur || '').trim() : '';
   const first = kleur.split('/')[0].trim().toLowerCase();
-  return { merk, kleur, cls: KLEUR_CLS[first] || (kleur ? 'anders' : '') };
+  // Bouwjaar: datum deel I van de werkopdracht, anders de eerste toelating volgens de RDW.
+  const jaar = String(data.datum_deel1 || (info && info.found !== false && info.eersteToelating) || '').slice(0, 4);
+  return { merk, kleur, jaar: /^(19|20)\d\d$/.test(jaar) ? jaar : '', cls: KLEUR_CLS[first] || (kleur ? 'anders' : '') };
 }
 function withSummary(row) {
   const data = orders.parseOrderData(row.data);

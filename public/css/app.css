@@ -2677,3 +2677,6 @@ tr.is-inactive > td.row-act { opacity: 1; }
 .brand-color input[type=color] { width: 44px; height: 36px; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); cursor: pointer; }
 .brand-color input[type=color]:disabled { opacity: .4; cursor: default; }
 .btn-primary { color: var(--on-primary, #fff); }
+/* Zwarte (en andere donkere) stip zichtbaar op een donkere achtergrond */
+:root:is([data-theme="dark"], [data-theme="oled"], [data-theme="neon"], [data-theme="ice"]) .car-dot { box-shadow: 0 0 0 1px rgba(255, 255, 255, .35); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) .car-dot { box-shadow: 0 0 0 1px rgba(255, 255, 255, .35); } }

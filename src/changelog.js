@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.62.1', date: '2026-11-12', title: 'Bouwjaar in de lijst met werkopdrachten',
+    items: [
+      'In de kolom Auto staat achter merk en model nu het bouwjaar (datum deel I, anders de eerste toelating volgens de RDW) in plaats van de kleur, bijv. "● Ford Fiesta · 2012". De kleur blijft te zien aan de stip; wijs hem aan voor de naam van de kleur.',
+      'Een zwarte stip is in het donkere thema nu ook zichtbaar (met een lichte rand).',
+    ],
+  },
+  {
     version: '1.62.0', date: '2026-11-12', title: 'Eigen kleuren en rustig oplichten van nieuwe regels',
     items: [
       'Huisstijl (Systeem → Huisstijl): kies naast naam en logo nu ook een eigen hoofdkleur (knoppen, links, menu) en tweede kleur (accenten), in plaats van ADONIS-blauw en -goud. U ziet het meteen op de pagina; na Opslaan voor iedereen. Bij een lichte hoofdkleur (zoals geel) wordt de tekst op knoppen vanzelf donker. Net als de achtergrond alleen bij de thema\'s Systeem, Licht en Donker.',
