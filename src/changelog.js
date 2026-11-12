@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.60.0', date: '2026-11-12', title: 'Merk, model en kleur in de lijst met werkopdrachten',
+    items: [
+      'De lijst met werkopdrachten (en Werkopdrachten van vandaag op het startscherm) heeft nu een kolom Auto: merk en model van de werkopdracht (of van de klant / de RDW als het daar leeg is), met de kleur volgens de RDW en een gekleurde stip, bijv. "● Volkswagen Golf · blauw". Ook op de telefoon.',
+      'Namen van de RDW in hoofdletters worden netjes geschreven (VOLKSWAGEN GOLF → Volkswagen Golf; afkortingen als BMW en GTI blijven).',
+    ],
+  },
+  {
     version: '1.59.1', date: '2026-11-12', title: 'Werkopdracht verspringt niet meer',
     items: [
       'De werkopdracht kon op en neer springen terwijl u ernaar keek: de werkbalk bovenaan werd even hoger of lager als de status veranderde ("Opslaan…", "Bijgewerkt door …", "Ook open: …") of als de stip op Opslaan verscheen. De werkbalk blijft nu altijd even hoog; lange tekst wordt netjes afgekapt (wijs hem aan om alles te zien).',

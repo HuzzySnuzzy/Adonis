@@ -2624,3 +2624,17 @@ tr.autofilled > td { background: transparent !important; }
 .search-none { margin: .2rem 0; }
 .search-page h1 { margin-bottom: .8rem; }
 .plate-mini { max-width: 7.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+
+/* Auto in de lijst met werkopdrachten: merk/type en kleur (RDW) met een gekleurde stip */
+.car-cell { min-width: 10rem; }
+.car-cell .car-txt { display: inline; }
+.car-kleur { white-space: nowrap; }
+td.nowrap { white-space: nowrap; }
+.car-dot { display: inline-block; width: 10px; height: 10px; margin-right: .4rem; border-radius: 50%; vertical-align: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .25); background: #9aa0a6; }
+.car-dot.k-grijs { background: #8a8f98; } .car-dot.k-zwart { background: #1d1f22; } .car-dot.k-wit { background: #f7f7f5; }
+.car-dot.k-blauw { background: #2f5fbf; } .car-dot.k-rood { background: #c62828; } .car-dot.k-groen { background: #2e7d32; }
+.car-dot.k-geel { background: #f2c200; } .car-dot.k-oranje { background: #ef7d00; } .car-dot.k-bruin { background: #7b4a26; }
+.car-dot.k-beige { background: #d8c7a3; } .car-dot.k-paars { background: #6a3fa0; } .car-dot.k-roze { background: #e48aa8; }
+.car-dot.k-creme { background: #f1e6c8; } .car-dot.k-brons { background: #a0682d; }
+.car-dot.k-anders { background: conic-gradient(#c62828, #f2c200, #2e7d32, #2f5fbf, #c62828); }

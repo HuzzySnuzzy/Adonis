@@ -1,14 +1,14 @@
 <div class="table-wrap">
 <table class="list clickable">
   <thead><tr>
-    <th class="num">Nr.</th><th>Status</th><th>Datum</th><% if (showPlate) { %><th>Kenteken</th><th>Naam</th><% } %>
+    <th class="num">Nr.</th><th>Status</th><th>Datum</th><% if (showPlate) { %><th>Kenteken</th><th>Auto</th><th>Naam</th><% } %>
     <th class="num">Km-stand</th><th>Monteur</th><th>Werkzaamheden</th>
   </tr></thead>
   <tbody>
   <% const noteCounts = locals.user ? notesOnOrders(user) : new Map(); %>
   <%
     // Per dag een kopje (Vandaag, Gisteren, ...) met hoeveel werkopdrachten er die dag zijn en hoeveel nog open staan.
-    const cols = locals.showPlate ? 8 : 6;
+    const cols = locals.showPlate ? 9 : 6;
     const perDay = new Map();
     if (locals.groupByDate) for (const o of orders) { const k = o.datum_invoer || ''; const e = perDay.get(k) || { n: 0, open: 0 }; e.n++; if (o.status === 'open') e.open++; perDay.set(k, e); }
     let lastDay = null;
@@ -24,8 +24,10 @@
       <% const nNotes = noteCounts.get(o.id) || 0; %>
       <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= fmtNr(o.nummer) %></a><% if (nNotes) { %> <span class="note-flag" title="<%= nNotes %> plaknotitie<%= nNotes === 1 ? '' : 's' %> op deze werkopdracht" aria-label="<%= nNotes %> plaknotities"></span><% } %></td>
       <td><span class="status-badge status-<%= o.status %> in-list"><%= { open: 'Open', klaar: 'Klaar', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>
-      <td><%= fmtDate(o.datum_invoer) %></td>
-      <% if (showPlate) { %><td><%- include('/partials/plate', { kenteken: o.d.kenteken || o.c_kenteken }) %></td><td><%= o.d.naam %></td><% } %>
+      <td class="nowrap"><%= fmtDate(o.datum_invoer) %></td>
+      <% if (showPlate) { %><td><%- include('/partials/plate', { kenteken: o.d.kenteken || o.c_kenteken }) %></td>
+      <td class="car-cell"><% if (o.car && (o.car.merk || o.car.kleur)) { %><% if (o.car.cls) { %><span class="car-dot k-<%= o.car.cls %>" title="<%= o.car.kleur %>"></span><% } %><span class="car-txt"><%= o.car.merk %><% if (o.car.kleur) { %> <span class="muted small car-kleur"><%= o.car.merk ? '· ' : '' %><%= o.car.kleur.toLowerCase() %></span><% } %></span><% } %></td>
+      <td><%= o.d.naam %></td><% } %>
       <td class="num"><%= fmtKm(o.d.km_in || o.d.km_uit) %></td>
       <td><%= o.d.monteur %></td>
       <td class="summary"><%= o.summary %></td>

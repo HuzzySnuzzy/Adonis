@@ -702,10 +702,29 @@ app.get('/werkopdrachten', (req, res) => {
   });
 });
 
+// Auto in lijsten: merk/type van de werkopdracht (anders van de klant of de RDW) en de kleur volgens de RDW.
+const carStmt = db.prepare('SELECT merk_type, rdw_json FROM customers WHERE id = ?');
+const KLEUR_CLS = { grijs: 'grijs', zwart: 'zwart', wit: 'wit', blauw: 'blauw', rood: 'rood', groen: 'groen', geel: 'geel', oranje: 'oranje', bruin: 'bruin',
+  beige: 'beige', paars: 'paars', roze: 'roze', creme: 'creme', 'crème': 'creme', brons: 'brons', zilver: 'grijs', goud: 'geel' };
+// "VOLKSWAGEN GOLF" (zoals de RDW het schrijft) -> "Volkswagen Golf"; afkortingen (BMW, GTI, TDI…) blijven hoofdletters.
+const KEEP_UPPER = new Set(['BMW', 'VW', 'MG', 'DS', 'GT', 'GTI', 'GTD', 'TDI', 'TSI', 'TFSI', 'CDI', 'HDI', 'AMG', 'RS', 'SUV', 'DAF', 'MAN', 'XC', 'CX', 'ID', 'EV', 'BYD', 'KTM']);
+function niceCase(s) {
+  if (!s || s !== s.toUpperCase() || !/[A-Z]{3}/.test(s)) return s;
+  return s.split(/(\s+|-)/).map((w) => (KEEP_UPPER.has(w) || /\d/.test(w) || w.length < 2 ? w : w.charAt(0) + w.slice(1).toLowerCase())).join('');
+}
+function carOf(row, data) {
+  const c = row.customer_id ? carStmt.get(row.customer_id) : null;
+  let info = null;
+  try { info = c && c.rdw_json ? JSON.parse(c.rdw_json) : null; } catch { /* geen */ }
+  const merk = niceCase((data.merk_type || (c && c.merk_type) || rdw.merkType(info) || '').trim());
+  const kleur = info && info.found !== false ? String(info.kleur || '').trim() : '';
+  const first = kleur.split('/')[0].trim().toLowerCase();
+  return { merk, kleur, cls: KLEUR_CLS[first] || (kleur ? 'anders' : '') };
+}
 function withSummary(row) {
   const data = orders.parseOrderData(row.data);
   const firstLine = data.werk_omschrijving.split('\n').map((l) => l.replace(/^[-–\s]+/, '').trim()).find(Boolean) || '';
-  return { ...row, d: data, summary: firstLine };
+  return { ...row, d: data, summary: firstLine, car: carOf(row, data) };
 }
 
 /* ---------- werkopdracht formulier ---------- */
