@@ -271,9 +271,10 @@ const STATUSES = {
   `);
 }
 
-/* Klantstatus: '' = actief, 'weg' = komt niet meer bij ons, 'genegeerd' = negeren. Werkopdrachten en gegevens blijven;
+/* Klantstatus: '' = actief, 'weg' = inactief (geen klant meer), 'genegeerd' = geen herinneringen (wel klant). Werkopdrachten en gegevens blijven;
  * alleen APK-lijst, herinneringen en de wissellijst slaan deze klanten over. */
-const CUSTOMER_STATUS = { '': 'Actief', weg: 'Niet meer bij ons', genegeerd: 'Genegeerd' };
+// Zakelijke, neutrale namen: klanten kunnen het scherm ook zien.
+const CUSTOMER_STATUS = { '': 'Actief', weg: 'Inactief', genegeerd: 'Geen herinneringen' };
 {
   const cols = db.prepare('PRAGMA table_info(customers)').all().map((c) => c.name);
   if (!cols.includes('status')) db.exec("ALTER TABLE customers ADD COLUMN status TEXT NOT NULL DEFAULT ''");

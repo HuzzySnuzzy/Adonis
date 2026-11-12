@@ -409,7 +409,7 @@ app.get('/', (req, res) => {
     SELECT c.*, COUNT(o.id) AS aantal, MAX(o.datum_invoer) AS laatste,
       (SELECT COUNT(*) FROM tyre_storage t WHERE t.plate_key = c.plate_key AND t.soort = 'klant' AND t.status = 'opgeslagen') AS banden
     FROM customers c LEFT JOIN orders o ON o.customer_id = c.id`;
-  // Tabbladen: actieve klanten (standaard), niet meer bij ons, genegeerd, alle. Zoeken vindt altijd iedereen.
+  // Tabbladen: actieve klanten (standaard), inactief, geen herinneringen, alle. Zoeken vindt altijd iedereen.
   const toon = ['actief', 'weg', 'genegeerd', 'alle'].includes(req.query.toon) ? req.query.toon : 'actief';
   const statusWhere = q || toon === 'alle' ? '1' : toon === 'actief' ? "COALESCE(c.status, '') = ''" : 'c.status = ?';
   const statusParams = !q && (toon === 'weg' || toon === 'genegeerd') ? [toon] : [];
@@ -560,15 +560,16 @@ app.post('/apk/:id/gebeld', (req, res) => {
 });
 
 /* Eén klant met alle werkopdrachten */
-// Klantstatus: actief / niet meer bij ons / genegeerd (geen APK-herinneringen en wissellijst meer).
+// Klantstatus: actief / inactief / geen herinneringen (geen APK-herinneringen en wissellijst meer).
 app.post('/klant/:id/status', (req, res) => {
   const c = db.prepare('SELECT id, kenteken FROM customers WHERE id = ?').get(req.params.id);
   if (!c) return res.redirect('/');
   const status = ['', 'weg', 'genegeerd'].includes(req.body.status) ? req.body.status : '';
   orders.setCustomerStatus(c.id, status, req.user);
   events.broadcast({ type: 'data', area: 'klanten', id: c.id, by: req.user.name, byId: req.user.id });
-  flash(req, 'ok', status ? `${c.kenteken} staat nu op "${orders.CUSTOMER_STATUS[status]}": geen APK-herinneringen en niet op de wissellijst. Werkopdrachten en gegevens blijven bewaard.`
-    : `${c.kenteken} is weer een actieve klant.`);
+  flash(req, 'ok', status === 'weg' ? `${c.kenteken} staat nu op Inactief: geen APK-herinneringen en niet op de wissellijst. Werkopdrachten en gegevens blijven bewaard.`
+    : status ? `${c.kenteken}: geen herinneringen meer (APK-lijst en wissellijst). Werkopdrachten en gegevens blijven bewaard.`
+      : `${c.kenteken} is weer actief.`);
   const back = String(req.body.terug || '');
   res.redirect(back.startsWith('/') && !back.startsWith('//') ? back : `/klant/${c.id}`);
 });

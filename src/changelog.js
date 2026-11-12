@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.61.1', date: '2026-11-12', title: 'Zakelijkere namen voor de klantstatus',
+    items: [
+      'De klantstatus heeft nu neutrale, zakelijke namen (klanten kunnen het scherm ook zien): Actief, Inactief (geen klant meer; gegevens en historie blijven bewaard) en Geen herinneringen (blijft klant, maar niet op de APK-lijst of wissellijst). Het label is grijs en onopvallend.',
+      'Op de klantpagina heet de knop nu "Op inactief zetten", en staat er niet meer bij wie de status heeft gewijzigd.',
+    ],
+  },
+  {
     version: '1.61.0', date: '2026-11-12', title: 'Klant op "niet meer bij ons" of "negeren" zetten',
     items: [
       'Bij Klanten staat achter elke klant een ⋯-menu: Actief, Komt niet meer bij ons of Negeren. Zo\'n klant komt niet meer op de APK-lijst, niet in de herinneringen (bel) en niet op de wissellijst van het bandenhotel. Werkopdrachten, banden en gegevens blijven gewoon bewaard en vindbaar.',

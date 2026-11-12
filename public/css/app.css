@@ -2644,7 +2644,7 @@ tr.is-inactive > td { opacity: .62; }
 tr.is-inactive > td.row-act { opacity: 1; }
 .cust-status { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-weight: 700; letter-spacing: .02em; white-space: nowrap; vertical-align: middle;
   background: color-mix(in srgb, var(--muted) 16%, transparent); color: var(--muted); }
-.cust-status.st-weg { background: color-mix(in srgb, #d9480f 14%, transparent); color: #c2410c; }
+.cust-status.st-weg { background: color-mix(in srgb, var(--muted) 20%, transparent); color: var(--text); }
 .cust-status-note { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: .35rem 0 0; }
 .tab-n { opacity: .7; font-variant-numeric: tabular-nums; margin-left: .15rem; }
 .row-act-h, .row-act { width: 1%; text-align: right; }

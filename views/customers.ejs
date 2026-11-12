@@ -10,11 +10,11 @@
     <% if (feat.ai) { %><div class="head-buttons"><a class="btn" href="/lijsten/optimaliseren?lijst=klanten" title="Namen, adressen, telefoonnummers en merk/type laten nakijken door Claude"><%- include('/partials/ai-icon') %> Opschonen met AI</a></div><% } %>
   </div>
 
-  <% const ST_HELP = { '': 'Actief: gewoon herinneringen voor APK en bandenwissel', weg: 'Komt niet meer bij ons: geen APK-herinneringen en niet op de wissellijst', genegeerd: 'Negeren: geen APK-herinneringen en niet op de wissellijst' };
-     const ST_BTN = { '': 'Actief', weg: 'Komt niet meer bij ons', genegeerd: 'Negeren' }; %>
+  <% const ST_HELP = { '': 'Actief: krijgt herinneringen voor APK en bandenwissel', weg: 'Inactief: geen klant meer; gegevens en historie blijven bewaard', genegeerd: 'Geen herinneringen: blijft klant, maar niet op de APK-lijst of wissellijst' };
+     const ST_BTN = { '': 'Actief', weg: 'Inactief', genegeerd: 'Geen herinneringen' }; %>
   <% if (!q) { %>
   <nav class="status-tabs" aria-label="Welke klanten">
-    <% for (const [k, label] of [['actief', 'Actief'], ['weg', 'Niet meer bij ons'], ['genegeerd', 'Genegeerd'], ['alle', 'Alle']]) {
+    <% for (const [k, label] of [['actief', 'Actief'], ['weg', 'Inactief'], ['genegeerd', 'Geen herinneringen'], ['alle', 'Alle']]) {
          const n = k === 'alle' ? Object.values(statusCounts).reduce((a, b) => a + b, 0) : statusCounts[k] || 0;
          if ((k === 'weg' || k === 'genegeerd') && !n && toon !== k) continue; %>
     <a href="/<%= k === 'actief' ? '' : '?toon=' + k %>" class="<%= toon === k ? 'active' : '' %>"><%= label %> <span class="tab-n"><%= n %></span></a>
