@@ -1,0 +1,75 @@
+<%- include('/partials/head') %>
+<%
+  const fmtD = (s) => s ? s.slice(8, 10) + '-' + s.slice(5, 7) + '-' + s.slice(0, 4) : '—';
+  const show = (v) => v ? v : '—';
+%>
+<main class="page privacy-page">
+  <div class="page-head">
+    <div>
+      <h1>Privacy (AVG): oude klantgegevens</h1>
+      <p class="muted small">De administratie (werkopdrachten, facturen) bewaart u 7 jaar, gerekend vanaf het einde van het jaar.
+        Daarna hoort u persoonsgegevens niet langer te bewaren dan nodig. Hieronder staan klanten bij wie sinds
+        <b><%= fmtD(cutoff) %></b> niets meer is gebeurd: geen werkopdracht, geen wijziging en geen banden in het bandenhotel.</p>
+    </div>
+    <a class="btn btn-ghost" href="/systeem#privacy">Terug naar Systeem</a>
+  </div>
+
+  <% if (!list.length) { %>
+    <section class="card"><p class="empty">Er zijn geen klanten van vóór <%= fmtD(cutoff) %>. Er hoeft nu niets te gebeuren.</p></section>
+  <% } else { %>
+  <form method="post" action="/systeem/privacy" class="stack" data-confirm="Weet u het zeker? Dit kan niet ongedaan worden gemaakt.">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <section class="card">
+      <div class="table-wrap">
+      <table class="list privacy-list">
+        <thead><tr><th class="chk"><input type="checkbox" data-check-all checked aria-label="Alles aanvinken"></th><th>Kenteken</th><th>Naam</th><th>Plaats</th><th>Auto</th><th>Laatst actief</th><th>Werkopdrachten</th></tr></thead>
+        <tbody>
+        <% for (const c of list) { %>
+          <tr>
+            <td class="chk"><input type="checkbox" name="klant" value="<%= c.id %>" checked aria-label="<%= c.kenteken %> kiezen"></td>
+            <td><a href="/klant/<%= c.id %>"><%= c.kenteken %></a></td>
+            <td><%= show(c.naam) %></td>
+            <td><%= show(c.plaats) %></td>
+            <td><%= show(c.merk_type) %></td>
+            <td><%= fmtD(c.last) %></td>
+            <td><%= c.orders %></td>
+          </tr>
+        <% } %>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <section class="card privacy-actions">
+      <h2>Wat wilt u doen met de aangevinkte klanten?</h2>
+      <label class="check big-check"><input type="radio" name="actie" value="anoniem" checked>
+        <span><b>Anonimiseren</b> (aanbevolen)<br><span class="muted small">Naam, adres, plaats, klantnummer, telefoonnummers en alarmcode worden
+          gewist, ook op de werkopdrachten en in het bandenhotel. Kenteken, merk/type en de werkgeschiedenis van de auto blijven, zodat u die nog
+          ziet als de auto (bij een nieuwe eigenaar) terugkomt. Notities en meldingen bij deze klanten worden verwijderd.</span></span></label>
+      <label class="check big-check"><input type="radio" name="actie" value="verwijderen">
+        <span><b>Definitief verwijderen</b><br><span class="muted small">De klant met alle werkopdrachten, banden en foto's verdwijnt helemaal.
+          Dit gaat niet via de prullenbak.</span></span></label>
+      <p class="muted small">Let op: oude backups bevatten de gegevens nog tot ze worden opgeruimd (na <%= keepDays %> dagen, zie Systeem → Backups).
+        Vrije tekst (zoals opmerkingen op een werkopdracht) wordt niet aangepast.</p>
+      <div class="narrow-form stack">
+        <label>Uw wachtwoord <span class="muted small">(ter controle)</span>
+          <input type="password" name="wachtwoord" autocomplete="current-password" required></label>
+        <label class="check"><input type="checkbox" name="bevestig" value="on" required> Ik begrijp dat dit niet ongedaan kan worden gemaakt.</label>
+        <div><button class="btn btn-danger" type="submit">Uitvoeren</button></div>
+      </div>
+    </section>
+  </form>
+  <% } %>
+
+  <% if (log.length) { %>
+  <section class="card">
+    <h2>Eerder opgeschoond</h2>
+    <p class="muted small">Als verantwoording (alleen aantallen, geen namen).</p>
+    <ul class="privacy-log">
+      <% for (const l of log) { %><li><%= fmtDateTime(l.at) %> · <%= l.n %> klant<%= l.n === 1 ? '' : 'en' %> <%= l.action === 'verwijderd' ? 'verwijderd' : 'geanonimiseerd' %><%= l.by ? ' door ' + l.by : '' %></li><% } %>
+    </ul>
+  </section>
+  <% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

@@ -9,6 +9,7 @@
       <% if (alleen) { %><input type="hidden" name="alleen" value="1"><% } %>
       <input type="search" name="q" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" data-1p-ignore data-lpignore="true" value="<%= q %>"
              placeholder="<%= soort === 'band' ? 'Zoek op maat (205/55R16 of 2055516), merk, type…' : 'Zoek op (OE-)nummer, merk, soort, auto… (spaties en punten maken niet uit)' %>" data-autofocus>
+      <button class="btn scan-btn" type="button" data-scan-stock data-soort="<%= soort %>" title="Barcode scannen met de camera" aria-label="Barcode scannen"><%- include('/partials/scan-icon') %></button>
       <button class="btn" type="submit">Zoeken</button>
       <% if (q) { %><a class="btn btn-ghost" href="/voorraad?soort=<%= soort %>">Wissen</a><% } %>
     </form>
@@ -103,4 +104,5 @@
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/inventory.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/scan.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

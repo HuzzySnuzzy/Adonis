@@ -37,9 +37,22 @@
     },
   };
 
-  /* Foto die de browser niet kan tonen (JPEG XL in een oudere browser): zelf omzetten en tonen. */
+  /* Foto of huisstijl-afbeelding die de browser niet kan tonen (JPEG XL in een oudere browser): zelf omzetten en tonen. */
+  const PATTERN = /\/(fotos\/\d+\/(full|thumb)|huisstijl\/(banner|achtergrond))(\?|$)/;
   const done = new WeakSet(); const cache = new Map();
-  async function fallback(src) {
+  // Huisstijl staat op elke pagina: het omgezette plaatje even bewaren (per versie), zodat niet elke pagina opnieuw rekent.
+  const KEEP = /\/huisstijl\//;
+  const stored = (src) => { try { return KEEP.test(src) ? localStorage.getItem('adonis-jxl:' + src) : null; } catch { return null; } };
+  const store = (src, url) => {
+    if (!KEEP.test(src)) return;
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.startsWith('adonis-jxl:' + src.split('?')[0])) localStorage.removeItem(k); }
+      localStorage.setItem('adonis-jxl:' + src, url);
+    } catch { /* vol of geen opslag */ }
+  };
+  async function convert(src) {
+    const keep = stored(src);
+    if (keep) return keep;
     const res = await fetch(src, { credentials: 'same-origin' });
     if (!res.ok) throw new Error('niet gevonden');
     const buf = await res.arrayBuffer();
@@ -47,15 +60,33 @@
     const img = await window.adonisJxl.decode(buf);
     const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
     c.getContext('2d').putImageData(img, 0, 0);
-    return c.toDataURL('image/jpeg', 0.92);
+    // Banner kan doorzichtig zijn: PNG. Foto's en achtergrond: JPEG.
+    const url = /huisstijl\/banner/.test(src) ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.92);
+    store(src, url);
+    return url;
   }
-  document.addEventListener('error', (e) => {
-    const img = e.target;
+  function fallback(src) {
+    if (!cache.has(src)) cache.set(src, convert(src));
+    return cache.get(src);
+  }
+  function fix(img) {
     if (!(img instanceof HTMLImageElement) || done.has(img)) return;
     const src = img.currentSrc || img.src;
-    if (!/\/fotos\/\d+\/(full|thumb)/.test(src)) return;
+    if (!PATTERN.test(src)) return;
     done.add(img);
-    if (!cache.has(src)) cache.set(src, fallback(src));
-    cache.get(src).then((url) => { img.src = url; }).catch(() => { /* echt kapot */ });
-  }, true);
+    fallback(src).then((url) => { img.src = url; }).catch(() => { /* echt kapot */ });
+  }
+  document.addEventListener('error', (e) => fix(e.target), true);
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Plaatjes die al mislukten voordat dit script er was.
+    document.querySelectorAll('img').forEach((img) => { if (img.complete && img.naturalWidth === 0 && img.getAttribute('src')) fix(img); });
+    // Achtergrond van de huisstijl (CSS): alleen als de browser zelf geen JPEG XL kan tonen.
+    if (await native) return;
+    document.querySelectorAll('.brand-bg, [data-brand-pv-img]').forEach((el) => {
+      const m = /url\("?([^")]*huisstijl\/achtergrond[^")]*)"?\)/.exec(getComputedStyle(el).backgroundImage || '');
+      if (!m) return;
+      const src = new URL(m[1], location.href).pathname + new URL(m[1], location.href).search;
+      fallback(src).then((url) => el.style.setProperty('background-image', `url("${url}")`)).catch(() => { /* geen JPEG XL: niets te doen */ });
+    });
+  });
 })();

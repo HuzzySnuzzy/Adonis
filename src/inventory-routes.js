@@ -261,7 +261,7 @@ module.exports = function register(app, { flash, wrap }) {
     });
   }
   app.get('/voorraad/nieuw', (req, res) => {
-    const data = inv.normalizeStock({ datum: orders.todayISO() }, req.query.soort === 'band' ? 'band' : 'onderdeel');
+    const data = inv.normalizeStock({ datum: orders.todayISO(), barcode: req.query.barcode || '' }, req.query.soort === 'band' ? 'band' : 'onderdeel');
     renderStock(res, { item: null, data });
   });
   app.post('/voorraad', (req, res) => {
@@ -273,6 +273,16 @@ module.exports = function register(app, { flash, wrap }) {
     announce(req, 'voorraad', note('voorraad', `Toegevoegd aan de voorraad: ${stockLabel(data)}`, `/voorraad/${id}`));
     flash(req, 'ok', 'Toegevoegd aan de voorraad.');
     res.redirect(req.body.nog_een === '1' ? `/voorraad/nieuw?soort=${data.soort}` : `/voorraad?soort=${data.soort}`);
+  });
+  // Gescande barcode opzoeken (Voorraad en het onderdelenvak van de werkopdracht).
+  app.get('/voorraad/scan', (req, res) => {
+    const code = String(req.query.code || '').trim().slice(0, 200);
+    const items = inv.findStockByCode(code).map((i) => ({
+      id: i.id, soort: i.soort, nummer: i.nummer, oe_nummer: i.oe_nummer, merk: i.merk, type: i.type, maat: i.maat,
+      omschrijving: i.omschrijving || [i.type, i.merk, i.maat].filter(Boolean).join(' '),
+      prijs: i.prijs, aantal: i.aantal, locatie: i.locatie, href: `/voorraad/${i.id}`,
+    }));
+    res.set('Cache-Control', 'no-store').json({ code: inv.numberKey(code), items });
   });
   app.get('/voorraad/:id', (req, res) => {
     const item = inv.getStock(req.params.id);

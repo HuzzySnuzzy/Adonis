@@ -48,6 +48,9 @@
         <label>Artikelnummer<input name="s[nummer]" value="<%= d.nummer %>" class="mono"></label>
         <label>Origineel (OE) nummer<input name="s[oe_nummer]" value="<%= d.oe_nummer %>" class="mono"></label>
       <% } %>
+      <label>Barcode (EAN) <span class="muted small">meerdere: scheid met een komma</span>
+        <span class="scan-field"><input name="s[barcode]" value="<%= (d.barcode || '').split(',').join(', ') %>" class="mono" inputmode="numeric" autocomplete="off" data-scan-target>
+          <button class="btn btn-small scan-btn" type="button" data-scan-into title="Barcode scannen met de camera" aria-label="Barcode scannen"><%- include('/partials/scan-icon') %></button></span></label>
       <label>Locatie<input name="s[locatie]" value="<%= d.locatie %>" list="locList"></label>
       <label>Prijs<input name="s[prijs]" value="<%= d.prijs %>" inputmode="decimal" placeholder="€"></label>
       <label>Datum binnen<input name="s[datum]" value="<%= d.datum %>" type="date"></label>
@@ -81,4 +84,5 @@
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/scan.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

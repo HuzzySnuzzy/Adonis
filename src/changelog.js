@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.64.0', date: '2026-11-13', title: 'Barcode scannen, privacy (AVG) en veiligere backups',
+    items: [
+      'Onderdelen scannen: bij Voorraad en in de werkopdracht (streepjescode-icoon naast Onderdeelnummer) scant u de barcode op de verpakking met de camera van de telefoon of met een USB-barcodescanner. In de werkopdracht worden nummer, omschrijving en prijs uit de voorraad ingevuld; hetzelfde onderdeel nog eens scannen maakt het aantal 2. Bij een onderdeel kunt u de barcode (EAN) opslaan; dozen met het artikelnummer als barcode werken meteen. Een onbekende code? Dan kunt u meteen een nieuw onderdeel met die barcode toevoegen.',
+      'Systeem → Privacy (AVG), voor de ADONIS-beheerder: klanten bij wie al meer dan 7 jaar niets is gebeurd (de bewaartermijn van de administratie) en die geen banden meer in het bandenhotel hebben. Anonimiseren (naam, adres, telefoon en alarmcode weg, ook op de werkopdrachten; kenteken en werkgeschiedenis van de auto blijven) of definitief verwijderen, na uw wachtwoord. Komt een geanonimiseerde auto terug, dan is hij gewoon weer een actieve klant.',
+      'Backups: staan ze allemaal op dezelfde schijf als ADONIS, dan waarschuwt Systeem → Backups (en het startscherm van de ADONIS-beheerder) daarvoor. Een map van OneDrive, Google Drive of Dropbox telt als veilig.',
+      'Huisstijl: de banner en achtergrond worden nu ook als JPEG XL bewaard als dat kleiner is (de banner zonder kwaliteitsverlies, doorzichtigheid blijft). Bestaande zet de knop bij Foto\'s (JPEG XL) om. Het logo blijft zoals het is, omdat het ook het pictogram van het tabblad is.',
+    ],
+  },
+  {
     version: '1.63.0', date: '2026-11-12', title: 'Foto\'s als JPEG XL',
     items: [
       'Nieuwe foto\'s worden als JPEG XL bewaard in plaats van JPEG: dezelfde kwaliteit, maar ongeveer een derde kleiner. Dat scheelt schijfruimte en maakt backups kleiner. Het omzetten gebeurt in de browser, in een aparte thread, dus de pagina blijft gewoon werken.',

@@ -52,6 +52,10 @@
       onderdelen). De resultaten verschijnen per soort terwijl u typt.</p>
     <p class="help-tip"><b>Lijst opschonen:</b> in het Bandenhotel en de Voorraad staat de knop <%- B(include('/partials/ai-icon') + ' Opschonen') %>.
       Claude stelt verbeteringen voor (schrijfwijze, merken, maten, seizoen) en wijst dubbele regels aan; u kiest zelf wat u doorvoert.</p>
+    <p class="help-tip"><b>Onderdeel scannen:</b> bij Voorraad en in de werkopdracht (het streepjescode-icoon naast <i>Onderdeelnummer</i>)
+      scant u de barcode op de verpakking met de camera van de telefoon, of met een USB-barcodescanner. In de werkopdracht worden nummer,
+      omschrijving en prijs uit de voorraad ingevuld; nog een keer scannen maakt het aantal 2. Zet de barcode eenmalig bij het onderdeel
+      (Voorraad → onderdeel → <i>Barcode</i>); dozen met het artikelnummer als barcode werken meteen.</p>
     <p class="help-tip"><b>Links naar andere websites:</b> bij <i>Instellingen → Links</i> kiest u of ze in ADONIS openen of in uw eigen
       browser. Shift + klik of klikken met het scrollwiel doet het andersom.</p>
     <p class="help-tip"><b>Profielfoto:</b> bij <i>Instellingen → Profiel</i> kiest u een pictogram met een kleur, of een eigen foto.</p>
@@ -178,7 +182,11 @@
         backupbestand met <%- B('Backupbestand kiezen…') %>. Er wordt eerst nog een backup van nu gemaakt, dus ook dit is
         terug te draaien.</li>
     </ol>
-    <p class="help-tip">Gaat een backup mis (bijvoorbeeld omdat de USB-schijf er niet in zit), dan ziet u bovenaan elke pagina een rode melding.</p>
+    <p class="help-tip">Gaat een backup mis (bijvoorbeeld omdat de USB-schijf er niet in zit), dan ziet u bovenaan elke pagina een rode melding.
+      Staan alle backups op dezelfde schijf als ADONIS, dan waarschuwt het startscherm u daar ook voor.</p>
+    <p class="help-tip"><b>Privacy (AVG):</b> bij <%- B('Systeem') %> → <b>Privacy (AVG)</b> ziet u klanten bij wie al meer dan 7 jaar niets is gebeurd
+      (de bewaartermijn van de administratie). U kunt ze anonimiseren (naam, adres en telefoon weg; de werkgeschiedenis van de auto blijft)
+      of helemaal verwijderen. Ter controle vraagt ADONIS uw wachtwoord.</p>
   </section>
   <section class="card help-sec" id="onderdelen">
     <h2>Onderdelen aan- of uitzetten (alleen beheerder)</h2>

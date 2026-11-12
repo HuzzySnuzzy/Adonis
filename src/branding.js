@@ -23,7 +23,10 @@ const SLOTS = {
   banner: { label: 'Banner', max: 3 * 1024 * 1024 },
   achtergrond: { label: 'Achtergrond', max: 8 * 1024 * 1024 },
 };
-const MIMES = ['image/png', 'image/jpeg', 'image/webp'];
+const MIMES = ['image/png', 'image/jpeg', 'image/webp', 'image/jxl'];
+// Het logo blijft PNG/JPEG/WebP: het is ook het pictogram van het tabblad en van het beginscherm (telefoon), en daar kan
+// ADONIS een JPEG XL niet zelf omzetten in browsers die het niet kennen.
+const JXL_SLOTS = ['banner', 'achtergrond'];
 const DEFAULTS = { naam: '', sub: '', blur: 6, zicht: 35, bannerInMenu: false, kleur1: '', kleur2: '' };
 const HEX = /^#[0-9a-f]{6}$/i;
 
@@ -77,7 +80,7 @@ class BrandingError extends Error {}
 function saveFile(slot, dataUrl) {
   if (!SLOTS[slot]) throw new BrandingError('Onbekend soort afbeelding.');
   const m = /^data:(image\/[a-z+.-]+);base64,([A-Za-z0-9+/=\s]+)$/.exec(String(dataUrl || ''));
-  if (!m || !MIMES.includes(m[1])) throw new BrandingError('Kies een afbeelding (PNG, JPG of WebP).');
+  if (!m || !MIMES.includes(m[1]) || (m[1] === 'image/jxl' && !JXL_SLOTS.includes(slot))) throw new BrandingError('Kies een afbeelding (PNG, JPG of WebP).');
   const buf = Buffer.from(m[2], 'base64');
   if (!buf.length) throw new BrandingError('De afbeelding is leeg.');
   if (buf.length > SLOTS[slot].max) throw new BrandingError(`De afbeelding is te groot (maximaal ${SLOTS[slot].max / 1024 / 1024} MB).`);
@@ -93,8 +96,28 @@ function saveFile(slot, dataUrl) {
 function looksLike(mime, b) {
   if (mime === 'image/png') return b.length > 8 && b.readUInt32BE(0) === 0x89504e47;
   if (mime === 'image/jpeg') return b.length > 3 && b[0] === 0xff && b[1] === 0xd8;
+  if (mime === 'image/jxl') return (b.length > 2 && b[0] === 0xff && b[1] === 0x0a) || (b.length > 12 && b.toString('ascii', 4, 8) === 'JXL ');
   if (mime === 'image/webp') return b.length > 12 && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP';
   return false;
+}
+/** Banner en achtergrond die nog geen JPEG XL zijn (Systeem → Foto's (JPEG XL) zet ze om). */
+function jxlTodo() {
+  const skip = settings.get('branding_jxl_skip', {}) || {};
+  return db.prepare('SELECT slot, mime, hash FROM branding_files').all()
+    .filter((r) => JXL_SLOTS.includes(r.slot) && r.mime !== 'image/jxl' && skip[r.slot] !== r.hash).map((r) => r.slot);
+}
+/** Omgezette versie alleen bewaren als hij kleiner is; anders onthouden dat het niet hoeft. */
+function replaceWithJxl(slot, dataUrl) {
+  const cur = file(slot);
+  if (!cur || !JXL_SLOTS.includes(slot)) throw new BrandingError('Onbekend soort afbeelding.');
+  const m = /^data:image\/jxl;base64,([A-Za-z0-9+/=\s]+)$/.exec(String(dataUrl || ''));
+  const size = m ? Buffer.byteLength(m[1], 'base64') : Infinity;
+  if (size >= cur.data.length) {
+    settings.set('branding_jxl_skip', { ...(settings.get('branding_jxl_skip', {}) || {}), [slot]: cur.hash });
+    return { skipped: true };
+  }
+  saveFile(slot, dataUrl);
+  return { before: cur.data.length, after: size };
 }
 function removeFile(slot) {
   db.prepare('DELETE FROM branding_files WHERE slot = ?').run(slot);
@@ -136,4 +159,4 @@ ${sys}:not(.in-window) .brand-bg { display: block; background-image: url("${b.ac
 `;
 }
 
-module.exports = { get, saveSettings, saveFile, removeFile, file, css, SLOTS, BrandingError };
+module.exports = { jxlTodo, replaceWithJxl, get, saveSettings, saveFile, removeFile, file, css, SLOTS, BrandingError };

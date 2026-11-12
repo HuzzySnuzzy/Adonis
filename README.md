@@ -17,7 +17,7 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Foto's en extra bladen bij werkopdrachten.** Foto's (camera of bestand) onderaan de werkopdracht; extra
   vervolgbladen (voorkant, achterkant of leeg) die meetellen in het totaal, mee worden afgedrukt en doorzoekbaar zijn.
   Foto's worden als **JPEG XL** bewaard (ongeveer 30% kleiner dan JPEG bij dezelfde kwaliteit; coderen in de browser).
-  Bestaande foto's zet de ADONIS-beheerder om bij *Systeem → Foto's (JPEG XL)*. Toont een browser zelf geen JPEG XL,
+  Bestaande foto's (en de banner en achtergrond van de huisstijl) zet de ADONIS-beheerder om bij *Systeem → Foto's (JPEG XL)*. Toont een browser zelf geen JPEG XL,
   dan zet ADONIS de foto bij het bekijken om.
 - **Rekenhulp.** Band omrekenen (diameter, tellerafwijking, alternatieve maten), last-/snelheidsindex, DOT-leeftijd,
   bar/psi, Nm/lbf·ft, kW/pk, verbruik, arbeidsloon, BTW en meer.
@@ -107,7 +107,13 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   zoekresultaat. De knop **Afbeeldingen zoeken** zoekt foto's van precies dat onderdeel (merk + nummer) in de browser.
 - **Voorraad:** onderdelen en banden die op de zaak liggen, met aantal (knoppen − en +), merk, artikelnummer,
   origineel (OE) nummer, soort en locatie. Een nummer vind je ook als het anders is getypt: `1493001` vindt `1 493 001`,
-  `A0031592603` vindt `A003.159.26.03`.
+  `A0031592603` vindt `A003.159.26.03`. **Barcode scannen** (camera of USB-scanner) in Voorraad en in het onderdelenvak van
+  de werkopdracht: zoekt op de barcode van het onderdeel (EAN, veld *Barcode*) of op het artikel-/OE-nummer en vult nummer,
+  omschrijving en prijs in. Het lezen doet de browser zelf (BarcodeDetector, o.a. Chrome op Android); zonder lezer kan de code
+  worden getypt of met een USB-scanner ingevoerd.
+- **Privacy (AVG):** *Systeem → Privacy (AVG)* toont klanten zonder activiteit sinds 1 januari van 7 jaar terug (en zonder banden
+  in het bandenhotel). Anonimiseren (persoonsgegevens weg, ook op werkopdrachten en in het bandenhotel; kenteken en werkgeschiedenis
+  blijven) of definitief verwijderen, na het eigen wachtwoord. Alleen aantallen worden gelogd.
 - **Foto's** bij elke bandenset en elk voorraaditem: maak er een met de camera, kies er een paar, of sleep ze erop.
   Ze worden in de browser verkleind (langste zijde 1800 px) en bewaard in de map `fotos` in de datamap. In de lijsten
   staat een miniatuur; klik voor groot (met vorige/volgende). Verwijst een geïmporteerde Excel-lijst naar foto's

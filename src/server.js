@@ -380,6 +380,7 @@ app.use((req, res, next) => {
   if (req.user && req.user.is_owner && !req.path.startsWith('/systeem')) {
     const h = backup.health();
     if (h.state !== 'ok') res.locals.backupWarn = { state: h.state, lastOk: h.c.lastOk, error: h.c.last && h.c.last.error };
+    else if (req.path === '/' && backup.onlyLocal()) res.locals.backupWarn = { state: 'lokaal' }; // alleen op het startscherm
   }
   next();
 });
@@ -1312,17 +1313,42 @@ async function renderSystem(res, { error = null, status = 200, values = {} } = {
     title: 'Systeem', error, values, cf, tunnelState: tunnel.getState(),
     port: Number(process.env.APP_PORT) || null, supported: Boolean(tunnel.assetName()),
     permissionsHelp: cloudflare.PERMISSIONS_HELP,
-    bk, FEATURES: features.FEATURES, feesten: festive.overview(), af: autofill.state(), AF_OPTIONS: autofill.OPTIONS, jxl: require('./photos').jxlStats(),
+    bk, FEATURES: features.FEATURES, feesten: festive.overview(), af: autofill.state(), AF_OPTIONS: autofill.OPTIONS, jxl: { ...require('./photos').jxlStats(), brand: branding.jxlTodo().length },
+    privacy: { n: require('./privacy').candidates().length, cutoff: require('./privacy').cutoff(), last: require('./privacy').history()[0] || null },
   });
 }
 async function backupView() {
   const c = backup.config();
-  const folders = await Promise.all(c.folders.map(async (f, i) => ({ i, path: f, files: await backup.listBackups(f), result: c.last && (c.last.results || []).find((r) => r.folder === f) })));
+  const folders = await Promise.all(c.folders.map(async (f, i) => ({ i, path: f, files: await backup.listBackups(f), result: c.last && (c.last.results || []).find((r) => r.folder === f), place: await backup.placeOf(f) })));
   let restored = null;
   try { restored = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'laatst-teruggezet.json'), 'utf8')); } catch { /* nooit */ }
-  return { c, folders, health: backup.health().state, defaultDir: backup.DEFAULT_DIR, restored, isWindows: process.platform === 'win32' };
+  const allLocal = folders.length > 0 && folders.every((f) => f.place.local);
+  return { c, folders, allLocal, health: backup.health().state, defaultDir: backup.DEFAULT_DIR, restored, isWindows: process.platform === 'win32' };
 }
 app.get('/systeem', auth.requireOwner, wrap((req, res) => renderSystem(res)));
+
+/* Privacy (AVG): klanten zonder activiteit na de bewaartermijn anonimiseren of verwijderen (alleen ADONIS-beheerder). */
+app.get('/systeem/privacy', auth.requireOwner, (req, res) => {
+  const privacy = require('./privacy');
+  res.render('privacy', { title: 'Privacy (AVG)', list: privacy.candidates(), cutoff: privacy.cutoff(), log: privacy.history(), keepDays: backup.config().keepDays });
+});
+app.post('/systeem/privacy', auth.requireOwner, wrap(async (req, res) => {
+  const privacy = require('./privacy');
+  const key = 'privacy|' + req.user.id;
+  const back = (msg) => { flash(req, 'err', msg); res.redirect('/systeem/privacy'); };
+  const ids = [].concat(req.body.klant || []).map(Number).filter(Number.isInteger);
+  if (!ids.length) return back('Vink eerst de klanten aan.');
+  if (!['anoniem', 'verwijderen'].includes(req.body.actie)) return back('Kies wat er moet gebeuren.');
+  if (req.body.bevestig !== 'on') return back('Vink aan dat u begrijpt dat dit niet ongedaan kan worden gemaakt.');
+  if (auth.loginBlocked(key)) return back('Te veel verkeerde wachtwoorden. Probeer het over 15 minuten opnieuw.');
+  if (!(await auth.checkPassword(req.user.id, req.body.wachtwoord))) { auth.loginFailed(key); return back('Uw wachtwoord klopt niet. Er is niets veranderd.'); }
+  auth.loginSucceeded(key);
+  const n = req.body.actie === 'verwijderen' ? privacy.remove(ids, req.user) : privacy.anonymize(ids, req.user);
+  console.log(`Privacy: ${n} klant(en) ${req.body.actie === 'verwijderen' ? 'verwijderd' : 'geanonimiseerd'} door ${req.user.username}.`);
+  events.broadcast({ type: 'data', byId: req.user.id });
+  flash(req, 'ok', `${n} klant${n === 1 ? '' : 'en'} ${req.body.actie === 'verwijderen' ? 'definitief verwijderd' : 'geanonimiseerd'}.`);
+  res.redirect('/systeem/privacy');
+}));
 
 /* Onderdelen aan/uit (alleen ADONIS-beheerder). Er wordt niets verwijderd. */
 app.post('/systeem/onderdelen', auth.requireOwner, (req, res) => {
@@ -1368,7 +1394,16 @@ app.post('/systeem/feestdagen', auth.requireOwner, (req, res) => {
 /* ---------- foto's omzetten naar JPEG XL (alleen ADONIS-beheerder; het rekenwerk gebeurt in de browser) ---------- */
 app.get('/systeem/jxl', auth.requireOwner, (req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.json({ stats: require('./photos').jxlStats(), todo: require('./photos').jxlTodo() });
+  res.json({ stats: require('./photos').jxlStats(), todo: require('./photos').jxlTodo(), brand: branding.jxlTodo() });
+});
+app.post('/systeem/jxl/huisstijl/:slot', auth.requireOwner, express.json({ limit: '12mb' }), (req, res) => {
+  try {
+    const r = branding.replaceWithJxl(req.params.slot, req.body.data);
+    if (!r.skipped) events.broadcast({ type: 'branding', byId: req.user.id });
+    res.json({ ok: true, ...r });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Omzetten lukte niet.' });
+  }
 });
 app.post('/systeem/jxl/:id', auth.requireOwner, express.json({ limit: '12mb' }), (req, res) => {
   try {
@@ -1432,6 +1467,7 @@ app.post('/systeem/backup/map', auth.requireOwner, wrap(async (req, res) => {
     const dir = await backup.checkFolder(req.body.folder);
     const c = backup.config();
     if (!c.folders.map((f) => path.resolve(f)).includes(dir)) backup.saveConfig({ folders: [...c.folders, dir] });
+    backup.forgetPlaces();
     flash(req, 'ok', `Map toegevoegd: ${dir}. Vanaf nu komt elke backup ook daar te staan.`);
   } catch (err) {
     if (!(err instanceof backup.BackupError)) console.error(err);
@@ -1444,6 +1480,7 @@ app.post('/systeem/backup/map/verwijderen', auth.requireOwner, (req, res) => {
   const i = parseInt(req.body.i, 10);
   if (c.folders[i] !== undefined) {
     backup.saveConfig({ folders: c.folders.filter((_, k) => k !== i) });
+    backup.forgetPlaces();
     flash(req, 'ok', 'Map verwijderd uit de lijst. De backups die daar al staan, blijven staan.');
   }
   res.redirect('/systeem#backup');

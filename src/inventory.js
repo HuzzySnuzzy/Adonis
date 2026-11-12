@@ -65,6 +65,9 @@ CREATE TABLE IF NOT EXISTS stock_items (
 );
 CREATE INDEX IF NOT EXISTS stock_items_soort ON stock_items(soort);
 `);
+// Barcode(s) op de verpakking (EAN e.d.), gescheiden door komma's. Scannen vindt het onderdeel ook op artikel- of OE-nummer.
+if (!db.prepare('PRAGMA table_info(stock_items)').all().some((c) => c.name === 'barcode')) db.exec("ALTER TABLE stock_items ADD COLUMN barcode TEXT NOT NULL DEFAULT ''");
+
 if (!db.prepare('PRAGMA table_info(tyre_storage)').all().some((c) => c.name === 'soort')) {
   db.exec("ALTER TABLE tyre_storage ADD COLUMN soort TEXT NOT NULL DEFAULT 'klant'");
 }
@@ -471,16 +474,30 @@ function normalizeStock(input, soort) {
     seizoen: s === 'band' ? normalizeSeason(d.seizoen) : '',
     locatie: clean(d.locatie, 100),
     prijs: clean(d.prijs, 30),
+    barcode: normalizeBarcodes(d.barcode),
     datum: orders.parseDate(d.datum) || '',
     extra: typeof d.extra === 'string' ? d.extra : extraJson(d.extra),
   };
   return out;
 }
 const STOCK_COLS = ['soort', 'beschikbaar', 'aantal', 'merk', 'nummer', 'oe_nummer', 'type', 'omschrijving', 'maat', 'profiel', 'snelheid',
-  'seizoen', 'locatie', 'prijs', 'datum', 'extra'];
+  'seizoen', 'locatie', 'prijs', 'barcode', 'datum', 'extra'];
+/** "8 710000 123456, 4006633" -> "8710000123456,4006633" (codes gescheiden door komma of nieuwe regel; alleen letters en cijfers, max. 5). */
+function normalizeBarcodes(v) {
+  return [...new Set(String(v || '').split(/[,;\n]+/).map(numberKey).filter((c) => c.length >= 3))].slice(0, 5).join(',').slice(0, 200);
+}
+/** Gescande code -> voorraaditems: eerst op barcode, anders op artikel- of OE-nummer (sommige dozen hebben het nummer als barcode). */
+function findStockByCode(code) {
+  const k = numberKey(code);
+  if (k.length < 3) return [];
+  const byBarcode = db.prepare("SELECT * FROM stock_items WHERE (',' || barcode || ',') LIKE ? ORDER BY aantal > 0 DESC, id LIMIT 20").all(`%,${k},%`);
+  if (byBarcode.length) return byBarcode;
+  return db.prepare('SELECT * FROM stock_items WHERE search_key LIKE ? ORDER BY aantal > 0 DESC, id LIMIT 200').all(`% ${k} %`)
+    .filter((i) => numberKey(i.nummer) === k || numberKey(i.oe_nummer).split(/\s+/).includes(k) || numberKey(i.oe_nummer) === k).slice(0, 20);
+}
 function stockSearch(s) {
   return {
-    search_key: ' ' + [...[s.nummer, s.oe_nummer, s.maat].map(numberKey), sizeKey(s.maat)].filter(Boolean).join(' ') + ' ',
+    search_key: ' ' + [...[s.nummer, s.oe_nummer, s.maat].map(numberKey), sizeKey(s.maat), ...String(s.barcode || '').split(',')].filter(Boolean).join(' ') + ' ',
     search_text: [s.merk, s.nummer, s.oe_nummer, s.type, s.omschrijving, s.maat, s.profiel, s.snelheid, s.seizoen, s.locatie,
       Object.values(parseExtra(s.extra)).join(' ')].join(' ').toLowerCase(),
   };
@@ -548,8 +565,8 @@ module.exports = {
   TYRE_SOORTEN, formatPlate, ensureCustomer, customerAction,
   seasonClass, SEASON_LABEL, swapTarget, onCarFor, swapOnto, setOnCar, toggleInvited, swapList, minTread,
   TYRE_STATUSES, VELGEN, SEASONS, SOORTEN,
-  normalizeTyre, saveTyre, getTyre, searchTyres, tyresForPlate, tyreCounts, setTyreStatus, deleteTyre,
-  normalizeStock, saveStock, getStock, searchStock, stockCounts, adjustStock, deleteStock,
+  tyreSearchText, normalizeTyre, saveTyre, getTyre, searchTyres, tyresForPlate, tyreCounts, setTyreStatus, deleteTyre,
+  normalizeStock, normalizeBarcodes, findStockByCode, saveStock, getStock, searchStock, stockCounts, adjustStock, deleteStock,
   distinct, parseExtra, parseMm, fmtMm, treadClass, normalizeSize, normalizeSeason, numberKey, sizeKey, clean,
   labelSuggestion, suspiciousLabels, setLabel,
 };

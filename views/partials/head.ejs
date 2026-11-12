@@ -232,7 +232,8 @@
 <% if (locals.backupWarn) { const bw = backupWarn; %>
 <div class="backup-warn no-print" role="alert">
   <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2 1 21h22L12 2zm0 6 .9 7h-1.8L12 8zm0 9.2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4z"/></svg>
-  <span><b><%= bw.state === 'mislukt' ? 'De laatste backup is mislukt.' : bw.state === 'nooit' ? 'Er is nog geen backup gemaakt.' : 'Er is al een paar dagen geen backup gemaakt.' %></b>
+  <span><b><%= bw.state === 'mislukt' ? 'De laatste backup is mislukt.' : bw.state === 'nooit' ? 'Er is nog geen backup gemaakt.' : bw.state === 'lokaal' ? 'Alle backups staan op dezelfde schijf als ADONIS.' : 'Er is al een paar dagen geen backup gemaakt.' %></b>
+    <%= bw.state === 'lokaal' ? 'Gaat die schijf kapot, dan bent u ook de backups kwijt. Voeg een USB-schijf, netwerkschijf of cloudmap toe.' : '' %>
     <%= bw.state === 'mislukt' && bw.error ? bw.error : '' %></span>
   <a class="btn btn-small" href="/systeem#backup">Bekijken</a>
 </div>

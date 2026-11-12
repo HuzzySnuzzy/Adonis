@@ -71,7 +71,17 @@
     if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); }
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(img, 0, 0, c.width, c.height);
-    return c.toDataURL(type, 0.86);
+    const plain = c.toDataURL(type, 0.86);
+    // Banner en achtergrond als JPEG XL als dat kleiner is (banner zonder kwaliteitsverlies: scherpe letters en doorzichtigheid blijven).
+    if (slot !== 'logo' && window.adonisJxl) {
+      try {
+        const data = ctx.getImageData(0, 0, c.width, c.height);
+        const buf = await window.adonisJxl.encode(data, slot === 'banner' ? { lossless: true, quality: 100 } : { quality: 86 });
+        const jxl = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(new Blob([buf], { type: 'image/jxl' })); });
+        if (jxl.length < plain.length) return jxl;
+      } catch (err) { console.warn('JPEG XL lukte niet, dan ' + type + ':', err); }
+    }
+    return plain;
   }
   card.addEventListener('change', async (e) => {
     const input = e.target.closest('[data-brand-file]');

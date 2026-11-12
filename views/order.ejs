@@ -139,7 +139,7 @@
       <table class="grid parts">
         <colgroup><col class="c-rownum"><col class="c-partnr"><col><col class="c-qty"><col class="c-price"></colgroup>
         <thead>
-          <tr><th colspan="2">Onderdeelnummer</th><th>Omschrijving</th><th class="center">Aantal</th><th class="center">Prijs p.eenh.</th></tr>
+          <tr><th colspan="2">Onderdeelnummer<% if (editable && feat.voorraad) { %> <button class="scan-mini no-print" type="button" data-scan-part title="Onderdeel scannen (barcode) en invullen uit de voorraad" aria-label="Onderdeel scannen"><%- include('/partials/scan-icon') %></button><% } %></th><th>Omschrijving</th><th class="center">Aantal</th><th class="center">Prijs p.eenh.</th></tr>
         </thead>
         <tbody>
         <% d.onderdelen.forEach((p, i) => { %>
@@ -366,5 +366,6 @@
 <script src="/static/js/rdw.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/order-assist.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/templates.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/scan.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

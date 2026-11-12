@@ -71,16 +71,29 @@
     </form>
   </section>
 
+  <section class="card privacy-card" id="privacy">
+    <div class="sys-head">
+      <h2>Privacy (AVG)</h2>
+      <span class="status-pill status-<%= privacy.n ? 'busy' : 'ok' %>"><%= privacy.n ? privacy.n + ' oude klant' + (privacy.n === 1 ? '' : 'en') : 'In orde' %></span>
+    </div>
+    <p class="muted small">Werkopdrachten en facturen bewaart u 7 jaar (fiscale bewaarplicht). Daarna horen naam, adres en telefoonnummers
+      van klanten die niet meer komen te verdwijnen. ADONIS zoekt ze voor u op: klanten bij wie sinds
+      <%= privacy.cutoff.slice(8, 10) %>-<%= privacy.cutoff.slice(5, 7) %>-<%= privacy.cutoff.slice(0, 4) %> niets meer is gebeurd. U kiest zelf of u ze anonimiseert of verwijdert.</p>
+    <% if (privacy.last) { %><p class="muted small">Laatst opgeschoond: <%= fmtDateTime(privacy.last.at) %> (<%= privacy.last.n %> klant<%= privacy.last.n === 1 ? '' : 'en' %>).</p><% } %>
+    <p><a class="btn<%= privacy.n ? ' btn-primary' : '' %>" href="/systeem/privacy"><%= privacy.n ? 'Bekijken en opschonen' : 'Bekijken' %></a></p>
+  </section>
+
   <% const mbJ = (n) => (n / 1024 / 1024).toFixed(1).replace('.', ',') + ' MB'; %>
   <section class="card jxl-card" id="fotos-jxl" data-jxl-card data-csrf="<%= csrf %>">
     <h2>Foto's (JPEG XL)</h2>
     <p class="muted small">Nieuwe foto's worden als JPEG XL bewaard: dezelfde kwaliteit als JPEG, maar kleiner (minder schijfruimte, kleinere backups).
       Oudere foto's kunt u hier omzetten. Dat gebeurt in deze browser, foto voor foto; u kunt het altijd onderbreken en later verdergaan.
-      Een foto die er niet kleiner van wordt, blijft zoals hij is.</p>
+      Een foto die er niet kleiner van wordt, blijft zoals hij is. De banner en achtergrond van de huisstijl worden ook omgezet (het logo blijft
+      zoals het is, want dat is ook het pictogram van het tabblad).</p>
     <div class="jxl-stats">
       <div><b data-jxl-n="total"><%= jxl.total %></b><span class="muted small">foto's</span></div>
       <div><b data-jxl-n="jxl"><%= jxl.jxl %></b><span class="muted small">JPEG XL</span></div>
-      <div><b data-jxl-n="todo"><%= jxl.todo %></b><span class="muted small">nog om te zetten</span></div>
+      <div><b data-jxl-n="todo"><%= jxl.todo + jxl.brand %></b><span class="muted small">nog om te zetten</span></div>
       <div><b data-jxl-n="bytes"><%= mbJ(jxl.bytes) %></b><span class="muted small">in totaal</span></div>
     </div>
     <div class="listai-progress" data-jxl-progress hidden>
@@ -90,7 +103,7 @@
     <p class="alert" data-jxl-error hidden></p>
     <p class="muted small" data-jxl-native></p>
     <div class="jxl-actions">
-      <button class="btn btn-primary" type="button" data-jxl-start <%= jxl.todo ? '' : 'disabled' %>>Foto's omzetten naar JPEG XL</button>
+      <button class="btn btn-primary" type="button" data-jxl-start <%= jxl.todo + jxl.brand ? '' : 'disabled' %>>Foto's omzetten naar JPEG XL</button>
       <button class="btn" type="button" data-jxl-stop hidden>Stoppen</button>
     </div>
   </section>
@@ -225,6 +238,11 @@
       <a class="btn" href="/systeem/backup/download">Backup downloaden</a>
     </div>
 
+    <% if (bk.allLocal) { %>
+    <div class="alert backup-local-warn" role="alert"><b>Alle backups staan op dezelfde schijf als ADONIS.</b>
+      Gaat die schijf kapot, of wordt de computer gestolen, dan bent u de gegevens én de backups kwijt.
+      Voeg hieronder een tweede map toe op een USB-schijf, netwerkschijf (NAS) of in de map van OneDrive, Google Drive of Dropbox.</div>
+    <% } %>
     <h3>Waar worden de backups bewaard?</h3>
     <p class="muted small">Kies één of meer mappen. Het veiligst is een plek <b>buiten deze computer</b>: een USB-schijf, een netwerkschijf (NAS),
       of de map van <b>OneDrive, Google Drive of Dropbox</b> op deze computer – die zet de backup dan zelf in de cloud.</p>
@@ -234,7 +252,7 @@
         <div class="bf-head">
           <code><%= f.path %></code>
           <% if (f.result) { %><span class="status-pill status-<%= f.result.ok ? 'ok' : 'bad' %>"><%= f.result.ok ? 'laatste keer gelukt' : 'laatste keer mislukt' %></span><% } %>
-          <% if (f.path === bk.defaultDir) { %><span class="muted small">(op deze computer zelf – bij een kapotte schijf bent u deze ook kwijt)</span><% } %>
+          <% if (f.place.local) { %><span class="muted small">(<%= f.path === bk.defaultDir ? 'op deze computer zelf' : 'op dezelfde schijf als ADONIS' %> – bij een kapotte schijf bent u deze ook kwijt)</span><% } else if (f.place.cloud) { %><span class="muted small">(gaat ook naar de cloud)</span><% } %>
           <form method="post" action="/systeem/backup/map/verwijderen" class="inline" data-confirm="Deze map niet meer gebruiken voor backups? (De backups die er al staan, blijven staan.)">
             <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="i" value="<%= f.i %>">
             <button class="linkbtn" type="submit">niet meer gebruiken</button>

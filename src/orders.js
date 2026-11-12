@@ -280,6 +280,7 @@ const CUSTOMER_STATUS = { '': 'Actief', weg: 'Inactief', genegeerd: 'Geen herinn
   if (!cols.includes('status')) db.exec("ALTER TABLE customers ADD COLUMN status TEXT NOT NULL DEFAULT ''");
   if (!cols.includes('status_at')) db.exec('ALTER TABLE customers ADD COLUMN status_at TEXT');
   if (!cols.includes('status_by')) db.exec("ALTER TABLE customers ADD COLUMN status_by TEXT NOT NULL DEFAULT ''");
+  if (!cols.includes('anon_at')) db.exec('ALTER TABLE customers ADD COLUMN anon_at TEXT'); // geanonimiseerd (Systeem → Privacy)
 }
 function setCustomerStatus(id, status, user) {
   if (!Object.hasOwn(CUSTOMER_STATUS, status)) throw new Error('Onbekende status.');
@@ -375,7 +376,11 @@ function refreshCustomer(customerId) {
     return;
   }
   const values = {};
-  const cust = db.prepare('SELECT bewerkt_at FROM customers WHERE id = ?').get(customerId);
+  const cust = db.prepare('SELECT bewerkt_at, anon_at FROM customers WHERE id = ?').get(customerId);
+  // Geanonimiseerde auto komt terug (bijv. nieuwe eigenaar): weer een gewone, actieve klant.
+  if (cust && cust.anon_at && orders.some((o) => o.created_at > cust.anon_at)) {
+    db.prepare("UPDATE customers SET anon_at = NULL, status = '', status_at = NULL WHERE id = ?").run(customerId);
+  }
   const since = cust && cust.bewerkt_at;
   for (const o of orders) {
     if (since && !(o.created_at > since)) continue;
@@ -535,7 +540,7 @@ module.exports = {
   workRows, WORK_COLS, fmtNr, CUSTOMER_STATUS, setCustomerStatus,
   formFields, applyPatch, diffFields,
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage, UREN_ROWS, ADVIES_ROWS, migrateBack,
-  emptyOrderData, normalizeOrderData, parseOrderData,
+  emptyOrderData, normalizeOrderData, parseOrderData, flattenText,
   nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate, updateCustomer, refreshCustomer,
   STATUSES, canEdit, allowedTransitions, setStatus, logAction, history, statusCounts,
 };

@@ -88,6 +88,34 @@ async function checkFolder(folder) {
   })(), 20000, `"${full}"`);
 }
 
+/**
+ * Staat een backupmap op dezelfde schijf als de gegevens van ADONIS? Dan bent u bij een kapotte schijf (of diefstal)
+ * de backup ook kwijt. Een map van OneDrive, Google Drive, Dropbox of iCloud telt niet: die gaat ook naar de cloud.
+ */
+const CLOUD = /onedrive|google ?drive|googledrive|my drive|mijn drive|dropbox|icloud|nextcloud|owncloud|pcloud|mega/i;
+async function placeOf(folder) {
+  const cloud = CLOUD.test(folder);
+  if (cloud) return { cloud: true, local: false };
+  try {
+    const [a, b] = await withTimeout(Promise.all([fsp.stat(folder), fsp.stat(DATA_DIR)]), 3000, `"${folder}"`);
+    return { cloud: false, local: a.dev === b.dev };
+  } catch {
+    return { cloud: false, local: false }; // niet bereikbaar: geen uitspraak
+  }
+}
+
+// Voor de waarschuwing op het startscherm: hooguit één keer per uur opnieuw kijken (zonder te wachten).
+let localCache = { at: 0, value: false };
+function onlyLocal() {
+  if (Date.now() - localCache.at > 3600e3) {
+    localCache.at = Date.now();
+    const { folders } = config();
+    Promise.all(folders.map(placeOf)).then((p) => { localCache.value = p.length > 0 && p.every((x) => x.local); }).catch(() => {});
+  }
+  return localCache.value;
+}
+function forgetPlaces() { localCache = { at: 0, value: false }; }
+
 /* ---------- backup maken ---------- */
 function counts() {
   const n = (sql) => { try { return db.prepare(sql).get().n; } catch { return 0; } };
@@ -296,6 +324,7 @@ function isRunning() { return !!running; }
 function stopSchedule() { if (timer) clearInterval(timer); timer = null; if (firstTick) clearTimeout(firstTick); firstTick = null; }
 
 module.exports = {
+  placeOf, onlyLocal, forgetPlaces,
   isRunning, stopSchedule, BackupError, DEFAULT_DIR, config, saveConfig, checkFolder, createZip, runBackup, listBackups, startSchedule, health,
   readBackup, stageRestore, backupPath, isDue,
 };

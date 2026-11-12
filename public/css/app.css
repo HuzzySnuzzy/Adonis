@@ -2688,3 +2688,25 @@ tr.is-inactive > td.row-act { opacity: 1; }
 .jxl-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; }
 .jxl-actions [hidden], .jxl-card [hidden] { display: none; }
 .jxl-progress[hidden] { display: none; }
+
+/* ---------- barcode scannen ---------- */
+.scan-dialog { width: min(520px, calc(100vw - 24px)); }
+.scan-dialog h1 { font-size: 1.2rem; }
+.scan-dialog [hidden] { display: none !important; }
+.scan-dialog .scan-photo { margin: .3rem 0 .6rem; }
+.scan-video { position: relative; margin: .6rem 0; border-radius: 10px; overflow: hidden; background: #000; }
+.scan-video video { display: block; width: 100%; max-height: 50vh; object-fit: cover; }
+.scan-aim { position: absolute; inset: 30% 10%; border: 2px solid rgba(255, 255, 255, .85); border-radius: 8px; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .28); pointer-events: none; }
+.scan-manual { display: block; margin-top: .4rem; font-size: .9rem; }
+.scan-field { display: flex; gap: .4rem; align-items: stretch; margin-top: .25rem; }
+.scan-field input { flex: 1; min-width: 0; }
+.scan-btn { display: inline-flex; align-items: center; justify-content: center; }
+.scan-icon { vertical-align: middle; }
+.scan-mini { border: 0; background: none; color: inherit; padding: 0 .15rem; margin-left: .25rem; cursor: pointer; opacity: .75; line-height: 1; }
+.scan-mini:hover, .scan-mini:focus-visible { opacity: 1; color: var(--primary); }
+.scan-mini .scan-icon { width: 15px; height: 15px; }
+.scan-toast { position: fixed; left: 50%; bottom: 46px; transform: translateX(-50%); z-index: 1000; max-width: min(560px, calc(100vw - 32px));
+  background: var(--text, #222); color: var(--bg, #fff); padding: .6rem .9rem; border-radius: 10px; box-shadow: 0 6px 24px rgba(0, 0, 0, .25);
+  font-size: .92rem; transition: opacity .5s; }
+.scan-toast.out { opacity: 0; }
+@media print { .scan-mini, .scan-toast { display: none !important; } }
