@@ -62,7 +62,7 @@ app.use((req, res, next) => {
     'X-Frame-Options': 'SAMEORIGIN', // alleen ADONIS zelf mag pagina's in een venster tonen (bureaubladmodus)
     'Referrer-Policy': 'same-origin',
     'Content-Security-Policy':
-      "default-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'self'; base-uri 'none'",
+      "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data:; form-action 'self'; frame-ancestors 'self'; base-uri 'none'",
   });
   if (req.secure) res.set('Strict-Transport-Security', 'max-age=31536000');
   next();
@@ -72,6 +72,7 @@ app.use((req, res, next) => {
 const MIME = {
   '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon',
+  '.wasm': 'application/wasm', // JPEG XL (public/vendor/jxl)
 };
 const STARTED = Date.now().toString(36);
 let festiveMemo = { at: 0, key: null };
@@ -1311,7 +1312,7 @@ async function renderSystem(res, { error = null, status = 200, values = {} } = {
     title: 'Systeem', error, values, cf, tunnelState: tunnel.getState(),
     port: Number(process.env.APP_PORT) || null, supported: Boolean(tunnel.assetName()),
     permissionsHelp: cloudflare.PERMISSIONS_HELP,
-    bk, FEATURES: features.FEATURES, feesten: festive.overview(), af: autofill.state(), AF_OPTIONS: autofill.OPTIONS,
+    bk, FEATURES: features.FEATURES, feesten: festive.overview(), af: autofill.state(), AF_OPTIONS: autofill.OPTIONS, jxl: require('./photos').jxlStats(),
   });
 }
 async function backupView() {
@@ -1362,6 +1363,19 @@ app.post('/systeem/feestdagen', auth.requireOwner, (req, res) => {
   const bad = festive.KEYS.filter((k) => (req.body[`f_${k}_van`] && !festive.parseDm(req.body[`f_${k}_van`])) || (req.body[`f_${k}_tot`] && !festive.parseDm(req.body[`f_${k}_tot`])));
   flash(req, bad.length ? 'err' : 'ok', bad.length ? 'Opgeslagen, maar niet alle datums klopten (schrijf ze als dag-maand, bijv. 06-12). Die zijn teruggezet.' : 'Feestdagen opgeslagen.');
   res.redirect('/systeem#feestdagen');
+});
+
+/* ---------- foto's omzetten naar JPEG XL (alleen ADONIS-beheerder; het rekenwerk gebeurt in de browser) ---------- */
+app.get('/systeem/jxl', auth.requireOwner, (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ stats: require('./photos').jxlStats(), todo: require('./photos').jxlTodo() });
+});
+app.post('/systeem/jxl/:id', auth.requireOwner, express.json({ limit: '12mb' }), (req, res) => {
+  try {
+    res.json({ ok: true, ...require('./photos').replaceWithJxl(Number(req.params.id), req.body.full, req.body.thumb) });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Omzetten lukte niet.' });
+  }
 });
 
 /* ---------- huisstijl (alleen ADONIS-beheerder) ---------- */

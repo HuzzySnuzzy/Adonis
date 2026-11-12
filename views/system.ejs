@@ -71,6 +71,30 @@
     </form>
   </section>
 
+  <% const mbJ = (n) => (n / 1024 / 1024).toFixed(1).replace('.', ',') + ' MB'; %>
+  <section class="card jxl-card" id="fotos-jxl" data-jxl-card data-csrf="<%= csrf %>">
+    <h2>Foto's (JPEG XL)</h2>
+    <p class="muted small">Nieuwe foto's worden als JPEG XL bewaard: dezelfde kwaliteit als JPEG, maar kleiner (minder schijfruimte, kleinere backups).
+      Oudere foto's kunt u hier omzetten. Dat gebeurt in deze browser, foto voor foto; u kunt het altijd onderbreken en later verdergaan.
+      Een foto die er niet kleiner van wordt, blijft zoals hij is.</p>
+    <div class="jxl-stats">
+      <div><b data-jxl-n="total"><%= jxl.total %></b><span class="muted small">foto's</span></div>
+      <div><b data-jxl-n="jxl"><%= jxl.jxl %></b><span class="muted small">JPEG XL</span></div>
+      <div><b data-jxl-n="todo"><%= jxl.todo %></b><span class="muted small">nog om te zetten</span></div>
+      <div><b data-jxl-n="bytes"><%= mbJ(jxl.bytes) %></b><span class="muted small">in totaal</span></div>
+    </div>
+    <div class="listai-progress" data-jxl-progress hidden>
+      <div class="listai-bar"><span data-jxl-fill></span></div>
+      <span class="muted small" data-jxl-text></span>
+    </div>
+    <p class="alert" data-jxl-error hidden></p>
+    <p class="muted small" data-jxl-native></p>
+    <div class="jxl-actions">
+      <button class="btn btn-primary" type="button" data-jxl-start <%= jxl.todo ? '' : 'disabled' %>>Foto's omzetten naar JPEG XL</button>
+      <button class="btn" type="button" data-jxl-stop hidden>Stoppen</button>
+    </div>
+  </section>
+
   <% const FD = feesten; %>
   <section class="card feest-card" id="feestdagen">
     <h2>Feestdagen</h2>
@@ -361,4 +385,6 @@
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/system.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/branding.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/jxl-migrate.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

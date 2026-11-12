@@ -6,6 +6,11 @@
   const THUMB = 360;
 
   async function loadBitmap(blob) {
+    // Een JPEG XL-bestand kiezen werkt ook als de browser het zelf niet kan tonen.
+    if (window.adonisJxl && window.createImageBitmap && !(await window.adonisJxl.native)) {
+      const buf = await blob.arrayBuffer();
+      if (window.adonisJxl.isJxl(new Uint8Array(buf, 0, Math.min(12, buf.byteLength)))) return createImageBitmap(await window.adonisJxl.decode(buf));
+    }
     if (window.createImageBitmap) {
       try { return await createImageBitmap(blob, { imageOrientation: 'from-image' }); } catch { /* val terug */ }
     }
@@ -17,26 +22,43 @@
       img.src = url;
     });
   }
-  function scaled(bmp, max, quality) {
+  function canvasOf(bmp, max) {
     const s = Math.min(1, max / Math.max(bmp.width, bmp.height));
     const c = document.createElement('canvas');
     c.width = Math.max(1, Math.round(bmp.width * s));
     c.height = Math.max(1, Math.round(bmp.height * s));
     c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
-    return { url: c.toDataURL('image/jpeg', quality), width: c.width, height: c.height };
+    return c;
+  }
+  const toDataUrl = (buf, type) => new Promise((resolve, reject) => {
+    const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(new Blob([buf], { type }));
+  });
+  /** Canvas -> JPEG XL (data:-adres). Lukt dat niet (heel oude browser), dan JPEG. */
+  async function encodeCanvas(c, quality) {
+    if (window.adonisJxl) {
+      try {
+        const data = c.getContext('2d').getImageData(0, 0, c.width, c.height);
+        return await toDataUrl(await window.adonisJxl.encode(data, { quality }), 'image/jxl');
+      } catch (err) { console.warn('JPEG XL lukte niet, dan JPEG:', err); }
+    }
+    return c.toDataURL('image/jpeg', quality / 100);
   }
   async function prepare(blob) {
     const bmp = await loadBitmap(blob);
-    const full = scaled(bmp, FULL, 0.85);
-    const thumb = scaled(bmp, THUMB, 0.78);
+    const big = canvasOf(bmp, FULL); const small = canvasOf(bmp, THUMB);
     if (bmp.close) bmp.close();
-    return { full: full.url, thumb: thumb.url, width: full.width, height: full.height };
+    let full = await encodeCanvas(big, 85); let thumb = await encodeCanvas(small, 80);
+    // Groot en klein in hetzelfde formaat (de server bewaart één soort per foto).
+    if (full.startsWith('data:image/jxl') !== thumb.startsWith('data:image/jxl')) { full = big.toDataURL('image/jpeg', 0.85); thumb = small.toDataURL('image/jpeg', 0.8); }
+    // preview: altijd te tonen (ook waar de browser zelf geen JPEG XL kan laten zien); wordt niet geüpload.
+    return { full, thumb, preview: small.toDataURL('image/jpeg', 0.8), width: big.width, height: big.height };
   }
+  window.adonisPhotoCanvas = { canvasOf, encodeCanvas, loadBitmap, FULL, THUMB };
   async function upload(type, id, csrf, data) {
     const res = await fetch(`/fotos/${type}/${id}`, {
       method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-Token': csrf },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, preview: undefined }),
     });
     const r = await res.json().catch(() => ({ error: 'Onverwacht antwoord van de server.' }));
     if (!res.ok) throw new Error(r.error || 'Uploaden mislukt.');
@@ -79,7 +101,7 @@
       return fig;
     }
     async function addFiles(files) {
-      const list = [...files].filter((f) => /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name));
+      const list = [...files].filter((f) => /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|heif|jxl)$/i.test(f.name));
       if (!list.length) return;
       let ok = 0;
       const errors = [];
@@ -88,7 +110,7 @@
         try {
           const data = await prepare(f);
           const r = await upload(type, id, csrf, { ...data, name: f.name });
-          grid.append(figure(r.id, data.thumb));
+          grid.append(figure(r.id, data.preview));
           ok++;
         } catch (e) {
           errors.push(`${f.name}: ${e.message}`);

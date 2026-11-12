@@ -346,7 +346,8 @@ module.exports = function register(app, { flash, wrap }) {
     try { buf = require('node:fs').readFileSync(photos.filePath(p, req.params.size)); } catch { return res.status(404).end(); }
     // Een foto verandert nooit (nieuwe foto = nieuw nummer): lang bewaren mag.
     res.set({ 'Content-Type': p.media_type, 'Cache-Control': 'private, max-age=31536000, immutable' });
-    if (req.query.download) res.attachment(p.name || `foto-${p.id}.jpg`);
+    const ext = { 'image/jxl': '.jxl', 'image/png': '.png', 'image/webp': '.webp' }[p.media_type] || '.jpg';
+    if (req.query.download) res.attachment((p.name || `foto-${p.id}`).replace(/\.[a-z0-9]{2,5}$/i, '') + ext);
     res.send(buf);
   });
   // Foto's die bij een Excel-lijst horen (bijv. de map klanten_Images) in één keer koppelen.

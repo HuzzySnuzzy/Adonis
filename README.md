@@ -16,6 +16,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   vastzetten aan de linker-/rechterrand, een venstermenu op de taakbalk en "bureaublad weergeven".
 - **Foto's en extra bladen bij werkopdrachten.** Foto's (camera of bestand) onderaan de werkopdracht; extra
   vervolgbladen (voorkant, achterkant of leeg) die meetellen in het totaal, mee worden afgedrukt en doorzoekbaar zijn.
+  Foto's worden als **JPEG XL** bewaard (ongeveer 30% kleiner dan JPEG bij dezelfde kwaliteit; coderen in de browser).
+  Bestaande foto's zet de ADONIS-beheerder om bij *Systeem → Foto's (JPEG XL)*. Toont een browser zelf geen JPEG XL,
+  dan zet ADONIS de foto bij het bekijken om.
 - **Rekenhulp.** Band omrekenen (diameter, tellerafwijking, alternatieve maten), last-/snelheidsindex, DOT-leeftijd,
   bar/psi, Nm/lbf·ft, kW/pk, verbruik, arbeidsloon, BTW en meer.
 - **Slim invullen.** Kenteken van een bekende klant vult de klantgegevens in en toont vorige werkopdracht, km-stand,
@@ -460,4 +463,5 @@ GitHub Actions bouwt en test de bestanden automatisch bij elke push. Een release
 - `scripts/build.js` – bouwt de losse executables · `src/orders.js` – werkopdracht-velden en opslag · `src/auth.js` – inloggen, CSRF-bescherming, rate limiting
 - `views/order.ejs` + `public/css/werkopdracht.css` – het formulier
 - `public/css/theme-neon.css`, `public/js/neon.js` – thema Neon (lettertypen Orbitron, Oxanium en Share Tech Mono onder de SIL Open Font License, zie `public/fonts/OFL-*.txt`)
+- `public/vendor/jxl/` – JPEG XL-coder/decoder (libjxl als WebAssembly, via @jsquash/jxl 1.3.0, Apache-2.0, zie `LICENSE`); `public/js/jxl.js` + `jxl-worker.js` – coderen in een aparte thread en terugval bij het tonen; `public/js/jxl-migrate.js` – omzetten van bestaande foto's
 - `src/import.js` – foto-import (Claude vision + JSON-schema afgeleid van de formuliervelden), `public/js/import.js` – camera en verkleinen

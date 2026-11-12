@@ -2680,3 +2680,11 @@ tr.is-inactive > td.row-act { opacity: 1; }
 /* Zwarte (en andere donkere) stip zichtbaar op een donkere achtergrond */
 :root:is([data-theme="dark"], [data-theme="oled"], [data-theme="neon"], [data-theme="ice"]) .car-dot { box-shadow: 0 0 0 1px rgba(255, 255, 255, .35); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme]) .car-dot { box-shadow: 0 0 0 1px rgba(255, 255, 255, .35); } }
+
+/* Systeem → Foto's (JPEG XL) */
+.jxl-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .6rem; margin: .7rem 0; }
+.jxl-stats > div { display: grid; padding: .6rem .8rem; border-radius: 10px; border: 1px solid var(--border-soft, var(--border)); background: var(--surface); }
+.jxl-stats b { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.jxl-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; }
+.jxl-actions [hidden], .jxl-card [hidden] { display: none; }
+.jxl-progress[hidden] { display: none; }

@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.63.0', date: '2026-11-12', title: 'Foto\'s als JPEG XL',
+    items: [
+      'Nieuwe foto\'s worden als JPEG XL bewaard in plaats van JPEG: dezelfde kwaliteit, maar ongeveer een derde kleiner. Dat scheelt schijfruimte en maakt backups kleiner. Het omzetten gebeurt in de browser, in een aparte thread, dus de pagina blijft gewoon werken.',
+      'Systeem → Foto\'s (JPEG XL), voor de ADONIS-beheerder: zet bestaande foto\'s met één knop om. U ziet hoeveel er nog moeten en hoeveel ruimte het bespaart, en u kunt altijd stoppen en later verdergaan. Een foto die er niet kleiner van wordt, blijft zoals hij is.',
+      'Toont een browser zelf geen JPEG XL, dan zet ADONIS de foto bij het bekijken om, zodat u hem toch ziet (miniaturen, Verkenner en groot bekijken).',
+      'U kunt nu ook zelf .jxl-bestanden als foto toevoegen. Een gedownloade foto krijgt de juiste extensie (.jxl).',
+    ],
+  },
+  {
     version: '1.62.1', date: '2026-11-12', title: 'Bouwjaar in de lijst met werkopdrachten',
     items: [
       'In de kolom Auto staat achter merk en model nu het bouwjaar (datum deel I, anders de eerste toelating volgens de RDW) in plaats van de kleur, bijv. "● Ford Fiesta · 2012". De kleur blijft te zien aan de stip; wijs hem aan voor de naam van de kleur.',

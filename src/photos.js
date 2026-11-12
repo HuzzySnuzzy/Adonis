@@ -36,17 +36,22 @@ CREATE INDEX IF NOT EXISTS photos_owner ON photos(owner_type, owner_id);
 
 class PhotoError extends Error {}
 
-/** data:image/jpeg;base64,... -> { type, buf } (alleen JPEG/PNG/WebP, gecontroleerd op de inhoud). */
+/** Is dit JPEG XL? (kale codestream FF 0A, of de container met "JXL ") */
+function isJxl(buf) {
+  return (buf[0] === 0xff && buf[1] === 0x0a) || (buf.length > 12 && buf.subarray(4, 8).toString('latin1') === 'JXL ');
+}
+/** data:image/jpeg;base64,... -> { type, buf } (alleen JPEG XL/JPEG/PNG/WebP, gecontroleerd op de inhoud). */
 function decodeDataUrl(url, max) {
-  const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(url || ''));
+  const m = /^data:(image\/(?:jxl|jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(url || ''));
   if (!m) throw new PhotoError('Ongeldige afbeelding.');
   const buf = Buffer.from(m[2], 'base64');
   if (buf.length > max) throw new PhotoError('De foto is te groot.');
   const isJpeg = buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
   const isPng = buf.subarray(0, 4).toString('hex') === '89504e47';
   const isWebp = buf.subarray(0, 4).toString() === 'RIFF' && buf.subarray(8, 12).toString() === 'WEBP';
-  if (!isJpeg && !isPng && !isWebp) throw new PhotoError('Dit bestand is geen foto.');
-  return { type: isJpeg ? 'image/jpeg' : isPng ? 'image/png' : 'image/webp', buf };
+  const jxl = isJxl(buf);
+  if (!isJpeg && !isPng && !isWebp && !jxl) throw new PhotoError('Dit bestand is geen foto.');
+  return { type: jxl ? 'image/jxl' : isJpeg ? 'image/jpeg' : isPng ? 'image/png' : 'image/webp', buf };
 }
 
 function ownerExists(type, id) {
@@ -149,4 +154,41 @@ function stats() {
   return { count: r.n, mb: Math.round((r.bytes / 1024 / 1024) * 10) / 10 };
 }
 
-module.exports = { PhotoError, OWNERS, MAX_PER_RECORD, add, get, filePath, list, firstPhotos, remove, removeFor, references, refKey, stats, DIR };
+/* ---------- omzetten naar JPEG XL (Systeem → Foto's) ---------- */
+if (!db.prepare('PRAGMA table_info(photos)').all().some((c) => c.name === 'jxl_skip')) {
+  db.exec('ALTER TABLE photos ADD COLUMN jxl_skip INTEGER NOT NULL DEFAULT 0'); // 1 = als JPEG XL niet kleiner: zo laten
+}
+function sizeOf(p, size) { try { return fs.statSync(filePath(p, size)).size; } catch { return 0; } }
+function jxlStats() {
+  const rows = db.prepare('SELECT * FROM photos').all();
+  const out = { total: rows.length, jxl: 0, todo: 0, skipped: 0, bytes: 0 };
+  for (const p of rows) {
+    out.bytes += sizeOf(p, 'full') + sizeOf(p, 'thumb');
+    if (p.media_type === 'image/jxl') out.jxl++; else if (p.jxl_skip) out.skipped++; else out.todo++;
+  }
+  return out;
+}
+function jxlTodo() {
+  return db.prepare("SELECT id FROM photos WHERE media_type <> 'image/jxl' AND jxl_skip = 0 ORDER BY id").all().map((r) => r.id);
+}
+/** Een foto vervangen door de JPEG XL-versie (groot en klein). Alleen als hij er kleiner van wordt. */
+function replaceWithJxl(id, full, thumb) {
+  const p = get(id);
+  if (!p) throw new PhotoError('Deze foto bestaat niet (meer).');
+  if (p.media_type === 'image/jxl') return { id, already: true };
+  const big = decodeDataUrl(full, MAX_FULL); const small = decodeDataUrl(thumb, MAX_THUMB);
+  if (big.type !== 'image/jxl' || small.type !== 'image/jxl') throw new PhotoError('Dit is geen JPEG XL.');
+  const before = sizeOf(p, 'full') + sizeOf(p, 'thumb');
+  const after = big.buf.length + small.buf.length;
+  if (after >= before) { db.prepare('UPDATE photos SET jxl_skip = 1 WHERE id = ?').run(id); return { id, skipped: true, before, after }; }
+  // Eerst naast het origineel schrijven, dan pas vervangen (een onderbreking laat nooit een halve foto achter).
+  for (const [size, b] of [['full', big.buf], ['thumb', small.buf]]) {
+    fs.writeFileSync(filePath(p, size) + '.new', b);
+    fs.renameSync(filePath(p, size) + '.new', filePath(p, size));
+  }
+  db.prepare("UPDATE photos SET media_type = 'image/jxl', bytes = ? WHERE id = ?").run(big.buf.length, id);
+  return { id, before, after };
+}
+
+module.exports = {
+  jxlStats, jxlTodo, replaceWithJxl, isJxl, PhotoError, OWNERS, MAX_PER_RECORD, add, get, filePath, list, firstPhotos, remove, removeFor, references, refKey, stats, DIR };
