@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.59.1', date: '2026-11-12', title: 'Werkopdracht verspringt niet meer',
+    items: [
+      'De werkopdracht kon op en neer springen terwijl u ernaar keek: de werkbalk bovenaan werd even hoger of lager als de status veranderde ("Opslaan…", "Bijgewerkt door …", "Ook open: …") of als de stip op Opslaan verscheen. De werkbalk blijft nu altijd even hoog; lange tekst wordt netjes afgekapt (wijs hem aan om alles te zien).',
+      '"Ook open" verdwijnt en verschijnt niet meer steeds als een collega de werkopdracht in een ander (verborgen) tabblad open heeft.',
+    ],
+  },
+  {
     version: '1.59.0', date: '2026-11-12', title: 'Bestaande klant kiezen bij Naam',
     items: [
       'Werkopdracht: typt u bij Naam een paar letters, dan verschijnen bestaande klanten (met kenteken, auto en plaats; recente klanten eerst). Kies er een met de muis of met ↓ en Enter, en adres, plaats, klantnummer en telefoonnummers worden in één keer ingevuld (alleen lege vakken), met de kleurveeg van automatisch invullen.',

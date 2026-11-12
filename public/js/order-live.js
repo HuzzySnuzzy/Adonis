@@ -87,8 +87,10 @@
       new: 'Wordt automatisch opgeslagen zodra er een kenteken en werk of onderdelen op staan',
       offline: 'Geen verbinding – wordt opgeslagen zodra die er weer is',
     };
-    stateEl.textContent = text || T[kind] || '';
-    stateEl.dataset.state = kind;
+    const t = text || T[kind] || '';
+    if (stateEl.textContent !== t) stateEl.textContent = t; // alleen echt veranderen (geen onnodig herschikken)
+    if (stateEl.dataset.state !== kind) stateEl.dataset.state = kind;
+    stateEl.title = t;
     if (toolbar) toolbar.classList.toggle('dirty', kind === 'pending' || kind === 'saving' || kind === 'error' || kind === 'offline');
   }
   function showRemote(by) {
@@ -319,7 +321,7 @@
     fetch(`/werkopdracht/${orderId}/aanwezig`, { method: 'POST', credentials: 'same-origin', body })
       .then((r) => r.json()).then((r) => renderPeople(r.people)).catch(() => {});
   }
-  function hello() { post(); clearInterval(helloTimer); helloTimer = setInterval(() => { if (document.visibilityState === 'visible') post(); }, 20000); }
+  function hello() { post(); clearInterval(helloTimer); helloTimer = setInterval(() => post(), 20000); } // ook op de achtergrond: anders verdwijnt en verschijnt "Ook open" steeds
   let focusTimer = null;
   const setField = (name) => {
     clearTimeout(focusTimer);

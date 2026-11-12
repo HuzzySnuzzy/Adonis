@@ -24,7 +24,9 @@
 .tb-left, .tb-right { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
 .tb-tools, .tb-actions { display: contents; }
 .tb-title { display: flex; flex-direction: column; line-height: 1.25; }
-.order-toolbar.dirty #saveBtn::after { content: " •"; }
+/* Niet-opgeslagen: een stip op de knop zonder dat de knop breder wordt (anders verspringt de werkbalk). */
+#saveBtn { position: relative; }
+.order-toolbar.dirty #saveBtn::after { content: ""; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .85; }
 .totals:empty { display: none; }
 
 /* ---------- vel papier ---------- */
@@ -340,8 +342,10 @@ table.grid.uren th { white-space: normal; line-height: 1.1; font-size: 12.5px; }
 table.grid.kv .sign-row td.rowlabel { white-space: normal; line-height: 1.15; font-size: 12.5px; padding: 2px 6px; }
 
 /* ---------- Automatisch opslaan en live samen bewerken (order-live.js) ---------- */
-.co-bar { display: flex; align-items: center; gap: .35rem .75rem; flex-wrap: wrap; margin-top: 2px; min-height: 1.25rem; }
-.co-bar:not(:has(.live-state:not(:empty), .co-person)) { display: none; }
+.co-bar { display: flex; align-items: center; gap: .35rem .75rem; flex-wrap: nowrap; margin-top: 2px; height: 1.35rem; min-width: 0; overflow: hidden; }
+.co-bar > * { min-width: 0; }
+.live-state { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+.co-people { flex-wrap: nowrap; overflow: hidden; }
 .live-state { display: inline-flex; align-items: center; gap: .35rem; color: var(--muted); }
 .live-state:empty { display: none; }
 .live-state::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok-text, #2e9d5b); flex: none; }
@@ -377,3 +381,11 @@ table.grid.kv .sign-row td.rowlabel { white-space: normal; line-height: 1.15; fo
 .work-line .w-tick { cursor: pointer; font-weight: 700; caret-color: transparent; }
 .work-line .w-tick:focus { caret-color: auto; }
 .work-convert { padding: 6px 8px; border-top: var(--rule-w) solid var(--rule); background: var(--paper); }
+
+/* Werkbalk: de titelkant mag smaller worden (lange tekst wordt afgekapt) en bepaalt nooit of de knoppen naar een tweede
+ * regel springen. Zo blijft de werkbalk even hoog als de status ("Opslaan…", "Bijgewerkt door …", "Ook open") verandert. */
+.order-toolbar .tb-left { flex: 1 1 18rem; min-width: 0; flex-wrap: nowrap; }
+.order-toolbar .tb-title { min-width: 0; }
+.order-toolbar .tb-title > * { min-width: 0; max-width: 100%; }
+.order-toolbar .tb-title > .muted { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.order-toolbar .tb-right { flex: 0 1 auto; }
