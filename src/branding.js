@@ -24,7 +24,8 @@ const SLOTS = {
   achtergrond: { label: 'Achtergrond', max: 8 * 1024 * 1024 },
 };
 const MIMES = ['image/png', 'image/jpeg', 'image/webp'];
-const DEFAULTS = { naam: '', sub: '', blur: 6, zicht: 35, bannerInMenu: false };
+const DEFAULTS = { naam: '', sub: '', blur: 6, zicht: 35, bannerInMenu: false, kleur1: '', kleur2: '' };
+const HEX = /^#[0-9a-f]{6}$/i;
 
 let cache = null;
 function get() {
@@ -40,10 +41,13 @@ function get() {
     blur: clamp(s.blur, 0, 40, DEFAULTS.blur),
     zicht: clamp(s.zicht, 5, 100, DEFAULTS.zicht),
     bannerInMenu: !!s.bannerInMenu && !!files.banner,
+    kleur1: HEX.test(s.kleur1 || '') ? s.kleur1.toLowerCase() : '', // hoofdkleur (standaard ADONIS-blauw)
+    kleur2: HEX.test(s.kleur2 || '') ? s.kleur2.toLowerCase() : '', // tweede kleur (standaard ADONIS-goud)
     logo: files.logo ? `/huisstijl/logo?v=${files.logo}` : null,
     banner: files.banner ? `/huisstijl/banner?v=${files.banner}` : null,
     achtergrond: files.achtergrond ? `/huisstijl/achtergrond?v=${files.achtergrond}` : null,
   };
+  cache.css = !!(cache.achtergrond || cache.kleur1 || cache.kleur2); // is /huisstijl.css nodig?
   // Eén versie voor het stylesheet met de achtergrond (verandert bij elke wijziging).
   cache.v = crypto.createHash('sha1').update(JSON.stringify(cache)).digest('hex').slice(0, 10);
   return cache;
@@ -61,6 +65,8 @@ function saveSettings(input) {
   if ('blur' in input) next.blur = clamp(input.blur, 0, 40, DEFAULTS.blur);
   if ('zicht' in input) next.zicht = clamp(input.zicht, 5, 100, DEFAULTS.zicht);
   if ('bannerInMenu' in input) next.bannerInMenu = !!input.bannerInMenu;
+  if ('kleur1' in input) next.kleur1 = HEX.test(input.kleur1 || '') ? input.kleur1 : '';
+  if ('kleur2' in input) next.kleur2 = HEX.test(input.kleur2 || '') ? input.kleur2 : '';
   settings.set('branding', next);
   cache = null;
   return get();
@@ -101,11 +107,29 @@ function file(slot) {
 }
 
 /** Stylesheet met de achtergrond (alleen bij de thema's Systeem, Licht en Donker). */
+/** Leesbare tekstkleur op een achtergrondkleur: donker op licht (bijv. geel), wit op donker. */
+function textOn(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.36 ? '#14171c' : '#ffffff';
+}
+function colorCss(b) {
+  if (!b.kleur1 && !b.kleur2) return '';
+  const P = b.kleur1; const A = b.kleur2;
+  const light = [P && `--primary: ${P}; --primary-hover: color-mix(in srgb, ${P} 82%, #000); --brand: ${P}; --on-primary: ${textOn(P)};`, A && `--accent: ${A};`].filter(Boolean).join(' ');
+  const dark = [P && `--primary: color-mix(in srgb, ${P} 80%, #fff); --primary-hover: ${P}; --brand: color-mix(in srgb, ${P} 85%, #fff); --on-primary: ${textOn(P)};`, A && `--accent: ${A};`].filter(Boolean).join(' ');
+  return `/* Eigen kleuren (Systeem → Huisstijl), alleen bij Systeem, Licht en Donker */
+:root:is(:not([data-theme]), [data-theme="light"]) { ${light} }
+:root[data-theme="dark"] { ${dark} }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) { ${dark} } }
+:root:is(:not([data-theme]), [data-theme="light"], [data-theme="dark"]) .btn-primary { color: var(--on-primary, #fff); }
+`;
+}
 function css() {
   const b = get();
-  if (!b.achtergrond) return '/* geen achtergrond */\n';
+  const colors = colorCss(b);
+  if (!b.achtergrond) return colors || '/* geen eigen huisstijl */\n';
   const sys = ':root:is(:not([data-theme]), [data-theme="light"], [data-theme="dark"])';
-  return `${sys} { --brand-bg-blur: ${b.blur}px; --brand-bg-zicht: ${b.zicht / 100}; }
+  return colors + `${sys} { --brand-bg-blur: ${b.blur}px; --brand-bg-zicht: ${b.zicht / 100}; }
 ${sys}:not(.in-window) { background: var(--bg); }
 ${sys}:not(.in-window) body { background: transparent; }
 ${sys}:not(.in-window) .brand-bg { display: block; background-image: url("${b.achtergrond}"); }

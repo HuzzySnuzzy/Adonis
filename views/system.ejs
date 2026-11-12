@@ -128,6 +128,16 @@
         <label class="check"><input type="checkbox" name="bannerInMenu" <%= Bs.bannerInMenu ? 'checked' : '' %> <%= Bs.banner ? '' : 'disabled' %> data-brand-bannermenu>
           Banner in het menu tonen in plaats van logo en naam<% if (!Bs.banner) { %> <span class="muted small">(eerst een banner kiezen)</span><% } %></label>
 
+        <fieldset class="brand-bgset brand-colors" data-brand-colors>
+          <legend>Kleuren</legend>
+          <label class="check"><input type="checkbox" name="eigenKleuren" <%= Bs.kleur1 || Bs.kleur2 ? 'checked' : '' %> data-brand-own> Eigen kleuren gebruiken
+            <span class="muted small">(anders ADONIS-blauw en -goud)</span></label>
+          <div class="brand-color-row">
+            <label class="brand-color"><input type="color" name="kleur1" value="<%= Bs.kleur1 || '#233fb8' %>" data-brand-c1><span><b>Hoofdkleur</b><span class="muted small">knoppen, links, menu</span></span></label>
+            <label class="brand-color"><input type="color" name="kleur2" value="<%= Bs.kleur2 || '#e2b44b' %>" data-brand-c2><span><b>Tweede kleur</b><span class="muted small">accenten, lijn onder het menu</span></span></label>
+          </div>
+          <p class="muted small">Net als de achtergrond alleen bij de thema's Systeem, Licht en Donker. Bij een lichte hoofdkleur (zoals geel) wordt de tekst op knoppen vanzelf donker.</p>
+        </fieldset>
         <fieldset class="brand-bgset"<%= Bs.achtergrond ? '' : ' disabled' %>>
           <legend>Achtergrond</legend>
           <% if (!Bs.achtergrond) { %><p class="muted small">Kies eerst een achtergrondafbeelding hiernaast.</p><% } %>

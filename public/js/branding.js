@@ -96,3 +96,23 @@
     } finally { input.value = ''; }
   });
 })();
+
+/* Kleuren: meteen zien op deze pagina (pas na Opslaan voor iedereen). */
+(function () {
+  const box = document.querySelector('[data-brand-colors]');
+  if (!box) return;
+  const own = box.querySelector('[data-brand-own]'); const c1 = box.querySelector('[data-brand-c1]'); const c2 = box.querySelector('[data-brand-c2]');
+  const root = document.documentElement;
+  const lum = (hex) => { const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+  function apply() {
+    const on = own.checked;
+    c1.disabled = !on; c2.disabled = !on;
+    if (!on) { ['--primary', '--primary-hover', '--brand', '--accent', '--on-primary'].forEach((k) => root.style.removeProperty(k)); return; }
+    root.style.setProperty('--primary', c1.value); root.style.setProperty('--primary-hover', `color-mix(in srgb, ${c1.value} 82%, #000)`);
+    root.style.setProperty('--brand', c1.value); root.style.setProperty('--accent', c2.value);
+    root.style.setProperty('--on-primary', lum(c1.value) > 0.36 ? '#14171c' : '#ffffff');
+  }
+  [own, c1, c2].forEach((el) => el.addEventListener('input', apply));
+  own.addEventListener('change', apply);
+  if (own.checked) apply(); else { c1.disabled = true; c2.disabled = true; }
+})();

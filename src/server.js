@@ -1366,6 +1366,7 @@ app.post('/systeem/feestdagen', auth.requireOwner, (req, res) => {
 app.post('/systeem/huisstijl', auth.requireOwner, (req, res) => {
   branding.saveSettings({
     naam: req.body.naam, sub: req.body.sub, blur: req.body.blur, zicht: req.body.zicht, bannerInMenu: req.body.bannerInMenu === 'on',
+    kleur1: req.body.eigenKleuren === 'on' ? req.body.kleur1 : '', kleur2: req.body.eigenKleuren === 'on' ? req.body.kleur2 : '',
   });
   events.broadcast({ type: 'branding', byId: req.user.id });
   if ((req.get('accept') || '').includes('application/json')) return res.json({ ok: true, brand: branding.get() });

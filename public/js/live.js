@@ -85,10 +85,17 @@
         document.querySelectorAll('[data-live]:not([data-live-remote])').forEach((el) => {
           const fresh = doc.getElementById(el.id);
           if (fresh && fresh.innerHTML !== el.innerHTML) {
+            const before = new Set([...el.querySelectorAll('[data-href]')].map((x) => x.dataset.href));
             el.innerHTML = fresh.innerHTML;
-            el.classList.remove('live-flash');
-            void el.offsetWidth; // animatie opnieuw starten
-            el.classList.add('live-flash');
+            // Nieuwe regels (bijv. een werkopdracht van een collega): rustige kleurveeg, zoals bij automatisch invullen.
+            const added = before.size ? [...el.querySelectorAll('[data-href]')].filter((x) => !before.has(x.dataset.href)) : [];
+            if (added.length && added.length <= 12 && window.adonisAutofilled) {
+              added.forEach((x, i) => setTimeout(() => window.adonisAutofilled(x, { soft: true }), i * 120));
+            } else {
+              el.classList.remove('live-flash');
+              void el.offsetWidth; // animatie opnieuw starten
+              el.classList.add('live-flash');
+            }
           }
         });
         document.dispatchEvent(new Event('adonis:swapped'));

@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="/static/img/adonis-icon.svg"><% } %>
   <script src="/static/js/early.js?v=<%= assetVersion %>"></script>
   <link rel="stylesheet" href="/static/css/app.css?v=<%= assetVersion %>">
-  <% if (B.achtergrond) { %><link rel="stylesheet" href="/huisstijl.css?v=<%= B.v %>"><% } %>
+  <% if (B.css) { %><link rel="stylesheet" href="/huisstijl.css?v=<%= B.v %>"><% } %>
   <% if (typeof extraCss !== 'undefined') { %><link rel="stylesheet" href="/static/css/<%= extraCss %>?v=<%= assetVersion %>"><% } %>
   <script src="/static/js/theme-menu.js?v=<%= assetVersion %>" defer></script>
   <script src="/static/js/festive.js?v=<%= assetVersion %>" defer></script>

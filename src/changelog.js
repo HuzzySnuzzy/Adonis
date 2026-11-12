@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.62.0', date: '2026-11-12', title: 'Eigen kleuren en rustig oplichten van nieuwe regels',
+    items: [
+      'Huisstijl (Systeem → Huisstijl): kies naast naam en logo nu ook een eigen hoofdkleur (knoppen, links, menu) en tweede kleur (accenten), in plaats van ADONIS-blauw en -goud. U ziet het meteen op de pagina; na Opslaan voor iedereen. Bij een lichte hoofdkleur (zoals geel) wordt de tekst op knoppen vanzelf donker. Net als de achtergrond alleen bij de thema\'s Systeem, Licht en Donker.',
+      'Komt er live iets nieuws in een lijst (bijv. een collega maakt een werkopdracht), dan licht die regel rustig op met een zachtere versie van de kleurveeg van automatisch invullen, zodat u ziet wat er nieuw is.',
+    ],
+  },
+  {
     version: '1.61.2', date: '2026-11-12', title: 'Telefoon: alles op elke kaart op dezelfde plek',
     items: [
       'Op de telefoon (lijsten als kaarten) stond bijvoorbeeld Monteur niet op elke kaart op dezelfde plek, omdat lege vakken werden weggelaten. Nu blijft elk vak op zijn vaste plek en staat er een licht streepje (—) als het leeg is. Zo vindt u alles op gevoel terug. Geldt voor alle lijsten: werkopdrachten, klanten, bandenhotel, voorraad enz.',

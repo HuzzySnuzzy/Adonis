@@ -789,11 +789,11 @@ window.adonisAsk = function ({ title = '', text = '', value = '', placeholder = 
 };
 
 /* Automatisch ingevuld (RDW, bekende klant, suggestie, sjabloon): een zachte kleurveeg over het vak die daarna wegvloeit. */
-window.adonisAutofilled = function (el) {
+window.adonisAutofilled = function (el, { soft = false } = {}) {
   if (!el) return;
   const t = el.type === 'checkbox' || el.type === 'radio' ? el.closest('label') || el : el;
-  t.classList.remove('autofilled'); void t.offsetWidth; t.classList.add('autofilled');
-  clearTimeout(t._afTimer); t._afTimer = setTimeout(() => t.classList.remove('autofilled'), 2700);
+  t.classList.remove('autofilled', 'af-soft'); void t.offsetWidth; t.classList.add('autofilled'); if (soft) t.classList.add('af-soft');
+  clearTimeout(t._afTimer); t._afTimer = setTimeout(() => t.classList.remove('autofilled', 'af-soft'), soft ? 3300 : 2700);
 };
 
 /* Na "Lijst opschonen met AI": de bijgewerkte regels lichten op met dezelfde kleurveeg als automatisch invullen. */
