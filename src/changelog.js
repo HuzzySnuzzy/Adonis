@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.64.1', date: '2026-11-13', title: 'Barcode scannen ook op de iPhone',
+    items: [
+      'Barcode scannen met de camera werkt nu ook op de iPhone en in de ADONIS-app op Windows: ADONIS heeft een eigen barcodelezer erbij (gratis, werkt zonder internet). Waar de browser het zelf kan (Chrome op Android), gebruikt ADONIS nog steeds die.',
+      'Live scannen (camerabeeld) vraagt een beveiligde verbinding (https, bijv. via Cloudflare). Op het gewone adres in de werkplaats kiest u "Foto van de barcode maken"; dat werkt overal.',
+    ],
+  },
+  {
     version: '1.64.0', date: '2026-11-13', title: 'Barcode scannen, privacy (AVG) en veiligere backups',
     items: [
       'Onderdelen scannen: bij Voorraad en in de werkopdracht (streepjescode-icoon naast Onderdeelnummer) scant u de barcode op de verpakking met de camera van de telefoon of met een USB-barcodescanner. In de werkopdracht worden nummer, omschrijving en prijs uit de voorraad ingevuld; hetzelfde onderdeel nog eens scannen maakt het aantal 2. Bij een onderdeel kunt u de barcode (EAN) opslaan; dozen met het artikelnummer als barcode werken meteen. Een onbekende code? Dan kunt u meteen een nieuw onderdeel met die barcode toevoegen.',

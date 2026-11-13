@@ -1,7 +1,8 @@
 'use strict';
 /*
  * Barcode scannen: met de camera (live, of een foto van de barcode) of met een USB-barcodescanner (die "typt" de code).
- * Het lezen doet de browser zelf (BarcodeDetector, gratis en zonder extra software; o.a. Chrome op Android).
+ * Het lezen doet de browser zelf als dat kan (BarcodeDetector, o.a. Chrome op Android); anders de ingebouwde lezer
+ * zxing-wasm (MIT, public/vendor/zxing), bijv. op de iPhone en in de ADONIS-app op Windows. Beide gratis en lokaal.
  * window.adonisScan({ title, text }) -> Promise met de code, of null bij Annuleren.
  * window.adonisBarcodeReader = { detect(bron) -> Promise<string[]> } kan een andere lezer inprikken.
  */
@@ -20,7 +21,34 @@
         }
       } catch { /* geen lezer */ }
     }
+    if (!detector) detector = await zxing().catch((err) => { console.warn('Barcodelezer niet beschikbaar:', err); return null; });
     return detector;
+  }
+  /* zxing-wasm: pas laden als er gescand wordt (± 1 MB). */
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const el = document.createElement('script'); el.src = src; el.onload = resolve; el.onerror = () => reject(new Error('laden mislukt'));
+      document.head.append(el);
+    });
+  }
+  async function zxing() {
+    if (!window.ZXingWASM) await loadScript('/static/vendor/zxing/zxing-reader.js');
+    const Z = window.ZXingWASM;
+    await Z.prepareZXingModule({ overrides: { locateFile: (path, prefix) => (path.endsWith('.wasm') ? '/static/vendor/zxing/' + path : prefix + path) }, fireImmediately: true });
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    return {
+      slow: true,
+      async detect(src) {
+        const w = src.videoWidth || src.width; const h = src.videoHeight || src.height;
+        if (!w || !h) return [];
+        const s = Math.min(1, 1280 / Math.max(w, h));
+        canvas.width = Math.round(w * s); canvas.height = Math.round(h * s);
+        ctx.drawImage(src, 0, 0, canvas.width, canvas.height);
+        const res = await Z.readBarcodes(ctx.getImageData(0, 0, canvas.width, canvas.height), { tryHarder: true, maxNumberOfSymbols: 1 });
+        return res.filter((r) => r.isValid && r.text).map((r) => r.text);
+      },
+    };
   }
   const canLive = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext);
 
@@ -59,7 +87,7 @@
       (async () => {
         const r = await reader();
         if (closed) return;
-        if (!r) { say('Deze browser kan zelf geen barcodes lezen met de camera (Chrome op Android wel). Typ de code, of gebruik een USB-barcodescanner.'); return; }
+        if (!r) { say('De barcodelezer kon niet worden geladen. Typ de code, of gebruik een USB-barcodescanner.'); return; }
         photo.hidden = false;
         photo.querySelector('input').addEventListener('change', async (e) => {
           const f = e.target.files[0]; e.target.value = '';
@@ -83,7 +111,7 @@
             if (video.readyState >= 2) {
               try { const codes = await r.detect(video); if (codes[0]) { done(codes[0]); return; } } catch { /* volgende keer */ }
             }
-            timer = setTimeout(tick, 180);
+            timer = setTimeout(tick, r.slow ? 300 : 180);
           };
           tick();
         } catch {

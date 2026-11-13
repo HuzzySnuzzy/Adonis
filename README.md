@@ -109,8 +109,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   origineel (OE) nummer, soort en locatie. Een nummer vind je ook als het anders is getypt: `1493001` vindt `1 493 001`,
   `A0031592603` vindt `A003.159.26.03`. **Barcode scannen** (camera of USB-scanner) in Voorraad en in het onderdelenvak van
   de werkopdracht: zoekt op de barcode van het onderdeel (EAN, veld *Barcode*) of op het artikel-/OE-nummer en vult nummer,
-  omschrijving en prijs in. Het lezen doet de browser zelf (BarcodeDetector, o.a. Chrome op Android); zonder lezer kan de code
-  worden getypt of met een USB-scanner ingevoerd.
+  omschrijving en prijs in. Het lezen doet de browser zelf als dat kan (BarcodeDetector, o.a. Chrome op Android), anders de
+  meegeleverde lezer zxing-wasm 3.1.6 (MIT, `public/vendor/zxing/`, pas geladen bij het scannen), bijv. op de iPhone en in de
+  Windows-app. Live camerabeeld vraagt https; anders een foto van de barcode. Een USB-scanner werkt altijd.
 - **Privacy (AVG):** *Systeem → Privacy (AVG)* toont klanten zonder activiteit sinds 1 januari van 7 jaar terug (en zonder banden
   in het bandenhotel). Anonimiseren (persoonsgegevens weg, ook op werkopdrachten en in het bandenhotel; kenteken en werkgeschiedenis
   blijven) of definitief verwijderen, na het eigen wachtwoord. Alleen aantallen worden gelogd.
