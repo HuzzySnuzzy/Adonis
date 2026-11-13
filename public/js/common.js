@@ -861,3 +861,9 @@ window.adonisAutofilled = function (el, { soft = false } = {}) {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('[data-row-menu][open]').forEach((m) => { m.open = false; }); });
   addEventListener('scroll', (e) => { if (e.target && e.target.closest && e.target.closest('.row-pop')) return; document.querySelectorAll('[data-row-menu][open]').forEach((m) => { m.open = false; }); }, true);
 })();
+
+/* Kleur van de auto: een kleur aanklikken slaat meteen op. */
+document.addEventListener('change', (e) => {
+  const form = e.target.closest('form[data-kleur-form]');
+  if (form && e.target.name === 'kleur') { if (form.requestSubmit) form.requestSubmit(); else form.submit(); }
+});

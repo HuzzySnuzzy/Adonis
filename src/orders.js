@@ -281,6 +281,19 @@ const CUSTOMER_STATUS = { '': 'Actief', weg: 'Inactief', genegeerd: 'Geen herinn
   if (!cols.includes('status_at')) db.exec('ALTER TABLE customers ADD COLUMN status_at TEXT');
   if (!cols.includes('status_by')) db.exec("ALTER TABLE customers ADD COLUMN status_by TEXT NOT NULL DEFAULT ''");
   if (!cols.includes('anon_at')) db.exec('ALTER TABLE customers ADD COLUMN anon_at TEXT'); // geanonimiseerd (Systeem → Privacy)
+  // Kleur van de auto zelf aangepast (bijv. overgespoten of gewrapt): gaat voor de kleur volgens de RDW.
+  if (!cols.includes('kleur_eigen')) db.exec("ALTER TABLE customers ADD COLUMN kleur_eigen TEXT NOT NULL DEFAULT ''");
+  if (!cols.includes('kleur_eigen_by')) db.exec("ALTER TABLE customers ADD COLUMN kleur_eigen_by TEXT NOT NULL DEFAULT ''");
+  if (!cols.includes('kleur_eigen_at')) db.exec('ALTER TABLE customers ADD COLUMN kleur_eigen_at TEXT');
+}
+/* Autokleuren waaruit een monteur kan kiezen (zelfde namen als de RDW). */
+const CAR_COLOURS = ['Zwart', 'Grijs', 'Zilver', 'Wit', 'Blauw', 'Rood', 'Groen', 'Geel', 'Oranje', 'Bruin', 'Beige', 'Crème', 'Paars', 'Roze', 'Brons', 'Goud'];
+/** Kleur aanpassen ('' = weer volgens de RDW). */
+function setCarColour(id, kleur, user) {
+  const k = CAR_COLOURS.includes(kleur) ? kleur : '';
+  db.prepare('UPDATE customers SET kleur_eigen = ?, kleur_eigen_by = ?, kleur_eigen_at = ? WHERE id = ?')
+    .run(k, k && user ? user.name : '', k ? new Date().toISOString().replace('T', ' ').slice(0, 19) : null, id);
+  return k;
 }
 function setCustomerStatus(id, status, user) {
   if (!Object.hasOwn(CUSTOMER_STATUS, status)) throw new Error('Onbekende status.');
@@ -537,7 +550,7 @@ function diffFields(before, after) {
 }
 
 module.exports = {
-  workRows, WORK_COLS, fmtNr, CUSTOMER_STATUS, setCustomerStatus,
+  workRows, WORK_COLS, fmtNr, CUSTOMER_STATUS, setCustomerStatus, CAR_COLOURS, setCarColour,
   formFields, applyPatch, diffFields,
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage, UREN_ROWS, ADVIES_ROWS, migrateBack,
   emptyOrderData, normalizeOrderData, parseOrderData, flattenText,

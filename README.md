@@ -112,6 +112,8 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   omschrijving en prijs in. Het lezen doet de browser zelf als dat kan (BarcodeDetector, o.a. Chrome op Android), anders de
   meegeleverde lezer zxing-wasm 3.1.6 (MIT, `public/vendor/zxing/`, pas geladen bij het scannen), bijv. op de iPhone en in de
   Windows-app. Live camerabeeld vraagt https; anders een foto van de barcode. Een USB-scanner werkt altijd.
+- **Kleur van de auto aanpassen:** op de klantpagina (RDW-gegevens → Kleur → *Aanpassen*), voor iedereen. De eigen kleur
+  (`customers.kleur_eigen`) gaat voor de RDW-kleur in de lijsten, op de klantpagina en in het RDW-venster.
 - **Privacy (AVG):** *Systeem → Privacy (AVG)* toont klanten zonder activiteit sinds 1 januari van 7 jaar terug (en zonder banden
   in het bandenhotel). Anonimiseren (persoonsgegevens weg, ook op werkopdrachten en in het bandenhotel; kenteken en werkgeschiedenis
   blijven) of definitief verwijderen, na het eigen wachtwoord. Alleen aantallen worden gelogd.

@@ -2710,3 +2710,20 @@ tr.is-inactive > td.row-act { opacity: 1; }
   font-size: .92rem; transition: opacity .5s; }
 .scan-toast.out { opacity: 0; }
 @media print { .scan-mini, .scan-toast { display: none !important; } }
+
+/* ---------- kleur van de auto aanpassen ---------- */
+.car-dot.k-zilver { background: linear-gradient(135deg, #e3e6ea, #a9aeb5); } .car-dot.k-goud { background: linear-gradient(135deg, #f0d77a, #b8902a); }
+.kleur-dd .car-dot { vertical-align: -1px; }
+.kleur-note { margin-left: .3rem; }
+.kleur-edit { display: inline-block; margin-left: .5rem; }
+.kleur-edit > summary { display: inline; cursor: pointer; list-style: none; font-size: .88rem; }
+.kleur-edit > summary::-webkit-details-marker { display: none; }
+.kleur-edit[open] { display: block; margin: .5rem 0 0; }
+.kleur-form { padding: .7rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+.kleur-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: .3rem .5rem; margin: .5rem 0 .7rem; }
+.kleur-swatch { display: flex; align-items: center; gap: .35rem; padding: .35rem .45rem; border-radius: 8px; cursor: pointer; font-size: .92rem; }
+.kleur-swatch:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); }
+.kleur-swatch input { margin: 0; }
+.kleur-swatch .car-dot { margin-right: 0; width: 14px; height: 14px; }
+.kleur-swatch:has(input:checked) { background: color-mix(in srgb, var(--primary) 14%, transparent); font-weight: 600; }
+.kleur-rdw { grid-column: 1 / -1; }

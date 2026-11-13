@@ -1,0 +1,21 @@
+<%# Kleur van de auto: volgens de RDW, of zelf aangepast (iedereen mag dat, ook monteurs). %>
+<% const eigen = customer.kleur_eigen || ''; const shown = eigen || rdwKleur || ''; %>
+<dt>Kleur</dt>
+<dd class="kleur-dd" id="kleur">
+  <% if (shown) { %><span class="car-dot k-<%= kleurCls(shown) %>"></span><%= shown %><% } else { %><span class="muted">onbekend</span><% } %>
+  <% if (eigen) { %><span class="muted small kleur-note" title="<%= customer.kleur_eigen_by ? 'Aangepast door ' + customer.kleur_eigen_by : '' %><%= customer.kleur_eigen_at ? ' op ' + fmtDateTime(customer.kleur_eigen_at) : '' %>">(aangepast<%= rdwKleur ? '; RDW: ' + rdwKleur.toLowerCase() : '' %>)</span><% } %>
+  <details class="kleur-edit no-print">
+    <summary class="linkbtn">Aanpassen</summary>
+    <form method="post" action="/klant/<%= customer.id %>/kleur" class="kleur-form" data-kleur-form>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <p class="muted small">Klopt de kleur niet (bijv. overgespoten of gewrapt)? Kies de echte kleur. Dit verandert niets bij de RDW.</p>
+      <div class="kleur-swatches" role="radiogroup" aria-label="Kleur van de auto">
+        <% for (const k of CAR_COLOURS) { %>
+          <label class="kleur-swatch" title="<%= k %>"><input type="radio" name="kleur" value="<%= k %>" <%= eigen === k ? 'checked' : '' %>><span class="car-dot k-<%= kleurCls(k) %>"></span><%= k %></label>
+        <% } %>
+        <label class="kleur-swatch kleur-rdw"><input type="radio" name="kleur" value="" <%= eigen ? '' : 'checked' %>><span>Volgens de RDW<%= rdwKleur ? ' (' + rdwKleur.toLowerCase() + ')' : '' %></span></label>
+      </div>
+      <button class="btn btn-small btn-primary" type="submit">Opslaan</button>
+    </form>
+  </details>
+</dd>

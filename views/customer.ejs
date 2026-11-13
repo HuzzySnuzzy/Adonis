@@ -77,7 +77,7 @@
   <% } %>
 
   <% const ri = rdwData && rdwData.info; %>
-  <section class="rdw-card" aria-label="RDW-gegevens">
+  <section class="rdw-card" aria-label="RDW-gegevens" id="rdw">
     <div class="rdw-head">
       <h2>RDW-gegevens</h2>
       <div class="rdw-links"<%= rdwData && rdwData.foreign ? ' hidden' : '' %>>
@@ -90,10 +90,13 @@
     </div>
     <% if (rdwData && rdwData.foreign) { %>
       <p class="muted"><%= rdwData.country === 'D' ? 'Duits kenteken' : 'Geen Nederlands kenteken' %>: de RDW heeft alleen gegevens van Nederlandse kentekens.</p>
+      <dl class="facts rdw-facts"><%- include('/partials/car-colour', { rdwKleur: '' }) %></dl>
     <% } else if (!ri) { %>
       <p class="muted" title="<%= rdwData && rdwData.error ? 'Technische melding: ' + rdwData.error : '' %>">De RDW is op dit moment niet bereikbaar. Probeer later opnieuw.</p>
+      <dl class="facts rdw-facts"><%- include('/partials/car-colour', { rdwKleur: '' }) %></dl>
     <% } else if (!ri.found) { %>
       <p class="muted">Kenteken <strong><%= customer.kenteken %></strong> is niet gevonden bij de RDW. Klopt het kenteken?</p>
+      <dl class="facts rdw-facts"><%- include('/partials/car-colour', { rdwKleur: '' }) %></dl>
     <% } else { const apk = apkStatus(ri.apk); %>
       <div class="rdw-grid">
         <div class="apk-box apk-<%= apk ? apk.cls : 'none' %>">
@@ -105,7 +108,7 @@
           <dt>Merk / type</dt><dd><%= rdwMerkType(ri) %></dd>
           <% if (ri.brandstof) { %><dt>Brandstof</dt><dd><%= ri.brandstof %><%= ri.vermogenKw ? ` · ${ri.vermogenKw} kW (${ri.vermogenPk} pk)` : '' %></dd><% } %>
           <% if (ri.eersteToelating) { %><dt>Eerste toelating</dt><dd><%= fmtDate(ri.eersteToelating) %><%= ri.eersteToelatingNL && ri.eersteToelatingNL !== ri.eersteToelating ? ' (in NL sinds ' + fmtDate(ri.eersteToelatingNL) + ')' : '' %></dd><% } %>
-          <% if (ri.kleur) { %><dt>Kleur</dt><dd><%= ri.kleur %></dd><% } %>
+          <%- include('/partials/car-colour', { rdwKleur: ri.kleur || '' }) %>
           <% if (ri.cilinderinhoud) { %><dt>Cilinderinhoud</dt><dd><%= ri.cilinderinhoud %> cc</dd><% } %>
           <% if (ri.emissie) { %><dt>Emissie</dt><dd><%= ri.emissie %></dd><% } %>
           <% if (ri.tellerstand) { %><dt>Tellerstand</dt><dd><%= ri.tellerstand %></dd><% } %>

@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.65.0', date: '2026-11-13', title: 'Kleur van de auto aanpassen',
+    items: [
+      'Klopt de kleur van een auto niet (bijv. overgespoten of gewrapt)? Op de klantpagina klikt iedereen, ook een monteur, bij RDW-gegevens → Kleur op Aanpassen en kiest de echte kleur. Die kleur staat daarna overal: de gekleurde stip in de lijsten (met "aangepast" erbij), de klantpagina en het RDW-venster op de werkopdracht. Bij de RDW verandert er niets; met "Volgens de RDW" gaat het terug.',
+      'Zilver en goud hebben nu een eigen stip (eerder grijs en geel).',
+    ],
+  },
+  {
     version: '1.64.1', date: '2026-11-13', title: 'Barcode scannen ook op de iPhone',
     items: [
       'Barcode scannen met de camera werkt nu ook op de iPhone en in de ADONIS-app op Windows: ADONIS heeft een eigen barcodelezer erbij (gratis, werkt zonder internet). Waar de browser het zelf kan (Chrome op Android), gebruikt ADONIS nog steeds die.',

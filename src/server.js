@@ -575,6 +575,19 @@ app.post('/klant/:id/status', (req, res) => {
   const back = String(req.body.terug || '');
   res.redirect(back.startsWith('/') && !back.startsWith('//') ? back : `/klant/${c.id}`);
 });
+const wantsJsonReq = (req) => (req.get('accept') || '').includes('application/json');
+app.locals.CAR_COLOURS = orders.CAR_COLOURS;
+// Kleur van de auto aanpassen (iedereen, ook monteurs): bijv. overgespoten of gewrapt, of de RDW-kleur klopt niet.
+app.post('/klant/:id/kleur', (req, res) => {
+  const c = db.prepare('SELECT id, kenteken FROM customers WHERE id = ?').get(req.params.id);
+  if (!c) return wantsJsonReq(req) ? res.status(404).json({ error: 'Deze klant bestaat niet.' }) : res.redirect('/');
+  const k = orders.setCarColour(c.id, String(req.body.kleur || ''), req.user);
+  events.broadcast({ type: 'data', area: 'klanten', id: c.id, by: req.user.name, byId: req.user.id });
+  if (wantsJsonReq(req)) return res.json({ ok: true, kleur: k, cls: kleurCls(k) });
+  flash(req, 'ok', k ? `Kleur van ${c.kenteken} aangepast naar ${k.toLowerCase()}.` : `${c.kenteken}: kleur weer volgens de RDW.`);
+  const back = String(req.body.terug || '');
+  res.redirect(back.startsWith('/') && !back.startsWith('//') ? back : `/klant/${c.id}#rdw`);
+});
 app.get('/klant/:id', wrap(async (req, res) => {
   const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
   if (!customer) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze klant bestaat niet.' });
@@ -687,7 +700,7 @@ app.get('/rdw/:kenteken', wrap(async (req, res) => {
     const customer = db.prepare('SELECT * FROM customers WHERE plate_key = ?').get(key);
     const info = customer ? (await rdw.forCustomer(customer)).info : await rdw.lookup(key);
     if (!info) throw new Error('niet bereikbaar');
-    res.json({ ok: true, info, merkType: rdw.merkType(info), url: rdw.rdwUrl(key), apk: apkStatus(info.apk) });
+    res.json({ ok: true, info, merkType: rdw.merkType(info), url: rdw.rdwUrl(key), apk: apkStatus(info.apk), kleurEigen: customer ? customer.kleur_eigen || '' : '' });
   } catch (err) {
     res.status(502).json({ ok: false, error: 'De RDW is op dit moment niet bereikbaar.' });
   }
@@ -723,9 +736,11 @@ app.get('/werkopdrachten', (req, res) => {
 });
 
 // Auto in lijsten: merk/type van de werkopdracht (anders van de klant of de RDW) en de kleur volgens de RDW.
-const carStmt = db.prepare('SELECT merk_type, rdw_json FROM customers WHERE id = ?');
+const carStmt = db.prepare('SELECT merk_type, rdw_json, kleur_eigen FROM customers WHERE id = ?');
 const KLEUR_CLS = { grijs: 'grijs', zwart: 'zwart', wit: 'wit', blauw: 'blauw', rood: 'rood', groen: 'groen', geel: 'geel', oranje: 'oranje', bruin: 'bruin',
-  beige: 'beige', paars: 'paars', roze: 'roze', creme: 'creme', 'crème': 'creme', brons: 'brons', zilver: 'grijs', goud: 'geel' };
+  beige: 'beige', paars: 'paars', roze: 'roze', creme: 'creme', 'crème': 'creme', brons: 'brons', zilver: 'zilver', goud: 'goud' };
+const kleurCls = (k) => { const first = String(k || '').split('/')[0].trim().toLowerCase(); return KLEUR_CLS[first] || (k ? 'anders' : ''); };
+app.locals.kleurCls = kleurCls;
 // "VOLKSWAGEN GOLF" (zoals de RDW het schrijft) -> "Volkswagen Golf"; afkortingen (BMW, GTI, TDI…) blijven hoofdletters.
 const KEEP_UPPER = new Set(['BMW', 'VW', 'MG', 'DS', 'GT', 'GTI', 'GTD', 'TDI', 'TSI', 'TFSI', 'CDI', 'HDI', 'AMG', 'RS', 'SUV', 'DAF', 'MAN', 'XC', 'CX', 'ID', 'EV', 'BYD', 'KTM']);
 function niceCase(s) {
@@ -737,11 +752,11 @@ function carOf(row, data) {
   let info = null;
   try { info = c && c.rdw_json ? JSON.parse(c.rdw_json) : null; } catch { /* geen */ }
   const merk = niceCase((data.merk_type || (c && c.merk_type) || rdw.merkType(info) || '').trim());
-  const kleur = info && info.found !== false ? String(info.kleur || '').trim() : '';
-  const first = kleur.split('/')[0].trim().toLowerCase();
+  const rdwKleur = info && info.found !== false ? String(info.kleur || '').trim() : '';
+  const kleur = (c && c.kleur_eigen) || rdwKleur; // zelf aangepast gaat voor
   // Bouwjaar: datum deel I van de werkopdracht, anders de eerste toelating volgens de RDW.
   const jaar = String(data.datum_deel1 || (info && info.found !== false && info.eersteToelating) || '').slice(0, 4);
-  return { merk, kleur, jaar: /^(19|20)\d\d$/.test(jaar) ? jaar : '', cls: KLEUR_CLS[first] || (kleur ? 'anders' : '') };
+  return { merk, kleur, rdwKleur, eigen: !!(c && c.kleur_eigen), jaar: /^(19|20)\d\d$/.test(jaar) ? jaar : '', cls: kleurCls(kleur) };
 }
 function withSummary(row) {
   const data = orders.parseOrderData(row.data);

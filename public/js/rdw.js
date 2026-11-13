@@ -80,7 +80,7 @@
         <dt>APK tot</dt><dd>${apkTxt}</dd>
         ${i.brandstof ? `<dt>Brandstof</dt><dd>${esc(i.brandstof)}${i.vermogenKw ? ` · ${i.vermogenKw} kW (${i.vermogenPk} pk)` : ''}</dd>` : ''}
         ${i.eersteToelating ? `<dt>Eerste toelating</dt><dd>${fmt(i.eersteToelating)}</dd>` : ''}
-        ${i.kleur ? `<dt>Kleur</dt><dd>${esc(i.kleur)}</dd>` : ''}
+        ${r.kleurEigen ? `<dt>Kleur</dt><dd>${esc(r.kleurEigen)} <span class="muted small">(aangepast${i.kleur ? '; RDW: ' + esc(i.kleur.toLowerCase()) : ''})</span></dd>` : i.kleur ? `<dt>Kleur</dt><dd>${esc(i.kleur)}</dd>` : ''}
         ${i.tellerstand ? `<dt>Tellerstand</dt><dd>${esc(i.tellerstand)}</dd>` : ''}
       </dl>
       ${i.terugroepactie ? '<div class="rdw-warn">⚠ Openstaande terugroepactie</div>' : ''}
