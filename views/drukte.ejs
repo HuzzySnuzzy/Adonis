@@ -1,0 +1,130 @@
+<%- include('/partials/head') %>
+<%
+  const MAAND = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+  const MND = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+  const WD = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'];
+  const WDL = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
+  const nl = (n) => String(n).replace('.', ',');
+  const dmy = (ds) => `${Number(ds.slice(8, 10))} ${MAAND[Number(ds.slice(5, 7)) - 1]}`;
+  const S = D.stats;
+  const tip = (c) => {
+    const head = `${WDL[c.wd]} ${dmy(c.ds)}`;
+    if (c.future) {
+      const parts = [c.verwacht === null ? 'nog geen eerdere jaren om mee te vergelijken' : `verwacht ± ${nl(c.verwacht)} werkopdracht${c.verwacht === 1 ? '' : 'en'}`];
+      if (c.apkDue) parts.push(`${c.apkDue} APK${c.apkDue === 1 ? '' : "'s"} ${c.apkDue === 1 ? 'verloopt' : 'verlopen'}`);
+      return `${head}: ${parts.join(' · ')}`;
+    }
+    const parts = [`${c.n} werkopdracht${c.n === 1 ? '' : 'en'}`];
+    if (c.apk) parts.push(`waarvan ${c.apk} APK`);
+    if (c.banden) parts.push(`${c.banden} bandenset${c.banden === 1 ? '' : 's'} in/uit`);
+    return `${head}: ${parts.join(' · ')}`;
+  };
+%>
+<main class="page wide drukte-page">
+  <div class="page-head">
+    <div>
+      <h1>Drukte</h1>
+      <p class="muted small">Hoeveel werkopdrachten er per dag binnenkomen. Licht is rustig, donker is druk.
+        Na vandaag ziet u de <b>verwachting</b>: hoe druk het rond die datum in eerdere jaren was, plus de APK's die dan verlopen.</p>
+    </div>
+    <nav class="dk-years" aria-label="Jaar kiezen">
+      <% if (D.year > D.firstYear) { %><a class="btn btn-small" href="/drukte?jaar=<%= D.year - 1 %>" aria-label="Vorig jaar">‹ <%= D.year - 1 %></a><% } %>
+      <b class="dk-year"><%= D.year %></b>
+      <% if (D.year <= D.thisYear) { %><a class="btn btn-small" href="/drukte?jaar=<%= D.year + 1 %>" aria-label="Volgend jaar"><%= D.year + 1 %> ›</a><% } %>
+    </nav>
+  </div>
+
+  <div class="dk-stats">
+    <div class="dk-stat"><span class="muted small">Werkopdrachten <%= D.year === D.thisYear ? 'tot nu toe' : 'in ' + D.year %></span><b><%= S.total %></b><span class="muted small"><%= S.apk ? `waarvan ${S.apk} met APK` : '\u00a0' %></span></div>
+    <div class="dk-stat"><span class="muted small">Gemiddeld per werkdag</span><b><%= nl(S.perDag) %></b><span class="muted small">maandag t/m zaterdag</span></div>
+    <div class="dk-stat"><span class="muted small">Drukste dag</span><b><%= S.busiest ? S.busiest.n : '—' %></b><span class="muted small"><%= S.busiest ? `${WDL[(new Date(S.busiest.ds + 'T00:00:00Z').getUTCDay() + 6) % 7]} ${dmy(S.busiest.ds)}` : 'nog geen gegevens' %></span></div>
+    <div class="dk-stat"><span class="muted small">Drukste maand</span><b><%= S.busiestMonth ? MAAND[S.busiestMonth.m] : '—' %></b><span class="muted small"><%= S.busiestMonth ? S.busiestMonth.total + ' werkopdrachten' : '\u00a0' %></span></div>
+  </div>
+
+  <section class="card dk-card">
+    <div class="dk-card-head">
+      <h2>Jaarkalender <%= D.year %></h2>
+      <div class="dk-legend" aria-hidden="true">
+        <span class="muted small">Rustig</span>
+        <% for (let l = 0; l <= 4; l++) { %><span class="dk-sw dk-l<%= l %>"></span><% } %>
+        <span class="muted small">Druk</span>
+        <span class="dk-sw dk-l3 dk-f"></span><span class="muted small">verwachting</span>
+        <span class="dk-sw dk-l0 dk-apkdot"></span><span class="muted small">APK verloopt</span>
+      </div>
+    </div>
+    <div class="dk-months">
+      <% for (const M of D.months) { %>
+      <div class="dk-month">
+        <div class="dk-mhead"><b><%= MAAND[M.m] %></b><span class="muted small"><%= M.total ? M.total : '' %></span></div>
+        <div class="dk-grid" role="grid" aria-label="<%= MAAND[M.m] %> <%= D.year %>">
+          <% for (const w of WD) { %><span class="dk-wd muted"><%= w %></span><% } %>
+          <% for (let i = 0; i < M.cells[0].wd; i++) { %><span class="dk-pad"></span><% } %>
+          <% for (const c of M.cells) { const t = tip(c); %>
+            <span class="dk-day dk-l<%= c.future ? c.flvl : c.lvl %><%= c.future ? ' dk-f' : '' %><%= c.today ? ' dk-today' : '' %><%= c.apkDue ? ' dk-apkdot' : '' %><%= c.wd === 6 ? ' dk-sun' : '' %>" data-tip="<%= t %>" aria-label="<%= t %>"><%= c.d %></span>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+    </div>
+  </section>
+
+  <div class="dk-two">
+    <section class="card">
+      <h2>Komende weken</h2>
+      <p class="muted small">Verwachting: gemiddelde van dezelfde weken in eerdere jaren.<% if (!D.hasHistory) { %> Er zijn nog geen gegevens van eerdere jaren; de verwachting wordt beter naarmate ADONIS langer in gebruik is.<% } %></p>
+      <% const maxW = Math.max(1, ...D.weeks.map((w) => Math.max(w.verwacht || 0, w.vorigJaar))); %>
+      <div class="table-wrap">
+      <table class="list dk-weeks no-cards">
+        <thead><tr><th>Week</th><th>Verwacht</th><th class="num">Vorig jaar</th><th class="num">APK's verlopen</th></tr></thead>
+        <tbody>
+        <% for (const w of D.weeks) { %>
+          <tr class="<%= w.current ? 'dk-now' : '' %>">
+            <td class="dk-wk"><b>wk <%= w.week %></b><br><span class="muted small"><%= Number(w.start.slice(8, 10)) %> <%= MND[Number(w.start.slice(5, 7)) - 1] %> – <%= Number(w.end.slice(8, 10)) %> <%= MND[Number(w.end.slice(5, 7)) - 1] %></span><% if (w.current) { %><br><span class="muted small">deze week, tot nu toe <%= w.gedaan %></span><% } %></td>
+            <td><div class="dk-barcell"><% if (w.verwacht !== null) { %><svg class="dk-hbar" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="1" height="8" rx="2" width="<%= Math.max(2, (w.verwacht / maxW) * 100).toFixed(1) %>"/></svg><span>± <%= w.verwacht %></span><% } else { %><span class="muted">—</span><% } %></div></td>
+            <td class="num"><%= w.vorigJaar %></td>
+            <td class="num"><%= w.apk || '' %></td>
+          </tr>
+        <% } %>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Per weekdag</h2>
+      <p class="muted small">Gemiddeld aantal werkopdrachten per dag in <%= D.year %>.</p>
+      <% const maxD = Math.max(1, ...D.weekday); %>
+      <svg class="dk-vbars" viewBox="0 0 280 150" role="img" aria-label="Gemiddeld per weekdag: <%= D.weekday.map((v, i) => WD[i] + ' ' + nl(v)).join(', ') %>">
+        <line class="dk-base" x1="0" x2="280" y1="125" y2="125"/>
+        <% D.weekday.forEach((v, i) => { const h = (v / maxD) * 100; const x = 8 + i * 39; %>
+          <rect class="dk-bar" x="<%= x %>" y="<%= (125 - h).toFixed(1) %>" width="26" height="<%= Math.max(h, v ? 2 : 0).toFixed(1) %>" rx="4"/>
+          <text class="dk-val" x="<%= x + 13 %>" y="<%= (125 - h - 5).toFixed(1) %>" text-anchor="middle"><%= v ? nl(v) : '' %></text>
+          <text class="dk-lab" x="<%= x + 13 %>" y="142" text-anchor="middle"><%= WD[i] %></text>
+        <% }) %>
+      </svg>
+
+      <h2 class="dk-sub">Per maand</h2>
+      <div class="dk-legend dk-legend-bars"><span class="dk-key dk-key-cur"></span><span class="small"><%= D.year %></span><span class="dk-key dk-key-prev"></span><span class="small"><%= D.year - 1 %></span></div>
+      <% const maxM = Math.max(1, ...D.months.map((m) => m.total), ...D.prevMonths); %>
+      <svg class="dk-vbars" viewBox="0 0 360 150" role="img" aria-label="Werkopdrachten per maand in <%= D.year %> en <%= D.year - 1 %>">
+        <line class="dk-base" x1="0" x2="360" y1="125" y2="125"/>
+        <% D.months.forEach((m, i) => { const x = 4 + i * 29.5; const hp = (D.prevMonths[i] / maxM) * 110; const hc = (m.total / maxM) * 110; %>
+          <rect class="dk-bar-prev" x="<%= x %>" y="<%= (125 - hp).toFixed(1) %>" width="11" height="<%= hp.toFixed(1) %>" rx="3"><title><%= MAAND[i] %> <%= D.year - 1 %>: <%= D.prevMonths[i] %></title></rect>
+          <rect class="dk-bar" x="<%= x + 13 %>" y="<%= (125 - hc).toFixed(1) %>" width="11" height="<%= hc.toFixed(1) %>" rx="3"><title><%= MAAND[i] %> <%= D.year %>: <%= m.total %></title></rect>
+          <text class="dk-lab" x="<%= x + 12 %>" y="142" text-anchor="middle"><%= MND[i] %></text>
+        <% }) %>
+      </svg>
+      <details class="dk-table">
+        <summary class="small">Als tabel</summary>
+        <table class="list no-cards">
+          <thead><tr><th>Maand</th><th class="num"><%= D.year - 1 %></th><th class="num"><%= D.year %></th></tr></thead>
+          <tbody><% D.months.forEach((m, i) => { %><tr><td><%= MAAND[i] %></td><td class="num"><%= D.prevMonths[i] %></td><td class="num"><%= m.total %></td></tr><% }) %></tbody>
+        </table>
+      </details>
+    </section>
+  </div>
+</main>
+<div class="dk-tip" role="tooltip" hidden></div>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/drukte.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

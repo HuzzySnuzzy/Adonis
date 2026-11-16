@@ -114,6 +114,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   Windows-app. Live camerabeeld vraagt https; anders een foto van de barcode. Een USB-scanner werkt altijd.
 - **Kleur van de auto aanpassen:** op de klantpagina (RDW-gegevens → Kleur → *Aanpassen*), voor iedereen. De eigen kleur
   (`customers.kleur_eigen`) gaat voor de RDW-kleur in de lijsten, op de klantpagina en in het RDW-venster.
+- **Drukte** (beheerders, `/drukte`, `src/drukte.js`): jaarkalender met per dag het aantal werkopdrachten (datum van invoer),
+  APK's en bandensets in/uit; voor dagen na vandaag een verwachting (zelfde weekdag 52 weken terug, gemiddeld over 3 weken en
+  alle eerdere jaren) en de APK-vervaldatums van actieve klanten. Plus komende 8 weken, per weekdag en per maand.
 - **Privacy (AVG):** *Systeem → Privacy (AVG)* toont klanten zonder activiteit sinds 1 januari van 7 jaar terug (en zonder banden
   in het bandenhotel). Anonimiseren (persoonsgegevens weg, ook op werkopdrachten en in het bandenhotel; kenteken en werkgeschiedenis
   blijven) of definitief verwijderen, na het eigen wachtwoord. Alleen aantallen worden gelogd.

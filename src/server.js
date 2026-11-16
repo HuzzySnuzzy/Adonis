@@ -1376,6 +1376,10 @@ app.post('/systeem/onderdelen', auth.requireOwner, (req, res) => {
 });
 
 /* ---------- Mijn werk: wat heeft een monteur gedaan (beheerders kunnen iedereen bekijken) ---------- */
+/* Drukte: jaarkalender en verwachting (beheerders). */
+app.get('/drukte', auth.requireAdmin, (req, res) => {
+  res.render('drukte', { title: 'Drukte', D: require('./drukte').build(req.query.jaar) });
+});
 app.get('/mijn-werk', (req, res) => {
   let target = req.user;
   if (req.user.is_admin && req.query.gebruiker) target = auth.findUserById(req.query.gebruiker) || req.user;

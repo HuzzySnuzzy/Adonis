@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.66.0', date: '2026-11-16', title: 'Drukte: jaarkalender en verwachting',
+    items: [
+      'Nieuw voor beheerders: Drukte (menu Beheer). Een jaarkalender waarin elke dag kleurt naar hoeveel werkopdrachten er binnenkwamen: licht is rustig, donker is druk. Wijs een dag aan (of tik erop) voor de details: aantal werkopdrachten, hoeveel APK, en bandensets in/uit. Met de pijltjes bladert u door de jaren.',
+      'Verwachting: dagen na vandaag zijn gestreept gekleurd naar hoe druk het rond die datum in eerdere jaren was (dezelfde weekdag). Een stipje betekent dat er die dag APK\'s verlopen bij actieve klanten. De tabel Komende weken zet de verwachting voor de komende 8 weken naast vorig jaar en de APK\'s die verlopen.',
+      'Verder: gemiddeld per weekdag, per maand naast vorig jaar, de drukste dag en de drukste maand. Hoe langer ADONIS in gebruik is, hoe beter de verwachting.',
+    ],
+  },
+  {
     version: '1.65.1', date: '2026-11-16', title: 'Uitlaatgastest niet meer automatisch aangevinkt',
     items: [
       'Roetmeting en viergastest (achterkant, Keuringen) worden niet meer automatisch aangevinkt op basis van de RDW. De monteur vinkt zelf aan welke test is gedaan. Merk/type, APK-datum en datum deel I worden nog wel ingevuld.',
