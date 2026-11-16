@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    version: '1.65.1', date: '2026-11-16', title: 'Uitlaatgastest niet meer automatisch aangevinkt',
+    items: [
+      'Roetmeting en viergastest (achterkant, Keuringen) worden niet meer automatisch aangevinkt op basis van de RDW. De monteur vinkt zelf aan welke test is gedaan. Merk/type, APK-datum en datum deel I worden nog wel ingevuld.',
+    ],
+  },
+  {
     version: '1.65.0', date: '2026-11-13', title: 'Kleur van de auto aanpassen',
     items: [
       'Klopt de kleur van een auto niet (bijv. overgespoten of gewrapt)? Op de klantpagina klikt iedereen, ook een monteur, bij RDW-gegevens → Kleur op Aanpassen en kiest de echte kleur. Die kleur staat daarna overal: de gekleurde stip in de lijsten (met "aangepast" erbij), de klantpagina en het RDW-venster op de werkopdracht. Bij de RDW verandert er niets; met "Volgens de RDW" gaat het terug.',
