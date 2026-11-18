@@ -42,7 +42,7 @@ function required(p) {
   if (/^\/apk(\/|$)/.test(p)) return ['apk'];
   if (/^\/portaal(\/|$)/.test(p)) return ['portaal'];
   if (/^\/rekenhulp(\/|$)/.test(p)) return ['rekenhulp'];
-  if (/^\/(ai-analyse|ai|aandachtspunt|aandachtspunten)(\/|$)/.test(p) || /^\/klant\/[^/]+\/aandachtspunten$/.test(p)) return ['ai'];
+  if (/^\/(ai-analyse|ai|aandachtspunt|aandachtspunten|apk-vraag)(\/|$)/.test(p) || /^\/klant\/[^/]+\/aandachtspunten$/.test(p)) return ['ai'];
   return null;
 }
 function allowed(p, on = state()) {

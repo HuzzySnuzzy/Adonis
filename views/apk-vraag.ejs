@@ -1,0 +1,90 @@
+<%- include('/partials/head') %>
+<%
+  const L = { laag: 'Snel', normaal: 'Normaal', hoog: 'Grondig' };
+  const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
+  const I = item; const D = I && I.data;
+%>
+<main class="page apkq-page">
+  <div class="page-head">
+    <div>
+      <h1><%- include('/partials/ai-icon') %> APK-vraag</h1>
+      <p class="muted small">Twijfelt u of iets afkeur is? Stel de vraag; Claude zoekt het op in de keuringseisen van de RDW
+        (het online APK-handboek) en geeft het oordeel, de uitleg, de eis zelf en de bron. Eerder gestelde vragen teruglezen is gratis.</p>
+    </div>
+  </div>
+
+  <form class="card apkq-ask" data-apkq-form data-csrf="<%= csrf %>">
+    <label class="field apkq-q"><span>Uw vraag</span>
+      <textarea name="vraag" rows="2" maxlength="500" required placeholder="bijv. Zijn stabilisatorstangetjes met speling afkeur, of mag dat door de APK?"><%= voorbeeld %></textarea></label>
+    <div class="apkq-row">
+      <label class="field"><span>Voertuig</span>
+        <select name="soort"><% for (const [k, v] of Object.entries(SOORTEN)) { %><option value="<%= k %>"><%= v %></option><% } %></select></label>
+      <% if (!aiConfigured) { %><p class="muted small">Claude is niet ingesteld (anthropic-api-key in config.properties).</p>
+      <% } else if (!canAi) { %><p class="muted small ai-locked">Een vraag stellen aan Claude kost geld. U heeft daar geen toegang toe; vraag een beheerder. Eerdere antwoorden kunt u wel lezen.</p>
+      <% } else { %><button class="btn btn-primary" type="submit" data-apkq-ask><%- include('/partials/ai-icon') %> Vraag het Claude</button><% } %>
+    </div>
+    <p class="alert" data-apkq-error hidden></p>
+    <p class="muted small apkq-busy" data-apkq-busy hidden>Claude zoekt het op in het APK-handboek van de RDW… dit duurt meestal een halve tot twee minuten.</p>
+  </form>
+
+  <% if (I) { %>
+  <section class="card apkq-answer" data-apkq-item="<%= I.id %>" data-apkq-status="<%= I.status %>">
+    <p class="muted small apkq-meta"><%= SOORTEN[I.soort] || I.soort %> · gevraagd<%= I.by_name ? ' door ' + I.by_name : '' %> op <%= fmtDateTime(I.created_at) %><%= I.status === 'klaar' ? ` (${L[I.effort] || I.effort}${I.eur ? ', € ' + (I.eur < 0.005 ? '0,00' : I.eur.toFixed(2).replace('.', ',')) : ''})` : '' %></p>
+    <h2 class="apkq-vraag">“<%= I.vraag %>”</h2>
+    <% if (I.status === 'bezig') { %>
+      <p class="muted" data-apkq-wait>Claude zoekt het op in het APK-handboek van de RDW… deze pagina ververst vanzelf.</p>
+    <% } else if (I.status === 'mislukt') { %>
+      <p class="alert"><%= I.error || 'Er ging iets mis.' %></p>
+    <% } else { const O = OORDELEN[I.oordeel] || OORDELEN.onbekend; %>
+      <div class="apkq-verdict apkq-<%= I.oordeel %>" role="status">
+        <span class="apkq-badge"><%= O.label %></span>
+        <p><b><%= D.kort || O.uitleg %></b></p>
+      </div>
+      <% if (D.uitleg) { %><p class="apkq-uitleg"><%= D.uitleg %></p><% } %>
+      <% if (D.eis && (D.eis.tekst || D.eis.titel)) { %>
+      <figure class="apkq-eis">
+        <figcaption class="muted small">Keuringseis<%= D.eis.titel ? ': ' + D.eis.titel : '' %></figcaption>
+        <% if (D.eis.tekst) { %><blockquote><%= D.eis.tekst %></blockquote><% } %>
+      </figure>
+      <% } %>
+      <% if (D.voorwaarden && D.voorwaarden.length) { %><h3>Wanneer wel en niet</h3><ul><% for (const v of D.voorwaarden) { %><li><%= v %></li><% } %></ul><% } %>
+      <% if (D.tips && D.tips.length) { %><h3>Tip bij het controleren</h3><ul><% for (const v of D.tips) { %><li><%= v %></li><% } %></ul><% } %>
+      <h3>Bron</h3>
+      <% if (I.sources.length) { %>
+        <ul class="apkq-sources"><% for (const s of I.sources) { %><li><a href="<%= s.url %>" target="_blank" rel="noopener"><%= s.title || s.url %></a> <span class="muted small"><%= host(s.url) %></span></li><% } %></ul>
+      <% } else { %><p class="muted small">Claude heeft geen pagina van de RDW gevonden voor deze vraag; daarom is het oordeel "niet zeker".</p><% } %>
+      <p class="muted small apkq-disclaimer">Opgezocht door Claude in de regels van de RDW. Bij twijfel geldt altijd de tekst in het APK-handboek zelf (zie de bron) en het oordeel van de keurmeester.</p>
+    <% } %>
+    <% if (user.is_admin) { %>
+    <form method="post" action="/apk-vraag/<%= I.id %>/verwijderen" class="inline apkq-del" data-confirm="Deze vraag en het antwoord verwijderen?">
+      <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="linkbtn" type="submit">Verwijderen</button>
+    </form>
+    <% } %>
+  </section>
+  <% } %>
+
+  <section class="card apkq-list-card">
+    <div class="apkq-list-head">
+      <h2>Eerder gevraagd</h2>
+      <form method="get" action="/apk-vraag" class="search apkq-search" role="search">
+        <input type="search" name="q" value="<%= q %>" placeholder="Zoek in eerdere vragen…" aria-label="Zoek in eerdere vragen">
+        <button class="btn btn-small" type="submit">Zoeken</button>
+      </form>
+    </div>
+    <% if (!list.length) { %><p class="empty"><%= q ? 'Niets gevonden.' : 'Nog geen vragen gesteld.' %></p><% } else { %>
+    <ul class="apkq-list">
+      <% for (const r of list) { const O = OORDELEN[r.oordeel]; %>
+      <li class="<%= I && I.id === r.id ? 'is-current' : '' %>">
+        <a href="/apk-vraag/<%= r.id %>"><%= r.vraag %></a>
+        <span class="apkq-mini apkq-<%= r.status === 'klaar' ? r.oordeel : r.status %>"><%= r.status === 'bezig' ? 'bezig…' : r.status === 'mislukt' ? 'mislukt' : O ? O.label : '' %></span>
+        <span class="muted small"><%= fmtDateTime(r.created_at) %><%= r.by_name ? ' · ' + r.by_name : '' %></span>
+      </li>
+      <% } %>
+    </ul>
+    <% } %>
+  </section>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/ai.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/apk-vraag.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

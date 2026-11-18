@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.67.0', date: '2026-11-18', title: 'APK-vraag: is dit afkeur?',
+    items: [
+      'Nieuw: APK-vraag (menu Hulpmiddelen, en een knop op de APK-lijst). Typ een vraag zoals "Zijn stabilisatorstangetjes met speling afkeur, of mag dat door de APK?". Claude zoekt het antwoord op in de keuringseisen van de RDW (het online APK-handboek op rdw.nl) en geeft een oordeel (Afkeur, Geen afkeur maar wel advies, Mag door, of Hangt ervan af), de uitleg, de eis zelf als citaat, wanneer wel en niet, een tip voor het controleren en de link naar de bron.',
+      'Claude mag voor dit antwoord alleen websites van de RDW doorzoeken en lezen. Een bron die hij niet echt heeft geopend, wordt niet getoond; zonder bron van de RDW is het oordeel "Niet zeker".',
+      'Vooraf ziet u wat het ongeveer kost (zoals bij de andere Claude-functies). Eerder gestelde vragen en antwoorden kan iedereen gratis teruglezen en doorzoeken; een nieuwe vraag stellen kan wie AI-toegang heeft.',
+    ],
+  },
+  {
     version: '1.66.0', date: '2026-11-16', title: 'Drukte: jaarkalender en verwachting',
     items: [
       'Nieuw voor beheerders: Drukte (menu Beheer). Een jaarkalender waarin elke dag kleurt naar hoeveel werkopdrachten er binnenkwamen: licht is rustig, donker is druk. Wijs een dag aan (of tik erop) voor de details: aantal werkopdrachten, hoeveel APK, en bandensets in/uit. Met de pijltjes bladert u door de jaren.',

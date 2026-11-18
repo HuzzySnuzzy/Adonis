@@ -13,6 +13,7 @@ const modelBulletins = require('./model-bulletins');
 const vehicle = require('./vehicle-analysis');
 const rdw = require('./rdw');
 const listAi = require('./list-ai');
+const apkVraag = require('./apk-vraag');
 
 module.exports = function register(app, { flash, wrap }) {
   const wantsJson = (req) => (req.get('accept') || '').includes('application/json');
@@ -56,6 +57,9 @@ module.exports = function register(app, { flash, wrap }) {
       const n = modelBulletins.customersWith(m.key);
       detail = `Bekende zwakke plekken en APK-afkeurpunten van de ${m.label} opzoeken op internet, met bronnen.`
         + (n > 1 ? ` Het resultaat geldt voor alle ${n} klanten met deze auto.` : ' Het resultaat geldt ook voor latere klanten met dezelfde auto.');
+    } else if (taak === 'apkvraag') {
+      levels = apkVraag.estimate();
+      detail = 'Claude zoekt het antwoord op in de keuringseisen van de RDW (het online APK-handboek) en geeft het oordeel, de uitleg, de eis zelf en de bron.';
     } else if (taak === 'voertuig') {
       const k = vehicle.keyFor({ kenteken: req.query.kenteken, omschrijving: req.query.omschrijving });
       if (!k) return res.status(400).json({ error: 'Vul een kenteken of een omschrijving van de auto in.' });
@@ -227,6 +231,36 @@ module.exports = function register(app, { flash, wrap }) {
       flash(req, 'err', err instanceof listAi.ListAiError ? err.message : 'Doorvoeren lukte niet.');
       res.redirect(`/lijsten/optimaliseren?lijst=${key}`);
     }
+  });
+
+  /* ================= APK-vraag: afkeur of niet, volgens de RDW ================= */
+  app.get('/apk-vraag', (req, res) => {
+    const q = String(req.query.q || '').trim().slice(0, 100);
+    res.render('apk-vraag', { title: 'APK-vraag', list: apkVraag.recent(q), q, SOORTEN: apkVraag.SOORTEN, OORDELEN: apkVraag.OORDELEN,
+      aiConfigured: importer.isConfigured(), canAi: req.user.can_ai, item: null, voorbeeld: String(req.query.vraag || '').slice(0, 500) });
+  });
+  app.get('/apk-vraag/:id', (req, res) => {
+    const item = apkVraag.get(Number(req.params.id));
+    if (!item) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze APK-vraag bestaat niet (meer).' });
+    if (wantsJson(req)) return res.json({ id: item.id, status: item.status, error: item.error });
+    res.render('apk-vraag', { title: 'APK-vraag', list: apkVraag.recent(), q: '', SOORTEN: apkVraag.SOORTEN, OORDELEN: apkVraag.OORDELEN,
+      aiConfigured: importer.isConfigured(), canAi: req.user.can_ai, item, voorbeeld: '' });
+  });
+  app.post('/apk-vraag', auth.requireAi, require('express').json({ limit: '20kb' }), (req, res) => {
+    let id;
+    const b = req.body || {};
+    try { id = apkVraag.create({ vraag: b.vraag, soort: b.soort, effort: b.effort, userId: req.user.id }); } catch (err) {
+      if (!(err instanceof apkVraag.ApkVraagError)) throw err;
+      return res.status(400).json({ error: err.message });
+    }
+    const by = req.user.name; const byId = req.user.id;
+    apkVraag.answer(id, req.user.id).then(() => events.broadcast({ type: 'data', area: 'apk-vraag', by, byId }));
+    res.json({ ok: true, id, url: `/apk-vraag/${id}` });
+  });
+  app.post('/apk-vraag/:id/verwijderen', auth.requireAdmin, (req, res) => {
+    apkVraag.remove(Number(req.params.id));
+    flash(req, 'ok', 'Vraag verwijderd.');
+    res.redirect('/apk-vraag');
   });
 
   /* ================= AI-analyse van een voertuig ================= */

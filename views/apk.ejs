@@ -11,6 +11,7 @@
         <b>Gebeld</b>; zo ziet iedereen wie al gebeld is. Nog niet gebelde klanten en de vroegste datums staan bovenaan.</p>
     </div>
     <div class="head-buttons">
+      <% if (feat.ai) { %><a class="btn" href="/apk-vraag" title="Is dit afkeur? Opzoeken in de keuringseisen van de RDW"><%- include('/partials/ai-icon') %> APK-vraag</a><% } %>
       <% if (user.is_admin && aiConfigured && feat.ai) { %>
       <button class="btn" type="button" data-ai-task="apk-modellen" data-ai-params="toon=<%= show %>" data-ai-action="/apk/modelpunten" data-ai-bulk
         data-ai-title="APK-aandachtspunten voor de automodellen in deze lijst"><%- include('/partials/ai-icon') %> APK-aandachtspunten opzoeken (Claude)</button>

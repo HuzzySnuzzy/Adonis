@@ -114,6 +114,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   Windows-app. Live camerabeeld vraagt https; anders een foto van de barcode. Een USB-scanner werkt altijd.
 - **Kleur van de auto aanpassen:** op de klantpagina (RDW-gegevens → Kleur → *Aanpassen*), voor iedereen. De eigen kleur
   (`customers.kleur_eigen`) gaat voor de RDW-kleur in de lijsten, op de klantpagina en in het RDW-venster.
+- **APK-vraag** (`/apk-vraag`, `src/apk-vraag.js`): "is dit afkeur?" Claude (web_search + web_fetch, alleen `rdw.nl`
+  inclusief `apk-handboek.rdw.nl`) zoekt de keuringseis op en geeft oordeel, uitleg, citaat van de eis, voorwaarden en bron.
+  Alleen bronnen die echt zijn gevonden/geopend worden getoond. Vragen en antwoorden worden bewaard (teruglezen is gratis).
 - **Drukte** (beheerders, `/drukte`, `src/drukte.js`): jaarkalender met per dag het aantal werkopdrachten (datum van invoer),
   APK's en bandensets in/uit; voor dagen na vandaag een verwachting (zelfde weekdag 52 weken terug, gemiddeld over 3 weken en
   alle eerdere jaren) en de APK-vervaldatums van actieve klanten. Plus komende 8 weken, per weekdag en per maand.
