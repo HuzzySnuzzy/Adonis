@@ -67,6 +67,8 @@ async function lookupFresh(kenteken) {
     merk: cap(v.merk),
     handelsbenaming: cap(v.handelsbenaming),
     voertuigsoort: v.voertuigsoort || '',
+    categorie: v.europese_voertuigcategorie || '',      // bijv. M1, N1
+    maxMassa: num(v.toegestane_maximum_massa_voertuig),
     inrichting: v.inrichting || '',
     kleur: [v.eerste_kleur, v.tweede_kleur].filter((k) => k && k !== 'Niet geregistreerd').map(cap).join(' / '),
     apk: rdwDate(v, 'vervaldatum_apk'),

@@ -17,19 +17,23 @@
     <label class="field apkq-q"><span>Uw vraag</span>
       <textarea name="vraag" rows="2" maxlength="500" required placeholder="bijv. Zijn stabilisatorstangetjes met speling afkeur, of mag dat door de APK?"><%= voorbeeld %></textarea></label>
     <div class="apkq-row">
-      <label class="field"><span>Voertuig</span>
-        <select name="soort"><% for (const [k, v] of Object.entries(SOORTEN)) { %><option value="<%= k %>"><%= v %></option><% } %></select></label>
+      <label class="field apkq-plate"><span>Kenteken <span class="muted small">(verplicht: bouwdatum en soort voertuig tellen mee)</span></span>
+        <input name="kenteken" value="<%= kenteken %>" list="apkq-customers" placeholder="bijv. 12-ABC-3" autocomplete="off" autocapitalize="characters" spellcheck="false" required data-apkq-plate>
+        <datalist id="apkq-customers"><% for (const c of customers) { %><option value="<%= c.kenteken %>"><%= c.merk_type %></option><% } %></datalist></label>
       <% if (!aiConfigured) { %><p class="muted small">Claude is niet ingesteld (anthropic-api-key in config.properties).</p>
       <% } else if (!canAi) { %><p class="muted small ai-locked">Een vraag stellen aan Claude kost geld. U heeft daar geen toegang toe; vraag een beheerder. Eerdere antwoorden kunt u wel lezen.</p>
       <% } else { %><button class="btn btn-primary" type="submit" data-apkq-ask><%- include('/partials/ai-icon') %> Vraag het Claude</button><% } %>
     </div>
+    <p class="muted small apkq-car" data-apkq-car aria-live="polite"></p>
     <p class="alert" data-apkq-error hidden></p>
     <p class="muted small apkq-busy" data-apkq-busy hidden>Claude zoekt het op in het APK-handboek van de RDW… dit duurt meestal een halve tot twee minuten.</p>
   </form>
 
   <% if (I) { %>
   <section class="card apkq-answer" data-apkq-item="<%= I.id %>" data-apkq-status="<%= I.status %>">
-    <p class="muted small apkq-meta"><%= SOORTEN[I.soort] || I.soort %> · gevraagd<%= I.by_name ? ' door ' + I.by_name : '' %> op <%= fmtDateTime(I.created_at) %><%= I.status === 'klaar' ? ` (${L[I.effort] || I.effort}${I.eur ? ', € ' + (I.eur < 0.005 ? '0,00' : I.eur.toFixed(2).replace('.', ',')) : ''})` : '' %></p>
+    <% const VT = I.voertuig || {}; %>
+    <p class="apkq-car-line"><% if (I.kenteken) { %><b class="apkq-plate-chip"><%= I.kenteken %></b> <% } %><%= [VT.merkType, VT.datumEersteToelating ? 'eerste toelating ' + VT.datumEersteToelating : '', SOORTEN[I.soort] || I.soort, VT.brandstof].filter(Boolean).join(' · ') %></p>
+    <p class="muted small apkq-meta">Gevraagd<%= I.by_name ? ' door ' + I.by_name : '' %> op <%= fmtDateTime(I.created_at) %><%= I.status === 'klaar' ? ` (${L[I.effort] || I.effort}${I.eur ? ', € ' + (I.eur < 0.005 ? '0,00' : I.eur.toFixed(2).replace('.', ',')) : ''})` : '' %></p>
     <h2 class="apkq-vraag">“<%= I.vraag %>”</h2>
     <% if (I.status === 'bezig') { %>
       <p class="muted" data-apkq-wait>Claude zoekt het op in het APK-handboek van de RDW… deze pagina ververst vanzelf.</p>
@@ -67,7 +71,7 @@
     <div class="apkq-list-head">
       <h2>Eerder gevraagd</h2>
       <form method="get" action="/apk-vraag" class="search apkq-search" role="search">
-        <input type="search" name="q" value="<%= q %>" placeholder="Zoek in eerdere vragen…" aria-label="Zoek in eerdere vragen">
+        <input type="search" name="q" value="<%= q %>" placeholder="Zoek op vraag, kenteken of auto…" aria-label="Zoek in eerdere vragen">
         <button class="btn btn-small" type="submit">Zoeken</button>
       </form>
     </div>
@@ -76,6 +80,7 @@
       <% for (const r of list) { const O = OORDELEN[r.oordeel]; %>
       <li class="<%= I && I.id === r.id ? 'is-current' : '' %>">
         <a href="/apk-vraag/<%= r.id %>"><%= r.vraag %></a>
+        <% if (r.kenteken) { %><span class="muted small"><b><%= r.kenteken %></b><%= r.merk_type ? ' · ' + r.merk_type : '' %></span><% } %>
         <span class="apkq-mini apkq-<%= r.status === 'klaar' ? r.oordeel : r.status %>"><%= r.status === 'bezig' ? 'bezig…' : r.status === 'mislukt' ? 'mislukt' : O ? O.label : '' %></span>
         <span class="muted small"><%= fmtDateTime(r.created_at) %><%= r.by_name ? ' · ' + r.by_name : '' %></span>
       </li>

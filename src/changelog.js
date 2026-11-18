@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.67.1', date: '2026-11-18', title: 'APK-vraag met kenteken',
+    items: [
+      'Bij een APK-vraag vult u nu ook het kenteken in (verplicht). ADONIS haalt de gegevens van de auto op bij de RDW (merk/type, datum eerste toelating, voertuigcategorie zoals M1 of N1, brandstof, gewicht, emissieklasse) en geeft die aan Claude. Zo houdt het antwoord rekening met eisen die pas vanaf een bepaalde bouwdatum, of alleen voor een bepaalde soort voertuig of brandstof gelden. Het soort voertuig hoeft u niet meer te kiezen.',
+      'Na het invullen van het kenteken ziet u meteen welke auto het is. Op de klantpagina (RDW-gegevens) staat een link APK-vraag die het kenteken al invult. Eerdere vragen zoekt u ook op kenteken of auto.',
+    ],
+  },
+  {
     version: '1.67.0', date: '2026-11-18', title: 'APK-vraag: is dit afkeur?',
     items: [
       'Nieuw: APK-vraag (menu Hulpmiddelen, en een knop op de APK-lijst). Typ een vraag zoals "Zijn stabilisatorstangetjes met speling afkeur, of mag dat door de APK?". Claude zoekt het antwoord op in de keuringseisen van de RDW (het online APK-handboek op rdw.nl) en geeft een oordeel (Afkeur, Geen afkeur maar wel advies, Mag door, of Hangt ervan af), de uitleg, de eis zelf als citaat, wanneer wel en niet, een tip voor het controleren en de link naar de bron.',

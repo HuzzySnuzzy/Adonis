@@ -237,26 +237,42 @@ module.exports = function register(app, { flash, wrap }) {
   app.get('/apk-vraag', (req, res) => {
     const q = String(req.query.q || '').trim().slice(0, 100);
     res.render('apk-vraag', { title: 'APK-vraag', list: apkVraag.recent(q), q, SOORTEN: apkVraag.SOORTEN, OORDELEN: apkVraag.OORDELEN,
-      aiConfigured: importer.isConfigured(), canAi: req.user.can_ai, item: null, voorbeeld: String(req.query.vraag || '').slice(0, 500) });
+      aiConfigured: importer.isConfigured(), canAi: req.user.can_ai, item: null, voorbeeld: String(req.query.vraag || '').slice(0, 500),
+      kenteken: String(req.query.kenteken || '').slice(0, 12), customers: db.prepare('SELECT kenteken, merk_type FROM customers ORDER BY updated_at DESC LIMIT 400').all() });
   });
   app.get('/apk-vraag/:id', (req, res) => {
     const item = apkVraag.get(Number(req.params.id));
     if (!item) return res.status(404).render('error', { title: 'Niet gevonden', message: 'Deze APK-vraag bestaat niet (meer).' });
     if (wantsJson(req)) return res.json({ id: item.id, status: item.status, error: item.error });
     res.render('apk-vraag', { title: 'APK-vraag', list: apkVraag.recent(), q: '', SOORTEN: apkVraag.SOORTEN, OORDELEN: apkVraag.OORDELEN,
-      aiConfigured: importer.isConfigured(), canAi: req.user.can_ai, item, voorbeeld: '' });
+      aiConfigured: importer.isConfigured(), canAi: req.user.can_ai, item, voorbeeld: '', kenteken: item.kenteken || '',
+      customers: db.prepare('SELECT kenteken, merk_type FROM customers ORDER BY updated_at DESC LIMIT 400').all() });
   });
-  app.post('/apk-vraag', auth.requireAi, require('express').json({ limit: '20kb' }), (req, res) => {
-    let id;
+  app.post('/apk-vraag', auth.requireAi, require('express').json({ limit: '20kb' }), wrap(async (req, res) => {
     const b = req.body || {};
-    try { id = apkVraag.create({ vraag: b.vraag, soort: b.soort, effort: b.effort, userId: req.user.id }); } catch (err) {
+    const plates = require('./plates');
+    const kenteken = plates.formatPlate(String(b.kenteken || '').trim());
+    const pk = plateKey(kenteken);
+    if (!pk || pk.length < 4) return res.status(400).json({ error: 'Vul het kenteken in van de auto waar het om gaat.' });
+    if (!plates.rdwApplicable(kenteken)) return res.status(400).json({ error: 'Alleen Nederlandse kentekens: de APK en de gegevens van de RDW gelden alleen voor in Nederland geregistreerde voertuigen.' });
+    let info = null;
+    try {
+      const c = db.prepare('SELECT * FROM customers WHERE plate_key = ?').get(pk);
+      info = c ? (await rdw.forCustomer(c)).info : await rdw.lookup(pk);
+      // Oudere bewaarde gegevens zonder voertuigcategorie: even vers ophalen.
+      if (info && info.found && !info.categorie) { const f = await rdw.lookup(pk).catch(() => null); if (f && f.found) info = f; }
+    } catch { info = null; }
+    if (!info) return res.status(502).json({ error: 'De RDW is op dit moment niet bereikbaar, dus de gegevens van de auto kunnen niet worden opgehaald. Probeer het zo opnieuw.' });
+    if (!info.found) return res.status(400).json({ error: `Kenteken ${kenteken} is niet gevonden bij de RDW. Klopt het kenteken?` });
+    let id;
+    try { id = apkVraag.create({ vraag: b.vraag, kenteken, info, effort: b.effort, userId: req.user.id }); } catch (err) {
       if (!(err instanceof apkVraag.ApkVraagError)) throw err;
       return res.status(400).json({ error: err.message });
     }
     const by = req.user.name; const byId = req.user.id;
     apkVraag.answer(id, req.user.id).then(() => events.broadcast({ type: 'data', area: 'apk-vraag', by, byId }));
     res.json({ ok: true, id, url: `/apk-vraag/${id}` });
-  });
+  }));
   app.post('/apk-vraag/:id/verwijderen', auth.requireAdmin, (req, res) => {
     apkVraag.remove(Number(req.params.id));
     flash(req, 'ok', 'Vraag verwijderd.');

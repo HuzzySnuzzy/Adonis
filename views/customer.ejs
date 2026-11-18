@@ -81,6 +81,7 @@
     <div class="rdw-head">
       <h2>RDW-gegevens</h2>
       <div class="rdw-links"<%= rdwData && rdwData.foreign ? ' hidden' : '' %>>
+<% if (feat.ai) { %><a href="/apk-vraag?kenteken=<%= encodeURIComponent(customer.kenteken) %>" title="Is iets afkeur bij deze auto? Opzoeken in de keuringseisen van de RDW">APK-vraag</a><% } %>
         <a href="<%= rdwUrl(customer.kenteken) %>" target="_blank" rel="noopener">Bekijken op rdw.nl</a>
         <form method="post" action="/klant/<%= customer.id %>/rdw" class="inline">
           <input type="hidden" name="_csrf" value="<%= csrf %>">
