@@ -91,10 +91,22 @@
         <% if (user.can_invoice) { %>data-confirm="Werkopdracht terugsturen naar de monteur (status Open)?"<% } %>>
     <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="open">
   </form>
+  <form id="statusWacht" method="post" action="/werkopdracht/<%= order.id %>/status" hidden>
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="wacht">
+  </form>
+  <form id="statusVerder" method="post" action="/werkopdracht/<%= order.id %>/status" hidden>
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="open">
+  </form>
   <form id="statusReopen" method="post" action="/werkopdracht/<%= order.id %>/status" hidden
         data-confirm="Gefactureerde werkopdracht heropenen? Hij komt weer bij facturatie te staan.">
     <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="status" value="klaar">
   </form>
+  <% if (order.status === 'wacht') { %>
+    <div class="status-bar status-bar-wacht no-print">
+      <strong>Wacht op onderdelen</strong> · sinds <%= fmtDateTime(order.status_at) %><%= order.status_by_name ? ' (' + order.status_by_name + ')' : '' %>.
+      Zijn de onderdelen binnen? Klik op <strong>Onderdelen binnen</strong>; dan staat hij weer bij het open werk.
+    </div>
+  <% } %>
   <% if (order.status === 'klaar') { %>
     <div class="status-bar status-bar-klaar no-print">
       <strong>Klaar voor facturatie</strong> · door <%= order.status_by_name || 'onbekend' %> op <%= fmtDateTime(order.status_at) %>.
@@ -236,7 +248,7 @@
           <input class="red-nr nr-input" name="nummer" value="<%= fmtNr(nummer) %>" inputmode="numeric" required placeholder="nr." aria-label="Werkopdrachtnummer" autocomplete="off">
         </div>
 
-        <div class="cell"><span class="lbl">Datum invoer</span><% if (draft) { %><input class="ink<%= datumInvoer && draft.result.datum_bron !== 'gereed' ? '' : ' needs-check' %>" type="date" name="datum_invoer" value="<%= datumInvoer %>" required title="<%= draft.result.datum_bron === 'gereed' ? 'Overgenomen van Datum gereed – controleer' : 'Datum van de papieren werkopdracht' %>"><% } else if (order) { %><input class="ink" type="date" name="datum_invoer" value="<%= datumInvoer %>" required title="Datum van de werkopdracht (aan te passen)"><% } else { %><input class="ink" type="date" name="datum_invoer" value="<%= datumInvoer %>" required title="Datum van de werkopdracht (standaard vandaag; bijv. een afspraak later)"><% } %></div>
+        <div class="cell"><span class="lbl" title="Datum invoer en tijd van de afspraak">Datum · tijd</span><span class="date-time"><% if (draft) { %><input class="ink<%= datumInvoer && draft.result.datum_bron !== 'gereed' ? '' : ' needs-check' %>" type="date" name="datum_invoer" value="<%= datumInvoer %>" required title="<%= draft.result.datum_bron === 'gereed' ? 'Overgenomen van Datum gereed – controleer' : 'Datum van de papieren werkopdracht' %>"><% } else if (order) { %><input class="ink" type="date" name="datum_invoer" value="<%= datumInvoer %>" required title="Datum van de werkopdracht (aan te passen)"><% } else { %><input class="ink" type="date" name="datum_invoer" value="<%= datumInvoer %>" required title="Datum van de werkopdracht (standaard vandaag; bijv. een afspraak later)"><% } %><%- inp('tijd', d.tijd, 'class="ink tijd-in" inputmode="numeric" maxlength="5" placeholder="tijd" title="Tijd van de afspraak (optioneel), bijv. 08:30" aria-label="Tijd van de afspraak"') %></span></div>
         <div class="cell"><span class="lbl">Naam</span><%- inp('naam', d.naam) %></div>
 
         <div class="cell"><span class="lbl">Datum gereed</span><%- inp('datum_gereed', d.datum_gereed, 'type="date"') %></div>

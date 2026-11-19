@@ -726,16 +726,23 @@ app.get('/werkopdrachten', (req, res) => {
   };
   if (weergave === 'dag') {
     // Open bovenaan, daarna wat klaar is (klaar voor facturatie en gefactureerd).
-    const rows = db.prepare(`${SEL} WHERE o.datum_invoer = ? ORDER BY o.nummer ASC`).all(dag).map(withSummary);
+    // Op tijd van de afspraak (zonder tijd achteraan), dan op nummer.
+    const rows = db.prepare(`${SEL} WHERE o.datum_invoer = ?
+      ORDER BY COALESCE(json_extract(o.data, '$.tijd'), '') = '', json_extract(o.data, '$.tijd'), o.nummer ASC`).all(dag).map(withSummary);
     return res.render('orders', { ...base, title: 'Werkopdrachten', nav, orders: rows,
-      open: rows.filter((o) => o.status === 'open'), done: rows.filter((o) => o.status !== 'open'), dagLabel: longDayLabel(dag),
+      open: rows.filter((o) => o.status === 'open'), wacht: rows.filter((o) => o.status === 'wacht'),
+      done: rows.filter((o) => o.status === 'klaar' || o.status === 'gefactureerd'), dagLabel: longDayLabel(dag),
       dagShort: new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(dag + 'T00:00:00Z')).replace(/\./g, '') });
   }
   if (weergave === 'achterstand' || weergave === 'toekomst') {
+    const T = "COALESCE(json_extract(o.data, '$.tijd'), '') = '', json_extract(o.data, '$.tijd')";
     const rows = weergave === 'achterstand'
-      ? db.prepare(`${SEL} WHERE o.status = 'open' AND o.datum_invoer < ? ORDER BY o.datum_invoer ASC, o.nummer ASC LIMIT 500`).all(dag)
-      : db.prepare(`${SEL} WHERE o.datum_invoer > ? ORDER BY o.datum_invoer ASC, o.nummer ASC LIMIT 500`).all(dag);
-    return res.render('orders', { ...base, title: 'Werkopdrachten', nav, orders: rows.map(withSummary), dagLabel: longDayLabel(dag) });
+      ? db.prepare(`${SEL} WHERE o.status = 'open' AND o.datum_invoer < ? ORDER BY o.datum_invoer ASC, ${T}, o.nummer ASC LIMIT 500`).all(dag)
+      : db.prepare(`${SEL} WHERE o.datum_invoer > ? ORDER BY o.datum_invoer ASC, ${T}, o.nummer ASC LIMIT 500`).all(dag);
+    // Bij "nog open van eerder": wat op onderdelen wacht apart (staat niet in de teller, er kan nu niet aan worden gewerkt).
+    const wachtRows = weergave === 'achterstand'
+      ? db.prepare(`${SEL} WHERE o.status = 'wacht' AND o.datum_invoer < ? ORDER BY o.status_at ASC, o.nummer ASC LIMIT 500`).all(dag).map(withSummary) : [];
+    return res.render('orders', { ...base, title: 'Werkopdrachten', nav, orders: rows.map(withSummary), wacht: wachtRows, dagLabel: longDayLabel(dag) });
   }
   if (weergave === 'kalender') {
     const maand = /^\d{4}-\d{2}$/.test(req.query.maand || '') ? req.query.maand : dag.slice(0, 7);
@@ -744,12 +751,12 @@ app.get('/werkopdrachten', (req, res) => {
     const start = addDays(first, -wd);
     const days = Array.from({ length: 42 }, (_, i) => addDays(start, i));
     const end = days[41];
-    const per = new Map(days.map((d) => [d, { d, open: 0, done: 0, items: [] }]));
-    for (const r of db.prepare(`SELECT o.id, o.nummer, o.status, o.datum_invoer AS d, c.kenteken FROM orders o JOIN customers c ON c.id = o.customer_id
-        WHERE o.datum_invoer BETWEEN ? AND ? ORDER BY o.status = 'open' DESC, o.nummer ASC`).all(start, end)) {
+    const per = new Map(days.map((d) => [d, { d, open: 0, wacht: 0, done: 0, items: [] }]));
+    for (const r of db.prepare(`SELECT o.id, o.nummer, o.status, o.datum_invoer AS d, c.kenteken, json_extract(o.data, '$.tijd') AS tijd FROM orders o JOIN customers c ON c.id = o.customer_id
+        WHERE o.datum_invoer BETWEEN ? AND ? ORDER BY CASE o.status WHEN 'open' THEN 0 WHEN 'wacht' THEN 1 ELSE 2 END, COALESCE(json_extract(o.data, '$.tijd'), '') = '', json_extract(o.data, '$.tijd'), o.nummer ASC`).all(start, end)) {
       const x = per.get(r.d); if (!x) continue;
-      if (r.status === 'open') x.open++; else x.done++;
-      if (x.items.length < 4) x.items.push({ id: r.id, kenteken: r.kenteken, open: r.status === 'open', nr: orders.fmtNr(r.nummer) });
+      if (r.status === 'open') x.open++; else if (r.status === 'wacht') x.wacht++; else x.done++;
+      if (x.items.length < 4) x.items.push({ id: r.id, kenteken: r.kenteken, open: r.status === 'open', wacht: r.status === 'wacht', tijd: r.tijd || '', nr: orders.fmtNr(r.nummer) });
     }
     const weeks = []; for (let i = 0; i < 6; i++) weeks.push(days.slice(i * 7, i * 7 + 7).map((d) => per.get(d)));
     // Laatste week alleen als er nog een dag van deze maand in zit.
@@ -1057,7 +1064,10 @@ app.post('/werkopdracht/:id/status', (req, res) => {
   }
   orders.setStatus(order.id, next, req.user);
   announce(req, 'status', { id: order.id, nummer: order.nummer, status: next });
-  flash(req, 'ok', next === 'open'
+  flash(req, 'ok', next === 'wacht'
+    ? `Werkopdracht ${orders.fmtNr(order.nummer)} wacht op onderdelen.`
+    : next === 'open' && order.status === 'wacht' ? `Werkopdracht ${orders.fmtNr(order.nummer)}: onderdelen binnen, staat weer bij het open werk.`
+    : next === 'open'
     ? `Werkopdracht ${orders.fmtNr(order.nummer)} staat weer op Open en kan worden gewijzigd.`
     : `Werkopdracht ${orders.fmtNr(order.nummer)} is heropend en staat weer bij facturatie.`);
   res.redirect(`/werkopdracht/${order.id}`);

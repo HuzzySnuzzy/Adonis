@@ -53,8 +53,14 @@
       <section class="day-sec" aria-label="Open">
         <h3 class="day-h">Open <span class="count"><%= open.length %></span></h3>
         <% if (open.length) { %><%- include('/partials/orderlist', { orders: open, showPlate: true, groupByDate: false }) %>
-        <% } else { %><p class="muted small">Alles van deze dag is klaar.</p><% } %>
+        <% } else { %><p class="muted small"><%= wacht.length ? 'Geen open werk; de rest wacht op onderdelen of is klaar.' : 'Alles van deze dag is klaar.' %></p><% } %>
       </section>
+      <% if (wacht.length) { %>
+      <section class="day-sec day-wait" aria-label="Wacht op onderdelen">
+        <h3 class="day-h">Wacht op onderdelen <span class="count"><%= wacht.length %></span></h3>
+        <%- include('/partials/orderlist', { orders: wacht, showPlate: true, groupByDate: false }) %>
+      </section>
+      <% } %>
       <% if (done.length) { %>
       <section class="day-sec day-done" aria-label="Klaar">
         <h3 class="day-h">Klaar <span class="count"><%= done.length %></span></h3>
@@ -74,6 +80,11 @@
       <p class="muted"><%= orders.length %> werkopdracht<%= orders.length === 1 ? '' : 'en' %><%= W === 'achterstand' ? ', oudste bovenaan' : ', eerstvolgende bovenaan' %></p>
       <%- include('/partials/orderlist', { orders, showPlate: true, groupByDate: true }) %>
     <% } %>
+    <% if (W === 'achterstand' && wacht.length) { %>
+      <h3 class="day-h day-wait-h">Wacht op onderdelen <span class="count"><%= wacht.length %></span></h3>
+      <p class="muted small">Ook nog niet klaar, maar hier kan nu niet aan worden gewerkt (telt niet mee in het aantal open).</p>
+      <%- include('/partials/orderlist', { orders: wacht, showPlate: true, groupByDate: true }) %>
+    <% } %>
 
   <% } else if (W === 'kalender') { %>
     <div class="cal-nav">
@@ -81,17 +92,18 @@
       <h2><%= cap(maandLabel) %></h2>
       <a class="btn" href="/werkopdrachten?weergave=kalender&maand=<%= nextMaand %>" aria-label="Volgende maand">›</a>
       <% if (maand !== today.slice(0, 7)) { %><a class="btn btn-ghost" href="/werkopdrachten?weergave=kalender">Deze maand</a><% } %>
-      <span class="cal-legend muted small"><span class="cal-chip is-open">open</span> <span class="cal-chip">klaar</span></span>
+      <span class="cal-legend muted small"><span class="cal-chip is-open">open</span> <span class="cal-chip is-wait">wacht</span> <span class="cal-chip">klaar</span></span>
     </div>
     <div class="cal-grid" role="grid" aria-label="<%= maandLabel %>">
       <% for (const w of WD) { %><div class="cal-wd" role="columnheader"><%= w %></div><% } %>
       <% for (const week of weeks) { for (const x of week) { const other = !x.d.startsWith(maand); const late = x.open && x.d < today; %>
         <a class="cal-day<%= other ? ' is-other' : '' %><%= x.d === today ? ' is-today' : '' %><%= late ? ' is-late' : '' %><%= x.d === dag && x.d !== today ? ' is-sel' : '' %>" href="<%= dayUrl(x.d) %>" role="gridcell"
-           aria-label="<%= x.d.split('-').reverse().join('-') %>: <%= x.open %> open, <%= x.done %> klaar">
+           aria-label="<%= x.d.split('-').reverse().join('-') %>: <%= x.open %> open, <%= x.wacht %> wacht, <%= x.done %> klaar">
           <span class="cal-num"><%= Number(x.d.slice(8)) %></span>
-          <% if (x.open || x.done) { %><span class="cal-count"><% if (x.open) { %><b><%= x.open %></b> open<% } %><% if (x.open && x.done) { %> · <% } %><% if (x.done) { %><%= x.done %> klaar<% } %></span><% } %>
-          <% for (const it of x.items) { %><span class="cal-chip<%= it.open ? ' is-open' : '' %>"><%= it.kenteken %></span><% } %>
-          <% if (x.open + x.done > x.items.length) { %><span class="cal-more muted small">+<%= x.open + x.done - x.items.length %> meer</span><% } %>
+          <% const parts = [x.open && `<b>${x.open}</b> open`, x.wacht && `${x.wacht} wacht`, x.done && `${x.done} klaar`].filter(Boolean); %>
+          <% if (parts.length) { %><span class="cal-count"><%- parts.join(' · ') %></span><% } %>
+          <% for (const it of x.items) { %><span class="cal-chip<%= it.open ? ' is-open' : it.wacht ? ' is-wait' : '' %>"><%= it.tijd ? it.tijd + ' ' : '' %><%= it.kenteken %></span><% } %>
+          <% const tot = x.open + x.wacht + x.done; if (tot > x.items.length) { %><span class="cal-more muted small">+<%= tot - x.items.length %> meer</span><% } %>
         </a>
       <% } } %>
     </div>

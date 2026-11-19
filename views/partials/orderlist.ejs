@@ -20,11 +20,11 @@
         <span class="day-count"><%= e.n %> werkopdracht<%= e.n === 1 ? '' : 'en' %><% if (e.open) { %> · <b><%= e.open %> open</b><% } %></span></td>
     </tr>
     <% } %>
-    <tr data-href="/werkopdracht/<%= o.id %>"<%- o.status === 'open' ? ' class="is-open"' : '' %>>
+    <tr data-href="/werkopdracht/<%= o.id %>"<%- o.status === 'open' ? ' class="is-open"' : o.status === 'wacht' ? ' class="is-wait"' : '' %>>
       <% const nNotes = noteCounts.get(o.id) || 0; %>
       <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= fmtNr(o.nummer) %></a><% if (nNotes) { %> <span class="note-flag" title="<%= nNotes %> plaknotitie<%= nNotes === 1 ? '' : 's' %> op deze werkopdracht" aria-label="<%= nNotes %> plaknotities"></span><% } %></td>
-      <td><span class="status-badge status-<%= o.status %> in-list"><%= { open: 'Open', klaar: 'Klaar', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>
-      <td class="nowrap"><%= fmtDate(o.datum_invoer) %></td>
+      <td><span class="status-badge status-<%= o.status %> in-list"><%= { open: 'Open', wacht: 'Wacht op onderdelen', klaar: 'Klaar', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>
+      <td class="nowrap"><%= fmtDate(o.datum_invoer) %><% if (o.d && o.d.tijd) { %> <b class="o-tijd"><%= o.d.tijd %></b><% } %></td>
       <% if (showPlate) { %><td><%- include('/partials/plate', { kenteken: o.d.kenteken || o.c_kenteken }) %></td>
       <td class="car-cell"><% if (o.car && (o.car.merk || o.car.jaar || o.car.cls)) { %><% if (o.car.cls) { %><span class="car-dot k-<%= o.car.cls %>" title="Kleur: <%= o.car.kleur.toLowerCase() %><%= o.car.eigen ? ' (aangepast)' : '' %>"></span><% } %><span class="car-txt"<%- o.car.kleur ? ` title="Kleur: ${esc(o.car.kleur.toLowerCase())}${o.car.eigen ? ' (aangepast)' : ''}"` : '' %>><%= o.car.merk %><% if (o.car.jaar) { %> <span class="muted small car-kleur" title="Bouwjaar (eerste toelating)"><%= o.car.merk ? '· ' : '' %><%= o.car.jaar %></span><% } %></span><% } %></td>
       <td><%= o.d.naam %></td><% } %>

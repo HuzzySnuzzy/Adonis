@@ -182,6 +182,7 @@
     const msg = !byOther || !wants('werkopdrachten') ? null
       : ev.action === 'created' && ev.status === 'open' ? `${label} toegevoegd door ${ev.by}`
         : ev.action === 'deleted' ? `${label} verwijderd door ${ev.by}`
+          : ev.status === 'wacht' && ev.action !== 'updated' ? `${label} wacht op onderdelen (${ev.by})`
           : ev.status === 'klaar' && ev.action !== 'updated' ? `${label} is klaar voor facturatie (door ${ev.by})`
             : ev.status === 'gefactureerd' && ev.action !== 'updated' ? `${label} is gefactureerd (door ${ev.by})` : null;
     if (msg) toast(msg, ev.action === 'deleted' ? null : `/werkopdracht/${ev.id}`, { kind: 'werkopdrachten' });

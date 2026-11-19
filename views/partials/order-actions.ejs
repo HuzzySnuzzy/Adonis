@@ -6,11 +6,17 @@
 %>
 <% if (editable) { %>
   <button class="btn btn-primary" type="submit" form="orderForm"<%- top ? ' id="saveBtn"' : '' %>>Opslaan</button>
-  <% if (st === 'open' && can('klaar')) { %>
+  <% if (order && st === 'open' && can('wacht')) { %>
+    <button class="btn" type="submit" form="statusWacht" title="Er kan nu niet verder worden gewerkt: onderdelen besteld">Wacht op onderdelen</button>
+  <% } %>
+  <% if (order && st === 'wacht' && can('open')) { %>
+    <button class="btn" type="submit" form="statusVerder" title="Onderdelen zijn binnen: weer bij het open werk">Onderdelen binnen</button>
+  <% } %>
+  <% if (['open', 'wacht'].includes(st) && can('klaar')) { %>
     <button class="btn" type="submit" form="orderForm" name="next_status" value="klaar"
             title="Opslaan en doorsturen naar facturatie">Klaar voor facturatie</button>
   <% } %>
-  <% if (st === 'open' && can('gefactureerd')) { %>
+  <% if (['open', 'wacht'].includes(st) && can('gefactureerd')) { %>
     <button class="btn" type="submit" form="orderForm" name="next_status" value="gefactureerd"
             title="Opslaan en meteen als gefactureerd afronden (zonder de stap via facturatie)">Gefactureerd</button>
   <% } %>

@@ -300,3 +300,13 @@
   window.addEventListener('beforeprint', fitAll);
   window.addEventListener('afterprint', fitAll);
 })();
+
+/* Tijd van de afspraak: "0830", "8.30" of "830" netjes als 08:30 (bij verlaten van het vak). */
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('input[name="d[tijd]"]');
+  if (!el) return;
+  const m = /^\s*(\d{1,2})[:.h]?(\d{2})\s*$/.exec(el.value);
+  if (!m) return;
+  const h = Number(m[1]); const min = Number(m[2]);
+  if (h < 24 && min < 60) { const v = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`; if (v !== el.value) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } }
+}, true);

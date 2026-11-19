@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.69.0', date: '2026-11-19', title: 'Tijd van de afspraak en "Wacht op onderdelen"',
+    items: [
+      'Werkopdrachten hebben nu een tijd (optioneel), naast de datum bovenaan de werkopdracht: typ bijv. 0830 of 8.30 en het wordt 08:30. De dag bij Werkopdrachten staat op volgorde van tijd (zonder tijd achteraan), en de tijd staat in de lijst en in de kalender bij het kenteken. Zo leest de dag als de agenda op de zaak.',
+      'Nieuwe status "Wacht op onderdelen", tussen Open en Klaar. Op de werkopdracht: knop Wacht op onderdelen, en als ze binnen zijn Onderdelen binnen (dan staat hij weer bij het open werk). Wie wacht kan gewoon nog worden aangepast.',
+      'De dag toont nu drie blokken: Open, Wacht op onderdelen en Klaar. Het oranje getal "open" bij Vorige dag telt alleen werk waar nu aan kan worden gewerkt; wat wacht staat apart onderaan in die lijst. In de kalender en de lijst (eigen tabblad) ziet u ook hoeveel er wachten.',
+    ],
+  },
+  {
     version: '1.68.1', date: '2026-11-19', title: 'Rustigere dagbalk bij Werkopdrachten',
     items: [
       'De dagbalk is nu één nette regel: pijltjes links en rechts, de datum in het midden (tik erop om een andere datum te kiezen) en "Naar vandaag" eronder. Op de telefoon staat de datum kort, bijv. "Do 19 nov".',

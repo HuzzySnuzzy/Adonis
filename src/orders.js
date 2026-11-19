@@ -44,6 +44,7 @@ function emptyOrderData() {
   return {
     // kop rechts
     monteur: '', datum_gereed: '', klantnr: '', kenteken: '', merk_type: '',
+    tijd: '', // tijd van de afspraak (UU:MM), optioneel
     km_in: '', km_uit: '', datum_deel1: '', apk_datum: '',
     naam: '', adres: '', plaats: '', tel_prive: '', tel_zaak: '',
     alle_reparaties: '', contact_boven: '', chassisnummer: '', alarmcode: '',
@@ -158,6 +159,13 @@ function withWorkRows(data) {
   return view;
 }
 
+/** "8:30", "0830", "8.30", "08:30" -> "08:30"; anders leeg. */
+function parseTime(v) {
+  const m = /^\s*(\d{1,2})[:.h]?(\d{2})\s*$/.exec(String(v || ''));
+  if (!m) return '';
+  const h = Number(m[1]); const min = Number(m[2]);
+  return h < 24 && min < 60 ? `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}` : '';
+}
 function normalizeOrderData(input) {
   input = joinWorkRows(input);
   const data = shape(emptyOrderData(), input);
@@ -165,6 +173,7 @@ function normalizeOrderData(input) {
   data.kenteken = data.kenteken.toUpperCase().trim();
   if (!['ja', 'nee'].includes(data.alle_reparaties)) data.alle_reparaties = '';
   for (const f of ['datum_gereed', 'datum_deel1', 'apk_datum']) data[f] = parseDate(data[f]);
+  data.tijd = parseTime(data.tijd);
   data.paginas = normalizePages(input && input.paginas);
   fixBack(data);
   return data;
@@ -248,6 +257,7 @@ function parseDate(value) {
 /* ---------- Status: open -> klaar (voor facturatie) -> gefactureerd ---------- */
 const STATUSES = {
   open: 'Open',
+  wacht: 'Wacht op onderdelen', // nog niet klaar, maar er kan nu niet aan worden gewerkt
   klaar: 'Klaar voor facturatie',
   gefactureerd: 'Gefactureerd',
 };
@@ -304,7 +314,7 @@ function setCustomerStatus(id, status, user) {
 /** Wie mag de inhoud van een werkopdracht wijzigen? */
 function canEdit(user, order) {
   const status = order ? order.status : 'open';
-  if (status === 'open') return true;
+  if (status === 'open' || status === 'wacht') return true;
   if (status === 'klaar') return Boolean(user.can_invoice);
   return false; // gefactureerd: eerst heropenen
 }
@@ -312,7 +322,8 @@ function canEdit(user, order) {
 /** Welke statuswijzigingen mag deze gebruiker doen vanuit de huidige status? */
 function allowedTransitions(user, order) {
   switch (order.status) {
-    case 'open': return user.can_invoice ? ['klaar', 'gefactureerd'] : ['klaar']; // facturatie mag direct afronden
+    case 'open': return user.can_invoice ? ['wacht', 'klaar', 'gefactureerd'] : ['wacht', 'klaar']; // facturatie mag direct afronden
+    case 'wacht': return user.can_invoice ? ['open', 'klaar', 'gefactureerd'] : ['open', 'klaar'];
     case 'klaar': return user.can_invoice ? ['open', 'gefactureerd'] : ['open'];
     case 'gefactureerd': return user.can_invoice ? ['klaar'] : [];
     default: return [];
@@ -320,7 +331,7 @@ function allowedTransitions(user, order) {
 }
 
 const LOG_TEXT = {
-  open: 'teruggezet naar Open', klaar: 'naar facturatie gestuurd', gefactureerd: 'gefactureerd (afgerond)',
+  open: 'teruggezet naar Open', wacht: 'wacht op onderdelen', klaar: 'naar facturatie gestuurd', gefactureerd: 'gefactureerd (afgerond)',
 };
 
 function setStatus(orderId, status, user) {
@@ -328,9 +339,10 @@ function setStatus(orderId, status, user) {
   const prev = (db.prepare('SELECT status FROM orders WHERE id = ?').get(orderId) || {}).status;
   db.prepare("UPDATE orders SET status = ?, status_at = datetime('now'), status_by = ?, updated_at = datetime('now') WHERE id = ?")
     .run(status, user.id, orderId);
-  logAction(orderId, user, prev === 'gefactureerd' && status === 'klaar' ? 'heropend'
+  logAction(orderId, user, prev === 'wacht' && status === 'open' ? 'onderdelen binnen (weer open)'
+    : prev === 'gefactureerd' && status === 'klaar' ? 'heropend'
     : prev === 'klaar' && status === 'open' ? 'teruggezet naar Open (terug naar monteur)'
-      : prev === 'open' && status === 'gefactureerd' ? 'direct gefactureerd (afgerond)' : LOG_TEXT[status]);
+      : ['open', 'wacht'].includes(prev) && status === 'gefactureerd' ? 'direct gefactureerd (afgerond)' : LOG_TEXT[status]);
 }
 
 function logAction(orderId, user, action) {
@@ -343,7 +355,7 @@ function history(orderId) {
 }
 
 function statusCounts() {
-  const counts = { open: 0, klaar: 0, gefactureerd: 0 };
+  const counts = { open: 0, wacht: 0, klaar: 0, gefactureerd: 0 };
   for (const r of db.prepare('SELECT status, COUNT(*) AS n FROM orders GROUP BY status').all()) counts[r.status] = r.n;
   return counts;
 }
@@ -553,7 +565,7 @@ module.exports = {
   workRows, WORK_COLS, fmtNr, CUSTOMER_STATUS, setCustomerStatus, CAR_COLOURS, setCarColour,
   formFields, applyPatch, diffFields,
   PART_ROWS, WORK_LINES, FLUIDS, TIRES, CUSTOMER_FIELDS, PAGE_TYPES, MAX_PAGES, emptyPage, UREN_ROWS, ADVIES_ROWS, migrateBack,
-  emptyOrderData, normalizeOrderData, parseOrderData, flattenText,
+  emptyOrderData, normalizeOrderData, parseOrderData, flattenText, parseTime,
   nextOrderNumber, saveOrder, deleteOrder, todayISO, parseDate, updateCustomer, refreshCustomer,
   STATUSES, canEdit, allowedTransitions, setStatus, logAction, history, statusCounts,
 };

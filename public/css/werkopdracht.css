@@ -241,6 +241,14 @@ td.tread-warn { background: var(--tread-warn); }
 .order-fieldset:disabled .box input, .order-fieldset:disabled .janee label { cursor: default; }
 .status-bar { padding: .6rem 1rem; font-size: .92rem; border-bottom: 1px solid var(--border); text-align: center; }
 .status-bar-klaar { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
+.status-bar-wacht { background: color-mix(in srgb, #7a5cff 12%, var(--surface)); border-color: color-mix(in srgb, #7a5cff 35%, var(--border)); }
+.head-grid .cell .date-time { display: flex; flex: 1 1 auto; gap: .3rem; align-items: center; min-width: 0; }
+.head-grid .cell .date-time input[type="date"] { flex: 1 1 auto; min-width: 0; font-size: .92em; }
+.head-grid .cell .date-time input[type="date"]::-webkit-calendar-picker-indicator { margin-left: 1px; padding: 0; }
+.head-grid .cell .date-time .tijd-in { flex: 0 0 3.1em; width: 3.1em; padding-left: 0; padding-right: 0; text-align: center; font-variant-numeric: tabular-nums;
+  border-left: 1px dashed color-mix(in srgb, currentColor 25%, transparent); }
+.date-time input[type="date"]::-webkit-calendar-picker-indicator { margin-left: 0; }
+.date-time .static { flex: 1 1 auto; }
 .status-bar-gefactureerd { background: var(--ok-bg); color: var(--ok-text); }
 .order-history { max-width: 1440px; margin: 0 auto 1rem; padding: 0 1rem; font-size: .88rem; }
 .order-history summary { cursor: pointer; color: var(--muted); }
