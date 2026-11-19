@@ -710,6 +710,55 @@ app.get('/rdw/:kenteken', wrap(async (req, res) => {
 app.get('/werkopdrachten', (req, res) => {
   const q = String(req.query.q || '').trim();
   const status = orders.STATUSES[req.query.status] ? req.query.status : '';
+  const VIEWS = ['dag', 'kalender', 'lijst', 'achterstand', 'toekomst'];
+  // Zoeken of filteren op status: altijd de lijst. Anders standaard de dag (agenda).
+  const weergave = q || status ? 'lijst' : VIEWS.includes(req.query.weergave) ? req.query.weergave : 'dag';
+  const today = orders.todayISO();
+  const dag = orders.parseDate(req.query.dag) || today;
+  const base = { q, status, weergave, dag, today, counts: orders.statusCounts(), aiConfigured: importer.isConfigured(), STATUSES: orders.STATUSES, searchParts: [] };
+  const SEL = `SELECT o.*, c.kenteken AS c_kenteken, su.name AS status_by_name
+     FROM orders o JOIN customers c ON c.id = o.customer_id LEFT JOIN users su ON su.id = o.status_by`;
+  // Tellers bij de knoppen vorige/volgende dag: nog open van eerder, en afspraken na deze dag.
+  const nav = {
+    achterstand: db.prepare("SELECT COUNT(*) AS n FROM orders WHERE status = 'open' AND datum_invoer < ?").get(dag).n,
+    toekomst: db.prepare('SELECT COUNT(*) AS n FROM orders WHERE datum_invoer > ?').get(dag).n,
+    prev: addDays(dag, -1), next: addDays(dag, 1),
+  };
+  if (weergave === 'dag') {
+    // Open bovenaan, daarna wat klaar is (klaar voor facturatie en gefactureerd).
+    const rows = db.prepare(`${SEL} WHERE o.datum_invoer = ? ORDER BY o.nummer ASC`).all(dag).map(withSummary);
+    return res.render('orders', { ...base, title: 'Werkopdrachten', nav, orders: rows,
+      open: rows.filter((o) => o.status === 'open'), done: rows.filter((o) => o.status !== 'open'), dagLabel: longDayLabel(dag) });
+  }
+  if (weergave === 'achterstand' || weergave === 'toekomst') {
+    const rows = weergave === 'achterstand'
+      ? db.prepare(`${SEL} WHERE o.status = 'open' AND o.datum_invoer < ? ORDER BY o.datum_invoer ASC, o.nummer ASC LIMIT 500`).all(dag)
+      : db.prepare(`${SEL} WHERE o.datum_invoer > ? ORDER BY o.datum_invoer ASC, o.nummer ASC LIMIT 500`).all(dag);
+    return res.render('orders', { ...base, title: 'Werkopdrachten', nav, orders: rows.map(withSummary), dagLabel: longDayLabel(dag) });
+  }
+  if (weergave === 'kalender') {
+    const maand = /^\d{4}-\d{2}$/.test(req.query.maand || '') ? req.query.maand : dag.slice(0, 7);
+    const first = maand + '-01';
+    const wd = (new Date(first + 'T00:00:00Z').getUTCDay() + 6) % 7; // 0 = maandag
+    const start = addDays(first, -wd);
+    const days = Array.from({ length: 42 }, (_, i) => addDays(start, i));
+    const end = days[41];
+    const per = new Map(days.map((d) => [d, { d, open: 0, done: 0, items: [] }]));
+    for (const r of db.prepare(`SELECT o.id, o.nummer, o.status, o.datum_invoer AS d, c.kenteken FROM orders o JOIN customers c ON c.id = o.customer_id
+        WHERE o.datum_invoer BETWEEN ? AND ? ORDER BY o.status = 'open' DESC, o.nummer ASC`).all(start, end)) {
+      const x = per.get(r.d); if (!x) continue;
+      if (r.status === 'open') x.open++; else x.done++;
+      if (x.items.length < 4) x.items.push({ id: r.id, kenteken: r.kenteken, open: r.status === 'open', nr: orders.fmtNr(r.nummer) });
+    }
+    const weeks = []; for (let i = 0; i < 6; i++) weeks.push(days.slice(i * 7, i * 7 + 7).map((d) => per.get(d)));
+    // Laatste week alleen als er nog een dag van deze maand in zit.
+    while (weeks.length > 4 && !weeks[weeks.length - 1].some((x) => x.d.startsWith(maand))) weeks.pop();
+    const [y, m] = maand.split('-').map(Number);
+    const shift = (n) => { const t = new Date(Date.UTC(y, m - 1 + n, 1)); return t.toISOString().slice(0, 7); };
+    return res.render('orders', { ...base, title: 'Werkopdrachten', nav, orders: [], weeks, maand, prevMaand: shift(-1), nextMaand: shift(1),
+      maandLabel: new Intl.DateTimeFormat('nl-NL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, 1))) });
+  }
+  // Lijst (zoeken, status, of alles)
   const where = [];
   const params = [];
   let sq = null;
@@ -725,15 +774,14 @@ app.get('/werkopdrachten', (req, res) => {
   // Te factureren: oudste eerst (wie het langst wacht, staat bovenaan).
   const order = status === 'klaar' ? 'o.status_at ASC, o.nummer ASC' : 'o.datum_invoer DESC, o.nummer DESC';
   const rows = db.prepare(
-    `SELECT o.*, c.kenteken AS c_kenteken, su.name AS status_by_name
-     FROM orders o JOIN customers c ON c.id = o.customer_id LEFT JOIN users su ON su.id = o.status_by
-     ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY ${order} LIMIT ${q || status ? 500 : 200}`
+    `${SEL} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY ${order} LIMIT ${q || status ? 500 : 200}`
   ).all(...params);
   res.render('orders', {
-    title: status === 'klaar' ? 'Facturatie' : 'Werkopdrachten', q, status, counts: orders.statusCounts(), searchParts: sq ? sq.parts : [], aiConfigured: importer.isConfigured(),
-    STATUSES: orders.STATUSES, orders: rows.map(withSummary),
+    ...base, title: status === 'klaar' ? 'Facturatie' : 'Werkopdrachten', searchParts: sq ? sq.parts : [], nav, orders: rows.map(withSummary),
   });
 });
+function addDays(iso, n) { const t = new Date(iso + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); }
+function longDayLabel(iso) { return new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z')); }
 
 // Auto in lijsten: merk/type van de werkopdracht (anders van de klant of de RDW) en de kleur volgens de RDW.
 const carStmt = db.prepare('SELECT merk_type, rdw_json, kleur_eigen FROM customers WHERE id = ?');
@@ -820,7 +868,8 @@ app.get('/werkopdracht/nieuw', (req, res) => {
     const c = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.query.klant);
     if (c) for (const f of orders.CUSTOMER_FIELDS) data[f] = c[f];
   }
-  renderOrder(res, { order: null, data, nummer: orders.nextOrderNumber() });
+  // Vanuit de dag- of kalenderweergave: op die dag (bijv. een afspraak uit de agenda).
+  renderOrder(res, { order: null, data, nummer: orders.nextOrderNumber(), datumInvoer: orders.parseDate(req.query.datum) || undefined });
 });
 
 function parseNummer(v) {
@@ -857,7 +906,7 @@ app.post('/werkopdracht', (req, res) => {
   const nummer = parseNummer(req.body.nummer);
   const error = validateOrder(data, nummer, null) || initialStatusError(req, data);
   if (error) return renderOrder(res, { order: null, data, nummer: req.body.nummer, error, status: 400 });
-  const id = orders.saveOrder({ nummer, data, userId: req.user.id });
+  const id = orders.saveOrder({ nummer, data, userId: req.user.id, datumInvoer: orders.parseDate(req.body.datum_invoer) || null });
   orders.logAction(id, req.user, 'aangemaakt');
   const next = req.body.next_status;
   let msg = `Werkopdracht ${orders.fmtNr(nummer)} is opgeslagen.`;
@@ -951,7 +1000,7 @@ app.post('/werkopdracht/:id/live', express.json({ limit: '2mb' }), (req, res) =>
     if (body.autoNummer === true && nummer && db.prepare('SELECT 1 FROM orders WHERE nummer = ?').get(nummer)) nummer = orders.nextOrderNumber();
     const error = validateOrder(data, nummer, null);
     if (error) return res.status(422).json({ error });
-    const id = orders.saveOrder({ nummer, data, userId: req.user.id });
+    const id = orders.saveOrder({ nummer, data, userId: req.user.id, datumInvoer: orders.parseDate(patch.datum_invoer) || null });
     orders.logAction(id, req.user, 'aangemaakt');
     announce(req, 'created', { id, nummer, kenteken: data.kenteken, status: 'open' });
     rdw.refreshInBackground(data.kenteken);

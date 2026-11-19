@@ -1,12 +1,19 @@
 <%- include('/partials/head') %>
+<%
+  const W = weergave;
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const dayUrl = (d) => '/werkopdrachten' + (d === today ? '' : '?dag=' + d);
+  const qs = (st) => '/werkopdrachten?' + [st ? 'status=' + st : 'weergave=lijst', q ? 'q=' + encodeURIComponent(q) : ''].filter(Boolean).join('&');
+  const WD = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'];
+%>
 <main class="page wide">
   <div class="page-head">
-    <h1><%= status === 'klaar' ? 'Klaar voor facturatie' : 'Alle werkopdrachten' %></h1>
+    <h1><%= status === 'klaar' ? 'Klaar voor facturatie' : 'Werkopdrachten' %></h1>
     <form class="search" method="get" action="/werkopdrachten" role="search" autocomplete="off">
       <% if (status) { %><input type="hidden" name="status" value="<%= status %>"><% } %>
-      <input type="search" name="q" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" data-1p-ignore data-lpignore="true" value="<%= q %>" placeholder="Zoek op nummer, kenteken, onderdeel, foutcode, tekst…" data-autofocus>
+      <input type="search" name="q" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" data-1p-ignore data-lpignore="true" value="<%= q %>" placeholder="Zoek op nummer, kenteken, onderdeel, foutcode, tekst…" <%= W === 'lijst' ? 'data-autofocus' : '' %>>
       <button class="btn" type="submit">Zoeken</button>
-      <% if (q) { %><a class="btn btn-ghost" href="/werkopdrachten">Wissen</a><% } %>
+      <% if (q) { %><a class="btn btn-ghost" href="/werkopdrachten?weergave=lijst">Wissen</a><% } %>
     </form>
     <div class="head-buttons">
       <% if (user.is_admin && aiConfigured && feat.ai) { %>
@@ -16,23 +23,108 @@
     </div>
   </div>
   <div class="ai-job" data-ai-job hidden></div>
-  <% const qs = (st) => '/werkopdrachten' + ((st || q) ? '?' + [st ? 'status=' + st : '', q ? 'q=' + encodeURIComponent(q) : ''].filter(Boolean).join('&') : ''); %>
-  <div id="live-orders" data-live>
-  <%- include("/partials/search-hint") %>
-  <nav class="status-tabs" aria-label="Filter op status">
-    <a href="<%= qs('') %>" class="<%= !status ? 'active' : '' %>">Alle</a>
-    <% for (const [k, label] of Object.entries(STATUSES)) { %>
-      <a href="<%= qs(k) %>" class="<%= status === k ? 'active' : '' %>"><%= label %><span class="count"><%= counts[k] %></span></a>
-    <% } %>
+
+  <nav class="ord-views" aria-label="Weergave">
+    <a href="<%= dayUrl(dag) %>" class="<%= ['dag', 'achterstand', 'toekomst'].includes(W) ? 'active' : '' %>">Dag</a>
+    <a href="/werkopdrachten?weergave=kalender&dag=<%= dag %>" class="<%= W === 'kalender' ? 'active' : '' %>">Kalender</a>
+    <a href="/werkopdrachten?weergave=lijst" class="<%= W === 'lijst' ? 'active' : '' %>">Lijst</a>
   </nav>
-  <% if (orders.length === 0) { %>
-    <div class="empty"><p><%= q ? 'Niets gevonden voor “' + q + '”.' : status === 'klaar' ? 'Er ligt niets klaar om te factureren.' : status ? 'Geen werkopdrachten met deze status.' : 'Nog geen werkopdrachten.' %></p></div>
+
+  <div id="live-orders" data-live>
+  <% if (W === 'dag') { %>
+    <div class="day-nav">
+      <a class="btn day-step day-prev" href="<%= dayUrl(nav.prev) %>" data-day-prev aria-label="Vorige dag<%= nav.achterstand ? ` (${nav.achterstand} nog open van eerder)` : '' %>">
+        <span aria-hidden="true">‹</span> Vorige dag
+        <% if (nav.achterstand) { %><span class="day-badge day-badge-warn" title="Werkopdrachten van eerdere dagen die nog open staan"><%= nav.achterstand %> open</span><% } %>
+      </a>
+      <div class="day-title">
+        <h2><%= cap(dagLabel) %></h2>
+        <div class="day-sub">
+          <% if (dag === today) { %><span class="day-today">Vandaag</span><% } else { %><a class="linkbtn" href="/werkopdrachten">Naar vandaag</a><% } %>
+          <label class="day-jump"><span class="sr-only">Ga naar datum</span><input type="date" value="<%= dag %>" data-day-jump aria-label="Ga naar datum"></label>
+        </div>
+      </div>
+      <a class="btn day-step day-next" href="<%= dayUrl(nav.next) %>" data-day-next aria-label="Volgende dag<%= nav.toekomst ? ` (${nav.toekomst} afspraken later)` : '' %>">
+        <% if (nav.toekomst) { %><span class="day-badge" title="Werkopdrachten (afspraken) na deze dag"><%= nav.toekomst %> later</span><% } %>
+        Volgende dag <span aria-hidden="true">›</span>
+      </a>
+    </div>
+    <% if (nav.achterstand || nav.toekomst) { %>
+    <p class="day-links muted small">
+      <% if (nav.achterstand) { %><a href="/werkopdrachten?weergave=achterstand&dag=<%= dag %>"><%= nav.achterstand %> werkopdracht<%= nav.achterstand === 1 ? '' : 'en' %> van eerder nog niet klaar</a><% } %>
+      <% if (nav.achterstand && nav.toekomst) { %> · <% } %>
+      <% if (nav.toekomst) { %><a href="/werkopdrachten?weergave=toekomst&dag=<%= dag %>"><%= nav.toekomst %> afspra<%= nav.toekomst === 1 ? 'ak' : 'ken' %> na deze dag</a><% } %>
+    </p>
+    <% } %>
+
+    <% if (!orders.length) { %>
+      <div class="empty day-empty"><p>Geen werkopdrachten op deze dag.</p>
+        <a class="btn btn-primary" href="/werkopdracht/nieuw?datum=<%= dag %>">+ Werkopdracht op <%= dag === today ? 'vandaag' : 'deze dag' %></a></div>
+    <% } else { %>
+      <section class="day-sec" aria-label="Open">
+        <h3 class="day-h">Open <span class="count"><%= open.length %></span></h3>
+        <% if (open.length) { %><%- include('/partials/orderlist', { orders: open, showPlate: true, groupByDate: false }) %>
+        <% } else { %><p class="muted small">Alles van deze dag is klaar.</p><% } %>
+      </section>
+      <% if (done.length) { %>
+      <section class="day-sec day-done" aria-label="Klaar">
+        <h3 class="day-h">Klaar <span class="count"><%= done.length %></span></h3>
+        <%- include('/partials/orderlist', { orders: done, showPlate: true, groupByDate: false }) %>
+      </section>
+      <% } %>
+      <p class="day-add"><a class="btn" href="/werkopdracht/nieuw?datum=<%= dag %>">+ Werkopdracht op <%= dag === today ? 'vandaag' : 'deze dag' %></a></p>
+    <% } %>
+
+  <% } else if (W === 'achterstand' || W === 'toekomst') { %>
+    <div class="day-listhead">
+      <a class="btn btn-small" href="<%= dayUrl(dag) %>">‹ Terug naar <%= dag === today ? 'vandaag' : dagLabel %></a>
+      <h2><%= W === 'achterstand' ? `Nog open van vóór ${dagLabel}` : `Afspraken na ${dagLabel}` %></h2>
+    </div>
+    <% if (!orders.length) { %><div class="empty"><p><%= W === 'achterstand' ? 'Alles van eerder is klaar.' : 'Geen afspraken na deze dag.' %></p></div>
+    <% } else { %>
+      <p class="muted"><%= orders.length %> werkopdracht<%= orders.length === 1 ? '' : 'en' %><%= W === 'achterstand' ? ', oudste bovenaan' : ', eerstvolgende bovenaan' %></p>
+      <%- include('/partials/orderlist', { orders, showPlate: true, groupByDate: true }) %>
+    <% } %>
+
+  <% } else if (W === 'kalender') { %>
+    <div class="cal-nav">
+      <a class="btn" href="/werkopdrachten?weergave=kalender&maand=<%= prevMaand %>" aria-label="Vorige maand">‹</a>
+      <h2><%= cap(maandLabel) %></h2>
+      <a class="btn" href="/werkopdrachten?weergave=kalender&maand=<%= nextMaand %>" aria-label="Volgende maand">›</a>
+      <% if (maand !== today.slice(0, 7)) { %><a class="btn btn-ghost" href="/werkopdrachten?weergave=kalender">Deze maand</a><% } %>
+      <span class="cal-legend muted small"><span class="cal-chip is-open">open</span> <span class="cal-chip">klaar</span></span>
+    </div>
+    <div class="cal-grid" role="grid" aria-label="<%= maandLabel %>">
+      <% for (const w of WD) { %><div class="cal-wd" role="columnheader"><%= w %></div><% } %>
+      <% for (const week of weeks) { for (const x of week) { const other = !x.d.startsWith(maand); const late = x.open && x.d < today; %>
+        <a class="cal-day<%= other ? ' is-other' : '' %><%= x.d === today ? ' is-today' : '' %><%= late ? ' is-late' : '' %><%= x.d === dag && x.d !== today ? ' is-sel' : '' %>" href="<%= dayUrl(x.d) %>" role="gridcell"
+           aria-label="<%= x.d.split('-').reverse().join('-') %>: <%= x.open %> open, <%= x.done %> klaar">
+          <span class="cal-num"><%= Number(x.d.slice(8)) %></span>
+          <% if (x.open || x.done) { %><span class="cal-count"><% if (x.open) { %><b><%= x.open %></b> open<% } %><% if (x.open && x.done) { %> · <% } %><% if (x.done) { %><%= x.done %> klaar<% } %></span><% } %>
+          <% for (const it of x.items) { %><span class="cal-chip<%= it.open ? ' is-open' : '' %>"><%= it.kenteken %></span><% } %>
+          <% if (x.open + x.done > x.items.length) { %><span class="cal-more muted small">+<%= x.open + x.done - x.items.length %> meer</span><% } %>
+        </a>
+      <% } } %>
+    </div>
+
   <% } else { %>
-    <p class="muted"><%= q || status ? orders.length + ' gevonden' + (status === 'klaar' ? ' – oudste bovenaan' : '') : 'Laatste ' + orders.length + ' werkopdrachten' %></p>
-    <%- include('/partials/orderlist', { orders, showPlate: true, groupByDate: status !== 'klaar' }) %>
+    <%- include("/partials/search-hint") %>
+    <nav class="status-tabs" aria-label="Filter op status">
+      <a href="<%= qs('') %>" class="<%= !status ? 'active' : '' %>">Alle</a>
+      <% for (const [k, label] of Object.entries(STATUSES)) { %>
+        <a href="<%= qs(k) %>" class="<%= status === k ? 'active' : '' %>"><%= label %><span class="count"><%= counts[k] %></span></a>
+      <% } %>
+    </nav>
+    <% if (orders.length === 0) { %>
+      <div class="empty"><p><%= q ? 'Niets gevonden voor “' + q + '”.' : status === 'klaar' ? 'Er ligt niets klaar om te factureren.' : status ? 'Geen werkopdrachten met deze status.' : 'Nog geen werkopdrachten.' %></p></div>
+    <% } else { %>
+      <p class="muted"><%= q || status ? orders.length + ' gevonden' + (status === 'klaar' ? ' – oudste bovenaan' : '') : 'Laatste ' + orders.length + ' werkopdrachten' %></p>
+      <%- include('/partials/orderlist', { orders, showPlate: true, groupByDate: status !== 'klaar' }) %>
+    <% } %>
   <% } %>
   </div>
 </main>
 <script src="/static/js/common.js?v=<%= assetVersion %>"></script>
 <script src="/static/js/ai.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/orders-day.js?v=<%= assetVersion %>"></script>
 <%- include('/partials/foot') %>

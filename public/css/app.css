@@ -2827,3 +2827,57 @@ tr.is-inactive > td.row-act { opacity: 1; }
 .apkq-car { margin: .35rem 0 0; min-height: 1.2em; }
 .apkq-car-line { margin: 0 0 .2rem; }
 .apkq-plate-chip { display: inline-block; padding: .05rem .45rem; border-radius: 4px; background: #f6c400; color: #111; font-family: var(--mono, monospace); letter-spacing: .04em; }
+
+/* ---------- Werkopdrachten: dag en kalender ---------- */
+.ord-views { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); margin: 0 0 .9rem; }
+.ord-views a { padding: .35rem .9rem; border-radius: 7px; text-decoration: none; color: var(--muted); font-weight: 600; }
+.ord-views a:hover { color: var(--text); }
+.ord-views a.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.day-nav { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .8rem; margin-bottom: .4rem; }
+.day-step { display: inline-flex; align-items: center; gap: .45rem; white-space: nowrap; }
+.day-title { text-align: center; }
+.day-title h2 { margin: 0; font-size: 1.3rem; }
+.day-sub { display: flex; justify-content: center; align-items: center; gap: .6rem; margin-top: .2rem; }
+.day-today { font-weight: 700; color: var(--primary); font-size: .9rem; }
+.day-jump input { padding: .15rem .35rem; font-size: .85rem; }
+.day-badge { display: inline-block; font-size: .75rem; font-weight: 700; padding: .1rem .5rem; border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface)); color: var(--text); }
+.day-badge-warn { background: color-mix(in srgb, #e08a00 26%, var(--surface)); }
+.day-links { text-align: center; margin: 0 0 1rem; }
+.day-sec { margin-top: .8rem; }
+.day-h { display: flex; align-items: center; gap: .5rem; font-size: 1rem; margin: .4rem 0 .5rem; }
+.day-h .count { font-size: .8rem; padding: .05rem .5rem; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border); }
+.day-done { opacity: .78; }
+.day-done:hover, .day-done:focus-within { opacity: 1; }
+.day-add { margin-top: 1rem; }
+.day-empty .btn { margin-top: .6rem; }
+.day-listhead { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; margin-bottom: .4rem; }
+.day-listhead h2 { margin: 0; font-size: 1.15rem; }
+.cal-nav { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: .7rem; }
+.cal-nav h2 { margin: 0; min-width: 10ch; text-align: center; font-size: 1.25rem; }
+.cal-legend { margin-left: auto; display: inline-flex; gap: .4rem; align-items: center; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-wd { text-align: center; font-size: .78rem; color: var(--muted); font-weight: 600; padding-bottom: 2px; }
+.cal-day { display: flex; flex-direction: column; gap: 3px; min-height: 104px; padding: .35rem .4rem; border-radius: 8px; text-decoration: none; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border-soft); overflow: hidden; }
+.cal-day:hover { border-color: var(--primary); }
+.cal-day.is-other { opacity: .45; }
+.cal-day.is-today { border: 2px solid var(--primary); }
+.cal-day.is-sel { background: color-mix(in srgb, var(--primary) 7%, var(--surface)); }
+.cal-day.is-late { box-shadow: inset 3px 0 0 #e08a00; }
+.cal-num { font-weight: 700; font-size: .9rem; }
+.cal-count { font-size: .72rem; color: var(--muted); }
+.cal-count b { color: var(--text); }
+.cal-chip { display: block; font-size: .72rem; padding: .05rem .35rem; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  background: var(--surface-2); color: var(--muted); box-shadow: inset 0 0 0 1px var(--border-soft); font-family: var(--mono, monospace); }
+.cal-chip.is-open { background: color-mix(in srgb, var(--primary) 14%, var(--surface)); color: var(--text); font-weight: 600; box-shadow: none; }
+.cal-legend .cal-chip { display: inline-block; }
+.cal-more { font-size: .7rem; }
+@media (max-width: 760px) {
+  .day-nav { grid-template-columns: 1fr 1fr; }
+  .day-title { grid-column: 1 / -1; grid-row: 1; }
+  .day-prev { justify-content: flex-start; } .day-next { justify-content: flex-end; }
+  .cal-day { min-height: 64px; padding: .25rem; }
+  .cal-chip { display: none; }
+  .cal-count { font-size: .64rem; }
+}

@@ -5,6 +5,15 @@
  */
 module.exports = [
   {
+    version: '1.68.0', date: '2026-11-19', title: 'Werkopdrachten als agenda',
+    items: [
+      'Werkopdrachten opent nu op vandaag, als een dag in de agenda: de werkopdrachten die nog open zijn staan bovenaan, wat klaar is (klaar voor facturatie of gefactureerd) eronder. Zo ziet u in één oogopslag wat er nog moet gebeuren.',
+      'Met Vorige dag en Volgende dag (of de pijltjestoetsen ← en →) bladert u door de dagen, of kies een datum. Op Vorige dag staat hoeveel werkopdrachten van eerdere dagen nog open staan; op Volgende dag hoeveel afspraken er nog komen. Klik op de tekst eronder voor de lijst daarvan.',
+      'Kalender: de hele maand in één overzicht, met per dag hoeveel er open en klaar zijn en de kentekens. Dagen in het verleden met nog open werk hebben een oranje rand. Klik op een dag om hem te openen. De oude lijst met zoeken en filteren op status staat onder Lijst.',
+      'Een nieuwe werkopdracht kan nu direct op een andere datum, bijvoorbeeld een afspraak uit de agenda: kies de dag en klik op "+ Werkopdracht op deze dag", of pas de datum aan op de werkopdracht zelf.',
+    ],
+  },
+  {
     version: '1.67.1', date: '2026-11-18', title: 'APK-vraag met kenteken',
     items: [
       'Bij een APK-vraag vult u nu ook het kenteken in (verplicht). ADONIS haalt de gegevens van de auto op bij de RDW (merk/type, datum eerste toelating, voertuigcategorie zoals M1 of N1, brandstof, gewicht, emissieklasse) en geeft die aan Claude. Zo houdt het antwoord rekening met eisen die pas vanaf een bepaalde bouwdatum, of alleen voor een bepaalde soort voertuig of brandstof gelden. Het soort voertuig hoeft u niet meer te kiezen.',

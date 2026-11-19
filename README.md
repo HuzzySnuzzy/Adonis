@@ -31,7 +31,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Klantenoverzicht op kenteken.** Klanten worden automatisch aangemaakt zodra een werkopdracht met een kenteken wordt opgeslagen.
   Zoeken op kenteken (met of zonder streepjes), naam, merk, plaats, klantnummer of chassisnummer.
 - **Werkopdrachten per klant doorzoeken.** Zoek bijv. op `accu`, `U1F1B` of een onderdeelnummer.
-  Via *Werkopdrachten* kun je in alle werkopdrachten tegelijk zoeken.
+  Via *Werkopdrachten* kun je in alle werkopdrachten tegelijk zoeken. *Werkopdrachten* opent als **dag** (agenda): open bovenaan,
+  klaar eronder, knoppen vorige/volgende dag (met het aantal nog open van eerder en het aantal afspraken later), een maand-
+  **kalender** en de **lijst** (zoeken en filteren op status). Een nieuwe werkopdracht kan op een andere datum (afspraak).
 - **Werkopdracht maken en wijzigen** in een formulier dat eruitziet als het papieren formulier:
   - links: onderdelen (22 regels), vloeistoffen en diversen
   - rechts: kop (monteur, datum, kenteken, km-stand, …), werkzaamheden met code/tijd, factuurnummer en uren
