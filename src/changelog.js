@@ -5,6 +5,14 @@
  */
 module.exports = [
   {
+    version: '1.68.1', date: '2026-11-19', title: 'Rustigere dagbalk bij Werkopdrachten',
+    items: [
+      'De dagbalk is nu één nette regel: pijltjes links en rechts, de datum in het midden (tik erop om een andere datum te kiezen) en "Naar vandaag" eronder. Op de telefoon staat de datum kort, bijv. "Do 19 nov".',
+      'De losse blauwe links onder de knoppen zijn weg. Het aantal "open" (nog niet klaar van eerder) en "later" (afspraken die nog komen) staan als kleine labels naast de pijltjes; tik erop voor de lijst.',
+      'De knop "Aandachtspunten voor alle klanten" staat alleen nog bij Lijst, niet meer boven de dag.',
+    ],
+  },
+  {
     version: '1.68.0', date: '2026-11-19', title: 'Werkopdrachten als agenda',
     items: [
       'Werkopdrachten opent nu op vandaag, als een dag in de agenda: de werkopdrachten die nog open zijn staan bovenaan, wat klaar is (klaar voor facturatie of gefactureerd) eronder. Zo ziet u in één oogopslag wat er nog moet gebeuren.',

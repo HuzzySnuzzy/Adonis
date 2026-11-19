@@ -6,6 +6,11 @@
     const j = e.target.closest('[data-day-jump]');
     if (j && /^\d{4}-\d{2}-\d{2}$/.test(j.value)) go('/werkopdrachten?dag=' + j.value);
   });
+  // Op de datum klikken opent de kalenderkiezer (ook op de computer).
+  document.addEventListener('click', (e) => {
+    const j = e.target.closest('[data-day-jump]');
+    if (j && j.showPicker) { try { j.showPicker(); } catch { /* niet toegestaan: gewoon het veld */ } }
+  });
   document.addEventListener('keydown', (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented) return;
     if (e.target.closest('input, textarea, select, [contenteditable], dialog')) return;

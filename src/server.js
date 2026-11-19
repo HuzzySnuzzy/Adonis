@@ -728,7 +728,8 @@ app.get('/werkopdrachten', (req, res) => {
     // Open bovenaan, daarna wat klaar is (klaar voor facturatie en gefactureerd).
     const rows = db.prepare(`${SEL} WHERE o.datum_invoer = ? ORDER BY o.nummer ASC`).all(dag).map(withSummary);
     return res.render('orders', { ...base, title: 'Werkopdrachten', nav, orders: rows,
-      open: rows.filter((o) => o.status === 'open'), done: rows.filter((o) => o.status !== 'open'), dagLabel: longDayLabel(dag) });
+      open: rows.filter((o) => o.status === 'open'), done: rows.filter((o) => o.status !== 'open'), dagLabel: longDayLabel(dag),
+      dagShort: new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(dag + 'T00:00:00Z')).replace(/\./g, '') });
   }
   if (weergave === 'achterstand' || weergave === 'toekomst') {
     const rows = weergave === 'achterstand'

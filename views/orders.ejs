@@ -16,7 +16,7 @@
       <% if (q) { %><a class="btn btn-ghost" href="/werkopdrachten?weergave=lijst">Wissen</a><% } %>
     </form>
     <div class="head-buttons">
-      <% if (user.is_admin && aiConfigured && feat.ai) { %>
+      <% if (user.is_admin && aiConfigured && feat.ai && W === 'lijst') { %>
       <button class="btn" type="button" data-ai-task="alle" data-ai-action="/aandachtspunten/alles" data-ai-bulk
         data-ai-title="Aandachtspunten voor alle klanten"><%- include('/partials/ai-icon') %> Aandachtspunten voor alle klanten</button>
       <% } %>
@@ -33,29 +33,18 @@
   <div id="live-orders" data-live>
   <% if (W === 'dag') { %>
     <div class="day-nav">
-      <a class="btn day-step day-prev" href="<%= dayUrl(nav.prev) %>" data-day-prev aria-label="Vorige dag<%= nav.achterstand ? ` (${nav.achterstand} nog open van eerder)` : '' %>">
-        <span aria-hidden="true">‹</span> Vorige dag
-        <% if (nav.achterstand) { %><span class="day-badge day-badge-warn" title="Werkopdrachten van eerdere dagen die nog open staan"><%= nav.achterstand %> open</span><% } %>
-      </a>
+      <a class="btn day-arrow" href="<%= dayUrl(nav.prev) %>" data-day-prev aria-label="Vorige dag" title="Vorige dag (←)">‹</a>
+      <% if (nav.achterstand) { %><a class="day-pill day-pill-warn" href="/werkopdrachten?weergave=achterstand&dag=<%= dag %>" title="<%= nav.achterstand %> werkopdracht<%= nav.achterstand === 1 ? '' : 'en' %> van eerder nog niet klaar"><%= nav.achterstand %> open</a><% } else { %><span></span><% } %>
       <div class="day-title">
-        <h2><%= cap(dagLabel) %></h2>
-        <div class="day-sub">
-          <% if (dag === today) { %><span class="day-today">Vandaag</span><% } else { %><a class="linkbtn" href="/werkopdrachten">Naar vandaag</a><% } %>
-          <label class="day-jump"><span class="sr-only">Ga naar datum</span><input type="date" value="<%= dag %>" data-day-jump aria-label="Ga naar datum"></label>
-        </div>
+        <label class="day-date" title="Andere datum kiezen">
+          <h2><span class="day-long"><%= cap(dagLabel) %></span><span class="day-short"><%= cap(locals.dagShort || dagLabel) %></span></h2>
+          <input type="date" value="<%= dag %>" data-day-jump aria-label="Ga naar datum">
+        </label>
+        <% if (dag === today) { %><span class="day-today">Vandaag</span><% } else { %><a class="day-today day-today-link" href="/werkopdrachten">Naar vandaag</a><% } %>
       </div>
-      <a class="btn day-step day-next" href="<%= dayUrl(nav.next) %>" data-day-next aria-label="Volgende dag<%= nav.toekomst ? ` (${nav.toekomst} afspraken later)` : '' %>">
-        <% if (nav.toekomst) { %><span class="day-badge" title="Werkopdrachten (afspraken) na deze dag"><%= nav.toekomst %> later</span><% } %>
-        Volgende dag <span aria-hidden="true">›</span>
-      </a>
+      <% if (nav.toekomst) { %><a class="day-pill" href="/werkopdrachten?weergave=toekomst&dag=<%= dag %>" title="<%= nav.toekomst %> afspra<%= nav.toekomst === 1 ? 'ak' : 'ken' %> na deze dag"><%= nav.toekomst %> later</a><% } else { %><span></span><% } %>
+      <a class="btn day-arrow" href="<%= dayUrl(nav.next) %>" data-day-next aria-label="Volgende dag" title="Volgende dag (→)">›</a>
     </div>
-    <% if (nav.achterstand || nav.toekomst) { %>
-    <p class="day-links muted small">
-      <% if (nav.achterstand) { %><a href="/werkopdrachten?weergave=achterstand&dag=<%= dag %>"><%= nav.achterstand %> werkopdracht<%= nav.achterstand === 1 ? '' : 'en' %> van eerder nog niet klaar</a><% } %>
-      <% if (nav.achterstand && nav.toekomst) { %> · <% } %>
-      <% if (nav.toekomst) { %><a href="/werkopdrachten?weergave=toekomst&dag=<%= dag %>"><%= nav.toekomst %> afspra<%= nav.toekomst === 1 ? 'ak' : 'ken' %> na deze dag</a><% } %>
-    </p>
-    <% } %>
 
     <% if (!orders.length) { %>
       <div class="empty day-empty"><p>Geen werkopdrachten op deze dag.</p>
