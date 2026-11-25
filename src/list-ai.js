@@ -50,7 +50,7 @@ const TABLE = { tyre: 'tyre_storage', stock: 'stock_items', customer: 'customers
 const HREF = { tyre: '/bandenhotel/', stock: '/voorraad/', customer: '/klant/' };
 function rowsOf(key) {
   const L = LISTS[key];
-  if (L.kind === 'customer') return db.prepare('SELECT * FROM customers ORDER BY id').all();
+  if (L.kind === 'customer') return db.prepare("SELECT * FROM customers WHERE plate_key <> '' ORDER BY id").all();
   if (L.kind === 'tyre') {
     return db.prepare("SELECT * FROM tyre_storage WHERE soort = ? AND status <> 'uitgegeven' ORDER BY id").all(L.soort);
   }

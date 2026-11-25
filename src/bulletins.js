@@ -156,7 +156,7 @@ function estimateFor(customers) {
 function staleCustomers() {
   const rows = db.prepare(
     `SELECT c.*, a.orders_sig FROM customers c LEFT JOIN customer_analysis a ON a.customer_id = c.id
-     WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id) ORDER BY c.id`
+     WHERE c.plate_key <> '' AND EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id) ORDER BY c.id`
   ).all();
   return rows.filter((c) => !c.orders_sig || c.orders_sig !== signature(ordersOf(c.id)));
 }

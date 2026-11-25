@@ -102,7 +102,7 @@
           <span class="cal-num"><%= Number(x.d.slice(8)) %></span>
           <% const parts = [x.open && `<b>${x.open}</b> open`, x.wacht && `${x.wacht} wacht`, x.done && `${x.done} klaar`].filter(Boolean); %>
           <% if (parts.length) { %><span class="cal-count"><%- parts.join(' · ') %></span><% } %>
-          <% for (const it of x.items) { %><span class="cal-chip<%= it.open ? ' is-open' : it.wacht ? ' is-wait' : '' %>"><%= it.tijd ? it.tijd + ' ' : '' %><%= it.kenteken %></span><% } %>
+          <% for (const it of x.items) { %><span class="cal-chip<%= it.open ? ' is-open' : it.wacht ? ' is-wait' : '' %><%= it.kenteken ? '' : ' no-plate' %>"><%= it.tijd ? it.tijd + ' ' : '' %><%= it.kenteken || 'Geen kenteken' %></span><% } %>
           <% const tot = x.open + x.wacht + x.done; if (tot > x.items.length) { %><span class="cal-more muted small">+<%= tot - x.items.length %> meer</span><% } %>
         </a>
       <% } } %>

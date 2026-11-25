@@ -20,7 +20,8 @@
         <span class="day-count"><%= e.n %> werkopdracht<%= e.n === 1 ? '' : 'en' %><% if (e.open) { %> · <b><%= e.open %> open</b><% } %></span></td>
     </tr>
     <% } %>
-    <tr data-href="/werkopdracht/<%= o.id %>"<%- o.status === 'open' ? ' class="is-open"' : o.status === 'wacht' ? ' class="is-wait"' : '' %>>
+    <% const rowCls = [o.status === 'open' ? 'is-open' : o.status === 'wacht' ? 'is-wait' : '', (o.d.kenteken || o.c_kenteken) ? '' : 'no-plate'].filter(Boolean).join(' '); %>
+    <tr data-href="/werkopdracht/<%= o.id %>"<%- rowCls ? ` class="${rowCls}"` : '' %>>
       <% const nNotes = noteCounts.get(o.id) || 0; %>
       <td class="num"><a class="ordernr" href="/werkopdracht/<%= o.id %>"><%= fmtNr(o.nummer) %></a><% if (nNotes) { %> <span class="note-flag" title="<%= nNotes %> plaknotitie<%= nNotes === 1 ? '' : 's' %> op deze werkopdracht" aria-label="<%= nNotes %> plaknotities"></span><% } %></td>
       <td><span class="status-badge status-<%= o.status %> in-list"><%= { open: 'Open', wacht: 'Wacht op onderdelen', klaar: 'Klaar', gefactureerd: 'Gefactureerd' }[o.status] || o.status %></span></td>

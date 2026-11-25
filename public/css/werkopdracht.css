@@ -397,3 +397,18 @@ table.grid.kv .sign-row td.rowlabel { white-space: normal; line-height: 1.15; fo
 .order-toolbar .tb-title > * { min-width: 0; max-width: 100%; }
 .order-toolbar .tb-title > .muted { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .order-toolbar .tb-right { flex: 0 1 auto; }
+/* Nog geen kenteken: het vak kleurt rood (herinnering), opslaan kan wel */
+.ink[name="d[kenteken]"]:placeholder-shown { background: color-mix(in srgb, #d93025 14%, transparent); box-shadow: inset 0 -2px 0 #d93025; }
+.ink[name="d[kenteken]"]::placeholder { color: #c5221f; opacity: .9; text-transform: none; }
+/* Rode pen: vakken die in het rood zijn geschreven (ook op papier) */
+.ink.ink-red { color: var(--red, #c62828); caret-color: var(--red, #c62828); }
+:root[data-pen="rood"] .ink:focus { caret-color: var(--red, #c62828); box-shadow: inset 0 -2px 0 var(--red, #c62828); }
+.pen-pick { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); vertical-align: middle; }
+.pen { width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.pen span { width: 16px; height: 16px; border-radius: 50%; display: block; }
+.pen-blauw span { background: var(--ink, #1d2b8f); }
+.pen-rood span { background: var(--red, #c62828); }
+.pen[aria-checked="true"] { background: var(--surface); box-shadow: 0 0 0 2px currentColor, 0 1px 3px rgba(0, 0, 0, .2); }
+.pen-blauw[aria-checked="true"] { color: var(--ink, #1d2b8f); }
+.pen-rood[aria-checked="true"] { color: var(--red, #c62828); }
+@media print { .pen-pick { display: none !important; } .ink.ink-red { color: #c62828 !important; } }

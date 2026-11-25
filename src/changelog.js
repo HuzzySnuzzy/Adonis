@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.70.0', date: '2026-11-25', title: 'Werkopdracht zonder kenteken, en schrijven in rood of blauw',
+    items: [
+      'Een werkopdracht kan nu ook zonder kenteken worden opgeslagen (bijv. als het kenteken nog niet bekend is). Het kentekenvak is dan rood ("nog invullen"), en in de lijsten, op de dag en in de kalender staat "Geen kenteken" in het rood als herinnering. Vult u het kenteken later in, dan komt de werkopdracht vanzelf bij de juiste klant.',
+      'Schrijven in blauw of rood, zoals op papier: bovenaan de werkopdracht staan twee pennen. Kies de rode pen (of druk op Alt+R om te wisselen) en wat u daarna in een vak typt, staat in het rood, voor iedereen en ook op de afdruk. Met de blauwe pen (standaard) wordt een vak weer blauw. Dit apparaat onthoudt welke pen u het laatst gebruikte.',
+    ],
+  },
+  {
     version: '1.69.0', date: '2026-11-19', title: 'Tijd van de afspraak en "Wacht op onderdelen"',
     items: [
       'Werkopdrachten hebben nu een tijd (optioneel), naast de datum bovenaan de werkopdracht: typ bijv. 0830 of 8.30 en het wordt 08:30. De dag bij Werkopdrachten staat op volgorde van tijd (zonder tijd achteraan), en de tijd staat in de lijst en in de kalender bij het kenteken. Zo leest de dag als de agenda op de zaak.',

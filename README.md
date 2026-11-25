@@ -35,7 +35,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   klaar eronder, knoppen vorige/volgende dag (met het aantal nog open van eerder en het aantal afspraken later), een maand-
   **kalender** en de **lijst** (zoeken en filteren op status). Een nieuwe werkopdracht kan op een andere datum (afspraak),
   met een optionele tijd (`d.tijd`, UU:MM; de dag sorteert erop). Status **Wacht op onderdelen** (`wacht`) tussen Open en Klaar:
-  bewerkbaar, apart blok op de dag, telt niet mee in "open van eerder".
+  bewerkbaar, apart blok op de dag, telt niet mee in "open van eerder". Kenteken is niet verplicht: zonder kenteken hangt de
+  werkopdracht aan een verborgen klant (`plate_key = ''`) en staat hij rood in de lijsten tot het kenteken is ingevuld.
+  Rode/blauwe pen per vak (`d.inkt_rood`: namen van de rood geschreven vakken; `public/js/pen.js`).
 - **Werkopdracht maken en wijzigen** in een formulier dat eruitziet als het papieren formulier:
   - links: onderdelen (22 regels), vloeistoffen en diversen
   - rechts: kop (monteur, datum, kenteken, km-stand, …), werkzaamheden met code/tijd, factuurnummer en uren

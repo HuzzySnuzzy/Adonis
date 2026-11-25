@@ -106,7 +106,7 @@ function suggest(kind, q, { stock = true, eigen = null } = {}) {
     // Bestaande klanten op naam (nieuwste bezoek eerst), met hun gegevens om in één keer in te vullen.
     const longest = fold(q).split(/\s+/).sort((a, b) => b.length - a.length)[0] || '';
     const rows = db.prepare(`SELECT c.*, (SELECT MAX(o.datum_invoer) FROM orders o WHERE o.customer_id = c.id) AS laatst
-      FROM customers c WHERE c.naam <> '' AND c.naam LIKE ? ESCAPE '\\' ORDER BY laatst IS NULL, laatst DESC, c.updated_at DESC LIMIT 80`)
+      FROM customers c WHERE c.plate_key <> '' AND c.naam <> '' AND c.naam LIKE ? ESCAPE '\\' ORDER BY laatst IS NULL, laatst DESC, c.updated_at DESC LIMIT 80`)
       .all('%' + longest.replace(/[\\%_]/g, (m) => '\\' + m) + '%');
     for (const c of rows) {
       if (out.length >= 8) break;

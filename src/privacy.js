@@ -33,6 +33,7 @@ function candidates(now = new Date()) {
   for (const c of db.prepare('SELECT id, plate_key, kenteken, naam, plaats, merk_type, created_at, bewerkt_at, anon_at FROM customers').all()) {
     const o = ord.get(c.id); const t = ty.get(c.plate_key);
     if (t && t.stored) continue; // banden liggen er nog
+    if (!c.plate_key) continue; // verborgen klant voor werkopdrachten zonder kenteken
     // Het anonimiseren zelf (bewerkt_at = anon_at) telt niet als activiteit.
     const dates = [c.created_at, c.bewerkt_at !== c.anon_at && c.bewerkt_at, o && o.d, o && o.u, t && t.u, t && t.di, t && t.du]
       .filter(Boolean).map((s) => String(s).slice(0, 10)).filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s));

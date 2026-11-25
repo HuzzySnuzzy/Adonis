@@ -2893,3 +2893,9 @@ tr.is-inactive > td.row-act { opacity: 1; }
 .day-wait { opacity: .9; }
 .cal-chip.is-wait { background: color-mix(in srgb, #7a5cff 14%, var(--surface)); color: var(--text); box-shadow: none; }
 .cal-legend .cal-chip.is-wait { display: inline-block; }
+
+/* Werkopdracht zonder kenteken: rood als herinnering */
+.plate-missing { display: inline-block; padding: .12rem .5rem; border-radius: 4px; font-weight: 700; font-size: .85em; white-space: nowrap;
+  background: color-mix(in srgb, #d93025 13%, var(--surface)); color: color-mix(in srgb, #c5221f 85%, var(--text)); border: 1px dashed color-mix(in srgb, #d93025 60%, transparent); }
+table.list tr.no-plate > td:first-child { box-shadow: inset 3px 0 0 #d93025; }
+.cal-chip.no-plate { background: color-mix(in srgb, #d93025 14%, var(--surface)); color: color-mix(in srgb, #c5221f 85%, var(--text)); font-family: inherit; font-weight: 600; box-shadow: none; }

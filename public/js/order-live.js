@@ -111,7 +111,8 @@
     if (stateEl && stateEl.dataset.state !== 'error') setState('pending');
   }
   function readyToCreate(snap) {
-    if (String(snap['d[kenteken]'] || '').replace(/[^A-Za-z0-9]/g, '').length < 4 || !String(snap.nummer || '').trim()) return false;
+    // Een kenteken is niet verplicht (dan staat de werkopdracht rood als herinnering), wel een nummer en iets van werk.
+    if (!String(snap.nummer || '').trim()) return false;
     return Object.entries(snap).some(([k, v]) => v && v.trim && v.trim() && (k === 'd[werk_omschrijving]'
       || /^d\[werk_regels\]\[\d+\]\[omschrijving\]$/.test(k)
       || /^d\[onderdelen\]\[\d+\]\[omschrijving\]$/.test(k) || /^d\[achter\]\[advies\]\[\d+\]\[tekst\]$/.test(k)

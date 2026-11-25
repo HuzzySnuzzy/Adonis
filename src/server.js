@@ -411,6 +411,8 @@ app.get('/', (req, res) => {
     SELECT c.*, COUNT(o.id) AS aantal, MAX(o.datum_invoer) AS laatste,
       (SELECT COUNT(*) FROM tyre_storage t WHERE t.plate_key = c.plate_key AND t.soort = 'klant' AND t.status = 'opgeslagen') AS banden
     FROM customers c LEFT JOIN orders o ON o.customer_id = c.id`;
+  // Werkopdrachten zonder kenteken hangen aan een verborgen "klant" zonder kenteken: die staat niet in de lijst.
+  const NOPLATE = "c.plate_key <> ''";
   // Tabbladen: actieve klanten (standaard), inactief, geen herinneringen, alle. Zoeken vindt altijd iedereen.
   const toon = ['actief', 'weg', 'genegeerd', 'alle'].includes(req.query.toon) ? req.query.toon : 'actief';
   const statusWhere = q || toon === 'alle' ? '1' : toon === 'actief' ? "COALESCE(c.status, '') = ''" : 'c.status = ?';
@@ -420,14 +422,14 @@ app.get('/', (req, res) => {
     const pkey = plateKey(q);
     rows = db.prepare(
       `${base}
-       WHERE (? <> '' AND c.plate_key LIKE ? ESCAPE '\\') OR c.naam LIKE ? ESCAPE '\\' OR c.merk_type LIKE ? ESCAPE '\\'
-          OR c.klantnr LIKE ? ESCAPE '\\' OR c.plaats LIKE ? ESCAPE '\\' OR c.chassisnummer LIKE ? ESCAPE '\\'
+       WHERE ${NOPLATE} AND ((? <> '' AND c.plate_key LIKE ? ESCAPE '\\') OR c.naam LIKE ? ESCAPE '\\' OR c.merk_type LIKE ? ESCAPE '\\'
+          OR c.klantnr LIKE ? ESCAPE '\\' OR c.plaats LIKE ? ESCAPE '\\' OR c.chassisnummer LIKE ? ESCAPE '\\')
        GROUP BY c.id ORDER BY c.plate_key LIMIT 500`
     ).all(pkey, likeTerm(pkey), term, term, term, term, term);
   } else {
-    rows = db.prepare(`${base} WHERE ${statusWhere} GROUP BY c.id ORDER BY c.plate_key LIMIT 2000`).all(...statusParams);
+    rows = db.prepare(`${base} WHERE ${NOPLATE} AND ${statusWhere} GROUP BY c.id ORDER BY c.plate_key LIMIT 2000`).all(...statusParams);
   }
-  const statusCounts = Object.fromEntries(db.prepare("SELECT COALESCE(status, '') AS s, COUNT(*) AS n FROM customers GROUP BY s").all().map((r) => [r.s || 'actief', r.n]));
+  const statusCounts = Object.fromEntries(db.prepare("SELECT COALESCE(status, '') AS s, COUNT(*) AS n FROM customers WHERE plate_key <> '' GROUP BY s").all().map((r) => [r.s || 'actief', r.n]));
   // Precies één klant met dit kenteken? Dan meteen naar die klant (niet bij live zoeken tijdens het typen).
   if (q && !req.get('X-Live-Refresh')) {
     const exact = rows.filter((c) => c.plate_key && c.plate_key === plateKey(q));
@@ -453,8 +455,8 @@ app.get('/zoeken', (req, res) => {
   if (q) {
     const term = likeTerm(q); const pkey = plateKey(q);
     if (scope.includes('klanten')) {
-      R.klanten = db.prepare(`SELECT c.* FROM customers c WHERE (? <> '' AND c.plate_key LIKE ? ESCAPE '\\') OR c.naam LIKE ? ESCAPE '\\'
-        OR c.merk_type LIKE ? ESCAPE '\\' OR c.klantnr LIKE ? ESCAPE '\\' OR c.plaats LIKE ? ESCAPE '\\' OR c.chassisnummer LIKE ? ESCAPE '\\'
+      R.klanten = db.prepare(`SELECT c.* FROM customers c WHERE c.plate_key <> '' AND ((? <> '' AND c.plate_key LIKE ? ESCAPE '\\') OR c.naam LIKE ? ESCAPE '\\'
+        OR c.merk_type LIKE ? ESCAPE '\\' OR c.klantnr LIKE ? ESCAPE '\\' OR c.plaats LIKE ? ESCAPE '\\' OR c.chassisnummer LIKE ? ESCAPE '\\')
         ORDER BY c.updated_at DESC LIMIT ${LIM + 1}`).all(pkey, likeTerm(pkey), term, term, term, term, term);
     }
     if (scope.includes('werkopdrachten')) {
@@ -887,7 +889,6 @@ function parseNummer(v) {
 
 function validateOrder(data, nummer, existingId) {
   if (!nummer) return 'Vul een geldig werkopdrachtnummer in.';
-  if (!plateKey(data.kenteken)) return 'Vul een kenteken in – werkopdrachten worden per kenteken opgeslagen.';
   const clash = db.prepare('SELECT id FROM orders WHERE nummer = ?').get(nummer);
   if (clash && clash.id !== existingId) return `Werkopdrachtnummer ${orders.fmtNr(nummer)} bestaat al.`;
   return null;

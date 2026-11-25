@@ -238,7 +238,7 @@ module.exports = function register(app, { flash, wrap }) {
     const q = String(req.query.q || '').trim().slice(0, 100);
     res.render('apk-vraag', { title: 'APK-vraag', list: apkVraag.recent(q), q, SOORTEN: apkVraag.SOORTEN, OORDELEN: apkVraag.OORDELEN,
       aiConfigured: importer.isConfigured(), canAi: req.user.can_ai, item: null, voorbeeld: String(req.query.vraag || '').slice(0, 500),
-      kenteken: String(req.query.kenteken || '').slice(0, 12), customers: db.prepare('SELECT kenteken, merk_type FROM customers ORDER BY updated_at DESC LIMIT 400').all() });
+      kenteken: String(req.query.kenteken || '').slice(0, 12), customers: db.prepare("SELECT kenteken, merk_type FROM customers WHERE plate_key <> '' ORDER BY updated_at DESC LIMIT 400").all() });
   });
   app.get('/apk-vraag/:id', (req, res) => {
     const item = apkVraag.get(Number(req.params.id));
@@ -246,7 +246,7 @@ module.exports = function register(app, { flash, wrap }) {
     if (wantsJson(req)) return res.json({ id: item.id, status: item.status, error: item.error });
     res.render('apk-vraag', { title: 'APK-vraag', list: apkVraag.recent(), q: '', SOORTEN: apkVraag.SOORTEN, OORDELEN: apkVraag.OORDELEN,
       aiConfigured: importer.isConfigured(), canAi: req.user.can_ai, item, voorbeeld: '', kenteken: item.kenteken || '',
-      customers: db.prepare('SELECT kenteken, merk_type FROM customers ORDER BY updated_at DESC LIMIT 400').all() });
+      customers: db.prepare("SELECT kenteken, merk_type FROM customers WHERE plate_key <> '' ORDER BY updated_at DESC LIMIT 400").all() });
   });
   app.post('/apk-vraag', auth.requireAi, require('express').json({ limit: '20kb' }), wrap(async (req, res) => {
     const b = req.body || {};
@@ -306,7 +306,7 @@ module.exports = function register(app, { flash, wrap }) {
     res.render('ai-analysis', {
       title: 'AI-analyse', v, result: v ? vehicle.get(v.key) : null, busy: v ? running.has(v.key) : false,
       recent: vehicle.recent(), ZONES: vehicle.ZONES, aiConfigured: importer.isConfigured(), canAi: req.user.can_ai,
-      customers: db.prepare('SELECT kenteken, merk_type FROM customers ORDER BY updated_at DESC LIMIT 400').all(),
+      customers: db.prepare("SELECT kenteken, merk_type FROM customers WHERE plate_key <> '' ORDER BY updated_at DESC LIMIT 400").all(),
     });
   }));
   app.post('/ai-analyse', auth.requireAi, wrap(async (req, res) => {

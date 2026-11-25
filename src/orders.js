@@ -45,6 +45,7 @@ function emptyOrderData() {
     // kop rechts
     monteur: '', datum_gereed: '', klantnr: '', kenteken: '', merk_type: '',
     tijd: '', // tijd van de afspraak (UU:MM), optioneel
+    inkt_rood: '', // velden die in het rood zijn geschreven (namen van de vakken, gescheiden door spaties)
     km_in: '', km_uit: '', datum_deel1: '', apk_datum: '',
     naam: '', adres: '', plaats: '', tel_prive: '', tel_zaak: '',
     alle_reparaties: '', contact_boven: '', chassisnummer: '', alarmcode: '',
@@ -159,6 +160,10 @@ function withWorkRows(data) {
   return view;
 }
 
+/** Lijst rood geschreven vakken: alleen geldige veldnamen, elk één keer. */
+function inkRed(v) {
+  return [...new Set(String(v || '').split(/\s+/).filter((n) => /^d(\[[A-Za-z0-9_]+\])+$/.test(n) && n !== 'd[inkt_rood]'))].slice(0, 400).join(' ');
+}
 /** "8:30", "0830", "8.30", "08:30" -> "08:30"; anders leeg. */
 function parseTime(v) {
   const m = /^\s*(\d{1,2})[:.h]?(\d{2})\s*$/.exec(String(v || ''));
@@ -174,6 +179,7 @@ function normalizeOrderData(input) {
   if (!['ja', 'nee'].includes(data.alle_reparaties)) data.alle_reparaties = '';
   for (const f of ['datum_gereed', 'datum_deel1', 'apk_datum']) data[f] = parseDate(data[f]);
   data.tijd = parseTime(data.tijd);
+  data.inkt_rood = inkRed(data.inkt_rood);
   data.paginas = normalizePages(input && input.paginas);
   fixBack(data);
   return data;
@@ -218,7 +224,7 @@ function parseOrderData(json) {
 
 function flattenText(value, out = []) {
   if (value && typeof value === 'object') {
-    for (const v of Object.values(value)) flattenText(v, out);
+    for (const [k, v] of Object.entries(value)) if (k !== 'inkt_rood') flattenText(v, out); // inktkleur is geen tekst om op te zoeken
   } else if (typeof value === 'string' && value.trim()) {
     out.push(value.trim());
   }
@@ -401,7 +407,9 @@ function refreshCustomer(customerId) {
     return;
   }
   const values = {};
-  const cust = db.prepare('SELECT bewerkt_at, anon_at FROM customers WHERE id = ?').get(customerId);
+  const cust = db.prepare('SELECT bewerkt_at, anon_at, plate_key FROM customers WHERE id = ?').get(customerId);
+  // De verborgen "klant" voor werkopdrachten zonder kenteken krijgt geen naam/adres (dat hoort bij de werkopdracht zelf).
+  if (cust && cust.plate_key === '') return;
   // Geanonimiseerde auto komt terug (bijv. nieuwe eigenaar): weer een gewone, actieve klant.
   if (cust && cust.anon_at && orders.some((o) => o.created_at > cust.anon_at)) {
     db.prepare("UPDATE customers SET anon_at = NULL, status = '', status_at = NULL WHERE id = ?").run(customerId);
