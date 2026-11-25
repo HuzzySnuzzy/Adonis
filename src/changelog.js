@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.71.0', date: '2026-11-25', title: 'Alle banden op één plek: Bandenhotel → Overige opslag',
+    items: [
+      'Banden op voorraad staan nu in het Bandenhotel bij Overige opslag, samen met de noodbanden en losse sets. Zo zoekt u een maat op één plek. De banden die in Voorraad stonden, zijn er automatisch heen verplaatst, met hun foto\'s: maat (met index), merk en type, aantal, profiel, seizoen en locatie gaan mee; artikelnummer, prijs en opmerking staan bij Opmerkingen. Vooraf is een kopie van de database gemaakt in de datamap (voor-banden-verplaatsen-….db).',
+      'Voorraad is nu alleen nog voor onderdelen. Oude links naar Voorraad → Banden en "Band toevoegen" gaan vanzelf naar Overige opslag. Bij een Excel-import komen bandenlijsten ook bij Overige opslag.',
+    ],
+  },
+  {
     version: '1.70.1', date: '2026-11-25', title: 'Geen onnodige "niet opgeslagen"-meldingen meer',
     items: [
       'Werkopdrachten worden automatisch opgeslagen, dus ADONIS vraagt niet meer "Pagina verlaten? Wijzigingen zijn mogelijk niet opgeslagen" en toont niet meer steeds de balk "Er is een niet-opgeslagen versie…". Gaat u weg terwijl er nog net iets wordt opgeslagen, dan gebeurt dat meteen. Alleen als opslaan echt niet lukt (geen verbinding, uitgelogd), krijgt u nog een waarschuwing en bewaart ADONIS een kopie op dit apparaat om terug te zetten. Ook bij het sluiten van een venster op het bureaublad.',

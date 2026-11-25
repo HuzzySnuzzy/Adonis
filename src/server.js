@@ -1779,4 +1779,17 @@ app.use((err, req, res, next) => {
   res.status(500).render('error', { title: 'Er ging iets mis', message: 'Er is een onverwachte fout opgetreden.' });
 });
 
+// Eenmalig (1.71): banden uit Voorraad naar Bandenhotel → Overige opslag, zodat banden op één plek staan.
+// Eerst een kopie van de database in de datamap, voor de zekerheid.
+try {
+  if (db.prepare("SELECT 1 FROM stock_items WHERE soort = 'band' LIMIT 1").get()) {
+    const copy = path.join(DATA_DIR, `voor-banden-verplaatsen-${orders.todayISO()}.db`);
+    if (!fs.existsSync(copy)) db.exec(`VACUUM INTO '${copy.replace(/'/g, "''")}'`);
+    const n = inv.moveStockTyres();
+    console.log(`  ${n} band${n === 1 ? '' : 'en'} uit Voorraad verplaatst naar Bandenhotel → Overige opslag (kopie vooraf: ${copy}).`);
+  }
+} catch (err) {
+  console.error('  Banden verplaatsen naar Overige opslag mislukt (er is niets veranderd):', err.message);
+}
+
 module.exports = app;

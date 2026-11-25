@@ -219,6 +219,8 @@ module.exports = function register(app, { flash, wrap }) {
 
   /* ================= voorraad ================= */
   app.get('/voorraad', (req, res) => {
+    // Banden staan in het Bandenhotel bij "Overige opslag" (niet meer in Voorraad).
+    if (req.query.soort === 'band' && !inv.stockCounts().band) return res.redirect('/bandenhotel?soort=opslag' + (req.query.q ? '&q=' + encodeURIComponent(req.query.q) : ''));
     const soort = inv.SOORTEN[req.query.soort] ? req.query.soort : 'onderdeel';
     const q = String(req.query.q || '').trim();
     const type = String(req.query.type || '');
@@ -237,7 +239,7 @@ module.exports = function register(app, { flash, wrap }) {
         }
         return out;
       })() : {},
-      counts: inv.stockCounts(), SOORTEN: inv.SOORTEN,
+      counts: inv.stockCounts(), SOORTEN: inv.stockCounts().band ? inv.SOORTEN : { onderdeel: inv.SOORTEN.onderdeel },
       // Bij banden: ook laten zien hoeveel sets met deze zoekterm in de overige opslag liggen (noodbanden).
       opslagMatches: soort === 'band' && q ? inv.searchTyres({ soort: 'opslag', q, status: 'opgeslagen' }).length : 0,
       types: inv.distinct('stock_items', soort === 'band' ? 'seizoen' : 'type', `AND soort = '${soort}'`),
@@ -261,6 +263,7 @@ module.exports = function register(app, { flash, wrap }) {
     });
   }
   app.get('/voorraad/nieuw', (req, res) => {
+    if (req.query.soort === 'band') return res.redirect('/bandenhotel/nieuw?soort=opslag');
     const data = inv.normalizeStock({ datum: orders.todayISO(), barcode: req.query.barcode || '' }, req.query.soort === 'band' ? 'band' : 'onderdeel');
     renderStock(res, { item: null, data });
   });

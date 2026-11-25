@@ -34,9 +34,9 @@
   <div id="live-tyres" data-live>
   <nav class="kind-tabs" aria-label="Soort opslag">
     <a href="<%= qs({ soort: 'klant', seizoen: '', locatie: '' }) %>" class="<%= soort === 'klant' ? 'active' : '' %>">Klantenbanden <span class="count"><%= counts.perSoort.klant %></span></a>
-    <a href="<%= qs({ soort: 'opslag', seizoen: '', locatie: '' }) %>" class="<%= soort === 'opslag' ? 'active' : '' %>" title="Gemengde opslag: noodbanden, oude klantbanden, losse sets">Overige opslag (noodbanden) <span class="count"><%= counts.perSoort.opslag %></span></a>
+    <a href="<%= qs({ soort: 'opslag', seizoen: '', locatie: '' }) %>" class="<%= soort === 'opslag' ? 'active' : '' %>" title="Gemengde opslag: noodbanden, banden op voorraad, oude klantbanden, losse sets">Overige opslag (noodbanden, voorraad) <span class="count"><%= counts.perSoort.opslag %></span></a>
   </nav>
-  <% if (soort === 'opslag') { %><p class="muted small kind-help">Banden die niet (meer) bij één vaste klant horen: noodbanden, oude klantbanden en losse sets. Handig als iemand met spoed een band nodig heeft – zoek op maat.</p><% } %>
+  <% if (soort === 'opslag') { %><p class="muted small kind-help">Banden die niet (meer) bij één vaste klant horen: noodbanden, banden op voorraad, oude klantbanden en losse sets. Handig als iemand met spoed een band nodig heeft – zoek op maat.</p><% } %>
   <div class="filter-bar">
     <nav class="status-tabs" aria-label="Filter op status">
       <a href="<%= qs({ status: 'opgeslagen' }) %>" class="<%= status === 'opgeslagen' ? 'active' : '' %>">In opslag<span class="count"><%= counts.opgeslagen %></span></a>

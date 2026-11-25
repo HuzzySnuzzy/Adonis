@@ -48,7 +48,7 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
 - **Datum invoer** wordt automatisch ingevuld met de datum waarop de werkopdracht is aangemaakt.
 - **Werkopdrachtnummer** loopt automatisch op en kan zo nodig worden aangepast.
 - **Afdrukken** op A4 liggend: pagina 1 is de voorkant, pagina 2 de achterkant.
-- **Lijsten opschonen met AI** (`/lijsten/optimaliseren`): klanten, bandenhotel, overige opslag, voorraad banden/onderdelen in
+- **Lijsten opschonen met AI** (`/lijsten/optimaliseren`): klanten, bandenhotel, overige opslag, voorraad onderdelen in
   stukken van 120 regels naar Claude; voorstellen per veld (via dezelfde normalisatie als het formulier) en mogelijke
   dubbele regels, bewaard in `list_ai_runs`; doorvoeren alleen wat is aangevinkt. Starten vereist AI-toegang.
 - **Automatisch invullen** (Systeem, eigenaar): RDW, klantgegevens, suggesties, hints, monteur, uurtarief en voorrekenen
@@ -105,13 +105,13 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   komen wisselen: klanten met banden van het komende seizoen in opslag die daar nog niet op rijden (van half september
   t/m januari naar winter, anders naar zomer; ook handmatig te kiezen). Nog niet gebelde klanten en het slechtste profiel
   op de auto staan bovenaan; met **Gebeld** houd je bij wie al is uitgenodigd. Afdrukken kan ook.
-  Daarnaast is er **Overige opslag (noodbanden)** voor banden die niet bij één vaste klant horen; zoek je in de voorraad op
+  Daarnaast is er **Overige opslag (noodbanden, voorraad)** voor banden die niet bij één vaste klant horen; zoek je in de voorraad op
   een maat, dan zie je ook hoeveel sets van die maat daar liggen.
 - **Voorraad met voorbeeldfoto's:** in de lijst en op de pagina van een onderdeel staat een voorbeeldfoto van de
   soort onderdeel (bougie, oliefilter, riem, remblokken...), gratis van Wikipedia; eigen foto's gaan altijd voor.
   Er wordt een vaste artikeltitel opgevraagd (gangbare garagewoorden zijn vertaald), dus nooit een willekeurig
   zoekresultaat. De knop **Afbeeldingen zoeken** zoekt foto's van precies dat onderdeel (merk + nummer) in de browser.
-- **Voorraad:** onderdelen en banden die op de zaak liggen, met aantal (knoppen − en +), merk, artikelnummer,
+- **Voorraad:** onderdelen die op de zaak liggen (banden op voorraad staan sinds 1.71 in het Bandenhotel bij *Overige opslag*; bij het bijwerken worden bestaande voorraadbanden daarheen verplaatst, met een kopie van de database vooraf), met aantal (knoppen − en +), merk, artikelnummer,
   origineel (OE) nummer, soort en locatie. Een nummer vind je ook als het anders is getypt: `1493001` vindt `1 493 001`,
   `A0031592603` vindt `A003.159.26.03`. **Barcode scannen** (camera of USB-scanner) in Voorraad en in het onderdelenvak van
   de werkopdracht: zoekt op de barcode van het onderdeel (EAN, veld *Barcode*) of op het artikel-/OE-nummer en vult nummer,

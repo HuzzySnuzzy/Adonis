@@ -34,7 +34,7 @@ const LISTS = {
     fields: ['naam', 'adres', 'plaats', 'tel_prive', 'tel_zaak', 'merk_type'], context: ['kenteken'] },
   klantbanden: { label: 'Bandenhotel (klantenbanden)', kind: 'tyre', soort: 'klant', back: '/bandenhotel', area: 'banden',
     fields: ['klant_naam', 'telefoon', 'auto', 'seizoen', 'maat', 'merk', 'velg'], context: ['label', 'kenteken'] },
-  opslagbanden: { label: 'Overige bandenopslag (o.a. noodbanden)', kind: 'tyre', soort: 'opslag', back: '/bandenhotel?soort=opslag', area: 'banden',
+  opslagbanden: { label: 'Overige bandenopslag (noodbanden, voorraad)', kind: 'tyre', soort: 'opslag', back: '/bandenhotel?soort=opslag', area: 'banden',
     fields: ['auto', 'seizoen', 'maat', 'merk', 'velg'], context: ['label', 'opmerkingen'] },
   voorraadbanden: { label: 'Voorraad: banden', kind: 'stock', soort: 'band', back: '/voorraad?soort=band', area: 'voorraad',
     fields: ['merk', 'type', 'maat', 'snelheid', 'seizoen', 'omschrijving'], context: ['nummer'] },

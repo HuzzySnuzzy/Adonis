@@ -186,6 +186,7 @@ module.exports = function register(app, { flash, wrap }) {
   /* ================= lijsten opschonen (bandenhotel, opslag, voorraad) ================= */
   const listAllowed = (req, key) => {
     const L = listAi.LISTS[key]; const F = res0(req);
+    if (key === 'voorraadbanden' && !db.prepare("SELECT 1 FROM stock_items WHERE soort = 'band' LIMIT 1").get()) return false; // banden staan nu in Overige opslag
     return L && F.ai && (L.kind === 'customer' ? true : L.kind === 'tyre' ? F.bandenhotel : F.voorraad);
   };
   const res0 = (req) => req.res.locals.feat || {};

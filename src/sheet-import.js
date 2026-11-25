@@ -46,7 +46,7 @@ const TYRE_FIELDS = {
 };
 const TARGETS = {
   bandenhotel: { label: 'Bandenhotel – klantenbanden (klanten worden toegevoegd aan Klanten)', fields: TYRE_FIELDS },
-  bandenopslag: { label: 'Overige bandenopslag (noodbanden, gemengd)', fields: TYRE_FIELDS },
+  bandenopslag: { label: 'Overige bandenopslag (noodbanden, banden op voorraad, gemengd)', fields: TYRE_FIELDS },
   onderdelen: {
     label: 'Voorraad onderdelen',
     fields: {
@@ -55,14 +55,7 @@ const TARGETS = {
       foto: 'Foto (bestandsnaam)',
     },
   },
-  banden: {
-    label: 'Voorraad banden (op de zaak, te koop)',
-    fields: {
-      aantal: 'Aantal', beschikbaar: 'Beschikbaar (ja/nee)', merk: 'Merk', type: 'Bandtype / model', maat: 'Bandenmaat',
-      profiel: 'Profiel (mm of "nieuw")', snelheid: 'Last-/snelheidsindex', seizoen: 'Seizoen', locatie: 'Locatie',
-      omschrijving: 'Opmerking', prijs: 'Prijs', datum: 'Datum binnen', foto: 'Foto (bestandsnaam)',
-    },
-  },
+
 };
 /** Bandenhotel en overige opslag gebruiken dezelfde velden en tabel (tyre_storage). */
 const isTyre = (doel) => doel === 'bandenhotel' || doel === 'bandenopslag';
@@ -183,7 +176,7 @@ function guessDoel(sheet) {
   const heads = sheet.columns.map((c) => c.header.toLowerCase()).join(' | ');
   const name = sheet.name.toLowerCase();
   if (/kenteken|klant/.test(heads)) return 'bandenhotel';
-  if (/band/.test(name) || (/maat/.test(heads) && /snelheid|seizoen|\bmm\b|profiel/.test(heads))) return 'banden';
+  if (/band/.test(name) || (/maat/.test(heads) && /snelheid|seizoen|\bmm\b|profiel/.test(heads))) return 'bandenopslag'; // banden op voorraad: Overige opslag
   if (/nummer|nmr|type|artikel|onderdeel/.test(heads)) return 'onderdelen';
   return 'overslaan';
 }
@@ -439,8 +432,8 @@ Bekijk elk blad en geef per blad terug:
 - "blad": de naam van het blad, precies zoals hieronder.
 - "doel": bandenhotel (het echte bandenhotel: sets VAN VASTE KLANTEN die de garage voor ze opslaat, één set per klant/kenteken;
   de klanten worden daarbij aan het klantenbestand toegevoegd), bandenopslag (overige opgeslagen banden: een gemengde lijst
-  met noodbanden, oude klantbanden en losse sets, niet duidelijk van één klant), onderdelen (onderdelen op voorraad),
-  banden (nieuwe/losse banden op voorraad om te verkopen, meestal met aantal en merk/type) of overslaan
+  met noodbanden, oude klantbanden, losse sets en banden op voorraad om te verkopen, niet duidelijk van één klant),
+  onderdelen (onderdelen op voorraad) of overslaan
   (geen bruikbare gegevens, of dubbel met een ander blad – leg dat dan uit). Twijfel je tussen bandenhotel en bandenopslag,
   zeg dat dan in "reden"; de gebruiker kiest.
 - "reden": in één zin waarom (Nederlands, voor de gebruiker).

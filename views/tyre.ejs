@@ -35,7 +35,7 @@
     <% if (tyre) { %><input type="hidden" name="versie" value="<%= tyre.updated_at %>"><% } %>
     <div class="kind-pick" role="radiogroup" aria-label="Soort">
       <label class="check"><input type="radio" name="t[soort]" value="klant" <%= d.soort !== 'opslag' ? 'checked' : '' %>> <span><b>Klantenbanden</b> <span class="muted small">– bandenhotel, de klant komt ook in Klanten</span></span></label>
-      <label class="check"><input type="radio" name="t[soort]" value="opslag" <%= d.soort === 'opslag' ? 'checked' : '' %>> <span><b>Overige opslag</b> <span class="muted small">– noodbanden, losse sets</span></span></label>
+      <label class="check"><input type="radio" name="t[soort]" value="opslag" <%= d.soort === 'opslag' ? 'checked' : '' %>> <span><b>Overige opslag</b> <span class="muted small">– noodbanden, banden op voorraad, losse sets</span></span></label>
     </div>
     <fieldset>
       <legend>Klant</legend>

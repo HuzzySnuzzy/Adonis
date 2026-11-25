@@ -561,7 +561,44 @@ function deleteStock(id) {
   db.prepare('DELETE FROM stock_items WHERE id = ?').run(id);
 }
 
+/**
+ * Banden uit Voorraad horen in het Bandenhotel bij "Overige opslag" (één plek om te zoeken).
+ * Verplaatst alle voorraadbanden naar tyre_storage (soort 'opslag'), met hun foto's. Geeft het aantal terug.
+ */
+function moveStockTyres() {
+  const rows = db.prepare("SELECT * FROM stock_items WHERE soort = 'band' ORDER BY id").all();
+  if (!rows.length) return 0;
+  const cols = [...TYRE_COLS, 'search_text', 'created_by', 'updated_by', 'created_at', 'updated_at'];
+  const ins = db.prepare(`INSERT INTO tyre_storage (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`);
+  db.exec('BEGIN');
+  try {
+    for (const s of rows) {
+      const mm = parseMm(s.profiel);
+      const notes = [s.omschrijving, s.nummer && `Artikelnr. ${s.nummer}`, s.oe_nummer && `OE ${s.oe_nummer}`,
+        s.prijs && `Prijs ${/€/.test(s.prijs) ? '' : '€ '}${s.prijs}`, s.beschikbaar ? '' : 'Niet beschikbaar'].filter(Boolean).join('. ');
+      const t = {
+        soort: 'opslag', label: '', klant_naam: '', kenteken: '', plate_key: '', telefoon: '', auto: '',
+        seizoen: normalizeSeason(s.seizoen), maat: normalizeSize([s.maat, s.snelheid].filter(Boolean).join(' ')),
+        merk: [s.merk, s.type].filter(Boolean).join(' ').slice(0, 100), aantal: Math.max(0, Number(s.aantal) || 0), velg: '',
+        profiel_voor: mm, profiel_achter: mm, profiel_tekst: mm === null ? clean(s.profiel, 60) : '', dot: '', locatie: s.locatie || '',
+        opmerkingen: notes.slice(0, 2000), extra: JSON.stringify({ ...parseExtra(s.extra), 'Uit Voorraad': 'ja' }),
+        status: Number(s.aantal) > 0 ? 'opgeslagen' : 'uitgegeven', datum_in: s.datum || String(s.created_at || '').slice(0, 10), datum_uit: '',
+      };
+      t.search_text = tyreSearchText(t);
+      const r = ins.run(...cols.map((c) => (c in t ? t[c] : s[c] ?? null)));
+      db.prepare("UPDATE photos SET owner_type = 'tyre', owner_id = ? WHERE owner_type = 'stock' AND owner_id = ?").run(Number(r.lastInsertRowid), s.id);
+      db.prepare('DELETE FROM stock_items WHERE id = ?').run(s.id);
+    }
+    db.exec('COMMIT');
+  } catch (err) {
+    if (db.isTransaction) db.exec('ROLLBACK');
+    throw err;
+  }
+  return rows.length;
+}
+
 module.exports = {
+  moveStockTyres,
   TYRE_SOORTEN, formatPlate, ensureCustomer, customerAction,
   seasonClass, SEASON_LABEL, swapTarget, onCarFor, swapOnto, setOnCar, toggleInvited, swapList, minTread,
   TYRE_STATUSES, VELGEN, SEASONS, SOORTEN,
