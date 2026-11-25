@@ -1074,9 +1074,20 @@ app.post('/werkopdracht/:id/status', (req, res) => {
   res.redirect(`/werkopdracht/${order.id}`);
 });
 
-app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
+// Verwijderen: beheerders altijd; wie de werkopdracht heeft aangemaakt ook, zolang hij nog niet klaar/gefactureerd is.
+function canDeleteOrder(user, order) {
+  return !!user && !!order && (user.is_admin || (order.created_by === user.id && ['open', 'wacht'].includes(order.status)));
+}
+app.locals.canDeleteOrder = canDeleteOrder;
+app.post('/werkopdracht/:id/verwijderen', (req, res) => {
   const order = loadOrder(req.params.id);
   if (!order) return res.redirect('/');
+  if (!canDeleteOrder(req.user, order)) {
+    flash(req, 'err', order.created_by === req.user.id
+      ? 'Deze werkopdracht is al klaar voor facturatie of gefactureerd; alleen een beheerder kan hem nog verwijderen.'
+      : 'Alleen wie de werkopdracht heeft aangemaakt, of een beheerder, kan hem verwijderen.');
+    return res.redirect(`/werkopdracht/${order.id}`);
+  }
   // Eerst in de prullenbak (met klant en logboek), zodat hij terug te zetten is. Foto's blijven bewaard.
   trash.put('order', db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id), {
     label: `Werkopdracht ${orders.fmtNr(order.nummer)}${orders.parseOrderData(order.data).kenteken ? ' · ' + orders.parseOrderData(order.data).kenteken : ''}`, user: req.user,
@@ -1085,8 +1096,8 @@ app.post('/werkopdracht/:id/verwijderen', auth.requireAdmin, (req, res) => {
   const customerId = orders.deleteOrder(order.id);
   announce(req, 'deleted', { id: order.id, nummer: order.nummer, customerId });
   flash(req, 'ok', `Werkopdracht ${orders.fmtNr(order.nummer)} staat in de prullenbak (${trash.KEEP_DAYS} dagen terug te zetten).`);
-  const stillExists = db.prepare('SELECT 1 FROM customers WHERE id = ?').get(customerId);
-  res.redirect(stillExists ? `/klant/${customerId}` : '/');
+  const stillExists = db.prepare("SELECT 1 FROM customers WHERE id = ? AND plate_key <> ''").get(customerId);
+  res.redirect(stillExists ? `/klant/${customerId}` : '/werkopdrachten');
 });
 
 /* ---------- Verkenner: alle foto's in mappen ---------- */

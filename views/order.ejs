@@ -370,9 +370,9 @@
 </details>
 <% } %>
 
-<% if (order && user.is_admin) { %>
+<% if (order && canDeleteOrder(user, order)) { %>
 <form method="post" action="/werkopdracht/<%= order.id %>/verwijderen" class="delete-form no-print"
-      data-confirm="Werkopdracht <%= fmtNr(order.nummer) %> definitief verwijderen? Dit kan niet ongedaan worden gemaakt.">
+      data-confirm="Werkopdracht <%= fmtNr(order.nummer) %> verwijderen? Hij gaat naar de prullenbak; een beheerder kan hem nog 30 dagen terugzetten.">
   <input type="hidden" name="_csrf" value="<%= csrf %>">
   <button class="btn btn-danger btn-small" type="submit">Werkopdracht verwijderen</button>
 </form>

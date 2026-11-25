@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.70.1', date: '2026-11-25', title: 'Geen onnodige "niet opgeslagen"-meldingen meer',
+    items: [
+      'Werkopdrachten worden automatisch opgeslagen, dus ADONIS vraagt niet meer "Pagina verlaten? Wijzigingen zijn mogelijk niet opgeslagen" en toont niet meer steeds de balk "Er is een niet-opgeslagen versie…". Gaat u weg terwijl er nog net iets wordt opgeslagen, dan gebeurt dat meteen. Alleen als opslaan echt niet lukt (geen verbinding, uitgelogd), krijgt u nog een waarschuwing en bewaart ADONIS een kopie op dit apparaat om terug te zetten. Ook bij het sluiten van een venster op het bureaublad.',
+      'Wie een werkopdracht heeft aangemaakt, kan hem nu zelf verwijderen (zolang hij nog niet klaar voor facturatie of gefactureerd is). Hij gaat naar de prullenbak, waar een beheerder hem 30 dagen kan terugzetten. Beheerders kunnen zoals altijd elke werkopdracht verwijderen.',
+    ],
+  },
+  {
     version: '1.70.0', date: '2026-11-25', title: 'Werkopdracht zonder kenteken, en schrijven in rood of blauw',
     items: [
       'Een werkopdracht kan nu ook zonder kenteken worden opgeslagen (bijv. als het kenteken nog niet bekend is). Het kentekenvak is dan rood ("nog invullen"), en in de lijsten, op de dag en in de kalender staat "Geen kenteken" in het rood als herinnering. Vult u het kenteken later in, dan komt de werkopdracht vanzelf bij de juiste klant.',

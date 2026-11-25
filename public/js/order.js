@@ -98,7 +98,17 @@
   window.adonisOrderDirty = isDirty; // voor live bijwerken (live.js)
   window.adonisOrder = { fitAll, updateTotals };
   if (dirty) toolbar.classList.add('dirty');
-  window.addEventListener('beforeunload', (e) => { if (isDirty() && !window.adonisLeaving) { e.preventDefault(); e.returnValue = ''; } });
+  window.addEventListener('beforeunload', (e) => {
+    if (window.adonisLeaving) return;
+    if (form.dataset.liveEdit && window.adonisLiveSaveNow) { // order-live.js laadt na dit script
+      // Automatisch opslaan: nu meteen opslaan en niet vragen. Alleen als opslaan echt niet lukt, waarschuwen.
+      const problem = window.adonisLiveProblem(); // eerst kijken: opslaan zet de status op "Opslaan…"
+      window.adonisLiveSaveNow();
+      if (problem) { e.preventDefault(); e.returnValue = ''; }
+      return;
+    }
+    if (isDirty()) { e.preventDefault(); e.returnValue = ''; }
+  });
   // Opslaan of annuleren (na bevestiging) mag de pagina verlaten zonder waarschuwing.
   // (Een <form method="dialog"> – plaknotitie, Claude-venster – verlaat de pagina niet.)
   document.addEventListener('submit', (e) => { if (!e.defaultPrevented && e.target.method !== 'dialog') dirty = false; });
@@ -109,7 +119,10 @@
    * opslaan (groene melding) wordt het concept weer verwijderd. */
   (function drafts() {
     if (!window.localStorage || form.querySelector('fieldset:disabled')) return;
-    const KEY = 'adonis-concept:' + new URL(form.action, location.href).pathname;
+    // Met automatisch opslaan (live) is een kopie op dit apparaat alleen nodig als opslaan niet lukt.
+    const live = !!form.dataset.liveEdit;
+    const keyNow = () => 'adonis-concept:' + new URL(form.action, location.href).pathname;
+    const KEY = keyNow();
     const SKIP = /^(_csrf|versie|zonder_factuurnr|nummer)$/; // nummer niet: dat kan intussen door een ander zijn gebruikt
     const MAX_AGE = 7 * 24 * 3600 * 1000;
     const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
@@ -144,7 +157,9 @@
       }
     } catch { /* geblokkeerd */ }
     const initial = snapshot();
-    const saved = read(KEY);
+    let saved = read(KEY);
+    // Oude kopieën van vóór automatisch opslaan (of van een nieuwe werkopdracht die intussen is opgeslagen): stil opruimen.
+    if (live && saved && !saved.failed) { remove(KEY); saved = null; }
     if (saved && saved.values && !same(saved.values, initial)) {
       const when = new Date(saved.t);
       const today = new Date().toDateString() === when.toDateString();
@@ -165,14 +180,20 @@
     const store = (extra = {}) => {
       const values = snapshot();
       if (same(values, initial) && !extra.submitted) return;
-      write(KEY, { t: Date.now(), values, ...extra });
+      write(keyNow(), { t: Date.now(), values, ...extra });
     };
+    if (live) {
+      // Alleen bewaren als automatisch opslaan mislukt; weer weg zodra het gelukt is.
+      document.addEventListener('adonis:order-unsynced', () => store({ failed: true }));
+      document.addEventListener('adonis:order-synced', () => { remove(keyNow()); remove(KEY); });
+      // Nieuwe werkopdracht die nog niet genoeg heeft om op te slaan en de pagina gaat dicht: kopie bewaren.
+      window.addEventListener('pagehide', () => { if (window.adonisLiveWaiting && window.adonisLiveWaiting()) store({ failed: true }); });
+      return;
+    }
     form.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(store, 800); });
     form.addEventListener('change', () => { clearTimeout(timer); timer = setTimeout(store, 300); });
     // Bij opslaan: bewaren met een vlag; pas na de groene melding wordt het verwijderd.
     form.addEventListener('submit', () => { clearTimeout(timer); store({ submitted: true }); });
-    // Automatisch opgeslagen (order-live.js): het concept op dit apparaat is niet meer nodig.
-    document.addEventListener('adonis:order-synced', () => { clearTimeout(timer); remove(KEY); });
   })();
 
   /* ---------- achterkant: uren en begroting rekenen mee (als hulp: alleen lege vakken krijgen een voorstel) ---------- */

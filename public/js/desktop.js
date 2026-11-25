@@ -202,7 +202,12 @@
   function maximize(w, yes) { w.st.max = yes; if (yes) w.st.snap = null; place(w); maxLabel(w); focus(w); save(); }
   function snap(w, side) { w.st.max = false; w.st.snap = side; minimize(w, false); place(w); maxLabel(w); focus(w); save(); }
   function dirty(w) {
-    try { const cw = w.frame.contentWindow; return (cw.adonisOrderDirty && cw.adonisOrderDirty()) || (cw.adonisFormDirty && cw.adonisFormDirty()); } catch { return false; }
+    try {
+      const cw = w.frame.contentWindow;
+      // Werkopdracht met automatisch opslaan: nu opslaan, en alleen "niet opgeslagen" als opslaan echt niet lukt.
+      if (cw.adonisLiveSaveNow && cw.document.querySelector('#orderForm[data-live-edit]')) { const problem = cw.adonisLiveProblem(); cw.adonisLiveSaveNow(); return problem; }
+      return (cw.adonisOrderDirty && cw.adonisOrderDirty()) || (cw.adonisFormDirty && cw.adonisFormDirty());
+    } catch { return false; }
   }
   // Bezig in een venster (venster open, Claude aan het werk, aan het typen): dan niet zomaar alles herladen na een serverupdate.
   function busyIn(w) {

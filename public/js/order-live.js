@@ -76,6 +76,10 @@
     return { snap, patch, pages, any: pages || Object.keys(patch).length > 0 };
   }
   window.adonisLiveDirty = () => editable && (!!inflight || pendingPatch().any);
+  // Voor het verlaten van de pagina: nu meteen opslaan (keepalive), en zeggen of er echt iets mis is.
+  window.adonisLiveSaveNow = () => { if (editable && (timer || pendingPatch().any)) flush({ keepalive: true }); };
+  window.adonisLiveProblem = () => !!stateEl && ['offline', 'error'].includes(stateEl.dataset.state);
+  window.adonisLiveWaiting = () => editable && !orderId && pendingPatch().any; // nieuw, maar nog niet genoeg om op te slaan
 
   /* ---------- status bovenaan ---------- */
   let stateTimer = null;
@@ -84,7 +88,7 @@
     clearTimeout(stateTimer);
     const T = {
       saved: 'Alles opgeslagen', saving: 'Opslaan…', pending: 'Opslaan…',
-      new: 'Wordt automatisch opgeslagen zodra er een kenteken en werk of onderdelen op staan',
+      new: 'Wordt automatisch opgeslagen zodra er werk of onderdelen op staan',
       offline: 'Geen verbinding – wordt opgeslagen zodra die er weer is',
     };
     const t = text || T[kind] || '';
@@ -92,6 +96,8 @@
     if (stateEl.dataset.state !== kind) stateEl.dataset.state = kind;
     stateEl.title = t;
     if (toolbar) toolbar.classList.toggle('dirty', kind === 'pending' || kind === 'saving' || kind === 'error' || kind === 'offline');
+    // Lukt automatisch opslaan niet (geen verbinding, uitgelogd, fout): dan bewaart order.js een kopie op dit apparaat.
+    if (kind === 'offline' || kind === 'error') document.dispatchEvent(new Event('adonis:order-unsynced'));
   }
   function showRemote(by) {
     const t = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
