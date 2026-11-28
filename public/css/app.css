@@ -2899,3 +2899,28 @@ tr.is-inactive > td.row-act { opacity: 1; }
   background: color-mix(in srgb, #d93025 13%, var(--surface)); color: color-mix(in srgb, #c5221f 85%, var(--text)); border: 1px dashed color-mix(in srgb, #d93025 60%, transparent); }
 table.list tr.no-plate > td:first-child { box-shadow: inset 3px 0 0 #d93025; }
 .cal-chip.no-plate { background: color-mix(in srgb, #d93025 14%, var(--surface)); color: color-mix(in srgb, #c5221f 85%, var(--text)); font-family: inherit; font-weight: 600; box-shadow: none; }
+
+/* ---------- Banden importeren met foto's ---------- */
+.tp-buttons { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.tp-thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: .5rem; margin: .8rem 0; }
+.tp-thumb { position: relative; margin: 0; }
+.tp-thumb img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; display: block; }
+.tp-thumb .thumb-del { position: absolute; top: 4px; right: 4px; }
+.tp-common .field input { max-width: 22rem; }
+.tp-rows { display: grid; gap: .7rem; margin: .8rem 0; }
+.tp-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: .9rem; padding: .7rem; }
+.tp-row.is-dup { opacity: .8; }
+.tp-row.is-unsure { box-shadow: inset 3px 0 0 #e08a00; }
+.tp-photo { position: relative; display: block; }
+.tp-photo img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; display: block; background: var(--surface-2); }
+.tp-photo span { position: absolute; left: 6px; bottom: 6px; font-size: .7rem; background: rgba(0, 0, 0, .55); color: #fff; padding: .05rem .35rem; border-radius: 4px; }
+.tp-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: .5rem .7rem; align-content: start; }
+.tp-fields .field { margin: 0; display: flex; flex-direction: column; gap: .15rem; font-size: .85rem; }
+.tp-fields .tp-mee, .tp-fields .tp-status { grid-column: 1 / -1; margin: 0; }
+.tp-fields .tp-aantal input { max-width: 4rem; }
+.tp-tag { display: inline-block; font-size: .74rem; font-weight: 700; padding: .05rem .45rem; border-radius: 999px; }
+.tp-known { background: var(--ok-bg); color: var(--ok-text); }
+.tp-new { background: color-mix(in srgb, var(--primary) 14%, var(--surface)); color: var(--text); }
+.tp-warn { background: var(--warn-bg); color: var(--warn-text); }
+.tp-actions { position: sticky; bottom: 0; background: var(--bg); padding: .6rem 0; z-index: 2; }
+@media (max-width: 560px) { .tp-row { grid-template-columns: 96px minmax(0, 1fr); } .tp-fields { grid-template-columns: 1fr; } }

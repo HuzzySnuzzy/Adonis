@@ -5,6 +5,13 @@
  */
 module.exports = [
   {
+    version: '1.72.0', date: '2026-11-28', title: 'Banden importeren met foto\'s van de labels',
+    items: [
+      'Bandenhotel → Foto-import: maak foto\'s van de stapels banden (of kies ze uit de fotomap), tot 40 tegelijk. Claude leest de labels: naam, kenteken en auto. Een foto mag meerdere labels hebben; hetzelfde label op twee foto\'s telt één keer. Vooraf ziet u wat het ongeveer kost.',
+      'Daarna ziet u per set de foto en wat er gelezen is, en wat ADONIS al weet: Bekende klant (gevonden op kenteken, of op naam als er geen kenteken op staat), Nieuwe klant (wordt aan Klanten toegevoegd), of Staat al in het bandenhotel. Sets die er al staan en labels waar Claude aan twijfelt, staan niet aangevinkt. Pas aan wat nodig is, kies eventueel een locatie voor alle sets en klik op Toevoegen. De foto van het label komt bij de set.',
+    ],
+  },
+  {
     version: '1.71.0', date: '2026-11-25', title: 'Alle banden op één plek: Bandenhotel → Overige opslag',
     items: [
       'Banden op voorraad staan nu in het Bandenhotel bij Overige opslag, samen met de noodbanden en losse sets. Zo zoekt u een maat op één plek. De banden die in Voorraad stonden, zijn er automatisch heen verplaatst, met hun foto\'s: maat (met index), merk en type, aantal, profiel, seizoen en locatie gaan mee; artikelnummer, prijs en opmerking staan bij Opmerkingen. Vooraf is een kopie van de database gemaakt in de datamap (voor-banden-verplaatsen-….db).',

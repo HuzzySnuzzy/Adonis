@@ -120,6 +120,9 @@ Het formulier is een digitale kopie van het papieren werkopdrachtformulier (voor
   Windows-app. Live camerabeeld vraagt https; anders een foto van de barcode. Een USB-scanner werkt altijd.
 - **Kleur van de auto aanpassen:** op de klantpagina (RDW-gegevens → Kleur → *Aanpassen*), voor iedereen. De eigen kleur
   (`customers.kleur_eigen`) gaat voor de RDW-kleur in de lijsten, op de klantpagina en in het RDW-venster.
+- **Banden importeren met foto's** (`/bandenhotel/foto-import`, `src/tyre-photos.js`): foto's van de labels (tot 40), Claude leest
+  ze in groepjes van 6 (structured output), samenvoegen op kenteken/naam, koppelen aan bestaande klanten en sets, controleren,
+  toevoegen als klantenbanden (nieuwe klanten in Klanten) met de labelfoto erbij.
 - **APK-vraag** (`/apk-vraag`, `src/apk-vraag.js`): "is dit afkeur?" Claude (web_search + web_fetch, alleen `rdw.nl`
   inclusief `apk-handboek.rdw.nl`) zoekt de keuringseis op en geeft oordeel, uitleg, citaat van de eis, voorwaarden en bron.
   Kenteken verplicht: de technische RDW-gegevens (o.a. datum eerste toelating, Europese categorie, brandstof) gaan mee.

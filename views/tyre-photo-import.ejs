@@ -1,0 +1,92 @@
+<%- include('/partials/head') %>
+<%
+  const I = item;
+  const SEIZ = { '': '—', zomer: 'Zomer', winter: 'Winter', 'all season': 'All season' };
+%>
+<main class="page tp-page">
+  <div class="page-head">
+    <div>
+      <h1><%- include('/partials/ai-icon') %> Banden importeren met foto's</h1>
+      <p class="muted small">Maak foto's van de stapels banden, met de labels (naam, kenteken, auto) goed in beeld. Claude leest de labels,
+        ADONIS zoekt de klanten erbij en u controleert alles voordat het in het bandenhotel komt. Een foto mag meerdere labels hebben.</p>
+    </div>
+    <a class="btn btn-ghost" href="/bandenhotel">Terug naar het bandenhotel</a>
+  </div>
+
+<% if (!I) { %>
+  <% if (!aiConfigured) { %><p class="alert">Claude is niet ingesteld (anthropic-api-key in config.properties).</p>
+  <% } else if (!canAi) { %><p class="alert">Foto's laten lezen door Claude kost geld. U heeft daar geen toegang toe; vraag een beheerder om AI-toegang.</p>
+  <% } else { %>
+  <section class="card tp-pick" data-tp-pick data-csrf="<%= csrf %>" data-max="<%= max %>">
+    <div class="tp-buttons">
+      <label class="btn btn-primary"><input type="file" accept="image/*" capture="environment" hidden data-tp-input> Foto maken</label>
+      <label class="btn"><input type="file" accept="image/*" multiple hidden data-tp-input> Foto's kiezen…</label>
+      <span class="muted small" data-tp-count>Nog geen foto's (maximaal <%= max %>).</span>
+    </div>
+    <div class="tp-thumbs" data-tp-thumbs></div>
+    <p class="alert" data-tp-error hidden></p>
+    <p><button class="btn btn-primary" type="button" data-tp-start disabled><%- include('/partials/ai-icon') %> Labels laten lezen</button></p>
+    <p class="muted small">Tip: liever een paar foto's te veel dan een label half in beeld. Hetzelfde label op twee foto's telt één keer.</p>
+  </section>
+  <% } %>
+
+<% } else if (I.status === 'bezig') { %>
+  <section class="card" data-tp-wait="<%= I.id %>">
+    <h2>Claude leest de labels…</h2>
+    <div class="listai-bar"><span data-tp-fill></span></div>
+    <p class="muted" data-tp-progress><%= I.done %> van <%= I.images.length %> foto's gelezen.</p>
+    <p class="muted small">Dit duurt ongeveer een halve minuut per zes foto's. U kunt de pagina open laten; hij ververst vanzelf.</p>
+  </section>
+
+<% } else { const rows = I.result; %>
+  <% if (I.error) { %><p class="alert"><%= I.error %><%= rows.length ? ' Wat al gelezen was, staat hieronder.' : '' %></p><% } %>
+  <% if (!rows.length) { %>
+    <section class="card"><p>Er zijn geen labels gevonden op deze foto's.</p>
+      <p><a class="btn" href="/bandenhotel/foto-import">Opnieuw proberen</a></p></section>
+  <% } else { %>
+  <form method="post" action="/bandenhotel/foto-import/<%= I.id %>" class="tp-review" data-tp-review>
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <section class="card tp-common">
+      <p><b><%= rows.length %> set<%= rows.length === 1 ? '' : 's' %> gevonden</b> op <%= I.images.length %> foto<%= I.images.length === 1 ? '' : "'s" %><%= I.eur ? ` (kosten ± € ${I.eur.toFixed(2).replace('.', ',')})` : '' %>.
+        Controleer naam, kenteken en auto; vink uit wat niet moet worden toegevoegd.</p>
+      <label class="field">Locatie <span class="muted small">(voor alle sets, optioneel)</span>
+        <input name="locatie" list="tpLoc" placeholder="bijv. stelling A" autocomplete="off"></label>
+      <datalist id="tpLoc"><% for (const l of locaties) { %><option value="<%= l %>"><% } %></datalist>
+    </section>
+    <div class="tp-rows">
+      <% rows.forEach((r, i) => { const dup = !!r.opgeslagen; const mee = !dup && r.zeker && (r.kenteken || r.naam); %>
+      <div class="card tp-row<%= dup ? ' is-dup' : '' %><%= r.zeker ? '' : ' is-unsure' %>" data-tp-row>
+        <a class="tp-photo" href="/bandenhotel/foto-import/<%= I.id %>/foto/<%= r.foto %>" data-photo-open title="Foto <%= r.foto %> groot bekijken">
+          <img src="/bandenhotel/foto-import/<%= I.id %>/foto/<%= r.foto %>?klein=1" alt="Foto <%= r.foto %>" loading="lazy"><span>foto <%= r.foto %></span></a>
+        <div class="tp-fields">
+          <label class="check tp-mee"><input type="checkbox" name="r[<%= i %>][mee]" value="on" <%= mee ? 'checked' : '' %>> Toevoegen</label>
+          <input type="hidden" name="r[<%= i %>][foto]" value="<%= r.foto %>">
+          <label class="field">Kenteken<input name="r[<%= i %>][kenteken]" value="<%= r.kenteken %>" class="mono upper" autocapitalize="characters" autocomplete="off" data-tp-plate></label>
+          <label class="field">Naam<input name="r[<%= i %>][naam]" value="<%= r.naam %>" autocomplete="off" data-tp-naam></label>
+          <label class="field">Auto<input name="r[<%= i %>][auto]" value="<%= r.auto %>" autocomplete="off"></label>
+          <label class="field">Seizoen<select name="r[<%= i %>][seizoen]"><% for (const [k, v] of Object.entries(SEIZ)) { %><option value="<%= k %>" <%= r.seizoen === k ? 'selected' : '' %>><%= v %></option><% } %></select></label>
+          <label class="field tp-aantal">Aantal<input name="r[<%= i %>][aantal]" value="<%= r.aantal || 4 %>" inputmode="numeric" maxlength="1"></label>
+          <p class="tp-status small" data-tp-status>
+            <% if (r.klant) { %><span class="tp-tag tp-known">Bekende klant</span> <a href="/klant/<%= r.klant.id %>" target="_blank" rel="noopener"><%= r.klant.naam || r.klant.kenteken %></a><%= r.klant.via === 'naam' ? ' (gevonden op naam: ' + r.klant.kenteken + ')' : '' %>
+            <% } else if (r.kenteken || r.naam) { %><span class="tp-tag tp-new">Nieuwe klant</span> wordt toegevoegd aan Klanten<% } %>
+            <% if (dup) { %><br><span class="tp-tag tp-warn">Staat al in het bandenhotel</span><%= r.opgeslagen.label ? ' label ' + r.opgeslagen.label : '' %><%= r.opgeslagen.locatie ? ' · ' + r.opgeslagen.locatie : '' %> – daarom niet aangevinkt<% } %>
+            <% if (!r.zeker) { %><br><span class="tp-tag tp-warn">Twijfel</span> <%= r.opmerking || 'Niet goed leesbaar; controleer het label.' %> – daarom niet aangevinkt<% } else if (r.opmerking) { %><br><span class="muted"><%= r.opmerking %></span><% } %>
+          </p>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <div class="form-actions tp-actions">
+      <button class="btn btn-primary" type="submit">Aangevinkte sets toevoegen aan het bandenhotel</button>
+      <button class="btn btn-ghost" type="submit" form="tpCancel">Annuleren</button>
+    </div>
+  </form>
+  <% } %>
+  <form id="tpCancel" method="post" action="/bandenhotel/foto-import/<%= I.id %>/annuleren" data-confirm="Deze import weggooien? Er wordt niets toegevoegd."><input type="hidden" name="_csrf" value="<%= csrf %>"></form>
+<% } %>
+</main>
+<script src="/static/js/common.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/ai.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/photos.js?v=<%= assetVersion %>"></script>
+<script src="/static/js/tyre-photo-import.js?v=<%= assetVersion %>"></script>
+<%- include('/partials/foot') %>

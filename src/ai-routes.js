@@ -14,6 +14,7 @@ const vehicle = require('./vehicle-analysis');
 const rdw = require('./rdw');
 const listAi = require('./list-ai');
 const apkVraag = require('./apk-vraag');
+const tyrePhotos = require('./tyre-photos');
 
 module.exports = function register(app, { flash, wrap }) {
   const wantsJson = (req) => (req.get('accept') || '').includes('application/json');
@@ -57,6 +58,10 @@ module.exports = function register(app, { flash, wrap }) {
       const n = modelBulletins.customersWith(m.key);
       detail = `Bekende zwakke plekken en APK-afkeurpunten van de ${m.label} opzoeken op internet, met bronnen.`
         + (n > 1 ? ` Het resultaat geldt voor alle ${n} klanten met deze auto.` : ' Het resultaat geldt ook voor latere klanten met dezelfde auto.');
+    } else if (taak === 'bandenfotos') {
+      const n = Math.min(Math.max(parseInt(req.query.n, 10) || 1, 1), tyrePhotos.MAX_PHOTOS);
+      levels = tyrePhotos.estimate(n);
+      detail = `Claude leest de labels op ${n} foto${n === 1 ? '' : "'s"} (naam, kenteken, auto). Daarna controleert u alles voordat het in het bandenhotel komt.`;
     } else if (taak === 'apkvraag') {
       levels = apkVraag.estimate();
       detail = 'Claude zoekt het antwoord op in de keuringseisen van de RDW (het online APK-handboek) en geeft het oordeel, de uitleg, de eis zelf en de bron.';
